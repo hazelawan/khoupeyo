@@ -102,7 +102,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -152,7 +152,8 @@ const I18N = {
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields',
     short_pw:'Password must be at least 6 characters', menu_empty:'The menu is empty. Ask the admin to add items.',
     order_no:'Order', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
-    keep_open:'Keep this app open and the screen on to hear new orders.'
+    keep_open:'Keep this app open and the screen on to hear new orders.',
+    customer:'Customer', no_phone:'No phone number'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -178,7 +179,8 @@ const I18N = {
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں',
     short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو', menu_empty:'مینو خالی ہے۔ ایڈمن سے آئٹمز شامل کروائیں۔',
     order_no:'آرڈر', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
-    keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔'
+    keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
+    customer:'گاہک', no_phone:'فون نمبر نہیں'
   }
 };
 const state = {
@@ -327,7 +329,7 @@ function orderCard(o){
   return `<div class="card ${o.status === 'placed' ? 'new' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
-    <div class="cust"><b>${esc(cust.full_name || '')}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : ''}
+    <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}
       <div class="muted">${esc(o.address_text || '')}</div></div>
     ${items}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
