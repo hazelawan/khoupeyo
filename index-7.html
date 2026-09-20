@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Khoupeyo Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E;
+  --s-placed:#B7791F; --s-accepted:#2A6F97; --s-preparing:#C4571A; --s-ready:#0F766E;
+  --s-rider_assigned:#6B4FA0; --s-picked_up:#6B4FA0; --s-delivered:#1F6F4A; --s-cancelled:#B3261E; --s-rejected:#B3261E;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+#app{max-width:760px;margin:0 auto;min-height:100%;padding-top:env(safe-area-inset-top,0px)}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:22px;letter-spacing:-.02em}
+.brand b{color:var(--marigold)}
+.linkbtn{background:none;border:0;color:var(--muted);padding:8px;cursor:pointer;text-decoration:underline}
+main{padding:12px 16px 110px}
+h2{font-size:22px;letter-spacing:-.01em;margin:8px 0 12px}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-inner{display:flex;width:100%;max-width:760px}
+.nav button{flex:1;background:none;border:0;padding:12px 4px 10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:14px;border-top:3px solid transparent}
+.nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.btn{background:var(--green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5}
+.list{border-top:1px solid var(--line)}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px;cursor:pointer}
+.row-main{flex:1;min-width:0}
+.row-title{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row-sub{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-side{text-align:right;font-weight:600;white-space:nowrap}
+.row-side small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.thumb{width:48px;height:48px;border-radius:10px;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.pill{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;color:#fff}
+.pill.off{background:var(--muted)}
+.steps{display:flex;gap:3px;margin-top:8px}
+.steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.steps i.on{background:var(--marigold)}
+.empty{padding:36px 8px;text-align:center;color:var(--muted)}
+.switch{position:relative;width:46px;height:26px;flex:none}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--green)}
+.switch input:checked + span::after{transform:translateX(20px)}
+.cat{display:flex;justify-content:space-between;align-items:center;margin:20px 0 6px}
+.cat h3{margin:0;font-size:18px}
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:760px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet-head h3{margin:0;font-size:20px}
+.x{background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+label.f{display:block;margin:12px 0 4px;font-weight:600;font-size:14px}
+input[type=text],input[type=password],input[type=email],input[type=number],input[type=time],select,textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:12px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;align-items:center;gap:10px;margin:14px 0 4px}
+.check input{width:20px;height:20px}
+.actions{display:grid;gap:10px;margin-top:18px}
+.kv{display:flex;justify-content:space-between;padding:5px 0}
+.kv.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:800;font-size:18px}
+.muted{color:var(--muted)}
+.preview{width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:10px;z-index:30;max-width:90%;font-weight:600}
+.toast.err{background:var(--danger);color:#fff}
+.login{max-width:380px;margin:0 auto;padding:12vh 20px 20px}
+.login .brand{font-size:38px;margin-bottom:4px}
+.err-text{color:var(--danger);margin-top:10px;min-height:20px}
+a{color:var(--green)}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
+const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
+const FINAL = ['delivered','cancelled','rejected'];
+
+const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], menuRestaurant:null, categories:[], items:[] };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => 'PKR ' + Number(n || 0).toLocaleString('en-PK');
+const hhmm = t => t ? String(t).slice(0,5) : '';
+function timeAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + ' h ago';
+  return new Date(ts).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+function toast(msg, isErr){
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+async function run(fn){
+  try { return await fn(); }
+  catch (e) { console.error(e); toast(e.message || 'Something went wrong', true); }
+}
+
+// ---- Bottom sheet ----
+function openSheet(title, html){
+  closeSheet();
+  const back = document.createElement('div');
+  back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div>${html}</div>`;
+  back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
+  document.body.appendChild(back);
+}
+function closeSheet(){ const s = $('sheet'); if (s) s.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+// ---- Images ----
+function resizeImage(file, max){
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error('Could not read this image')), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => rej(new Error('Could not read this image'));
+    img.src = url;
+  });
+}
+async function uploadImage(file, folder){
+  const blob = await resizeImage(file, 900);
+  const path = `${folder}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' });
+  if (error) throw error;
+  return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
+}
+function previewFile(input, imgId){
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block';
+}
+
+// ---- Login ----
+function showLogin(msg){
+  $('app').innerHTML = `
+  <div class="login">
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <p class="muted">Admin sign in</p>
+    <form onsubmit="A.login(event)">
+      <label class="f" for="em">Email</label>
+      <input id="em" type="email" autocomplete="username" required>
+      <label class="f" for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <div class="actions"><button class="btn block" id="loginBtn" type="submit">Sign in</button></div>
+      <div class="err-text" id="loginErr">${esc(msg || '')}</div>
+    </form>
+  </div>`;
+}
+
+async function afterLogin(user){
+  const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
+  if (error || !data || data.role !== 'admin'){
+    await sb.auth.signOut();
+    showLogin('This account is not an admin.');
+    return;
+  }
+  await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
+  showApp();
+  subscribeOrders();
+}
+
+// ---- Data loading ----
+async function loadZones(){
+  const { data, error } = await sb.from('zones').select('*').order('created_at');
+  if (error) throw error; state.zones = data;
+}
+async function loadRestaurants(){
+  const { data, error } = await sb.from('restaurants').select('*').order('created_at');
+  if (error) throw error; state.restaurants = data;
+}
+async function loadRiders(){
+  const { data, error } = await sb.from('riders').select('id,is_approved,is_online,profile:profiles(full_name,phone)').eq('is_approved', true);
+  if (!error) state.riders = data || [];
+}
+async function loadOrders(){
+  const { data, error } = await sb.from('orders')
+    .select('*, restaurant:restaurants(name), customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price)')
+    .order('created_at', { ascending:false }).limit(100);
+  if (error) throw error; state.orders = data;
+}
+async function loadMenu(){
+  if (!state.menuRestaurant) { state.categories = []; state.items = []; return; }
+  const [c, i] = await Promise.all([
+    sb.from('menu_categories').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order').order('name')
+  ]);
+  if (c.error) throw c.error; if (i.error) throw i.error;
+  state.categories = c.data; state.items = i.data;
+}
+let channel;
+function subscribeOrders(){
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('orders-live').on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async payload => {
+      if (payload.eventType === 'INSERT') toast('New order received');
+      if (state.tab === 'orders') { await run(loadOrders); renderTab(); }
+    }).subscribe();
+  } catch (e) { console.warn('Live updates off', e); }
+}
+
+// ---- Shell ----
+function showApp(){
+  $('app').innerHTML = `
+    <div class="topbar"><div class="brand">Khoupeyo<b>.</b></div><button class="linkbtn" onclick="A.logout()">Sign out</button></div>
+    <main id="main"></main>
+    <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
+  renderNav(); go(state.tab);
+}
+function renderNav(){
+  const tabs = [['orders','Orders'],['restaurants','Restaurants'],['menu','Menu'],['zones','Zones']];
+  $('nav').innerHTML = tabs.map(([k,l]) => `<button class="${state.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+}
+async function go(tab){
+  state.tab = tab; renderNav();
+  $('main').innerHTML = '<div class="empty">Loading…</div>';
+  await run(async () => {
+    if (tab === 'orders') await loadOrders();
+    if (tab === 'menu') { if (!state.menuRestaurant && state.restaurants[0]) state.menuRestaurant = state.restaurants[0].id; await loadMenu(); }
+  });
+  renderTab();
+}
+function renderTab(){
+  const m = $('main'); if (!m) return;
+  if (state.tab === 'orders') m.innerHTML = viewOrders();
+  if (state.tab === 'restaurants') m.innerHTML = viewRestaurants();
+  if (state.tab === 'menu') m.innerHTML = viewMenu();
+  if (state.tab === 'zones') m.innerHTML = viewZones();
+}
+
+// ---- Orders ----
+function viewOrders(){
+  const list = state.orders.filter(o => state.orderFilter === 'all' ? true : !FINAL.includes(o.status));
+  const rows = list.map(o => {
+    const idx = STEPS.indexOf(o.status);
+    const seg = STEPS.map((s,i) => `<i class="${i<=idx?'on':''}"></i>`).join('');
+    return `<button class="row" onclick="A.openOrder('${o.id}')">
+      <div class="row-main">
+        <div class="row-title">${esc(o.restaurant?.name || 'Restaurant')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div>
+        <div class="row-sub">${esc(o.customer?.full_name || 'Customer')}</div>
+        <div class="steps">${seg}</div>
+      </div>
+      <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div>
+    </button>`;
+  }).join('');
+  return `<h2>Orders</h2>
+    <div class="bar">
+      <button class="chip ${state.orderFilter==='active'?'on':''}" onclick="A.filter('active')">Active</button>
+      <button class="chip ${state.orderFilter==='all'?'on':''}" onclick="A.filter('all')">All</button>
+      <button class="chip" onclick="A.refreshOrders()">Refresh</button>
+    </div>
+    <div class="list">${rows || '<div class="empty">No orders here yet. New orders appear on this screen by themselves.</div>'}</div>`;
+}
+function orderActions(o){
+  const b = [];
+  const st = (s, label, cls) => b.push(`<button class="btn ${cls||''}" onclick="A.setStatus('${o.id}','${s}')">${label}</button>`);
+  if (o.status === 'placed'){ st('accepted','Accept order'); st('rejected','Reject order','warn'); }
+  if (o.status === 'accepted'){ st('preparing','Start preparing'); st('ready','Mark ready','ghost'); }
+  if (o.status === 'preparing') st('ready','Mark ready');
+  if (o.status === 'ready' || o.status === 'rider_assigned'){
+    if (state.riders.length){
+      const opts = state.riders.map(r => `<option value="${r.id}" ${o.rider_id===r.id?'selected':''}>${esc(r.profile?.full_name || 'Rider')}${r.is_online?' (online)':''}</option>`).join('');
+      b.push(`<label class="f" for="riderSel">Rider</label><select id="riderSel">${opts}</select>
+              <button class="btn" onclick="A.assign('${o.id}')">${o.status==='ready'?'Assign rider':'Change rider'}</button>`);
+    } else {
+      b.push('<div class="muted">No approved riders yet. Riders appear here once they are approved.</div>');
+    }
+  }
+  if (o.status === 'rider_assigned') st('picked_up','Mark picked up','ghost');
+  if (o.status === 'picked_up') st('delivered','Mark delivered');
+  if (!FINAL.includes(o.status)) st('cancelled','Cancel order','warn');
+  return b.join('');
+}
+// ---- Restaurants ----
+function viewRestaurants(){
+  const rows = state.restaurants.map(r => `
+    <div class="row" style="cursor:default">
+      ${r.logo_url ? `<img class="thumb" src="${esc(r.logo_url)}" alt="">` : `<div class="thumb">${esc((r.name||'?')[0])}</div>`}
+      <button class="row-main" style="background:none;border:0;text-align:left;padding:0;cursor:pointer" onclick="A.editRestaurant('${r.id}')">
+        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill off">Hidden</span>'}</div>
+        <div class="row-sub">${esc(r.address || 'No address yet')}</div>
+      </button>
+      <div style="text-align:center"><label class="switch"><input type="checkbox" ${r.is_open?'checked':''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small class="muted">${r.is_open?'Open':'Closed'}</small></div>
+    </div>`).join('');
+  return `<h2>Restaurants</h2>
+    <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add restaurant</button></div>
+    <div class="list">${rows || '<div class="empty">No restaurants yet. Add your first one.</div>'}</div>`;
+}
+function restaurantForm(r){
+  r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
+  const zoneOpts = state.zones.map(z => `<option value="${z.id}" ${r.zone_id===z.id?'selected':''}>${esc(z.name)}</option>`).join('');
+  return `
+    <label class="f" for="r_name">Restaurant name</label><input id="r_name" type="text" value="${esc(r.name)}">
+    <label class="f" for="r_desc">Short description</label><input id="r_desc" type="text" value="${esc(r.description)}" placeholder="Burgers, fries and shakes">
+    <label class="f" for="r_addr">Address</label><input id="r_addr" type="text" value="${esc(r.address)}">
+    <label class="f" for="r_phone">Phone</label><input id="r_phone" type="text" inputmode="tel" value="${esc(r.phone)}">
+    <label class="f" for="r_zone">Zone</label><select id="r_zone">${zoneOpts}</select>
+    <div class="two">
+      <div><label class="f" for="r_open">Opens at</label><input id="r_open" type="time" value="${hhmm(r.open_time)}"></div>
+      <div><label class="f" for="r_close">Closes at</label><input id="r_close" type="time" value="${hhmm(r.close_time)}"></div>
+    </div>
+    <div class="two">
+      <div><label class="f" for="r_comm">Commission %</label><input id="r_comm" type="number" min="0" max="100" step="0.5" value="${r.commission_percent ?? 15}"></div>
+      <div><label class="f" for="r_prep">Prep time (min)</label><input id="r_prep" type="number" min="5" step="5" value="${r.prep_time_minutes ?? 25}"></div>
+    </div>
+    <label class="f" for="r_logo">Logo or photo</label>
+    <input id="r_logo" type="file" accept="image/*" onchange="previewFile(this,'r_prev')">
+    <img id="r_prev" class="preview" alt="" style="display:${r.logo_url?'block':'none'}" src="${esc(r.logo_url || '')}">
+    <label class="check"><input id="r_isopen" type="checkbox" ${r.is_open?'checked':''}> Open for orders now</label>
+    <label class="check"><input id="r_active" type="checkbox" ${r.is_active?'checked':''}> Show in the customer app</label>
+    <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveRestaurant('${r.id || ''}')">Save restaurant</button></div>`;
+}
+
+// ---- Menu ----
+function viewMenu(){
+  if (!state.restaurants.length) return '<h2>Menu</h2><div class="empty">Add a restaurant first, then build its menu here.</div>';
+  const opts = state.restaurants.map(r => `<option value="${r.id}" ${r.id===state.menuRestaurant?'selected':''}>${esc(r.name)}</option>`).join('');
+  const uncategorised = state.items.filter(i => !state.categories.some(c => c.id === i.category_id));
+  const block = (title, catId, items) => `
+    <div class="cat"><h3>${esc(title)}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
+    <div class="list">${items.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
+  const cats = state.categories.map(c => block(c.name, c.id, state.items.filter(i => i.category_id === c.id))).join('');
+  return `<h2>Menu</h2>
+    <select id="menuRest" onchange="A.pickMenuRestaurant(this.value)" aria-label="Restaurant">${opts}</select>
+    <div class="bar" style="margin-top:12px">
+      <button class="btn ghost" onclick="A.editCategory()">Add section</button>
+      <button class="btn" onclick="A.editItem()">Add item</button>
+    </div>
+    ${cats}${uncategorised.length ? block('Other items', null, uncategorised) : ''}
+    ${!state.categories.length && !uncategorised.length ? '<div class="empty">This menu is empty. Add a section such as Burgers, then add items to it.</div>' : ''}`;
+}
+function itemRow(i){
+  return `<div class="row" style="cursor:default">
+    ${i.photo_url ? `<img class="thumb" src="${esc(i.photo_url)}" alt="">` : `<div class="thumb">${esc((i.name||'?')[0])}</div>`}
+    <button class="row-main" style="background:none;border:0;text-align:left;padding:0;cursor:pointer" onclick="A.editItem('${i.id}')">
+      <div class="row-title">${esc(i.name)}</div>
+      <div class="row-sub">${money(i.price)}</div>
+    </button>
+    <div style="text-align:center"><label class="switch"><input type="checkbox" ${i.is_available?'checked':''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="Available"><span></span></label><small class="muted">${i.is_available?'In stock':'Out'}</small></div>
+  </div>`;
+}
+function itemForm(i){
+  i = i || { is_available:true };
+  const catOpts = state.categories.map(c => `<option value="${c.id}" ${i.category_id===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+  return `
+    <label class="f" for="i_name">Item name</label><input id="i_name" type="text" value="${esc(i.name)}">
+    <label class="f" for="i_desc">Description</label><input id="i_desc" type="text" value="${esc(i.description)}">
+    <div class="two">
+      <div><label class="f" for="i_price">Price (PKR)</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
+      <div><label class="f" for="i_cat">Section</label><select id="i_cat">${catOpts || '<option value="">No sections yet</option>'}</select></div>
+    </div>
+    <label class="f" for="i_photo">Photo</label>
+    <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
+    <img id="i_prev" class="preview" alt="" style="display:${i.photo_url?'block':'none'}" src="${esc(i.photo_url || '')}">
+    <label class="check"><input id="i_avail" type="checkbox" ${i.is_available?'checked':''}> In stock</label>
+    <div class="actions">
+      <button class="btn block" id="saveBtn" onclick="A.saveItem('${i.id || ''}')">Save item</button>
+      ${i.id ? `<button class="btn warn block" onclick="A.deleteItem('${i.id}')">Delete item</button>` : ''}
+    </div>`;
+}
+
+// ---- Zones ----
+function viewZones(){
+  const rows = state.zones.map(z => `
+    <button class="row" onclick="A.editZone('${z.id}')">
+      <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active?'':'<span class="pill off">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
+      <div class="row-side">${money(z.delivery_fee)}<small>Min order ${money(z.min_order)}</small></div>
+    </button>`).join('');
+  return `<h2>Delivery zones</h2>
+    <div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
+    <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
+}
+function zoneForm(z){
+  z = z || { delivery_fee:100, min_order:0, is_active:true };
+  return `
+    <label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
+    <label class="f" for="z_city">City</label><input id="z_city" type="text" value="${esc(z.city)}">
+    <div class="two">
+      <div><label class="f" for="z_fee">Delivery fee (PKR)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
+      <div><label class="f" for="z_min">Minimum order (PKR)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
+    </div>
+    <label class="check"><input id="z_active" type="checkbox" ${z.is_active?'checked':''}> Zone is open for orders</label>
+    <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
+}
+
+// ---- Actions ----
+const A = {
+  async login(e){
+    e.preventDefault();
+    const btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Signing in…';
+    const { data, error } = await sb.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    if (error){ $('loginErr').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in'; return; }
+    await run(() => afterLogin(data.user));
+  },
+  async logout(){ await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+
+  filter(f){ state.orderFilter = f; renderTab(); },
+  async refreshOrders(){ await run(loadOrders); renderTab(); toast('Orders updated'); },
+  openOrder(id){
+    const o = state.orders.find(x => x.id === id); if (!o) return;
+    const items = (o.order_items || []).map(i => `<div class="kv"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
+    openSheet(`${o.restaurant?.name || 'Order'}`, `
+      <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${timeAgo(o.created_at)}</span></div>
+      <div><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}</div>
+      <div class="muted" style="margin:4px 0 12px">${esc(o.address_text || 'No address')}</div>
+      ${o.customer_note ? `<div style="margin-bottom:12px"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
+      ${items}
+      <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
+      <div class="kv"><span class="muted">Delivery</span><span>${money(o.delivery_fee)}</span></div>
+      ${Number(o.discount) ? `<div class="kv"><span class="muted">Discount</span><span>-${money(o.discount)}</span></div>` : ''}
+      <div class="kv total"><span>Total, cash on delivery</span><span>${money(o.total)}</span></div>
+      ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
+      <div class="actions">${orderActions(o)}</div>`);
+  },
+  async setStatus(id, status){
+    let reason = null;
+    if (status === 'rejected') reason = prompt('Reason for rejecting (optional)') ;
+    if (status === 'cancelled' && !confirm('Cancel this order?')) return;
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason });
+      if (error) throw error;
+      closeSheet(); await loadOrders(); renderTab(); toast('Order updated');
+    });
+  },
+  async assign(id){
+    const rid = $('riderSel').value;
+    await run(async () => {
+      const { error } = await sb.rpc('assign_rider', { p_order_id:id, p_rider_id:rid });
+      if (error) throw error;
+      closeSheet(); await loadOrders(); renderTab(); toast('Rider assigned');
+    });
+  },
+
+  editRestaurant(id){ const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit restaurant' : 'Add restaurant', restaurantForm(r)); },
+  async saveRestaurant(id){
+    const name = $('r_name').value.trim();
+    if (!name) return toast('Enter the restaurant name', true);
+    if (!state.zones.length) return toast('Add a zone first', true);
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+    await run(async () => {
+      const row = {
+        name, description:$('r_desc').value.trim() || null, address:$('r_addr').value.trim() || null, phone:$('r_phone').value.trim() || null,
+        zone_id:$('r_zone').value, open_time:$('r_open').value || null, close_time:$('r_close').value || null,
+        commission_percent:Number($('r_comm').value || 0), prep_time_minutes:Number($('r_prep').value || 25),
+        is_open:$('r_isopen').checked, is_active:$('r_active').checked
+      };
+      const f = $('r_logo').files[0];
+      if (f) row.logo_url = await uploadImage(f, 'restaurants');
+      const q = id ? sb.from('restaurants').update(row).eq('id', id) : sb.from('restaurants').insert(row);
+      const { error } = await q; if (error) throw error;
+      await loadRestaurants(); closeSheet(); renderTab(); toast('Restaurant saved');
+    });
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save restaurant'; }
+  },
+  async toggleOpen(id, val){
+    await run(async () => {
+      const { error } = await sb.from('restaurants').update({ is_open:val }).eq('id', id); if (error) throw error;
+      await loadRestaurants(); renderTab();
+    });
+  },
+
+  async pickMenuRestaurant(id){ state.menuRestaurant = id; await run(loadMenu); renderTab(); },
+  editCategory(id){
+    const c = state.categories.find(x => x.id === id);
+    openSheet(c ? 'Edit section' : 'Add section', `
+      <label class="f" for="c_name">Section name</label><input id="c_name" type="text" value="${esc(c?.name)}" placeholder="Burgers">
+      <div class="actions">
+        <button class="btn block" onclick="A.saveCategory('${id || ''}')">Save section</button>
+        ${c ? `<button class="btn warn block" onclick="A.deleteCategory('${id}')">Delete section and its items</button>` : ''}
+      </div>`);
+  },
+  async saveCategory(id){
+    const name = $('c_name').value.trim(); if (!name) return toast('Enter a section name', true);
+    await run(async () => {
+      const q = id ? sb.from('menu_categories').update({ name }).eq('id', id)
+                   : sb.from('menu_categories').insert({ name, restaurant_id:state.menuRestaurant, sort_order:state.categories.length + 1 });
+      const { error } = await q; if (error) throw error;
+      await loadMenu(); closeSheet(); renderTab(); toast('Section saved');
+    });
+  },
+  async deleteCategory(id){
+    if (!confirm('Delete this section and all items inside it?')) return;
+    await run(async () => {
+      const { error } = await sb.from('menu_categories').delete().eq('id', id); if (error) throw error;
+      await loadMenu(); closeSheet(); renderTab(); toast('Section deleted');
+    });
+  },
+  editItem(id){
+    if (!state.categories.length) return toast('Add a section first, for example Burgers', true);
+    const i = state.items.find(x => x.id === id); openSheet(i ? 'Edit item' : 'Add item', itemForm(i));
+  },
+  async saveItem(id){
+    const name = $('i_name').value.trim(); const price = $('i_price').value;
+    if (!name) return toast('Enter the item name', true);
+    if (price === '' || Number(price) < 0) return toast('Enter a price', true);
+    if (!$('i_cat').value) return toast('Choose a section', true);
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+    await run(async () => {
+      const row = { name, description:$('i_desc').value.trim() || null, price:Number(price), category_id:$('i_cat').value, is_available:$('i_avail').checked, restaurant_id:state.menuRestaurant };
+      const f = $('i_photo').files[0];
+      if (f) row.photo_url = await uploadImage(f, 'items');
+      const q = id ? sb.from('menu_items').update(row).eq('id', id) : sb.from('menu_items').insert(row);
+      const { error } = await q; if (error) throw error;
+      await loadMenu(); closeSheet(); renderTab(); toast('Item saved');
+    });
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save item'; }
+  },
+  async toggleItem(id, val){
+    await run(async () => {
+      const { error } = await sb.from('menu_items').update({ is_available:val }).eq('id', id); if (error) throw error;
+      await loadMenu(); renderTab();
+    });
+  },
+  async deleteItem(id){
+    if (!confirm('Delete this item?')) return;
+    await run(async () => {
+      const { error } = await sb.from('menu_items').delete().eq('id', id); if (error) throw error;
+      await loadMenu(); closeSheet(); renderTab(); toast('Item deleted');
+    });
+  },
+
+  editZone(id){ const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
+  async saveZone(id){
+    const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
+    await run(async () => {
+      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:Number($('z_fee').value || 0), min_order:Number($('z_min').value || 0), is_active:$('z_active').checked };
+      const q = id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row);
+      const { error } = await q; if (error) throw error;
+      await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
+    });
+  }
+};
+
+// ---- Start ----
+(async function boot(){
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user); else showLogin();
+  } catch (e) { console.error(e); showLogin('Could not connect. Check your internet and try again.'); }
+})();
+</script>
+</body>
+</html>
