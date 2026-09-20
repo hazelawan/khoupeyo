@@ -126,7 +126,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -190,7 +190,8 @@ const I18N = {
     items_n:'{n} items', your_details:'Your details', order_no:'Order', restaurant:'Restaurant',
     delivered_to:'Delivering to', order_items:'Your order', history:'Your orders',
     addr_in_use:'This address was used in an earlier order, so it cannot be deleted.',
-    browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.'
+    browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
+    need_details:'Please add your name and phone so the restaurant and rider can reach you.'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -226,7 +227,8 @@ const I18N = {
     items_n:'{n} آئٹم', your_details:'آپ کی معلومات', order_no:'آرڈر', restaurant:'ریسٹورنٹ',
     delivered_to:'اس پتے پر ڈیلیوری', order_items:'آپ کا آرڈر', history:'آپ کے آرڈرز',
     addr_in_use:'یہ پتہ پہلے آرڈر میں استعمال ہوا ہے، اس لیے حذف نہیں ہو سکتا۔',
-    browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔'
+    browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
+    need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ ریسٹورنٹ اور رائیڈر آپ سے رابطہ کر سکیں۔'
   }
 };
 
@@ -497,7 +499,13 @@ function drawCheckout(){
   const list = state.addresses.map(a => `
     <label class="addr"><input type="radio" name="addr" ${a.id === state.selAddr ? 'checked' : ''} onchange="state.selAddr='${a.id}'">
       <div><div style="font-weight:700">${esc(a.label || t('address'))}</div><div class="muted">${esc(a.full_address)}${a.note ? ', ' + esc(a.note) : ''}</div></div></label>`).join('');
+  const pr = state.profile || {};
+  const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
+  const detailsBox = needsDetails ? `<div class="box"><b>${t('your_details')}</b><div class="muted" style="font-size:14px">${t('need_details')}</div>
+    <label class="f" for="d_name">${t('name')}</label><input id="d_name" type="text" value="${esc(pr.full_name)}">
+    <label class="f" for="d_phone">${t('phone')}</label><input id="d_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(pr.phone)}"></div>` : '';
   v.innerHTML = `<h1>${t('checkout')}</h1>
+    ${detailsBox}
     <h2 style="margin-top:8px">${t('address')}</h2>
     ${list ? `<div>${list}</div>` : ''}
     ${state.addresses.length ? `<button class="link" onclick="A.showAddrForm()">${t('add_address')}</button><div id="addrHolder"></div>` : addressForm()}
@@ -693,8 +701,19 @@ const A = {
   },
   async placeOrder(){
     if (!state.selAddr) return toast(t('pick_address'), true);
+    let newName = null, newPhone = null;
+    if ($('d_name')){
+      newName = $('d_name').value.trim(); newPhone = normalizePhone($('d_phone').value);
+      if (!newName) return toast(t('enter_all'), true);
+      if (!newPhone) return toast(t('bad_phone'), true);
+    }
     const btn = $('placeBtn'); btn.disabled = true; btn.textContent = t('loading');
     await run(async () => {
+      if (newName){
+        const up = await sb.from('profiles').update({ full_name:newName, phone:newPhone }).eq('id', state.user.id);
+        if (up.error) throw up.error;
+        state.profile = Object.assign({}, state.profile, { full_name:newName, phone:newPhone });
+      }
       const items = state.cart.items.map(i => ({ menu_item_id:i.id, quantity:i.qty }));
       const { data, error } = await sb.rpc('place_order', {
         p_restaurant_id:state.cart.rid, p_address_id:state.selAddr, p_items:items,
