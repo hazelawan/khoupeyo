@@ -99,7 +99,7 @@ a{color:var(--green)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '1.4';
+const APP_VERSION = '1.5';
 const APP_DATE = '20 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -343,6 +343,8 @@ function restaurantForm(r){
     <label class="f" for="r_desc">Short description</label><input id="r_desc" type="text" value="${esc(r.description)}" placeholder="Burgers, fries and shakes">
     <label class="f" for="r_addr">Address</label><input id="r_addr" type="text" value="${esc(r.address)}">
     <label class="f" for="r_phone">Phone</label><input id="r_phone" type="text" inputmode="tel" value="${esc(r.phone)}">
+    <label class="f" for="r_owner">Owner email (the owner signs up in the Restaurant app first)</label>
+    <input id="r_owner" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="owner@gmail.com">
     <label class="f" for="r_zone">Zone</label><select id="r_zone">${zoneOpts}</select>
     <div class="two">
       <div><label class="f" for="r_open">Opens at</label><input id="r_open" type="time" value="${hhmm(r.open_time)}"></div>
@@ -480,7 +482,10 @@ const A = {
     });
   },
 
-  editRestaurant(id){ const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit restaurant' : 'Add restaurant', restaurantForm(r)); },
+  editRestaurant(id){
+    const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit restaurant' : 'Add restaurant', restaurantForm(r));
+    if (r) sb.rpc('admin_owner_email', { p_restaurant_id:id }).then(({ data }) => { const el = $('r_owner'); if (el && data){ el.value = data; el.dataset.orig = data; } });
+  },
   async saveRestaurant(id){
     const name = $('r_name').value.trim();
     if (!name) return toast('Enter the restaurant name', true);
@@ -495,8 +500,13 @@ const A = {
       };
       const f = $('r_logo').files[0];
       if (f) row.logo_url = await uploadImage(f, 'restaurants');
-      const q = id ? sb.from('restaurants').update(row).eq('id', id) : sb.from('restaurants').insert(row);
-      const { error } = await q; if (error) throw error;
+      const q = id ? sb.from('restaurants').update(row).eq('id', id).select('id').single() : sb.from('restaurants').insert(row).select('id').single();
+      const { data:saved, error } = await q; if (error) throw error;
+      const ownerEmail = ($('r_owner').value || '').trim(); const origEmail = $('r_owner').dataset.orig || '';
+      if (ownerEmail !== origEmail){
+        const { error:e2 } = await sb.rpc('link_restaurant_owner', { p_restaurant_id:saved.id, p_email:ownerEmail });
+        if (e2) throw e2;
+      }
       await loadRestaurants(); closeSheet(); renderTab(); toast('Restaurant saved');
     });
     const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save restaurant'; }
