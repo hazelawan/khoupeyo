@@ -126,12 +126,13 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Each app keeps its own login so admin and customer never mix on the same phone
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-customer-auth' } });
 
 // ---- Small helpers ----
 const ls = {
@@ -164,8 +165,8 @@ const I18N = {
     subtotal:'Subtotal', delivery_fee:'Delivery fee', total:'Total', promo:'Promo code',
     promo_note:'A promo code is applied when you place the order.',
     note_rest:'Note for the restaurant (optional)', checkout:'Checkout', proceed:'Continue to checkout',
-    address:'Delivery address', add_address:'Add a new address', addr_label:'Label (Home, Office)',
-    addr_full:'Full address', addr_note:'Landmark or house number', use_location:'Use my location',
+    address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
+    addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location',
     location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
     pay_note:'Pay cash to the rider when your food arrives.', place_order:'Place order',
     home:'Home', orders:'Orders', account:'Account',
@@ -200,8 +201,8 @@ const I18N = {
     subtotal:'کھانے کی رقم', delivery_fee:'ڈیلیوری فیس', total:'کل رقم', promo:'پرومو کوڈ',
     promo_note:'پرومو کوڈ آرڈر کرتے وقت لگایا جائے گا۔',
     note_rest:'ریسٹورنٹ کے لیے ہدایت (اختیاری)', checkout:'چیک آؤٹ', proceed:'چیک آؤٹ پر جائیں',
-    address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'نام (گھر، دفتر)',
-    addr_full:'مکمل پتہ', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں',
+    address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
+    addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں',
     location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
     pay_note:'کھانا پہنچنے پر رائیڈر کو نقد ادا کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', orders:'آرڈرز', account:'اکاؤنٹ',
