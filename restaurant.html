@@ -102,7 +102,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -153,7 +153,7 @@ const I18N = {
     short_pw:'Password must be at least 6 characters', menu_empty:'The menu is empty. Ask the admin to add items.',
     order_no:'Order', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
     keep_open:'Keep this app open and the screen on to hear new orders.',
-    customer:'Customer', no_phone:'No phone number'
+    customer:'Customer', no_phone:'No phone number', rider_label:'Rider', prep_time:'Preparing time'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -180,7 +180,7 @@ const I18N = {
     short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو', menu_empty:'مینو خالی ہے۔ ایڈمن سے آئٹمز شامل کروائیں۔',
     order_no:'آرڈر', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
     keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
-    customer:'گاہک', no_phone:'فون نمبر نہیں'
+    customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر', prep_time:'تیاری کا وقت'
   }
 };
 const state = {
@@ -310,7 +310,11 @@ async function loadOrders(){
   const { data, error } = await sb.from('orders')
     .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
     .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(100);
-  if (error) throw error; state.orders = data; updateTitle();
+  if (error) throw error;
+  await Promise.all(data.filter(o => ['rider_assigned', 'picked_up'].includes(o.status)).map(async o => {
+    const r = await sb.rpc('order_rider_info', { p_order_id:o.id }); o.rider = (r.data && r.data[0]) || null;
+  }));
+  state.orders = data; updateTitle();
 }
 async function refreshOrders(soft){
   await run(loadOrders);
@@ -319,19 +323,21 @@ async function refreshOrders(soft){
 function orderCard(o){
   const items = (o.order_items || []).map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</span></div>`).join('');
   const cust = o.customer || {};
+  const riderLine = o.rider ? `<div class="muted" style="margin-top:8px">${t('rider_label')}: <b>${esc(o.rider.full_name || '')}</b> ${o.rider.phone ? `<a href="tel:${esc(o.rider.phone)}">${esc(o.rider.phone)}</a>` : ''}</div>` : '';
   let actions = '';
   if (o.status === 'placed') actions = `<div class="two"><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button></div>`;
   else if (o.status === 'accepted') actions = `<div class="actions"><button class="btn" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn ghost" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
   else if (o.status === 'preparing') actions = `<div class="actions"><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
-  else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>`;
-  else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>`;
+  else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
+  else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
   return `<div class="card ${o.status === 'placed' ? 'new' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
     <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}
       <div class="muted">${esc(o.address_text || '')}</div></div>
     ${items}
+    ${o.prep_minutes && ['accepted', 'preparing'].includes(o.status) ? `<div class="muted">${t('prep_time')}: ${o.prep_minutes} ${t('min')}</div>` : ''}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
     <div class="line" style="font-weight:800;margin-top:6px"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
     ${actions}</div>`;
