@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Khoupeyo Rider</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.7}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--green)}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.15}
+.brand b{color:var(--marigold)}
+.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+.pillbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:14px}
+.statusbtn{border:0;border-radius:999px;padding:11px 20px;font-weight:800;cursor:pointer;color:#fff;background:var(--green);font-size:16px}
+.statusbtn.off{background:var(--muted)}
+main{padding:14px 16px 120px}
+h1{font-size:24px;margin:6px 0 12px}
+h2{font-size:18px;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
+.count{background:var(--marigold);color:#1E2B25;font-size:13px;font-weight:800;border-radius:999px;padding:1px 9px}
+.muted{color:var(--muted)}
+.empty{padding:34px 10px;text-align:center;color:var(--muted)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:16px;font-weight:700;cursor:pointer;text-align:center;font-size:17px;text-decoration:none}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.btn.small{padding:11px;font-size:15px}
+.btn[disabled]{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text],input[type=password],input[type=email],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
+label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.card.live{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.oid{font-weight:800;font-size:18px}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--green)}
+.pill.wait{background:#B7791F}
+.step{display:flex;gap:12px;align-items:flex-start;margin:8px 0}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--marigold);color:#1E2B25;font-weight:800;display:grid;place-items:center;flex:none}
+.step.done .n{background:var(--green);color:#fff}
+.step.todo{opacity:.5}
+.line{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.cash{background:rgba(242,169,0,.16);border-radius:12px;padding:12px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.cash b{font-size:22px}
+.actions{display:grid;gap:10px;margin-top:12px}
+.note{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.soundbar{background:var(--marigold);color:#1E2B25;border:0;width:100%;border-radius:12px;padding:12px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{display:flex;max-width:560px;margin:0 auto}
+.nav button{flex:1;background:none;border:0;padding:14px 4px 12px;font-weight:700;font-size:15px;color:var(--muted);border-top:3px solid transparent;cursor:pointer}
+.nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-size:22px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:30;max-width:90%;font-weight:600;text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+.auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
+.auth .brand{font-size:40px}
+.err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
+.link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
+.ver{font-size:12px;color:var(--muted);font-weight:600}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Version: change this every time the file is updated ----
+const APP_VERSION = '1.0';
+
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+// This app keeps its own login, separate from the other apps
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-rider-auth' } });
+
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => 'Rs ' + Number(n || 0).toLocaleString('en-PK');
+const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+function timeAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return '0 min'; if (m < 60) return m + ' min';
+  const h = Math.round(m / 60); return h < 24 ? h + ' h' : new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function logErr(e){ try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); } }
+function normalizePhone(p){
+  let d = String(p || '').replace(/\D/g, '');
+  if (d.startsWith('92') && d.length === 12) d = '0' + d.slice(2);
+  if (d.startsWith('3') && d.length === 10) d = '0' + d;
+  return /^03\d{9}$/.test(d) ? d : null;
+}
+function mapsUrl(lat, lng, text){
+  if (lat && lng) return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text || '')}`;
+}
+
+// ---- Words: English and Urdu ----
+const I18N = {
+  en: {
+    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
+    have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
+    rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
+    submit:'Send for approval', pending_title:'Waiting for approval',
+    pending_msg:'Your account is with the Khoupeyo admin. You will see deliveries once it is approved.',
+    check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', account:'Account',
+    online:'Online', offline:'Offline', go_online:'Go online',
+    offline_msg:'You are offline. Go online to see deliveries.',
+    my_deliveries:'My deliveries', new_jobs:'New deliveries', no_jobs:'No deliveries right now. New ones will ring here.',
+    keep_open:'Keep this app open and the screen on while you are online.',
+    accept:'Accept delivery', pick_from:'Pick up from', deliver_to:'Deliver to', picked:'I picked up the order',
+    delivered:'Delivered, cash collected', give_back:'Give back this delivery', open_maps:'Open in Maps', call:'Call',
+    cash_collect:'Cash to collect', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
+    confirm_picked:'Did you pick up the order from the restaurant?',
+    confirm_delivered:'Did you hand over the food and collect the cash?',
+    confirm_giveback:'Give back this delivery? Another rider can take it.',
+    today:'Today', deliveries_n:'Deliveries', my_earnings:'My earnings', cash_in_hand:'Cash collected',
+    handover:'Cash to hand over to Khoupeyo', handover_note:'Cash collected minus your pay, for deliveries not settled yet.',
+    recent:'Recent deliveries', no_recent:'No completed deliveries yet.',
+    enable_sound:'Tap here to turn on the alert sound', sound:'Alert sound', logout:'Log out', language:'Language',
+    saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
+    bad_phone:'Enter a valid phone number like 0300 1234567', st_rider_assigned:'Go to the restaurant', st_picked_up:'On the way to the customer',
+    taken:'Sorry, this delivery was already taken', accepted:'Delivery accepted',
+    no_phone:'No phone number', customer:'Customer', vehicle_label:'Vehicle'
+  },
+  ur: {
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
+    rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
+    submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
+    pending_msg:'آپ کا اکاؤنٹ Khoupeyo کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
+    check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', account:'اکاؤنٹ',
+    online:'آن لائن', offline:'آف لائن', go_online:'آن لائن ہوں',
+    offline_msg:'آپ آف لائن ہیں۔ ڈیلیوریاں دیکھنے کے لیے آن لائن ہوں۔',
+    my_deliveries:'میری ڈیلیوریاں', new_jobs:'نئی ڈیلیوریاں', no_jobs:'ابھی کوئی ڈیلیوری نہیں۔ نئی آنے پر یہاں گھنٹی بجے گی۔',
+    keep_open:'آن لائن رہتے ہوئے ایپ کھلی اور اسکرین آن رکھیں۔',
+    accept:'ڈیلیوری قبول کریں', pick_from:'یہاں سے کھانا اٹھائیں', deliver_to:'یہاں پہنچائیں', picked:'میں نے آرڈر اٹھا لیا',
+    delivered:'پہنچ گیا، رقم لے لی', give_back:'یہ ڈیلیوری واپس کریں', open_maps:'نقشے میں کھولیں', call:'کال',
+    cash_collect:'وصول کرنے کی رقم', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
+    confirm_picked:'کیا آپ نے ریسٹورنٹ سے آرڈر اٹھا لیا؟',
+    confirm_delivered:'کیا آپ نے کھانا دے دیا اور رقم لے لی؟',
+    confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
+    today:'آج', deliveries_n:'ڈیلیوریاں', my_earnings:'میری کمائی', cash_in_hand:'وصول شدہ رقم',
+    handover:'Khoupeyo کو دینے والی رقم', handover_note:'وصول شدہ رقم منفی آپ کی اجرت، ان ڈیلیوریوں کی جو ابھی حساب میں نہیں آئیں۔',
+    recent:'حالیہ ڈیلیوریاں', no_recent:'ابھی کوئی مکمل ڈیلیوری نہیں۔',
+    enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
+    saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
+    bad_phone:'درست فون نمبر لکھیں، جیسے 0300 1234567', st_rider_assigned:'ریسٹورنٹ جائیں', st_picked_up:'گاہک کی طرف جا رہے ہیں',
+    taken:'معذرت، یہ ڈیلیوری کوئی اور لے چکا ہے', accepted:'ڈیلیوری قبول ہو گئی',
+    no_phone:'فون نمبر نہیں', customer:'گاہک', vehicle_label:'سواری'
+  }
+};
+const state = {
+  lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, tab:'jobs', authMode:'login',
+  mine:[], available:[], done:[], sound: ls.get('kh_rd_sound', true), seen:new Set(), busy:false
+};
+const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
+function toast(msg, isErr){
+  const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
+}
+async function run(fn){ try { return await fn(); } catch (e) { logErr(e); toast((e && e.message) || t('error'), true); } }
+
+// ---- Alert sound, vibration, screen wake ----
+let actx = null;
+function unlockAudio(){
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {}
+}
+document.addEventListener('pointerdown', unlockAudio);
+const audioReady = () => !!actx && actx.state === 'running';
+function beep(){
+  if (state.sound && audioReady()){
+    try {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = 660; g.gain.value = 0.3; o.connect(g); g.connect(actx.destination); o.start();
+      setTimeout(() => { o.frequency.value = 990; }, 180); setTimeout(() => o.stop(), 460);
+    } catch (e) {}
+  }
+  try { if (navigator.vibrate) navigator.vibrate([250, 120, 250]); } catch (e) {}
+}
+let wakeLock = null;
+async function keepAwake(){
+  try { if ('wakeLock' in navigator){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.user && state.rider && state.rider.is_approved){ if (state.rider.is_online) keepAwake(); refresh(true); } });
+
+// ---- Location (shared while online) ----
+let geoWatch = null, lastSent = 0;
+function startGeo(){
+  if (geoWatch !== null || !navigator.geolocation) return;
+  geoWatch = navigator.geolocation.watchPosition(pos => {
+    const now = Date.now(); if (now - lastSent < 30000) return; lastSent = now;
+    sb.from('riders').update({ current_lat:pos.coords.latitude, current_lng:pos.coords.longitude, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
+  }, () => {}, { enableHighAccuracy:true, maximumAge:15000, timeout:20000 });
+}
+function stopGeo(){ if (geoWatch !== null){ navigator.geolocation.clearWatch(geoWatch); geoWatch = null; } }
+
+// ---- Screens ----
+function showAuth(msg, ok){
+  const signup = state.authMode === 'signup';
+  $('app').innerHTML = `
+  <div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Rider</p>
+    <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
+    <form onsubmit="A.submitAuth(event)">
+      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
+      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567">` : ''}
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
+      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
+    </form>
+    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+    <div class="ver">v${APP_VERSION}</div>
+  </div>`;
+}
+function showProfileForm(){
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${t('rider_profile')}</h1>
+    <label class="f" for="p_vehicle">${t('vehicle')}</label>
+    <select id="p_vehicle"><option value="motorbike">${t('v_bike')}</option><option value="bicycle">${t('v_bicycle')}</option><option value="car">${t('v_car')}</option></select>
+    <label class="f" for="p_cnic">${t('cnic')}</label><input id="p_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x">
+    <div class="actions"><button class="btn" id="profBtn" onclick="A.submitProfile()">${t('submit')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div></div>`;
+}
+function showPending(){
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${t('pending_title')}</h1>
+    <p class="muted">${t('pending_msg')}</p>
+    <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
+function renderShell(){
+  $('app').innerHTML = `
+    <header class="top">
+      <div class="brand">Khoupeyo<b>.</b><small>Rider</small></div>
+      <button class="statusbtn ${state.rider.is_online ? '' : 'off'}" id="onlineBtn" onclick="A.toggleOnline()">${state.rider.is_online ? t('online') : t('offline')}</button>
+    </header>
+    <main id="view"></main>
+    <nav class="nav"><div class="nav-in">
+      <button id="t_jobs" onclick="go('jobs')">${t('jobs')}</button>
+      <button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
+      <button id="t_acct" onclick="go('acct')">${t('account')}</button>
+    </div></nav>`;
+}
+function markTab(){ [['jobs','t_jobs'],['earn','t_earn'],['acct','t_acct']].forEach(([k, id]) => { const b = $(id); if (b) b.classList.toggle('on', state.tab === k); }); }
+async function go(tab){
+  state.tab = tab; markTab(); const v = $('view'); if (!v) return;
+  v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  await run(async () => { if (tab === 'jobs') await loadJobs(); if (tab === 'earn') await loadDone(); });
+  renderTab(); window.scrollTo(0, 0);
+}
+function renderTab(){
+  const v = $('view'); if (!v) return;
+  if (state.tab === 'jobs') v.innerHTML = viewJobs();
+  if (state.tab === 'earn') v.innerHTML = viewEarn();
+  if (state.tab === 'acct') v.innerHTML = viewAcct();
+  document.title = state.available.length && state.rider.is_online ? `(${state.available.length}) Khoupeyo Rider` : 'Khoupeyo Rider';
+}
+
+// ---- Data ----
+async function loadMine(){
+  const { data, error } = await sb.from('orders')
+    .select('*, restaurant:restaurants(name,address,phone,lat,lng), customer:profiles!customer_id(full_name,phone), order_items(name,quantity,note)')
+    .eq('rider_id', state.rider.id).in('status', ['rider_assigned', 'picked_up']).order('created_at');
+  if (error) throw error; state.mine = data;
+}
+async function loadAvailable(){
+  if (!state.rider.is_online){ state.available = []; return; }
+  const { data, error } = await sb.rpc('available_deliveries');
+  if (error) throw error; state.available = data || [];
+  let fresh = false;
+  state.available.forEach(j => { if (!state.seen.has(j.order_id)){ state.seen.add(j.order_id); fresh = true; } });
+  if (fresh && state.firstLoadDone) beep();
+  state.firstLoadDone = true;
+}
+async function loadJobs(){ await Promise.all([loadMine(), loadAvailable()]); }
+async function loadDone(){
+  const { data, error } = await sb.from('orders')
+    .select('id,created_at,delivered_at,total,rider_pay,rider_settled,restaurant:restaurants(name)')
+    .eq('rider_id', state.rider.id).eq('status', 'delivered').order('delivered_at', { ascending:false }).limit(200);
+  if (error) throw error; state.done = data;
+}
+let refreshing = false;
+async function refresh(soft){
+  if (refreshing || !state.rider) return; refreshing = true;
+  try { if (state.tab === 'jobs'){ await loadJobs(); renderTab(); } else { await loadAvailable(); document.title = state.available.length ? `(${state.available.length}) Khoupeyo Rider` : 'Khoupeyo Rider'; } }
+  catch (e) { logErr(e); } finally { refreshing = false; }
+}
+
+// ---- Deliveries tab ----
+function activeCard(o){
+  const r = o.restaurant || {}, c = o.customer || {};
+  const items = (o.order_items || []).map(i => `<div>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('');
+  const picked = o.status === 'picked_up';
+  const restBlock = `<div class="step ${picked ? 'done' : ''}"><div class="n">1</div><div style="flex:1">
+      <div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(r.name || '')}</b>
+      <div class="muted">${esc(r.address || '')}</div>
+      <div class="two" style="margin-top:8px">${r.phone ? `<a class="btn ghost small" href="tel:${esc(r.phone)}">${t('call')}</a>` : '<span></span>'}
+      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(r.lat, r.lng, (r.name || '') + ' ' + (r.address || ''))}">${t('open_maps')}</a></div>
+      <div class="muted" style="margin-top:8px;font-size:14px">${t('items')}:</div><div style="font-size:15px">${items}</div></div></div>`;
+  const custBlock = `<div class="step ${picked ? '' : 'todo'}"><div class="n">2</div><div style="flex:1">
+      <div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(c.full_name || t('customer'))}</b>
+      <div class="muted">${esc(o.address_text || '')}</div>
+      ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+      ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')} ${esc(c.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}
+      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(o.address_lat, o.address_lng, o.address_text)}">${t('open_maps')}</a></div>` : ''}</div></div>`;
+  const cash = `<div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>`;
+  const action = picked
+    ? `<button class="btn" onclick="A.markDelivered('${o.id}')">${t('delivered')}</button>`
+    : `<button class="btn" onclick="A.markPicked('${o.id}')">${t('picked')}</button>
+       <button class="btn warn small" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>`;
+  return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
+    <span class="pill">${t('st_' + o.status)}</span></div>${restBlock}${custBlock}${cash}
+    <div class="line muted"><span>${t('your_pay')}</span><b>${money(o.rider_pay)}</b></div><div class="actions">${action}</div></div>`;
+}
+function jobCard(j){
+  return `<div class="card"><div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${timeAgo(j.created_at)}</span></div>
+    <div class="muted">${esc(j.restaurant_address || '')}</div>
+    <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
+    <div class="cash"><span>${t('your_pay')}</span><b>${money(j.rider_pay)}</b></div>
+    <div class="line muted"><span>${t('cash_collect')}</span><span>${money(j.total)}</span></div>
+    <div class="actions"><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div></div>`;
+}
+function viewJobs(){
+  const sound = (!audioReady() && state.sound && state.rider.is_online) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
+  if (!state.rider.is_online && !state.mine.length){
+    return `<div class="empty">${t('offline_msg')}<br><br><button class="btn" style="max-width:260px;margin:0 auto" onclick="A.toggleOnline()">${t('go_online')}</button></div>`;
+  }
+  const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
+  const jobs = state.rider.is_online ? (state.available.length ? `<h2>${t('new_jobs')} <span class="count">${state.available.length}</span></h2>${state.available.map(jobCard).join('')}`
+    : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
+  return sound + mine + jobs;
+}
+
+// ---- Earnings tab ----
+function viewEarn(){
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const today = state.done.filter(o => new Date(o.delivered_at || o.created_at) >= start);
+  const sum = (list, f) => list.reduce((n, o) => n + Number(f(o) || 0), 0);
+  const unsettled = state.done.filter(o => !o.rider_settled);
+  const hand = sum(unsettled, o => o.total) - sum(unsettled, o => o.rider_pay);
+  const rows = state.done.slice(0, 20).map(o => `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at || o.created_at)}</div></div>
+    <div style="text-align:end"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)}</div></div></div>`).join('');
+  return `<h1>${t('earnings')}</h1>
+    <h2 style="margin-top:0">${t('today')}</h2>
+    <div class="stat"><div><b>${today.length}</b><span class="muted">${t('deliveries_n')}</span></div><div><b>${money(sum(today, o => o.rider_pay))}</b><span class="muted">${t('my_earnings')}</span></div></div>
+    <div class="cash" style="margin-top:14px"><span>${t('handover')}</span><b>${money(hand)}</b></div>
+    <div class="muted" style="font-size:13px">${t('handover_note')}</div>
+    <h2>${t('recent')}</h2>${rows || `<div class="empty">${t('no_recent')}</div>`}`;
+}
+
+// ---- Account tab ----
+function viewAcct(){
+  const p = state.profile || {}, r = state.rider;
+  return `<h1>${t('account')}</h1>
+    <div class="card"><b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div><div class="muted">${esc(state.user.email)}</div>
+    <div class="muted" style="margin-top:6px">${t('vehicle_label')}: ${esc(r.vehicle || '')}</div></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
+      <input type="checkbox" style="width:24px;height:24px" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"></div>
+    <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+    <button class="btn warn" onclick="A.logout()">${t('logout')}</button></div>
+    <p class="ver" style="margin-top:14px">Khoupeyo Rider v${APP_VERSION}</p>`;
+}
+
+// ---- Actions ----
+let pollTimer = null, channel = null;
+const A = {
+  toggleLang(onAuth){
+    state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
+    if (onAuth || !state.rider || !state.rider.is_approved) { if (state.user) return recheckScreen(); return showAuth(); }
+    renderShell(); markTab(); renderTab();
+  },
+  switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  async submitAuth(e){
+    e.preventDefault(); unlockAudio();
+    const signup = state.authMode === 'signup';
+    const email = $('a_email').value.trim(), pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    if (!email || !pw){ msg.textContent = t('enter_all'); return; }
+    if (pw.length < 6){ msg.textContent = t('short_pw'); return; }
+    let name = '', phone = '';
+    if (signup){
+      name = $('a_name').value.trim(); phone = normalizePhone($('a_phone').value);
+      if (!name){ msg.textContent = t('enter_all'); return; }
+      if (!phone){ msg.textContent = t('bad_phone'); return; }
+    }
+    const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
+    try {
+      if (signup){
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        if (error) throw error;
+        if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
+        await afterLogin(data.user);
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+        if (error) throw error; await afterLogin(data.user);
+      }
+    } catch (err) {
+      logErr(err);
+      const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
+      const el = $('authMsg'); if (el) el.textContent = m;
+      const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
+    }
+  },
+  async submitProfile(){
+    const btn = $('profBtn'); btn.disabled = true;
+    await run(async () => {
+      const row = { profile_id:state.user.id, vehicle:$('p_vehicle').value, cnic:$('p_cnic').value.trim() || null };
+      const { error } = await sb.from('riders').insert(row); if (error) throw error;
+      await loadRider(); route();
+    });
+    const b = $('profBtn'); if (b) b.disabled = false;
+  },
+  async recheck(){ await run(async () => { await loadRider(); await route(); }); },
+  async logout(){
+    if (state.rider && state.rider.is_approved && state.rider.is_online) { try { await sb.from('riders').update({ is_online:false }).eq('id', state.rider.id); } catch (e) {} }
+    await sb.auth.signOut(); stopGeo();
+    if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if (channel){ sb.removeChannel(channel); channel = null; }
+    state.user = null; state.rider = null; state.profile = null; state.mine = []; state.available = []; state.authMode = 'login'; showAuth();
+  },
+  async toggleOnline(){
+    const v = !state.rider.is_online;
+    await run(async () => {
+      const { error } = await sb.from('riders').update({ is_online:v }).eq('id', state.rider.id); if (error) throw error;
+      state.rider.is_online = v; unlockAudio();
+      const b = $('onlineBtn'); if (b){ b.textContent = v ? t('online') : t('offline'); b.classList.toggle('off', !v); }
+      if (v){ startGeo(); keepAwake(); } else stopGeo();
+      state.firstLoadDone = false; state.seen = new Set();
+      await go('jobs');
+    });
+  },
+  enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
+  setSound(v){ state.sound = v; ls.set('kh_rd_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
+
+  async acceptJob(id){
+    await run(async () => {
+      const { error } = await sb.rpc('accept_delivery', { p_order_id:id });
+      if (error) { await loadJobs(); renderTab(); throw error; }
+      toast(t('accepted')); await loadJobs(); renderTab();
+    });
+  },
+  async markPicked(id){
+    if (!confirm(t('confirm_picked'))) return;
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:'picked_up' }); if (error) throw error;
+      await loadJobs(); renderTab(); toast(t('saved'));
+    });
+  },
+  async markDelivered(id){
+    if (!confirm(t('confirm_delivered'))) return;
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:'delivered' }); if (error) throw error;
+      await loadJobs(); renderTab(); toast(t('saved'));
+    });
+  },
+  async giveBack(id){
+    if (!confirm(t('confirm_giveback'))) return;
+    await run(async () => {
+      const { error } = await sb.rpc('release_delivery', { p_order_id:id }); if (error) throw error;
+      await loadJobs(); renderTab(); toast(t('saved'));
+    });
+  }
+};
+
+// ---- Start ----
+async function loadRider(){
+  const { data:prof } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
+  state.profile = prof || {};
+  const { data, error } = await sb.from('riders').select('*').eq('profile_id', state.user.id).maybeSingle();
+  if (error) throw error; state.rider = data;
+}
+function recheckScreen(){
+  if (!state.rider) return showProfileForm();
+  if (!state.rider.is_approved) return showPending();
+}
+async function route(){
+  if (!state.rider) return showProfileForm();
+  if (!state.rider.is_approved) return showPending();
+  await startApp();
+}
+async function startApp(){
+  renderShell();
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('rider-orders').on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:'rider_id=eq.' + state.rider.id }, () => refresh(true)).subscribe();
+  } catch (e) { console.warn('Live updates are off', e); }
+  if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refresh(true); }, 8000);
+  if (state.rider.is_online){ startGeo(); keepAwake(); }
+  await go('jobs');
+}
+async function afterLogin(user){ state.user = user; await loadRider(); await route(); }
+(async function boot(){
+  applyLang();
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user); else showAuth();
+  } catch (e) { logErr(e); showAuth(t('error')); }
+})();
+</script>
+</body>
+</html>
