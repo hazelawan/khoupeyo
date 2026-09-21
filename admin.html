@@ -32,7 +32,7 @@ main{padding:12px 16px 110px}
 h2{font-size:22px;letter-spacing:-.01em;margin:8px 0 12px}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav-inner{display:flex;width:100%;max-width:760px}
-.nav button{flex:1;background:none;border:0;padding:12px 4px 10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:14px;border-top:3px solid transparent}
+.nav button{flex:1;background:none;border:0;padding:12px 4px 10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px;border-top:3px solid transparent}
 .nav button.on{color:var(--green);border-top-color:var(--marigold)}
 .bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600}
@@ -99,7 +99,7 @@ a{color:var(--green)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 const APP_DATE = '20 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -112,7 +112,7 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 
-const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], menuRestaurant:null, categories:[], items:[] };
+const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], adminRiders:[], riderStats:{}, menuRestaurant:null, categories:[], items:[] };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -223,7 +223,7 @@ async function loadRiders(){
 }
 async function loadOrders(){
   const { data, error } = await sb.from('orders')
-    .select('*, restaurant:restaurants(name), customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price)')
+    .select('*, restaurant:restaurants(name), customer:profiles!customer_id(full_name,phone), rider:riders(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
     .order('created_at', { ascending:false }).limit(100);
   if (error) throw error; state.orders = data;
 }
@@ -256,7 +256,7 @@ function showApp(){
   renderNav(); go(state.tab);
 }
 function renderNav(){
-  const tabs = [['orders','Orders'],['restaurants','Restaurants'],['menu','Menu'],['zones','Zones']];
+  const tabs = [['orders','Orders'],['restaurants','Shops'],['menu','Menu'],['riders','Riders'],['zones','Zones']];
   $('nav').innerHTML = tabs.map(([k,l]) => `<button class="${state.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
 }
 async function go(tab){
@@ -264,6 +264,7 @@ async function go(tab){
   $('main').innerHTML = '<div class="empty">Loading…</div>';
   await run(async () => {
     if (tab === 'orders') await loadOrders();
+    if (tab === 'riders') await loadRiderAdmin();
     if (tab === 'menu') { if (!state.menuRestaurant && state.restaurants[0]) state.menuRestaurant = state.restaurants[0].id; await loadMenu(); }
   });
   renderTab();
@@ -273,6 +274,7 @@ function renderTab(){
   if (state.tab === 'orders') m.innerHTML = viewOrders();
   if (state.tab === 'restaurants') m.innerHTML = viewRestaurants();
   if (state.tab === 'menu') m.innerHTML = viewMenu();
+  if (state.tab === 'riders') m.innerHTML = viewRiders();
   if (state.tab === 'zones') m.innerHTML = viewZones();
   if (state.tab === 'publish') m.innerHTML = viewPublish();
 }
@@ -280,6 +282,12 @@ function renderTab(){
 // ---- Orders ----
 function viewOrders(){
   const list = state.orders.filter(o => state.orderFilter === 'all' ? true : !FINAL.includes(o.status));
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const todayOrders = state.orders.filter(o => new Date(o.created_at) >= dayStart);
+  const deliveredToday = todayOrders.filter(o => o.status === 'delivered');
+  const salesToday = deliveredToday.reduce((n, o) => n + Number(o.subtotal || 0), 0);
+  const tile = (v, l) => `<div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center"><b style="display:block;font-size:18px">${v}</b><span class="muted" style="font-size:12px">${l}</span></div>`;
+  const stats = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">${tile(todayOrders.length, 'Orders today')}${tile(deliveredToday.length, 'Delivered')}${tile(money(salesToday), 'Food sales')}</div>`;
   const rows = list.map(o => {
     const idx = STEPS.indexOf(o.status);
     const seg = STEPS.map((s,i) => `<i class="${i<=idx?'on':''}"></i>`).join('');
@@ -292,7 +300,7 @@ function viewOrders(){
       <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div>
     </button>`;
   }).join('');
-  return `<h2>Orders</h2>
+  return `<h2>Orders</h2>${stats}
     <div class="bar">
       <button class="chip ${state.orderFilter==='active'?'on':''}" onclick="A.filter('active')">Active</button>
       <button class="chip ${state.orderFilter==='all'?'on':''}" onclick="A.filter('all')">All</button>
@@ -410,12 +418,45 @@ function itemForm(i){
     </div>`;
 }
 
+// ---- Riders ----
+async function loadRiderAdmin(){
+  const [r, o] = await Promise.all([
+    sb.from('riders').select('id,profile_id,vehicle,cnic,is_approved,is_online,location_updated_at,created_at,profile:profiles(full_name,phone)').order('created_at'),
+    sb.from('orders').select('rider_id,total,rider_pay').eq('status', 'delivered').eq('rider_settled', false).limit(5000)
+  ]);
+  if (r.error) throw r.error; if (o.error) throw o.error;
+  state.adminRiders = r.data; const st = {};
+  o.data.forEach(x => { const s = st[x.rider_id] || (st[x.rider_id] = { n:0, cash:0, pay:0 }); s.n++; s.cash += Number(x.total || 0); s.pay += Number(x.rider_pay || 0); });
+  state.riderStats = st;
+}
+function viewRiders(){
+  const pending = state.adminRiders.filter(r => !r.is_approved);
+  const active = state.adminRiders.filter(r => r.is_approved);
+  const box = 'border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:var(--surface)';
+  const pRows = pending.map(r => `<div style="${box}"><div class="row-title">${esc(r.profile ? r.profile.full_name : 'Rider')}</div>
+    <div class="row-sub">${esc(r.profile ? r.profile.phone || '' : '')}, ${esc(r.vehicle || '')}${r.cnic ? ', CNIC ' + esc(r.cnic) : ''}</div>
+    <div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.approveRider('${r.id}')">Approve</button><button class="btn warn" onclick="A.rejectRider('${r.id}')">Reject</button></div></div>`).join('');
+  const aRows = active.map(r => {
+    const s = state.riderStats[r.id] || { n:0, cash:0, pay:0 };
+    return `<div style="${box}"><div class="row-title">${esc(r.profile ? r.profile.full_name : 'Rider')}<span class="pill ${r.is_online ? '' : 'off'}" style="${r.is_online ? 'background:var(--green)' : ''}">${r.is_online ? 'Online' : 'Offline'}</span></div>
+      <div class="row-sub">${r.profile && r.profile.phone ? `<a href="tel:${esc(r.profile.phone)}">${esc(r.profile.phone)}</a>` : ''} ${esc(r.vehicle || '')}</div>
+      <div class="kv"><span class="muted">Deliveries not settled</span><span>${s.n}</span></div>
+      <div class="kv"><span class="muted">Cash collected</span><span>${money(s.cash)}</span></div>
+      <div class="kv"><span class="muted">Rider pay</span><span>${money(s.pay)}</span></div>
+      <div class="kv total"><span>Rider must hand over</span><span>${money(s.cash - s.pay)}</span></div>
+      <div class="bar" style="margin:10px 0 0">${s.n ? `<button class="btn" onclick="A.settleRider('${r.id}')">Mark settled</button>` : ''}<button class="btn warn" onclick="A.blockRider('${r.id}')">Block</button></div></div>`;
+  }).join('');
+  return `<h2>Riders</h2>
+    ${pending.length ? `<h3 style="margin:8px 0">New requests (${pending.length})</h3>${pRows}` : ''}
+    ${aRows || '<div class="empty">No approved riders yet. A rider signs up in the Rider app, then you approve them here.</div>'}`;
+}
+
 // ---- Zones ----
 function viewZones(){
   const rows = state.zones.map(z => `
     <button class="row" onclick="A.editZone('${z.id}')">
       <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active?'':'<span class="pill off">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
-      <div class="row-side">${money(z.delivery_fee)}<small>Min order ${money(z.min_order)}</small></div>
+      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}, rider ${money(z.rider_pay ?? 60)}</small></div>
     </button>`).join('');
   return `<h2>Delivery zones</h2>
     <div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
@@ -430,6 +471,7 @@ function zoneForm(z){
       <div><label class="f" for="z_fee">Delivery fee (PKR)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
       <div><label class="f" for="z_min">Minimum order (PKR)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
     </div>
+    <label class="f" for="z_pay">Rider pay per delivery (PKR)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
     <label class="check"><input id="z_active" type="checkbox" ${z.is_active?'checked':''}> Zone is open for orders</label>
     <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
 }
@@ -453,7 +495,8 @@ const A = {
     openSheet(`${o.restaurant?.name || 'Order'}`, `
       <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${timeAgo(o.created_at)}</span></div>
       <div><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}</div>
-      <div class="muted" style="margin:4px 0 12px">${esc(o.address_text || 'No address')}</div>
+      <div class="muted" style="margin:4px 0 8px">${esc(o.address_text || 'No address')}</div>
+      ${o.rider && o.rider.profile ? `<div style="margin-bottom:12px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : '<div style="height:4px"></div>'}
       ${o.customer_note ? `<div style="margin-bottom:12px"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
       ${items}
       <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
@@ -578,11 +621,42 @@ const A = {
     });
   },
 
+  async approveRider(id){
+    const r = state.adminRiders.find(x => x.id === id); if (!r) return;
+    await run(async () => {
+      const { error } = await sb.from('riders').update({ is_approved:true }).eq('id', id); if (error) throw error;
+      await sb.from('profiles').update({ role:'rider' }).eq('id', r.profile_id).eq('role', 'customer');
+      await loadRiderAdmin(); await loadRiders(); renderTab(); toast('Rider approved');
+    });
+  },
+  async rejectRider(id){
+    if (!confirm('Reject and remove this rider request?')) return;
+    await run(async () => {
+      const { error } = await sb.from('riders').delete().eq('id', id); if (error) throw error;
+      await loadRiderAdmin(); renderTab(); toast('Removed');
+    });
+  },
+  async blockRider(id){
+    if (!confirm('Block this rider? They will stop seeing deliveries.')) return;
+    await run(async () => {
+      const { error } = await sb.from('riders').update({ is_approved:false, is_online:false }).eq('id', id); if (error) throw error;
+      await loadRiderAdmin(); await loadRiders(); renderTab(); toast('Rider blocked');
+    });
+  },
+  async settleRider(id){
+    const s = state.riderStats[id]; if (!s) return;
+    if (!confirm(`Mark ${s.n} deliveries as settled? The rider hands over ${money(s.cash - s.pay)}.`)) return;
+    await run(async () => {
+      const { error } = await sb.from('orders').update({ rider_settled:true }).eq('rider_id', id).eq('status', 'delivered').eq('rider_settled', false);
+      if (error) throw error;
+      await loadRiderAdmin(); renderTab(); toast('Settled');
+    });
+  },
   editZone(id){ const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
   async saveZone(id){
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
-      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:Number($('z_fee').value || 0), min_order:Number($('z_min').value || 0), is_active:$('z_active').checked };
+      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:Number($('z_fee').value || 0), min_order:Number($('z_min').value || 0), rider_pay:Number($('z_pay').value || 0), is_active:$('z_active').checked };
       const q = id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row);
       const { error } = await q; if (error) throw error;
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
