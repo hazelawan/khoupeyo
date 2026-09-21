@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Khoupeyo Restaurant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E;
+  --s-placed:#B7791F; --s-accepted:#2A6F97; --s-preparing:#C4571A; --s-ready:#0F766E;
+  --s-rider_assigned:#6B4FA0; --s-picked_up:#6B4FA0; --s-delivered:#1F6F4A; --s-cancelled:#B3261E; --s-rejected:#B3261E;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.7}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--green)}
+#app{max-width:640px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.15}
+.brand b{color:var(--marigold)}
+.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+.pillbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:14px}
+.statusbtn{border:0;border-radius:999px;padding:9px 16px;font-weight:800;cursor:pointer;color:#fff;background:var(--green)}
+.statusbtn.off{background:var(--muted)}
+main{padding:14px 16px 120px}
+h1{font-size:24px;margin:6px 0 12px}
+h2{font-size:18px;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
+.count{background:var(--marigold);color:#1E2B25;font-size:13px;font-weight:800;border-radius:999px;padding:1px 9px}
+.muted{color:var(--muted)}
+.empty{padding:34px 10px;text-align:center;color:var(--muted)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:15px 16px;font-weight:700;cursor:pointer;text-align:center;font-size:17px}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.btn[disabled]{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text],input[type=password],input[type=email],input[type=tel],input[type=number],textarea,select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.card.new{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.oid{font-weight:800;font-size:18px}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff}
+.line{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.cust{margin:6px 0;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.actions{display:grid;gap:10px;margin-top:12px}
+.note{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.soundbar{background:var(--marigold);color:#1E2B25;border:0;width:100%;border-radius:12px;padding:12px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{display:flex;max-width:640px;margin:0 auto}
+.nav button{flex:1;background:none;border:0;padding:14px 4px 12px;font-weight:700;font-size:15px;color:var(--muted);border-top:3px solid transparent;cursor:pointer}
+.nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:start;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 2px}
+.row-main{flex:1;min-width:0;cursor:pointer;background:none;border:0;text-align:start;padding:0}
+.thumb{width:48px;height:48px;border-radius:10px;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.switch{position:relative;display:block;width:50px;height:28px;flex:none;margin:0 auto 3px}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--green)}
+.switch input:checked + span::after{transform:translateX(22px)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:11px 18px;cursor:pointer;font-weight:700}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.cat{margin:20px 0 4px;font-size:18px;font-weight:800}
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sheet-head h3{margin:0;font-size:20px}
+.x{background:none;border:0;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+.preview{width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px}
+.check{display:flex;align-items:center;gap:10px;margin:14px 0 4px}
+.check input{width:22px;height:22px}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:30;max-width:90%;font-weight:600;text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+.auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
+.auth .brand{font-size:40px}
+.err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
+.link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
+.ver{font-size:12px;color:var(--muted);font-weight:600}
+.stat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-size:24px}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Version: change this every time the file is updated ----
+const APP_VERSION = '1.1';
+
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+// This app keeps its own login, separate from the customer and admin apps
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-restaurant-auth' } });
+
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => 'Rs ' + Number(n || 0).toLocaleString('en-PK');
+function timeAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return '0 min';
+  if (m < 60) return m + ' min';
+  const h = Math.round(m / 60);
+  return h < 24 ? h + ' h' : new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function logErr(e){ try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); } }
+
+// ---- Words: English and Urdu ----
+const I18N = {
+  en: {
+    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
+    have_account:'Already have an account? Log in', no_account:'New here? Create an account',
+    orders:'Orders', menu:'Menu', shop:'Shop', new_orders:'New orders', in_kitchen:'In the kitchen', ready_pickup:'Ready for pickup',
+    done_today:'Finished today', no_orders:'No orders right now. New orders will ring here.',
+    accept:'Accept order', reject:'Reject', start_prep:'Start preparing', mark_ready:'Mark ready',
+    prep_q:'Ready in how many minutes?', min:'min', reject_q:'Why are you rejecting this order?',
+    r1:'Item not available', r2:'Too busy right now', r3:'Closing soon', r4:'Other reason',
+    waiting_rider:'Waiting for the rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider',
+    st_placed:'New', st_accepted:'Accepted', st_preparing:'Preparing', st_ready:'Ready', st_rider_assigned:'Rider assigned',
+    st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
+    order_value:'Order value', cust_note:'Customer note', call:'Call',
+    open_now:'Open', closed_now:'Closed', prep_default:'Usual preparing time (minutes)',
+    today:'Today', orders_n:'Orders', sales:'Sales (food only)', sound:'Alert sound', on:'On', off:'Off',
+    enable_sound:'Tap here to turn on the alert sound', logout:'Log out', language:'Language',
+    saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    not_linked:'Your account is not linked to a restaurant yet',
+    not_linked_msg:'Send this email address to the Khoupeyo admin. They will link it to your restaurant:',
+    check_again:'Check again', in_stock:'In stock', out_stock:'Out of stock', edit_item:'Edit item',
+    price:'Price (Rs)', item_name:'Item name', description:'Description', photo:'Photo', save:'Save', cancel:'Cancel',
+    new_badge:'NEW ORDER', confirm_email:'Account created. Check your email to confirm it, then log in.',
+    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields',
+    short_pw:'Password must be at least 6 characters', menu_empty:'The menu is empty. Ask the admin to add items.',
+    order_no:'Order', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
+    keep_open:'Keep this app open and the screen on to hear new orders.',
+    customer:'Customer', no_phone:'No phone number'
+  },
+  ur: {
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
+    orders:'آرڈرز', menu:'مینو', shop:'دکان', new_orders:'نئے آرڈرز', in_kitchen:'تیار ہو رہے ہیں', ready_pickup:'اٹھانے کے لیے تیار',
+    done_today:'آج مکمل ہوئے', no_orders:'ابھی کوئی آرڈر نہیں۔ نیا آرڈر آنے پر یہاں گھنٹی بجے گی۔',
+    accept:'آرڈر قبول کریں', reject:'مسترد کریں', start_prep:'تیاری شروع کریں', mark_ready:'تیار ہے',
+    prep_q:'کتنے منٹ میں تیار ہوگا؟', min:'منٹ', reject_q:'آرڈر مسترد کرنے کی وجہ کیا ہے؟',
+    r1:'آئٹم دستیاب نہیں', r2:'ابھی بہت رش ہے', r3:'دکان بند ہونے والی ہے', r4:'کوئی اور وجہ',
+    waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا',
+    st_placed:'نیا', st_accepted:'قبول', st_preparing:'تیاری میں', st_ready:'تیار', st_rider_assigned:'رائیڈر مقرر',
+    st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
+    order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال',
+    open_now:'کھلا ہے', closed_now:'بند ہے', prep_default:'عام تیاری کا وقت (منٹ)',
+    today:'آج', orders_n:'آرڈرز', sales:'فروخت (صرف کھانا)', sound:'الرٹ کی آواز', on:'آن', off:'آف',
+    enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', logout:'لاگ آؤٹ', language:'زبان',
+    saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    not_linked:'آپ کا اکاؤنٹ ابھی کسی ریسٹورنٹ سے نہیں جڑا',
+    not_linked_msg:'یہ ای میل ایڈریس Khoupeyo کے ایڈمن کو بھیجیں، وہ اسے آپ کے ریسٹورنٹ سے جوڑ دیں گے:',
+    check_again:'دوبارہ دیکھیں', in_stock:'موجود ہے', out_stock:'ختم ہے', edit_item:'آئٹم تبدیل کریں',
+    price:'قیمت (Rs)', item_name:'آئٹم کا نام', description:'تفصیل', photo:'تصویر', save:'محفوظ کریں', cancel:'منسوخ',
+    new_badge:'نیا آرڈر', confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں',
+    short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو', menu_empty:'مینو خالی ہے۔ ایڈمن سے آئٹمز شامل کروائیں۔',
+    order_no:'آرڈر', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
+    keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
+    customer:'گاہک', no_phone:'فون نمبر نہیں'
+  }
+};
+const state = {
+  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], cats:[], items:[], tab:'orders',
+  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20
+};
+const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
+function toast(msg, isErr){
+  const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
+}
+async function run(fn){ try { return await fn(); } catch (e) { logErr(e); toast((e && e.message) || t('error'), true); } }
+
+// ---- Bottom sheet ----
+function openSheet(title, html){
+  closeSheet();
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div>${html}</div>`;
+  back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
+  document.body.appendChild(back);
+}
+function closeSheet(){ const s = $('sheet'); if (s) s.remove(); }
+
+// ---- Alert sound, vibration, screen wake ----
+let actx = null;
+function unlockAudio(){
+  try {
+    if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) {}
+}
+document.addEventListener('pointerdown', unlockAudio);
+const audioReady = () => !!actx && actx.state === 'running';
+function beep(){
+  if (state.sound && audioReady()){
+    try {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.3;
+      o.connect(g); g.connect(actx.destination); o.start();
+      setTimeout(() => { o.frequency.value = 1175; }, 180); setTimeout(() => o.stop(), 460);
+    } catch (e) {}
+  }
+  try { if (navigator.vibrate) navigator.vibrate([250, 120, 250]); } catch (e) {}
+}
+let alertTimer = null;
+function startAlertLoop(){ if (!alertTimer) alertTimer = setInterval(() => { if (newCount() > 0) beep(); }, 4000); }
+let wakeLock = null;
+async function keepAwake(){
+  try { if ('wakeLock' in navigator){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.user){ keepAwake(); refreshOrders(true); } });
+const newCount = () => state.orders.filter(o => o.status === 'placed').length;
+function updateTitle(){ const n = newCount(); document.title = n ? `(${n}) ${t('new_badge')} - Khoupeyo` : 'Khoupeyo Restaurant'; }
+
+// ---- Auth ----
+function showAuth(msg, ok){
+  const signup = state.authMode === 'signup';
+  $('app').innerHTML = `
+  <div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Restaurant</p>
+    <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
+    <form onsubmit="A.submitAuth(event)">
+      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
+      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel">` : ''}
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
+      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
+    </form>
+    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+    <div class="ver">v${APP_VERSION}</div>
+  </div>`;
+}
+function showUnlinked(){
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${t('not_linked')}</h1>
+    <p class="muted">${t('not_linked_msg')}</p>
+    <div class="card" style="font-weight:800;word-break:break-all">${esc(state.user.email)}</div>
+    <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
+
+// ---- Shell ----
+function renderShell(){
+  const r = state.restaurant;
+  $('app').innerHTML = `
+    <header class="top">
+      <div class="brand">${esc(r.name)}<small>Khoupeyo Restaurant</small></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="statusbtn ${r.is_open ? '' : 'off'}" id="openBtn" onclick="go('shop')">${r.is_open ? t('open_now') : t('closed_now')}</button>
+      </div>
+    </header>
+    <main id="view"></main>
+    <nav class="nav"><div class="nav-in">
+      <button id="t_orders" onclick="go('orders')">${t('orders')}</button>
+      <button id="t_menu" onclick="go('menu')">${t('menu')}</button>
+      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>
+    </div></nav>`;
+}
+function markTab(){ ['orders','menu','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k); }); }
+async function go(tab){
+  state.tab = tab; markTab();
+  const v = $('view'); if (!v) return;
+  v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  await run(async () => {
+    if (tab === 'orders') await loadOrders();
+    if (tab === 'menu') await loadMenu();
+    if (tab === 'shop') await loadOrders();
+  });
+  renderTab(); window.scrollTo(0, 0);
+}
+function renderTab(){
+  const v = $('view'); if (!v) return;
+  if (state.tab === 'orders') v.innerHTML = viewOrders();
+  if (state.tab === 'menu') v.innerHTML = viewMenu();
+  if (state.tab === 'shop') v.innerHTML = viewShop();
+  updateTitle();
+}
+
+// ---- Orders ----
+async function loadOrders(){
+  const { data, error } = await sb.from('orders')
+    .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
+    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(100);
+  if (error) throw error; state.orders = data; updateTitle();
+}
+async function refreshOrders(soft){
+  await run(loadOrders);
+  if (state.tab === 'orders') renderTab();
+}
+function orderCard(o){
+  const items = (o.order_items || []).map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</span></div>`).join('');
+  const cust = o.customer || {};
+  let actions = '';
+  if (o.status === 'placed') actions = `<div class="two"><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button></div>`;
+  else if (o.status === 'accepted') actions = `<div class="actions"><button class="btn" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn ghost" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
+  else if (o.status === 'preparing') actions = `<div class="actions"><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
+  else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
+  else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>`;
+  else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>`;
+  return `<div class="card ${o.status === 'placed' ? 'new' : ''}">
+    <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
+      <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
+    <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}
+      <div class="muted">${esc(o.address_text || '')}</div></div>
+    ${items}
+    ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+    <div class="line" style="font-weight:800;margin-top:6px"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
+    ${actions}</div>`;
+}
+function viewOrders(){
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const by = fn => state.orders.filter(fn);
+  const fresh = by(o => o.status === 'placed');
+  const kitchen = by(o => o.status === 'accepted' || o.status === 'preparing');
+  const ready = by(o => ['ready', 'rider_assigned', 'picked_up'].includes(o.status));
+  const done = by(o => ['delivered', 'cancelled', 'rejected'].includes(o.status) && new Date(o.created_at) >= startOfDay);
+  const sect = (title, list, showCount) => list.length ? `<h2>${title} ${showCount ? `<span class="count">${list.length}</span>` : ''}</h2>${list.map(orderCard).join('')}` : '';
+  const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
+  const any = fresh.length || kitchen.length || ready.length || done.length;
+  return `${sound}${sect(t('new_orders'), fresh, true)}${sect(t('in_kitchen'), kitchen, true)}${sect(t('ready_pickup'), ready, true)}${sect(t('done_today'), done, false)}
+    ${any ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}`;
+}
+
+// ---- Menu ----
+async function loadMenu(){
+  const id = state.restaurant.id;
+  const [c, i] = await Promise.all([
+    sb.from('menu_categories').select('*').eq('restaurant_id', id).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id', id).order('sort_order').order('name')
+  ]);
+  if (c.error) throw c.error; if (i.error) throw i.error; state.cats = c.data; state.items = i.data;
+}
+function itemRow(i){
+  return `<div class="row">
+    ${i.photo_url ? `<img class="thumb" src="${esc(i.photo_url)}" alt="">` : `<div class="thumb">${esc((i.name || '?')[0])}</div>`}
+    <button class="row-main" onclick="A.editItem('${i.id}')"><div style="font-weight:700">${esc(i.name)}</div><div class="muted">${money(i.price)}</div></button>
+    <div style="text-align:center"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="${t('in_stock')}"><span></span></label><small class="muted">${i.is_available ? t('in_stock') : t('out_stock')}</small></div>
+  </div>`;
+}
+function viewMenu(){
+  if (!state.items.length) return `<h1>${t('menu')}</h1><div class="empty">${t('menu_empty')}</div>`;
+  const blocks = state.cats.map(c => {
+    const list = state.items.filter(i => i.category_id === c.id);
+    return list.length ? `<div class="cat">${esc(c.name)}</div>${list.map(itemRow).join('')}` : '';
+  }).join('');
+  const loose = state.items.filter(i => !state.cats.some(c => c.id === i.category_id));
+  return `<h1>${t('menu')}</h1>${blocks}${loose.length ? loose.map(itemRow).join('') : ''}`;
+}
+
+// ---- Shop ----
+function viewShop(){
+  const r = state.restaurant;
+  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+  const today = state.orders.filter(o => new Date(o.created_at) >= startOfDay);
+  const delivered = today.filter(o => o.status === 'delivered');
+  const sales = delivered.reduce((n, o) => n + Number(o.subtotal || 0), 0);
+  return `<h1>${t('shop')}</h1>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? t('is_open_msg') : t('is_closed_msg')}</div></div>
+      <label class="switch" style="margin:0"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen(this.checked)" aria-label="${t('open_now')}"><span></span></label>
+    </div>
+    <h2>${t('today')}</h2>
+    <div class="stat"><div><b>${today.length}</b><span class="muted">${t('orders_n')}</span></div><div><b>${money(sales)}</b><span class="muted">${t('sales')}</span></div></div>
+    <div class="card" style="margin-top:14px">
+      <label class="f" for="prep" style="margin-top:0">${t('prep_default')}</label>
+      <input id="prep" type="number" min="5" step="5" value="${r.prep_time_minutes || 25}">
+      <div style="margin-top:12px"><button class="btn ghost" onclick="A.savePrep()">${t('save')}</button></div>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <b>${t('sound')}</b>
+      <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+      <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
+    </div>
+    <p class="ver" style="margin-top:14px">Khoupeyo Restaurant v${APP_VERSION}</p>`;
+}
+
+// ---- Photos ----
+function resizeImage(file, max){
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error('Could not read this image')), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => rej(new Error('Could not read this image')); img.src = url;
+  });
+}
+async function uploadImage(file, folder){
+  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}.jpg`;
+  const { error } = await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' });
+  if (error) throw error; return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
+}
+function previewFile(input){ const f = input.files && input.files[0]; if (!f) return; const el = $('i_prev'); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
+
+// ---- Actions ----
+const A = {
+  toggleLang(onAuth){
+    state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
+    if (onAuth) showAuth(); else { renderShell(); markTab(); renderTab(); }
+  },
+  switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  async submitAuth(e){
+    e.preventDefault(); unlockAudio();
+    const signup = state.authMode === 'signup';
+    const email = $('a_email').value.trim(), pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    if (!email || !pw){ msg.textContent = t('enter_all'); return; }
+    if (pw.length < 6){ msg.textContent = t('short_pw'); return; }
+    let name = '', phone = '';
+    if (signup){ name = $('a_name').value.trim(); phone = $('a_phone').value.trim(); if (!name || !phone){ msg.textContent = t('enter_all'); return; } }
+    const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
+    try {
+      if (signup){
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        if (error) throw error;
+        if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
+        await afterLogin(data.user);
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+        if (error) throw error; await afterLogin(data.user);
+      }
+    } catch (err) {
+      logErr(err);
+      const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
+      const el = $('authMsg'); if (el) el.textContent = m;
+      const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
+    }
+  },
+  async logout(){
+    await sb.auth.signOut();
+    if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
+    if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if (channel){ sb.removeChannel(channel); channel = null; }
+    state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Khoupeyo Restaurant'; showAuth();
+  },
+  async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else toast(t('not_linked'), true); }); },
+  enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
+  setSound(v){ state.sound = v; ls.set('kh_r_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
+
+  openAccept(id){
+    state.prep = state.restaurant.prep_time_minutes || 20;
+    const opts = [10, 15, 20, 30, 45, 60];
+    if (!opts.includes(state.prep)) opts.push(state.prep);
+    opts.sort((a, b) => a - b);
+    openSheet(t('accept'), `<div class="muted">${t('prep_q')}</div>
+      <div class="chips" id="prepChips">${opts.map(m => `<button class="chip ${m === state.prep ? 'on' : ''}" onclick="A.pickPrep(${m})">${m} ${t('min')}</button>`).join('')}</div>
+      <div class="actions"><button class="btn" onclick="A.doAccept('${id}')">${t('accept')}</button></div>`);
+  },
+  pickPrep(m){
+    state.prep = m;
+    document.querySelectorAll('#prepChips .chip').forEach(c => c.classList.toggle('on', c.textContent.trim() === m + ' ' + t('min')));
+  },
+  async doAccept(id){
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:'accepted', p_prep_minutes:state.prep });
+      if (error) throw error; closeSheet(); await loadOrders(); renderTab(); toast(t('saved'));
+    });
+  },
+  openReject(id){
+    openSheet(t('reject'), `<div class="muted">${t('reject_q')}</div>
+      <div class="actions">${['r1','r2','r3','r4'].map(k => `<button class="btn warn" onclick="A.doReject('${id}','${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doReject(id, key){
+    await run(async () => {
+      const reason = I18N.en[key];
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:'rejected', p_reason:reason });
+      if (error) throw error; closeSheet(); await loadOrders(); renderTab(); toast(t('saved'));
+    });
+  },
+  async setStatus(id, status){
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:status });
+      if (error) throw error; await loadOrders(); renderTab(); toast(t('saved'));
+    });
+  },
+
+  async toggleOpen(v){
+    await run(async () => {
+      const { error } = await sb.from('restaurants').update({ is_open:v }).eq('id', state.restaurant.id);
+      if (error) throw error; state.restaurant.is_open = v;
+      const b = $('openBtn'); if (b){ b.textContent = v ? t('open_now') : t('closed_now'); b.classList.toggle('off', !v); }
+      renderTab(); toast(t('saved'));
+    });
+  },
+  async savePrep(){
+    const m = Number($('prep').value || 0); if (m < 5) return toast(t('enter_all'), true);
+    await run(async () => {
+      const { error } = await sb.from('restaurants').update({ prep_time_minutes:m }).eq('id', state.restaurant.id);
+      if (error) throw error; state.restaurant.prep_time_minutes = m; toast(t('saved'));
+    });
+  },
+
+  async toggleItem(id, v){
+    await run(async () => {
+      const { error } = await sb.from('menu_items').update({ is_available:v }).eq('id', id);
+      if (error) throw error; await loadMenu(); renderTab();
+    });
+  },
+  editItem(id){
+    const i = state.items.find(x => x.id === id); if (!i) return;
+    openSheet(t('edit_item'), `
+      <label class="f" for="i_name" style="margin-top:0">${t('item_name')}</label><input id="i_name" type="text" value="${esc(i.name)}">
+      <label class="f" for="i_desc">${t('description')}</label><input id="i_desc" type="text" value="${esc(i.description)}">
+      <label class="f" for="i_price">${t('price')}</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price}">
+      <label class="f" for="i_photo">${t('photo')}</label>
+      <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this)">
+      <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+      <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> ${t('in_stock')}</label>
+      <div class="actions"><button class="btn" id="saveBtn" onclick="A.saveItem('${i.id}')">${t('save')}</button></div>`);
+  },
+  async saveItem(id){
+    const name = $('i_name').value.trim(), price = $('i_price').value;
+    if (!name || price === '' || Number(price) < 0) return toast(t('enter_all'), true);
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = t('loading');
+    await run(async () => {
+      const row = { name, description:$('i_desc').value.trim() || null, price:Number(price), is_available:$('i_avail').checked };
+      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
+      const { error } = await sb.from('menu_items').update(row).eq('id', id); if (error) throw error;
+      await loadMenu(); closeSheet(); renderTab(); toast(t('saved'));
+    });
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = t('save'); }
+  }
+};
+
+// ---- Live orders ----
+let channel = null, pollTimer = null;
+function subscribeOrders(){
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('rest-orders').on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:'restaurant_id=eq.' + state.restaurant.id },
+      async payload => {
+        if (payload.eventType === 'INSERT'){ unlockAudio(); beep(); }
+        await refreshOrders(true);
+      }
+    ).subscribe();
+  } catch (e) { console.warn('Live updates are off', e); }
+  if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refreshOrders(true); }, 20000);
+}
+
+// ---- Start ----
+async function loadRestaurant(){
+  const { data, error } = await sb.from('restaurants').select('*').eq('owner_id', state.user.id).order('created_at').limit(1);
+  if (error) throw error; state.restaurant = data[0] || null;
+}
+async function startApp(){
+  renderShell(); subscribeOrders(); startAlertLoop(); keepAwake(); await go('orders');
+}
+async function afterLogin(user){
+  state.user = user; await loadRestaurant();
+  if (!state.restaurant) return showUnlinked();
+  await startApp();
+}
+(async function boot(){
+  applyLang();
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user); else showAuth();
+  } catch (e) { logErr(e); showAuth(t('error')); }
+})();
+</script>
+</body>
+</html>
