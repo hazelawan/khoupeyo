@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Khoupeyo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E; --ok:#1F6F4A;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; --ok:#3FA774; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.7}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:24px;letter-spacing:-.02em}
+html[lang=ur] .brand{font-family:"Bricolage Grotesque",sans-serif}
+.brand b{color:var(--marigold)}
+.actions-top{display:flex;gap:8px;align-items:center}
+.pillbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:14px}
+.iconbtn{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface)}
+.iconbtn svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.cnt{position:absolute;top:-4px;inset-inline-end:-4px;background:var(--marigold);color:#1E2B25;font-size:12px;font-weight:800;min-width:20px;height:20px;border-radius:10px;display:grid;place-items:center;padding:0 5px}
+main{padding:14px 16px 150px}
+h1{font-size:26px;letter-spacing:-.01em;margin:6px 0 12px;line-height:1.2}
+h2{font-size:20px;margin:22px 0 8px}
+.muted{color:var(--muted)}
+.empty{padding:40px 12px;text-align:center;color:var(--muted)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:14px 16px;font-weight:700;cursor:pointer;text-align:center}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn[disabled]{opacity:.5}
+.btn.inline{display:inline-block;width:auto;padding:10px 18px}
+input[type=text],input[type=password],input[type=email],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+.search{margin-bottom:6px}
+.rcard{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.rcard.closed{opacity:.62}
+.rimg{width:84px;height:84px;border-radius:14px;background:var(--line);overflow:hidden;flex:none;display:grid;place-items:center;font-weight:800;font-size:30px;color:var(--muted)}
+.rimg img{width:100%;height:100%;object-fit:cover}
+.rbody{flex:1;min-width:0}
+.rname{font-weight:700;font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rdesc{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rmeta{display:flex;gap:14px;color:var(--muted);font-size:13px;margin-top:4px}
+.badge{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;color:#fff;background:var(--green)}
+.badge.closed{background:var(--muted)}
+.hero{border-radius:18px;overflow:hidden;background:var(--green);color:#fff;margin-bottom:6px}
+.hero-img{height:170px;background:var(--green) center/cover no-repeat;display:grid;place-items:center;font-size:64px;font-weight:800;color:rgba(255,255,255,.55)}
+.hero-info{padding:14px 16px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-top:0;border-radius:0 0 18px 18px}
+.hero-info h1{margin:0 0 4px}
+.closed-note{background:var(--surface);border:1px solid var(--danger);color:var(--danger);border-radius:12px;padding:12px;margin:12px 0;font-weight:600}
+.cat{margin:24px 0 4px;font-size:20px;font-weight:800}
+.item{display:flex;gap:14px;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
+.item.off{opacity:.55}
+.item-text{flex:1;min-width:0}
+.item-name{font-weight:700}
+.item-desc{color:var(--muted);font-size:14px;margin:2px 0}
+.item-price{font-weight:600;margin-top:4px}
+.item-media{position:relative;width:104px;height:96px;flex:none}
+.tile{width:104px;height:80px;border-radius:14px;background:var(--line);object-fit:cover;display:grid;place-items:center;font-weight:800;font-size:28px;color:var(--muted);overflow:hidden}
+.tile img{width:100%;height:100%;object-fit:cover}
+.ctl{position:absolute;bottom:0;left:50%;transform:translateX(-50%);white-space:nowrap}
+.add{background:var(--surface);color:var(--green);border:1px solid var(--green);border-radius:999px;padding:6px 20px;font-weight:700;cursor:pointer;box-shadow:0 1px 0 var(--line)}
+.stepper{display:inline-flex;align-items:center;background:var(--green);color:#fff;border-radius:999px;overflow:hidden}
+.stepper button{background:none;border:0;color:#fff;width:34px;height:32px;font-size:20px;cursor:pointer}
+.stepper b{min-width:22px;text-align:center}
+.soldout{font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:4px 12px;border-radius:999px}
+.cartbar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:6;display:none;justify-content:center;padding:0 12px 10px}
+.cartbar a{display:flex;justify-content:space-between;width:100%;max-width:536px;background:var(--green);color:#fff;border-radius:14px;padding:14px 18px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{display:flex;max-width:560px;margin:0 auto}
+.nav a{flex:1;text-align:center;padding:13px 4px 11px;font-weight:600;font-size:14px;color:var(--muted);border-top:3px solid transparent}
+.nav a.on{color:var(--green);border-top-color:var(--marigold)}
+.line{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
+.line.total{border-top:1px solid var(--line);margin-top:8px;padding-top:12px;font-weight:800;font-size:19px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.addr{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.addr input{margin-top:5px;width:20px;height:20px;flex:none}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--green)}
+.pill.bad{background:var(--danger)}
+.pill.wait{background:#B7791F}
+.track{list-style:none;margin:16px 0;padding:0}
+.track li{position:relative;display:flex;gap:14px;align-items:center;padding:0 0 22px;color:var(--muted);font-weight:600}
+.track li i{width:18px;height:18px;border-radius:50%;background:var(--line);flex:none;position:relative;z-index:1}
+.track li::before{content:"";position:absolute;inset-inline-start:8px;top:18px;bottom:0;width:2px;background:var(--line)}
+.track li:last-child{padding-bottom:0}
+.track li:last-child::before{display:none}
+.track li.done{color:var(--ink)}
+.track li.done i{background:var(--green)}
+.track li.done::before{background:var(--green)}
+.track li.now{color:var(--ink);font-size:18px}
+.track li.now i{background:var(--marigold);box-shadow:0 0 0 5px rgba(242,169,0,.28)}
+.banner{border-radius:12px;padding:12px;margin:12px 0;font-weight:700}
+.banner.bad{background:var(--surface);border:1px solid var(--danger);color:var(--danger)}
+.orow{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.orow .r{text-align:end;font-weight:700}
+.orow small{display:block;color:var(--muted);font-weight:400}
+.toast{position:fixed;left:50%;bottom:140px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:30;max-width:90%;font-weight:600;text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+.auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
+.auth .brand{font-size:44px}
+.auth-top{display:flex;justify-content:flex-end}
+.err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
+.link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
+.ver{font-size:12px;color:var(--muted);margin-inline-start:6px;font-weight:600}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Version: change this every time the file is updated ----
+const APP_VERSION = '1.5';
+
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+// Each app keeps its own login so admin and customer never mix on the same phone
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-customer-auth' } });
+
+// ---- Small helpers ----
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => 'Rs ' + Number(n || 0).toLocaleString('en-PK');
+const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+const nav = h => { location.hash = h; };
+// Print readable errors (Supabase errors are plain objects)
+function logErr(e){
+  try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); }
+}
+// Some preview windows do not allow history.replaceState, so fall back safely
+function replaceHash(h){
+  try { history.replaceState(null, '', h); }
+  catch (e) { try { location.hash = h; } catch (e2) {} }
+}
+
+// ---- Words: English and Urdu ----
+const I18N = {
+  en: {
+    login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password',
+    have_account:'Already have an account? Log in', no_account:'New here? Create an account',
+    search:'Search restaurants', open:'Open', closed:'Closed', delivery:'Delivery', min_order:'Min order',
+    add:'Add', sold_out:'Out of stock', view_cart:'View cart', cart:'Your cart',
+    cart_empty:'Your cart is empty. Pick a restaurant and add something tasty.',
+    subtotal:'Subtotal', delivery_fee:'Delivery fee', total:'Total', promo:'Promo code',
+    promo_note:'A promo code is applied when you place the order.',
+    note_rest:'Note for the restaurant (optional)', checkout:'Checkout', proceed:'Continue to checkout',
+    address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
+    addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location',
+    location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
+    pay_note:'Pay cash to the rider when your food arrives.', place_order:'Place order',
+    home:'Home', orders:'Orders', account:'Account',
+    no_orders:'No orders yet. Your first order will show up here.',
+    st_placed:'Order placed', st_accepted:'Accepted', st_preparing:'Being prepared', st_ready:'Ready',
+    st_rider_assigned:'Rider assigned', st_picked_up:'On the way', st_delivered:'Delivered',
+    st_cancelled:'Cancelled', st_rejected:'Rejected',
+    cancel_order:'Cancel order', cancel_confirm:'Cancel this order?', call:'Call restaurant', reorder:'Order again',
+    logout:'Log out', language:'Language', saved_addresses:'Saved addresses', delete:'Delete', save:'Save',
+    loading:'Loading…', retry:'Try again', error:'Something went wrong. Please try again.',
+    other_rest_msg:'Your cart has items from another restaurant. Clear it and add this item?',
+    min_order_msg:'Minimum order is {n}', closed_msg:'This restaurant is closed right now.',
+    order_placed:'Order placed. The restaurant will confirm shortly.',
+    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields',
+    bad_phone:'Enter a valid phone number like 0300 1234567', short_pw:'Password must be at least 6 characters',
+    saved:'Saved', pick_address:'Choose or add a delivery address',
+    unavailable:'Those items are not available right now',
+    location_denied:'Could not get your location. You can still type the address.',
+    no_restaurants:'No restaurants are available in your area yet.', menu_empty:'This menu is being prepared.',
+    items_n:'{n} items', your_details:'Your details', order_no:'Order', restaurant:'Restaurant',
+    delivered_to:'Delivering to', order_items:'Your order', history:'Your orders',
+    addr_in_use:'This address was used in an earlier order, so it cannot be deleted.',
+    browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
+    need_details:'Please add your name and phone so the restaurant and rider can reach you.'
+  },
+  ur: {
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
+    search:'ریسٹورنٹ تلاش کریں', open:'کھلا ہے', closed:'بند ہے', delivery:'ڈیلیوری', min_order:'کم از کم آرڈر',
+    add:'شامل کریں', sold_out:'ختم ہو گیا', view_cart:'کارٹ دیکھیں', cart:'آپ کا کارٹ',
+    cart_empty:'آپ کا کارٹ خالی ہے۔ کوئی ریسٹورنٹ چنیں اور کھانا شامل کریں۔',
+    subtotal:'کھانے کی رقم', delivery_fee:'ڈیلیوری فیس', total:'کل رقم', promo:'پرومو کوڈ',
+    promo_note:'پرومو کوڈ آرڈر کرتے وقت لگایا جائے گا۔',
+    note_rest:'ریسٹورنٹ کے لیے ہدایت (اختیاری)', checkout:'چیک آؤٹ', proceed:'چیک آؤٹ پر جائیں',
+    address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
+    addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں',
+    location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
+    pay_note:'کھانا پہنچنے پر رائیڈر کو نقد ادا کریں۔', place_order:'آرڈر کریں',
+    home:'ہوم', orders:'آرڈرز', account:'اکاؤنٹ',
+    no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔',
+    st_placed:'آرڈر بھیج دیا گیا', st_accepted:'قبول ہو گیا', st_preparing:'تیار ہو رہا ہے', st_ready:'تیار ہے',
+    st_rider_assigned:'رائیڈر مقرر ہو گیا', st_picked_up:'راستے میں ہے', st_delivered:'پہنچ گیا',
+    st_cancelled:'منسوخ', st_rejected:'مسترد',
+    cancel_order:'آرڈر منسوخ کریں', cancel_confirm:'کیا یہ آرڈر منسوخ کریں؟', call:'ریسٹورنٹ کو کال کریں', reorder:'دوبارہ آرڈر کریں',
+    logout:'لاگ آؤٹ', language:'زبان', saved_addresses:'محفوظ پتے', delete:'حذف کریں', save:'محفوظ کریں',
+    loading:'لوڈ ہو رہا ہے…', retry:'دوبارہ کوشش کریں', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔',
+    other_rest_msg:'آپ کے کارٹ میں دوسرے ریسٹورنٹ کا کھانا ہے۔ اسے ہٹا کر یہ آئٹم شامل کریں؟',
+    min_order_msg:'کم از کم آرڈر {n} ہے', closed_msg:'یہ ریسٹورنٹ ابھی بند ہے۔',
+    order_placed:'آرڈر بھیج دیا گیا۔ ریسٹورنٹ جلد تصدیق کرے گا۔',
+    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں',
+    bad_phone:'درست فون نمبر لکھیں، جیسے 0300 1234567', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
+    saved:'محفوظ ہو گیا', pick_address:'ڈیلیوری کا پتہ چنیں یا شامل کریں',
+    unavailable:'یہ آئٹمز ابھی دستیاب نہیں',
+    location_denied:'لوکیشن نہیں مل سکی۔ آپ پتہ لکھ سکتے ہیں۔',
+    no_restaurants:'آپ کے علاقے میں ابھی کوئی ریسٹورنٹ دستیاب نہیں۔', menu_empty:'اس کا مینو تیار ہو رہا ہے۔',
+    items_n:'{n} آئٹم', your_details:'آپ کی معلومات', order_no:'آرڈر', restaurant:'ریسٹورنٹ',
+    delivered_to:'اس پتے پر ڈیلیوری', order_items:'آپ کا آرڈر', history:'آپ کے آرڈرز',
+    addr_in_use:'یہ پتہ پہلے آرڈر میں استعمال ہوا ہے، اس لیے حذف نہیں ہو سکتا۔',
+    browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
+    need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ ریسٹورنٹ اور رائیڈر آپ سے رابطہ کر سکیں۔'
+  }
+};
+
+const state = {
+  lang: ls.get('kh_lang', 'en'), user:null, profile:null, restaurants:[], curMenu:null, curRest:null,
+  addresses:[], selAddr:null, newCoords:null, promo:'', authMode:'login', pending:null,
+  cart: ls.get('kh_cart', { rid:null, items:[], note:'' })
+};
+const t = (k, v) => {
+  let s = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+  if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]);
+  return s;
+};
+function applyLang(){
+  document.documentElement.lang = state.lang;
+  document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr';
+}
+function toast(msg, isErr){
+  const el = document.createElement('div');
+  el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
+}
+async function run(fn){
+  try { return await fn(); }
+  catch (e) { logErr(e); toast(e.message || t('error'), true); }
+}
+
+// ---- Cart ----
+const cartCount = () => state.cart.items.reduce((n, i) => n + i.qty, 0);
+const cartSubtotal = () => state.cart.items.reduce((n, i) => n + i.price * i.qty, 0);
+function saveCart(){ ls.set('kh_cart', state.cart); updateCartUI(); }
+function cartRestaurant(){ return state.restaurants.find(r => r.id === state.cart.rid); }
+function cartFee(){ const r = cartRestaurant(); return Number(r && r.zone ? r.zone.delivery_fee : 0); }
+function cartMin(){ const r = cartRestaurant(); return Number(r && r.zone ? r.zone.min_order : 0); }
+
+// ---- Phone ----
+function normalizePhone(p){
+  let d = String(p || '').replace(/\D/g, '');
+  if (d.startsWith('92') && d.length === 12) d = '0' + d.slice(2);
+  if (d.startsWith('3') && d.length === 10) d = '0' + d;
+  return /^03\d{9}$/.test(d) ? d : null;
+}
+
+// ---- Auth screen ----
+function showAuth(msg, ok){
+  const signup = state.authMode === 'signup';
+  $('app').innerHTML = `
+  <div class="auth">
+    <div class="auth-top"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Khoupeyo<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:8px">${signup ? t('signup') : t('login')}</h1>
+    ${state.pending && state.pending.indexOf('checkout') > -1 ? `<p class="muted">${t('login_to_order')}</p>` : ''}
+    <form onsubmit="A.submitAuth(event)">
+      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
+      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567">` : ''}
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
+      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--ok)' : ''}">${esc(msg || '')}</div>
+    </form>
+    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button><br>
+    <button class="link" onclick="A.guestBack()">${t('browse_guest')}</button>
+    <div class="ver">v${APP_VERSION}</div>
+  </div>`;
+}
+
+// ---- Shell (header, bottom nav) ----
+function renderShell(){
+  $('app').innerHTML = `
+    <header class="top">
+      <a class="brand" href="#/">Khoupeyo<b>.</b></a>
+      <div class="actions-top">
+        <button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+        <a class="iconbtn" href="#/cart" aria-label="${t('cart')}">
+          <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          <span class="cnt" id="cartN" style="display:none">0</span>
+        </a>
+      </div>
+    </header>
+    <main id="view"></main>
+    <div class="cartbar" id="cartbar"></div>
+    <nav class="nav"><div class="nav-in">
+      <a href="#/" id="n_home">${t('home')}</a>
+      <a href="#/orders" id="n_orders">${t('orders')}</a>
+      <a href="#/account" id="n_account">${state.user ? t('account') : t('login')}</a>
+    </div></nav>`;
+  updateCartUI();
+}
+function highlightNav(name){
+  const map = { home:'n_home', r:'n_home', orders:'n_orders', order:'n_orders', account:'n_account' };
+  ['n_home','n_orders','n_account'].forEach(id => { const el = $(id); if (el) el.classList.toggle('on', map[name] === id); });
+}
+let currentRoute = 'home';
+function updateCartUI(){
+  const n = cartCount();
+  const c = $('cartN'); if (c){ c.textContent = n; c.style.display = n ? 'grid' : 'none'; }
+  const bar = $('cartbar'); if (!bar) return;
+  if (n && (currentRoute === 'home' || currentRoute === 'r')){
+    bar.style.display = 'flex';
+    bar.innerHTML = `<a href="#/cart"><span>${t('view_cart')} (${t('items_n', { n })})</span><span>${money(cartSubtotal())}</span></a>`;
+  } else { bar.style.display = 'none'; bar.innerHTML = ''; }
+}
+
+// ---- Router ----
+let pollTimer = null;
+function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
+const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account'];
+async function route(soft){
+  stopPoll();
+  const h = location.hash.replace(/^#\/?/, '');
+  const p = h.split('/');
+  const name = p[0] || 'home';
+  if (!state.user && LOGIN_ROUTES.includes(name)){ state.pending = location.hash; return showAuth(); }
+  if (!$('view')) renderShell();
+  currentRoute = name;
+  highlightNav(name); updateCartUI();
+  const v = $('view'); if (!v) return;
+  if (!soft) v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  try {
+    if (name === 'home') await showHome();
+    else if (name === 'r') await showRestaurant(p[1]);
+    else if (name === 'cart') await showCart();
+    else if (name === 'checkout') await showCheckout();
+    else if (name === 'orders') await showOrders();
+    else if (name === 'order') await showOrder(p[1]);
+    else if (name === 'account') await showAccount();
+    else return nav('/');
+  } catch (e) {
+    logErr(e);
+    if (!soft) v.innerHTML = `<div class="empty">${esc(e.message || t('error'))}<br><br><button class="btn inline" onclick="route()">${t('retry')}</button></div>`;
+  }
+  if (!soft) window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', () => route());
+
+// ---- Home: restaurants ----
+async function loadRestaurants(){
+  const { data, error } = await sb.from('restaurants')
+    .select('id,zone_id,name,description,logo_url,address,phone,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order)').eq('is_active', true)
+    .order('is_open', { ascending:false }).order('name');
+  if (error) throw error; state.restaurants = data;
+}
+function restaurantCard(r){
+  const fee = r.zone ? money(r.zone.delivery_fee) : '';
+  return `<a class="rcard ${r.is_open ? '' : 'closed'}" href="#/r/${r.id}">
+    <div class="rimg">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="" loading="lazy">` : esc((r.name || '?')[0])}</div>
+    <div class="rbody">
+      <div class="rname">${esc(r.name)}<span class="badge ${r.is_open ? '' : 'closed'}">${r.is_open ? t('open') : t('closed')}</span></div>
+      <div class="rdesc">${esc(r.description || '')}</div>
+      <div class="rmeta"><span>${t('delivery')} ${fee}</span><span>${r.prep_time_minutes || 25} min</span></div>
+    </div></a>`;
+}
+async function showHome(){
+  await loadRestaurants();
+  $('view').innerHTML = `
+    <input class="search" type="text" id="q" placeholder="${t('search')}" oninput="A.filterList()" autocomplete="off">
+    <div id="rlist"></div>`;
+  A.filterList();
+}
+
+// ---- Restaurant page ----
+async function showRestaurant(id){
+  if (!state.restaurants.length) await loadRestaurants();
+  const r = state.restaurants.find(x => x.id === id);
+  if (!r) return nav('/');
+  const [c, i] = await Promise.all([
+    sb.from('menu_categories').select('*').eq('restaurant_id', id).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id', id).order('sort_order').order('name')
+  ]);
+  if (c.error) throw c.error; if (i.error) throw i.error;
+  state.curRest = r; state.curMenu = { cats:c.data, items:i.data };
+  const hero = r.logo_url ? `style="background-image:url('${esc(r.logo_url)}')"` : '';
+  const cats = c.data.map(cat => {
+    const items = i.data.filter(x => x.category_id === cat.id);
+    return items.length ? `<div class="cat">${esc(cat.name)}</div>${items.map(itemHtml).join('')}` : '';
+  }).join('');
+  const loose = i.data.filter(x => !c.data.some(cat => cat.id === x.category_id));
+  $('view').innerHTML = `
+    <div class="hero"><div class="hero-img" ${hero}>${r.logo_url ? '' : esc((r.name || '?')[0])}</div></div>
+    <div class="hero-info">
+      <h1>${esc(r.name)}</h1>
+      <div class="muted">${esc(r.description || '')}</div>
+      <div class="rmeta"><span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} min</span></div>
+    </div>
+    ${r.is_open ? '' : `<div class="closed-note">${t('closed_msg')}</div>`}
+    ${cats}${loose.length ? loose.map(itemHtml).join('') : ''}
+    ${i.data.length ? '' : `<div class="empty">${t('menu_empty')}</div>`}`;
+}
+function ctlHtml(i){
+  if (!i.is_available) return `<span class="soldout">${t('sold_out')}</span>`;
+  if (!state.curRest || !state.curRest.is_open) return '';
+  const inCart = state.cart.rid === i.restaurant_id ? state.cart.items.find(c => c.id === i.id) : null;
+  if (!inCart) return `<button class="add" onclick="A.add('${i.id}')">${t('add')}</button>`;
+  return `<div class="stepper"><button onclick="A.chg('${i.id}',-1)" aria-label="-">−</button><b>${inCart.qty}</b><button onclick="A.chg('${i.id}',1)" aria-label="+">+</button></div>`;
+}
+function itemHtml(i){
+  return `<div class="item ${i.is_available ? '' : 'off'}">
+    <div class="item-text"><div class="item-name">${esc(i.name)}</div>
+      ${i.description ? `<div class="item-desc">${esc(i.description)}</div>` : ''}
+      <div class="item-price">${money(i.price)}</div></div>
+    <div class="item-media">
+      <div class="tile">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : esc((i.name || '?')[0])}</div>
+      <div class="ctl" id="ctl-${i.id}">${ctlHtml(i)}</div>
+    </div></div>`;
+}
+
+// ---- Cart page ----
+async function showCart(){
+  if (!state.restaurants.length) await loadRestaurants();
+  drawCart();
+}
+function drawCart(){
+  const v = $('view'); if (!v) return;
+  if (!state.cart.items.length){
+    v.innerHTML = `<h1>${t('cart')}</h1><div class="empty">${t('cart_empty')}<br><br><a class="btn inline" href="#/">${t('home')}</a></div>`;
+    return;
+  }
+  const r = cartRestaurant(); const sub = cartSubtotal(); const fee = cartFee(); const min = cartMin();
+  const short = min && sub < min;
+  const rows = state.cart.items.map(i => `
+    <div class="line" style="align-items:center">
+      <div style="flex:1"><div style="font-weight:700">${esc(i.name)}</div><div class="muted">${money(i.price)}</div></div>
+      <div class="stepper"><button onclick="A.chg('${i.id}',-1)" aria-label="-">−</button><b>${i.qty}</b><button onclick="A.chg('${i.id}',1)" aria-label="+">+</button></div>
+      <div style="min-width:82px;text-align:end;font-weight:700">${money(i.price * i.qty)}</div>
+    </div>`).join('');
+  v.innerHTML = `<h1>${t('cart')}</h1>
+    <div class="muted">${esc(r ? r.name : '')}</div>
+    <div class="box">${rows}</div>
+    <label class="f" for="c_note">${t('note_rest')}</label>
+    <textarea id="c_note" oninput="A.setNote(this.value)">${esc(state.cart.note || '')}</textarea>
+    <label class="f" for="c_promo">${t('promo')}</label>
+    <input id="c_promo" type="text" autocapitalize="characters" value="${esc(state.promo)}" oninput="state.promo=this.value">
+    <div class="muted" style="font-size:13px;margin-top:4px">${t('promo_note')}</div>
+    <div class="box">
+      <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
+      <div class="line"><span>${t('delivery_fee')}</span><span>${money(fee)}</span></div>
+      <div class="line total"><span>${t('total')}</span><span>${money(sub + fee)}</span></div>
+    </div>
+    ${short ? `<div class="closed-note">${t('min_order_msg', { n: money(min) })}</div>` : ''}
+    ${r && !r.is_open ? `<div class="closed-note">${t('closed_msg')}</div>` : ''}
+    <button class="btn" ${short || (r && !r.is_open) ? 'disabled' : ''} onclick="nav('/checkout')">${t('proceed')}</button>`;
+}
+
+// ---- Checkout ----
+async function loadAddresses(){
+  const { data, error } = await sb.from('addresses').select('*').order('created_at', { ascending:false });
+  if (error) throw error; state.addresses = data;
+  if (!state.addresses.find(a => a.id === state.selAddr)) state.selAddr = state.addresses[0] ? state.addresses[0].id : null;
+}
+async function showCheckout(){
+  if (!state.cart.items.length) return nav('/cart');
+  if (!state.restaurants.length) await loadRestaurants();
+  await loadAddresses();
+  drawCheckout();
+}
+function addressForm(){
+  return `<div class="box" id="addrForm">
+    <label class="f" for="ad_label" style="margin-top:0">${t('addr_label')}</label><input id="ad_label" type="text">
+    <label class="f" for="ad_full">${t('addr_full')}</label><textarea id="ad_full"></textarea>
+    <label class="f" for="ad_note">${t('addr_note')}</label><input id="ad_note" type="text">
+    <div style="margin-top:12px"><button class="btn ghost" type="button" id="locBtn" onclick="A.useLocation()">${state.newCoords ? t('location_added') : t('use_location')}</button></div>
+    <div style="margin-top:10px"><button class="btn" type="button" onclick="A.saveAddress()">${t('save_address')}</button></div>
+  </div>`;
+}
+function drawCheckout(){
+  const v = $('view'); if (!v) return;
+  const sub = cartSubtotal(), fee = cartFee();
+  const list = state.addresses.map(a => `
+    <label class="addr"><input type="radio" name="addr" ${a.id === state.selAddr ? 'checked' : ''} onchange="state.selAddr='${a.id}'">
+      <div><div style="font-weight:700">${esc(a.label || t('address'))}</div><div class="muted">${esc(a.full_address)}${a.note ? ', ' + esc(a.note) : ''}</div></div></label>`).join('');
+  const pr = state.profile || {};
+  const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
+  const detailsBox = needsDetails ? `<div class="box"><b>${t('your_details')}</b><div class="muted" style="font-size:14px">${t('need_details')}</div>
+    <label class="f" for="d_name">${t('name')}</label><input id="d_name" type="text" value="${esc(pr.full_name)}">
+    <label class="f" for="d_phone">${t('phone')}</label><input id="d_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(pr.phone)}"></div>` : '';
+  v.innerHTML = `<h1>${t('checkout')}</h1>
+    ${detailsBox}
+    <h2 style="margin-top:8px">${t('address')}</h2>
+    ${list ? `<div>${list}</div>` : ''}
+    ${state.addresses.length ? `<button class="link" onclick="A.showAddrForm()">${t('add_address')}</button><div id="addrHolder"></div>` : addressForm()}
+    <h2>${t('payment')}</h2>
+    <div class="box"><b>${t('cod')}</b><div class="muted">${t('pay_note')}</div></div>
+    <div class="box">
+      <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
+      <div class="line"><span>${t('delivery_fee')}</span><span>${money(fee)}</span></div>
+      <div class="line total"><span>${t('total')}</span><span>${money(sub + fee)}</span></div>
+    </div>
+    <button class="btn" id="placeBtn" onclick="A.placeOrder()">${t('place_order')}</button>`;
+}
+
+// ---- Orders ----
+async function fetchOrders(){
+  const { data, error } = await sb.from('orders')
+    .select('*, restaurant:restaurants(name,phone), order_items(menu_item_id,name,quantity,price)')
+    .order('created_at', { ascending:false }).limit(50);
+  if (error) throw error; return data;
+}
+const FINAL = ['delivered','cancelled','rejected'];
+function pillFor(status){
+  const cls = (status === 'cancelled' || status === 'rejected') ? 'bad' : (status === 'placed' ? 'wait' : '');
+  return `<span class="pill ${cls}">${t('st_' + status)}</span>`;
+}
+async function showOrders(){
+  const orders = await fetchOrders();
+  const rows = orders.map(o => `<a class="orow" href="#/order/${o.id}">
+    <div><div style="font-weight:700">${esc(o.restaurant ? o.restaurant.name : '')}</div><small class="muted">${when(o.created_at)}</small></div>
+    <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a>`).join('');
+  $('view').innerHTML = `<h1>${t('history')}</h1>${rows || `<div class="empty">${t('no_orders')}</div>`}`;
+}
+const TRACK = ['placed','accepted','preparing','ready','picked_up','delivered'];
+function trackerHtml(o){
+  if (o.status === 'cancelled' || o.status === 'rejected'){
+    return `<div class="banner bad">${t('st_' + o.status)}${o.reject_reason ? ': ' + esc(o.reject_reason) : ''}</div>`;
+  }
+  let cur = o.status === 'rider_assigned' ? 3 : TRACK.indexOf(o.status);
+  if (o.status === 'delivered') cur = TRACK.length;
+  return `<ol class="track">` + TRACK.map((s, i) => {
+    const cls = i < cur ? 'done' : (i === cur ? 'now' : '');
+    const label = (s === 'ready' && o.status === 'rider_assigned') ? t('st_rider_assigned') : t('st_' + s);
+    return `<li class="${cls}"><i></i><span>${label}</span></li>`;
+  }).join('') + `</ol>`;
+}
+async function showOrder(id){
+  const { data:o, error } = await sb.from('orders')
+    .select('*, restaurant:restaurants(name,phone), order_items(menu_item_id,name,quantity,price)').eq('id', id).single();
+  if (error) throw error;
+  state.curOrder = o;
+  const items = o.order_items.map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
+  $('view').innerHTML = `
+    <h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>
+    <div class="muted">${when(o.created_at)}</div>
+    ${trackerHtml(o)}
+    <div class="box"><b>${t('order_items')}</b>${items}
+      <div class="line"><span class="muted">${t('subtotal')}</span><span>${money(o.subtotal)}</span></div>
+      <div class="line"><span class="muted">${t('delivery_fee')}</span><span>${money(o.delivery_fee)}</span></div>
+      ${Number(o.discount) ? `<div class="line"><span class="muted">${t('promo')}</span><span>-${money(o.discount)}</span></div>` : ''}
+      <div class="line total"><span>${t('total')}</span><span>${money(o.total)}</span></div>
+      <div class="muted">${t('cod')}</div></div>
+    <div class="box"><b>${t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div></div>
+    <div style="display:grid;gap:10px;margin-top:14px">
+      ${o.restaurant && o.restaurant.phone ? `<a class="btn ghost" href="tel:${esc(o.restaurant.phone)}">${t('call')}</a>` : ''}
+      ${o.status === 'placed' ? `<button class="btn warn" onclick="A.cancelOrder('${o.id}')">${t('cancel_order')}</button>` : ''}
+      ${FINAL.includes(o.status) ? `<button class="btn" onclick="A.reorder()">${t('reorder')}</button>` : ''}
+    </div>`;
+  if (!FINAL.includes(o.status)) pollTimer = setInterval(() => route(true), 15000);
+}
+
+// ---- Account ----
+async function showAccount(){
+  const p = state.profile || {};
+  await loadAddresses();
+  const addrs = state.addresses.map(a => `<div class="line" style="align-items:center">
+    <div><b>${esc(a.label || t('address'))}</b><div class="muted">${esc(a.full_address)}</div></div>
+    <button class="link" onclick="A.deleteAddress('${a.id}')">${t('delete')}</button></div>`).join('');
+  $('view').innerHTML = `<h1>${t('account')}</h1>
+    <div class="box">
+      <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
+      <label class="f" for="p_phone">${t('phone')}</label><input id="p_phone" type="tel" inputmode="tel" value="${esc(p.phone)}">
+      <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
+      <div style="margin-top:14px"><button class="btn" onclick="A.saveProfile()">${t('save')}</button></div>
+    </div>
+    ${addrs ? `<h2>${t('saved_addresses')}</h2><div class="box">${addrs}</div>` : ''}
+    <div style="display:grid;gap:10px;margin-top:16px">
+      <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+      <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
+    </div>
+    <div class="ver" style="margin-top:14px">Khoupeyo v${APP_VERSION}</div>`;
+}
+
+// ---- Actions ----
+const A = {
+  toggleLang(onAuth){
+    state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
+    if (onAuth) showAuth(); else { renderShell(); route(); }
+  },
+  switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  async submitAuth(e){
+    e.preventDefault();
+    const signup = state.authMode === 'signup';
+    const email = $('a_email').value.trim(); const pw = $('a_pw').value;
+    const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    if (!email || !pw) { msg.textContent = t('enter_all'); return; }
+    if (pw.length < 6) { msg.textContent = t('short_pw'); return; }
+    let name = '', phone = '';
+    if (signup){
+      name = $('a_name').value.trim(); phone = normalizePhone($('a_phone').value);
+      if (!name) { msg.textContent = t('enter_all'); return; }
+      if (!phone) { msg.textContent = t('bad_phone'); return; }
+    }
+    const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
+    try {
+      if (signup){
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        if (error) throw error;
+        if (!data.session){ btn.disabled = false; state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
+        await afterLogin(data.user);
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+        if (error) throw error;
+        await afterLogin(data.user);
+      }
+    } catch (err) {
+      logErr(err);
+      const m = /invalid login/i.test(err.message || '') ? t('bad_login') : (err.message || t('error'));
+      const el = $('authMsg'); if (el) el.textContent = m;
+      const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
+    }
+  },
+  async logout(){
+    await sb.auth.signOut(); stopPoll();
+    if (channel) { sb.removeChannel(channel); channel = null; }
+    state.user = null; state.profile = null; state.addresses = []; state.authMode = 'login';
+    replaceHash('#/'); renderShell(); route();
+  },
+  guestBack(){ state.pending = null; state.authMode = 'login'; replaceHash('#/'); renderShell(); route(); },
+  filterList(){
+    const q = ($('q') ? $('q').value : '').trim().toLowerCase();
+    const list = state.restaurants.filter(r => !q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
+    $('rlist').innerHTML = list.map(restaurantCard).join('') || `<div class="empty">${t('no_restaurants')}</div>`;
+  },
+  add(id){
+    const it = state.curMenu && state.curMenu.items.find(x => x.id === id); if (!it) return;
+    if (state.cart.rid && state.cart.rid !== it.restaurant_id && state.cart.items.length){
+      if (!confirm(t('other_rest_msg'))) return;
+      state.cart = { rid:null, items:[], note:'' };
+    }
+    state.cart.rid = it.restaurant_id;
+    state.cart.items.push({ id:it.id, name:it.name, price:Number(it.price), qty:1 });
+    saveCart(); const c = $('ctl-' + id); if (c) c.innerHTML = ctlHtml(it);
+  },
+  chg(id, d){
+    const c = state.cart.items.find(x => x.id === id); if (!c) return;
+    c.qty += d;
+    if (c.qty <= 0) state.cart.items = state.cart.items.filter(x => x.id !== id);
+    if (!state.cart.items.length){ state.cart.rid = null; state.cart.note = ''; }
+    saveCart();
+    if (currentRoute === 'cart') drawCart();
+    else { const it = state.curMenu && state.curMenu.items.find(x => x.id === id); const el = $('ctl-' + id); if (it && el) el.innerHTML = ctlHtml(it); }
+  },
+  setNote(v){ state.cart.note = v; ls.set('kh_cart', state.cart); },
+  showAddrForm(){ $('addrHolder').innerHTML = addressForm(); },
+  useLocation(){
+    if (!navigator.geolocation) return toast(t('location_denied'), true);
+    const btn = $('locBtn'); if (btn) btn.textContent = t('loading');
+    navigator.geolocation.getCurrentPosition(
+      pos => { state.newCoords = { lat:pos.coords.latitude, lng:pos.coords.longitude }; const b = $('locBtn'); if (b) b.textContent = t('location_added'); },
+      () => { const b = $('locBtn'); if (b) b.textContent = t('use_location'); toast(t('location_denied'), true); },
+      { enableHighAccuracy:true, timeout:12000 }
+    );
+  },
+  async saveAddress(){
+    const full = $('ad_full').value.trim();
+    if (!full) return toast(t('enter_all'), true);
+    await run(async () => {
+      const row = { customer_id:state.user.id, label:$('ad_label').value.trim() || null, full_address:full, note:$('ad_note').value.trim() || null,
+                    lat:state.newCoords ? state.newCoords.lat : null, lng:state.newCoords ? state.newCoords.lng : null };
+      const { data, error } = await sb.from('addresses').insert(row).select().single();
+      if (error) throw error;
+      state.selAddr = data.id; state.newCoords = null;
+      await loadAddresses(); drawCheckout(); toast(t('saved'));
+    });
+  },
+  async deleteAddress(id){
+    await run(async () => {
+      const { error } = await sb.from('addresses').delete().eq('id', id);
+      if (error) { if (error.code === '23503') throw new Error(t('addr_in_use')); throw error; }
+      await showAccount();
+    });
+  },
+  async placeOrder(){
+    if (!state.selAddr) return toast(t('pick_address'), true);
+    let newName = null, newPhone = null;
+    if ($('d_name')){
+      newName = $('d_name').value.trim(); newPhone = normalizePhone($('d_phone').value);
+      if (!newName) return toast(t('enter_all'), true);
+      if (!newPhone) return toast(t('bad_phone'), true);
+    }
+    const btn = $('placeBtn'); btn.disabled = true; btn.textContent = t('loading');
+    await run(async () => {
+      if (newName){
+        const up = await sb.from('profiles').update({ full_name:newName, phone:newPhone }).eq('id', state.user.id);
+        if (up.error) throw up.error;
+        state.profile = Object.assign({}, state.profile, { full_name:newName, phone:newPhone });
+      }
+      const items = state.cart.items.map(i => ({ menu_item_id:i.id, quantity:i.qty }));
+      const { data, error } = await sb.rpc('place_order', {
+        p_restaurant_id:state.cart.rid, p_address_id:state.selAddr, p_items:items,
+        p_payment_method:'cod', p_promo:(state.promo || '').trim() || null, p_note:(state.cart.note || '').trim() || null
+      });
+      if (error) throw error;
+      state.cart = { rid:null, items:[], note:'' }; state.promo = ''; saveCart();
+      toast(t('order_placed')); nav('/order/' + data);
+    });
+    const b = $('placeBtn'); if (b){ b.disabled = false; b.textContent = t('place_order'); }
+  },
+  async cancelOrder(id){
+    if (!confirm(t('cancel_confirm'))) return;
+    await run(async () => {
+      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:'cancelled' });
+      if (error) throw error; await route(true);
+    });
+  },
+  async reorder(){
+    const o = state.curOrder; if (!o) return;
+    await run(async () => {
+      const ids = o.order_items.map(i => i.menu_item_id).filter(Boolean);
+      const { data, error } = await sb.from('menu_items').select('*').in('id', ids).eq('is_available', true);
+      if (error) throw error;
+      if (!data.length) return toast(t('unavailable'), true);
+      state.cart = { rid:o.restaurant_id, note:'', items:data.map(m => {
+        const old = o.order_items.find(x => x.menu_item_id === m.id);
+        return { id:m.id, name:m.name, price:Number(m.price), qty:old ? old.quantity : 1 };
+      }) };
+      saveCart(); nav('/cart');
+    });
+  },
+  async saveProfile(){
+    const name = $('p_name').value.trim(); const phone = normalizePhone($('p_phone').value);
+    if (!name) return toast(t('enter_all'), true);
+    if (!phone) return toast(t('bad_phone'), true);
+    await run(async () => {
+      const { error } = await sb.from('profiles').update({ full_name:name, phone }).eq('id', state.user.id);
+      if (error) throw error;
+      state.profile = Object.assign({}, state.profile, { full_name:name, phone }); toast(t('saved'));
+    });
+  }
+};
+
+// ---- Live order updates ----
+let channel = null;
+function subscribeOrders(){
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('my-orders').on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:'customer_id=eq.' + state.user.id },
+      () => { if (currentRoute === 'order' || currentRoute === 'orders') route(true); }
+    ).subscribe();
+  } catch (e) { console.warn('Live updates are off', e); }
+}
+
+// ---- Start ----
+async function afterLogin(user){
+  state.user = user;
+  const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  state.profile = data || {};
+  subscribeOrders();
+  const target = state.pending; state.pending = null;
+  renderShell();
+  if (target && target !== '#') replaceHash(target);
+  else if (!location.hash || location.hash === '#') replaceHash('#/');
+  route();
+}
+(async function boot(){
+  applyLang();
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user);
+    else { if (!location.hash || location.hash === '#') replaceHash('#/'); renderShell(); route(); }
+  } catch (e) { logErr(e); showAuth(t('error')); }
+})();
+</script>
+</body>
+</html>
