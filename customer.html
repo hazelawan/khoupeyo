@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Khoupeyo</title>
+<title>Wanhar Mart</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -47,6 +47,14 @@ h2{font-size:20px;margin:22px 0 8px}
 input[type=text],input[type=password],input[type=email],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
 textarea{min-height:70px;resize:vertical}
 label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+
+.prow{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;margin:2px 0 14px;-webkit-overflow-scrolling:touch}
+.ptile{flex:none;width:112px;text-decoration:none;color:inherit}
+.pimg{width:112px;height:112px;border-radius:14px;background:var(--line);overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--muted)}
+.pimg img{width:100%;height:100%;object-fit:cover}
+.pname{font-weight:700;font-size:14px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pshop{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pprice{font-weight:700;font-size:14px;margin-top:2px}
 .search{margin-bottom:6px}
 .rcard{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
 .rcard.closed{opacity:.62}
@@ -131,7 +139,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -164,7 +172,7 @@ const I18N = {
   en: {
     login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password',
     have_account:'Already have an account? Log in', no_account:'New here? Create an account',
-    search:'Search restaurants', open:'Open', closed:'Closed', delivery:'Delivery', min_order:'Min order',
+    search:'Search shops and products', open:'Open', closed:'Closed', delivery:'Delivery', min_order:'Min order',
     add:'Add', sold_out:'Out of stock', view_cart:'View cart', cart:'Your cart',
     cart_empty:'Your cart is empty. Pick a restaurant and add something tasty.',
     subtotal:'Subtotal', delivery_fee:'Delivery fee', total:'Total', promo:'Promo code',
@@ -191,7 +199,7 @@ const I18N = {
     saved:'Saved', pick_address:'Choose or add a delivery address',
     unavailable:'Those items are not available right now',
     location_denied:'Could not get your location. You can still type the address.',
-    no_restaurants:'No restaurants are available in your area yet.', menu_empty:'This menu is being prepared.',
+    no_restaurants:'No shops are available in your area yet.', menu_empty:'This shop has no products yet.', popular:'Popular products',
     items_n:'{n} items', your_details:'Your details', order_no:'Order', restaurant:'Restaurant',
     delivered_to:'Delivering to', order_items:'Your order', history:'Your orders',
     addr_in_use:'This address was used in an earlier order, so it cannot be deleted.',
@@ -204,7 +212,7 @@ const I18N = {
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
     have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
-    search:'ریسٹورنٹ تلاش کریں', open:'کھلا ہے', closed:'بند ہے', delivery:'ڈیلیوری', min_order:'کم از کم آرڈر',
+    search:'دکانیں اور پروڈکٹس تلاش کریں', open:'کھلا ہے', closed:'بند ہے', delivery:'ڈیلیوری', min_order:'کم از کم آرڈر',
     add:'شامل کریں', sold_out:'ختم ہو گیا', view_cart:'کارٹ دیکھیں', cart:'آپ کا کارٹ',
     cart_empty:'آپ کا کارٹ خالی ہے۔ کوئی ریسٹورنٹ چنیں اور کھانا شامل کریں۔',
     subtotal:'کھانے کی رقم', delivery_fee:'ڈیلیوری فیس', total:'کل رقم', promo:'پرومو کوڈ',
@@ -231,7 +239,7 @@ const I18N = {
     saved:'محفوظ ہو گیا', pick_address:'ڈیلیوری کا پتہ چنیں یا شامل کریں',
     unavailable:'یہ آئٹمز ابھی دستیاب نہیں',
     location_denied:'لوکیشن نہیں مل سکی۔ آپ پتہ لکھ سکتے ہیں۔',
-    no_restaurants:'آپ کے علاقے میں ابھی کوئی ریسٹورنٹ دستیاب نہیں۔', menu_empty:'اس کا مینو تیار ہو رہا ہے۔',
+    no_restaurants:'آپ کے علاقے میں ابھی کوئی دکان دستیاب نہیں۔', menu_empty:'اس دکان میں ابھی کوئی پروڈکٹ نہیں۔', popular:'مقبول پروڈکٹس',
     items_n:'{n} آئٹم', your_details:'آپ کی معلومات', order_no:'آرڈر', restaurant:'ریسٹورنٹ',
     delivered_to:'اس پتے پر ڈیلیوری', order_items:'آپ کا آرڈر', history:'آپ کے آرڈرز',
     addr_in_use:'یہ پتہ پہلے آرڈر میں استعمال ہوا ہے، اس لیے حذف نہیں ہو سکتا۔',
@@ -289,7 +297,7 @@ function showAuth(msg, ok){
   $('app').innerHTML = `
   <div class="auth">
     <div class="auth-top"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <h1 style="font-size:22px;margin-top:8px">${signup ? t('signup') : t('login')}</h1>
     ${state.pending && state.pending.indexOf('checkout') > -1 ? `<p class="muted">${t('login_to_order')}</p>` : ''}
     <form onsubmit="A.submitAuth(event)">
@@ -310,7 +318,7 @@ function showAuth(msg, ok){
 function renderShell(){
   $('app').innerHTML = `
     <header class="top">
-      <a class="brand" href="#/">Khoupeyo<b>.</b></a>
+      <a class="brand" href="#/">Wanhar Mart<b>.</b></a>
       <div class="actions-top">
         <button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button>
         <a class="iconbtn" href="#/cart" aria-label="${t('cart')}">
@@ -392,9 +400,27 @@ function restaurantCard(r){
       <div class="rmeta"><span>${t('delivery')} ${fee}</span><span>${r.prep_time_minutes || 25} min</span></div>
     </div></a>`;
 }
+async function fetchPopularProducts(){
+  const { data, error } = await sb.from('menu_items')
+    .select('id,name,price,photo_url,restaurant_id,restaurants!inner(name,is_active)')
+    .eq('is_available', true).eq('restaurants.is_active', true)
+    .order('created_at', { ascending:false }).limit(12);
+  if (error) throw error; return data;
+}
+function productTile(p){
+  return `<a class="ptile" href="#/r/${p.restaurant_id}">
+    <div class="pimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : esc((p.name || '?')[0])}</div>
+    <div class="pname">${esc(p.name)}</div>
+    <div class="pshop muted">${esc(p.restaurants ? p.restaurants.name : '')}</div>
+    <div class="pprice">${money(p.price)}</div></a>`;
+}
 async function showHome(){
   await loadRestaurants();
+  let popular = [];
+  try { popular = await fetchPopularProducts(); } catch (e) { logErr(e); }
+  const popularHtml = popular.length ? `<h2 style="margin-top:4px">${t('popular')}</h2><div class="prow">${popular.map(productTile).join('')}</div>` : '';
   $('view').innerHTML = `
+    ${popularHtml}
     <input class="search" type="text" id="q" placeholder="${t('search')}" oninput="A.filterList()" autocomplete="off">
     <div id="rlist"></div>`;
   A.filterList();
@@ -633,7 +659,7 @@ async function showAccount(){
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
-    <div class="ver" style="margin-top:14px">Khoupeyo v${APP_VERSION}</div>`;
+    <div class="ver" style="margin-top:14px">Wanhar Mart v${APP_VERSION}</div>`;
 }
 
 // ---- Actions ----
