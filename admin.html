@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Khoupeyo Admin</title>
+<title>Wanhar Mart Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@ main{padding:12px 16px 110px}
 h2{font-size:22px;letter-spacing:-.01em;margin:8px 0 12px}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav-inner{display:flex;width:100%;max-width:760px}
-.nav button{flex:1;background:none;border:0;padding:12px 4px 10px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px;border-top:3px solid transparent}
+.nav button{flex:1;background:none;border:0;padding:11px 2px 9px;cursor:pointer;color:var(--muted);font-weight:600;font-size:12px;border-top:3px solid transparent}
 .nav button.on{color:var(--green);border-top-color:var(--marigold)}
 .bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600}
@@ -99,7 +99,7 @@ a{color:var(--green)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 const APP_DATE = '20 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -112,7 +112,7 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 
-const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], adminRiders:[], riderStats:{}, menuRestaurant:null, categories:[], items:[] };
+const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], adminRiders:[], riderStats:{}, reportOrders:[], menuRestaurant:null, categories:[], items:[] };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -183,7 +183,7 @@ function previewFile(input, imgId){
 function showLogin(msg){
   $('app').innerHTML = `
   <div class="login">
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <p class="muted">Admin sign in <span class="ver">v${APP_VERSION}</span></p>
     <form onsubmit="A.login(event)">
       <label class="f" for="em">Email</label>
@@ -250,13 +250,13 @@ function subscribeOrders(){
 // ---- Shell ----
 function showApp(){
   $('app').innerHTML = `
-    <div class="topbar"><div class="brand">Khoupeyo<b>.</b><span class="ver">v${APP_VERSION}</span></div><div><button class="linkbtn" onclick="go('publish')">Publish</button><button class="linkbtn" onclick="A.logout()">Sign out</button></div></div>
+    <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">v${APP_VERSION}</span></div><div><button class="linkbtn" onclick="go('publish')">Publish</button><button class="linkbtn" onclick="A.logout()">Sign out</button></div></div>
     <main id="main"></main>
     <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
   renderNav(); go(state.tab);
 }
 function renderNav(){
-  const tabs = [['orders','Orders'],['restaurants','Shops'],['menu','Menu'],['riders','Riders'],['zones','Zones']];
+  const tabs = [['orders','Orders'],['restaurants','Shops'],['menu','Products'],['riders','Riders'],['reports','Reports'],['zones','Zones']];
   $('nav').innerHTML = tabs.map(([k,l]) => `<button class="${state.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
 }
 async function go(tab){
@@ -265,6 +265,7 @@ async function go(tab){
   await run(async () => {
     if (tab === 'orders') await loadOrders();
     if (tab === 'riders') await loadRiderAdmin();
+    if (tab === 'reports') await loadReports();
     if (tab === 'menu') { if (!state.menuRestaurant && state.restaurants[0]) state.menuRestaurant = state.restaurants[0].id; await loadMenu(); }
   });
   renderTab();
@@ -275,6 +276,7 @@ function renderTab(){
   if (state.tab === 'restaurants') m.innerHTML = viewRestaurants();
   if (state.tab === 'menu') m.innerHTML = viewMenu();
   if (state.tab === 'riders') m.innerHTML = viewRiders();
+  if (state.tab === 'reports') m.innerHTML = viewReports();
   if (state.tab === 'zones') m.innerHTML = viewZones();
   if (state.tab === 'publish') m.innerHTML = viewPublish();
 }
@@ -339,15 +341,15 @@ function viewRestaurants(){
       </button>
       <div style="text-align:center"><label class="switch"><input type="checkbox" ${r.is_open?'checked':''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small class="muted">${r.is_open?'Open':'Closed'}</small></div>
     </div>`).join('');
-  return `<h2>Restaurants</h2>
-    <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add restaurant</button></div>
+  return `<h2>Shops</h2>
+    <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
     <div class="list">${rows || '<div class="empty">No restaurants yet. Add your first one.</div>'}</div>`;
 }
 function restaurantForm(r){
   r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
   const zoneOpts = state.zones.map(z => `<option value="${z.id}" ${r.zone_id===z.id?'selected':''}>${esc(z.name)}</option>`).join('');
   return `
-    <label class="f" for="r_name">Restaurant name</label><input id="r_name" type="text" value="${esc(r.name)}">
+    <label class="f" for="r_name">Shop name</label><input id="r_name" type="text" value="${esc(r.name)}">
     <label class="f" for="r_desc">Short description</label><input id="r_desc" type="text" value="${esc(r.description)}" placeholder="Burgers, fries and shakes">
     <label class="f" for="r_addr">Address</label><input id="r_addr" type="text" value="${esc(r.address)}">
     <label class="f" for="r_phone">Phone</label><input id="r_phone" type="text" inputmode="tel" value="${esc(r.phone)}">
@@ -367,19 +369,19 @@ function restaurantForm(r){
     <img id="r_prev" class="preview" alt="" style="display:${r.logo_url?'block':'none'}" src="${esc(r.logo_url || '')}">
     <label class="check"><input id="r_isopen" type="checkbox" ${r.is_open?'checked':''}> Open for orders now</label>
     <label class="check"><input id="r_active" type="checkbox" ${r.is_active?'checked':''}> Show in the customer app</label>
-    <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveRestaurant('${r.id || ''}')">Save restaurant</button></div>`;
+    <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveRestaurant('${r.id || ''}')">Save shop</button></div>`;
 }
 
 // ---- Menu ----
 function viewMenu(){
-  if (!state.restaurants.length) return '<h2>Menu</h2><div class="empty">Add a restaurant first, then build its menu here.</div>';
+  if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a restaurant first, then build its menu here.</div>';
   const opts = state.restaurants.map(r => `<option value="${r.id}" ${r.id===state.menuRestaurant?'selected':''}>${esc(r.name)}</option>`).join('');
   const uncategorised = state.items.filter(i => !state.categories.some(c => c.id === i.category_id));
   const block = (title, catId, items) => `
     <div class="cat"><h3>${esc(title)}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
     <div class="list">${items.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
   const cats = state.categories.map(c => block(c.name, c.id, state.items.filter(i => i.category_id === c.id))).join('');
-  return `<h2>Menu</h2>
+  return `<h2>Products</h2>
     <select id="menuRest" onchange="A.pickMenuRestaurant(this.value)" aria-label="Restaurant">${opts}</select>
     <div class="bar" style="margin-top:12px">
       <button class="btn ghost" onclick="A.editCategory()">Add section</button>
@@ -449,6 +451,57 @@ function viewRiders(){
   return `<h2>Riders</h2>
     ${pending.length ? `<h3 style="margin:8px 0">New requests (${pending.length})</h3>${pRows}` : ''}
     ${aRows || '<div class="empty">No approved riders yet. A rider signs up in the Rider app, then you approve them here.</div>'}`;
+}
+
+// ---- Reports ----
+async function loadReports(){
+  const { data, error } = await sb.from('orders')
+    .select('restaurant_id, status, subtotal, rider_id, rider_pay, rider_settled, created_at, order_items(name,quantity,price)')
+    .order('created_at', { ascending:false }).limit(3000);
+  if (error) throw error; state.reportOrders = data;
+  if (!state.adminRiders.length) await loadRiderAdmin();
+}
+function viewReports(){
+  const delivered = state.reportOrders.filter(o => o.status === 'delivered');
+  const byShop = {};
+  delivered.forEach(o => {
+    const s = byShop[o.restaurant_id] || (byShop[o.restaurant_id] = { orders:0, sales:0 });
+    s.orders++; s.sales += Number(o.subtotal || 0);
+  });
+  const shopRows = Object.entries(byShop).map(([id, s]) => {
+    const r = state.restaurants.find(x => x.id === id);
+    return { name: r ? r.name : 'Unknown shop', ...s };
+  }).sort((a, b) => b.sales - a.sales);
+
+  const byProduct = {};
+  delivered.forEach(o => (o.order_items || []).forEach(i => {
+    const p = byProduct[i.name] || (byProduct[i.name] = { qty:0, revenue:0 });
+    p.qty += i.quantity; p.revenue += Number(i.price || 0) * i.quantity;
+  }));
+  const productRows = Object.entries(byProduct).map(([name, p]) => ({ name, ...p })).sort((a, b) => b.qty - a.qty).slice(0, 10);
+
+  const byRider = {};
+  delivered.forEach(o => {
+    if (!o.rider_id) return;
+    const r = byRider[o.rider_id] || (byRider[o.rider_id] = { n:0, earn:0, cashHeld:0 });
+    r.n++; r.earn += Number(o.rider_pay || 0);
+    if (!o.rider_settled) r.cashHeld += Number(o.subtotal || 0);
+  });
+  const riderRows = Object.entries(byRider).map(([id, s]) => {
+    const rr = state.adminRiders.find(x => x.id === id);
+    return { name: rr && rr.profile ? (rr.profile.full_name || 'Rider') : 'Rider', ...s };
+  }).sort((a, b) => b.n - a.n);
+
+  const rowLine = (title, sub, right, small) => `<div class="row"><div class="row-main"><div class="row-title">${esc(title)}</div><div class="row-sub">${esc(sub)}</div></div><div class="row-side">${right}${small ? `<small>${small}</small>` : ''}</div></div>`;
+  const shopTable = shopRows.length ? shopRows.map(s => rowLine(s.name, s.orders + ' orders', money(s.sales))).join('') : '<div class="empty">No sales yet.</div>';
+  const productTable = productRows.length ? productRows.map(p => rowLine(p.name, p.qty + ' sold', money(p.revenue))).join('') : '<div class="empty">No sales yet.</div>';
+  const riderTable = riderRows.length ? riderRows.map(r => rowLine(r.name, r.n + ' deliveries', money(r.earn), 'Cash held ' + money(r.cashHeld))).join('') : '<div class="empty">No deliveries yet.</div>';
+
+  return `<h2>Reports</h2>
+    <p class="muted" style="margin-top:-6px">Based on the last 3000 orders</p>
+    <h3 style="margin:16px 0 6px">Sales by shop</h3><div class="list">${shopTable}</div>
+    <h3 style="margin:20px 0 6px">Top products</h3><div class="list">${productTable}</div>
+    <h3 style="margin:20px 0 6px">Riders</h3><div class="list">${riderTable}</div>`;
 }
 
 // ---- Zones ----
@@ -526,7 +579,7 @@ const A = {
   },
 
   editRestaurant(id){
-    const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit restaurant' : 'Add restaurant', restaurantForm(r));
+    const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit shop' : 'Add shop', restaurantForm(r));
     if (r) sb.rpc('admin_owner_email', { p_restaurant_id:id }).then(({ data }) => { const el = $('r_owner'); if (el && data){ el.value = data; el.dataset.orig = data; } });
   },
   async saveRestaurant(id){
@@ -550,7 +603,7 @@ const A = {
         const { error:e2 } = await sb.rpc('link_restaurant_owner', { p_restaurant_id:saved.id, p_email:ownerEmail });
         if (e2) throw e2;
       }
-      await loadRestaurants(); closeSheet(); renderTab(); toast('Restaurant saved');
+      await loadRestaurants(); closeSheet(); renderTab(); toast('Shop saved');
     });
     const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save restaurant'; }
   },
