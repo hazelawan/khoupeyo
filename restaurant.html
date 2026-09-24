@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Khoupeyo Restaurant</title>
+<title>Wanhar Mart Shop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -102,7 +102,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -145,7 +145,7 @@ const I18N = {
     enable_sound:'Tap here to turn on the alert sound', logout:'Log out', language:'Language',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
     not_linked:'Your account is not linked to a restaurant yet',
-    not_linked_msg:'Send this email address to the Khoupeyo admin. They will link it to your restaurant:',
+    not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your restaurant:',
     check_again:'Check again', in_stock:'In stock', out_stock:'Out of stock', edit_item:'Edit item',
     price:'Price (Rs)', item_name:'Item name', description:'Description', photo:'Photo', save:'Save', cancel:'Cancel',
     new_badge:'NEW ORDER', confirm_email:'Account created. Check your email to confirm it, then log in.',
@@ -172,7 +172,7 @@ const I18N = {
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', logout:'لاگ آؤٹ', language:'زبان',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
     not_linked:'آپ کا اکاؤنٹ ابھی کسی ریسٹورنٹ سے نہیں جڑا',
-    not_linked_msg:'یہ ای میل ایڈریس Khoupeyo کے ایڈمن کو بھیجیں، وہ اسے آپ کے ریسٹورنٹ سے جوڑ دیں گے:',
+    not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کے ریسٹورنٹ سے جوڑ دیں گے:',
     check_again:'دوبارہ دیکھیں', in_stock:'موجود ہے', out_stock:'ختم ہے', edit_item:'آئٹم تبدیل کریں',
     price:'قیمت (Rs)', item_name:'آئٹم کا نام', description:'تفصیل', photo:'تصویر', save:'محفوظ کریں', cancel:'منسوخ',
     new_badge:'نیا آرڈر', confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
@@ -234,7 +234,7 @@ async function keepAwake(){
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.user){ keepAwake(); refreshOrders(true); } });
 const newCount = () => state.orders.filter(o => o.status === 'placed').length;
-function updateTitle(){ const n = newCount(); document.title = n ? `(${n}) ${t('new_badge')} - Khoupeyo` : 'Khoupeyo Restaurant'; }
+function updateTitle(){ const n = newCount(); document.title = n ? `(${n}) ${t('new_badge')} - Wanhar Mart` : 'Wanhar Mart Shop'; }
 
 // ---- Auth ----
 function showAuth(msg, ok){
@@ -242,8 +242,8 @@ function showAuth(msg, ok){
   $('app').innerHTML = `
   <div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Khoupeyo<b>.</b></div>
-    <p class="muted" style="margin:0 0 6px">Restaurant</p>
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Shop</p>
     <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
     <form onsubmit="A.submitAuth(event)">
       ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
@@ -259,7 +259,7 @@ function showAuth(msg, ok){
 }
 function showUnlinked(){
   $('app').innerHTML = `<div class="auth">
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <h1 style="font-size:22px;margin-top:14px">${t('not_linked')}</h1>
     <p class="muted">${t('not_linked_msg')}</p>
     <div class="card" style="font-weight:800;word-break:break-all">${esc(state.user.email)}</div>
@@ -273,7 +273,7 @@ function renderShell(){
   const r = state.restaurant;
   $('app').innerHTML = `
     <header class="top">
-      <div class="brand">${esc(r.name)}<small>Khoupeyo Restaurant</small></div>
+      <div class="brand">${esc(r.name)}<small>Wanhar Mart Shop</small></div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="statusbtn ${r.is_open ? '' : 'off'}" id="openBtn" onclick="go('shop')">${r.is_open ? t('open_now') : t('closed_now')}</button>
       </div>
@@ -409,7 +409,7 @@ function viewShop(){
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
-    <p class="ver" style="margin-top:14px">Khoupeyo Restaurant v${APP_VERSION}</p>`;
+    <p class="ver" style="margin-top:14px">Wanhar Mart Shop v${APP_VERSION}</p>`;
 }
 
 // ---- Photos ----
@@ -471,7 +471,7 @@ const A = {
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
-    state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Khoupeyo Restaurant'; showAuth();
+    state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Wanhar Mart Shop'; showAuth();
   },
   async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else toast(t('not_linked'), true); }); },
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
