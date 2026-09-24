@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Khoupeyo Rider</title>
+<title>Wanhar Mart Rider</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -86,7 +86,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -126,7 +126,7 @@ const I18N = {
     have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
     submit:'Send for approval', pending_title:'Waiting for approval',
-    pending_msg:'Your account is with the Khoupeyo admin. You will see deliveries once it is approved.',
+    pending_msg:'Your account is with the Wanhar Mart admin. You will see deliveries once it is approved.',
     check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', account:'Account',
     online:'Online', offline:'Offline', go_online:'Go online',
     offline_msg:'You are offline. Go online to see deliveries.',
@@ -139,7 +139,7 @@ const I18N = {
     confirm_delivered:'Did you hand over the food and collect the cash?',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
     today:'Today', deliveries_n:'Deliveries', my_earnings:'My earnings', cash_in_hand:'Cash collected',
-    handover:'Cash to hand over to Khoupeyo', handover_note:'Cash collected minus your pay, for deliveries not settled yet.',
+    handover:'Cash to hand over to Wanhar Mart', handover_note:'Cash collected minus your pay, for deliveries not settled yet.',
     recent:'Recent deliveries', no_recent:'No completed deliveries yet.',
     enable_sound:'Tap here to turn on the alert sound', sound:'Alert sound', logout:'Log out', language:'Language',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
@@ -154,7 +154,7 @@ const I18N = {
     have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
     submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
-    pending_msg:'آپ کا اکاؤنٹ Khoupeyo کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
+    pending_msg:'آپ کا اکاؤنٹ Wanhar Mart کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
     check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', account:'اکاؤنٹ',
     online:'آن لائن', offline:'آف لائن', go_online:'آن لائن ہوں',
     offline_msg:'آپ آف لائن ہیں۔ ڈیلیوریاں دیکھنے کے لیے آن لائن ہوں۔',
@@ -167,7 +167,7 @@ const I18N = {
     confirm_delivered:'کیا آپ نے کھانا دے دیا اور رقم لے لی؟',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
     today:'آج', deliveries_n:'ڈیلیوریاں', my_earnings:'میری کمائی', cash_in_hand:'وصول شدہ رقم',
-    handover:'Khoupeyo کو دینے والی رقم', handover_note:'وصول شدہ رقم منفی آپ کی اجرت، ان ڈیلیوریوں کی جو ابھی حساب میں نہیں آئیں۔',
+    handover:'Wanhar Mart کو دینے والی رقم', handover_note:'وصول شدہ رقم منفی آپ کی اجرت، ان ڈیلیوریوں کی جو ابھی حساب میں نہیں آئیں۔',
     recent:'حالیہ ڈیلیوریاں', no_recent:'ابھی کوئی مکمل ڈیلیوری نہیں۔',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
@@ -230,7 +230,7 @@ function showAuth(msg, ok){
   $('app').innerHTML = `
   <div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <p class="muted" style="margin:0 0 6px">Rider</p>
     <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
     <form onsubmit="A.submitAuth(event)">
@@ -247,7 +247,7 @@ function showAuth(msg, ok){
 }
 function showProfileForm(){
   $('app').innerHTML = `<div class="auth">
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <h1 style="font-size:22px;margin-top:14px">${t('rider_profile')}</h1>
     <label class="f" for="p_vehicle">${t('vehicle')}</label>
     <select id="p_vehicle"><option value="motorbike">${t('v_bike')}</option><option value="bicycle">${t('v_bicycle')}</option><option value="car">${t('v_car')}</option></select>
@@ -257,7 +257,7 @@ function showProfileForm(){
 }
 function showPending(){
   $('app').innerHTML = `<div class="auth">
-    <div class="brand">Khoupeyo<b>.</b></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
     <h1 style="font-size:22px;margin-top:14px">${t('pending_title')}</h1>
     <p class="muted">${t('pending_msg')}</p>
     <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
@@ -267,7 +267,7 @@ function showPending(){
 function renderShell(){
   $('app').innerHTML = `
     <header class="top">
-      <div class="brand">Khoupeyo<b>.</b><small>Rider</small></div>
+      <div class="brand">Wanhar Mart<b>.</b><small>Rider</small></div>
       <button class="statusbtn ${state.rider.is_online ? '' : 'off'}" id="onlineBtn" onclick="A.toggleOnline()">${state.rider.is_online ? t('online') : t('offline')}</button>
     </header>
     <main id="view"></main>
@@ -289,7 +289,7 @@ function renderTab(){
   if (state.tab === 'jobs') v.innerHTML = viewJobs();
   if (state.tab === 'earn') v.innerHTML = viewEarn();
   if (state.tab === 'acct') v.innerHTML = viewAcct();
-  document.title = state.available.length && state.rider.is_online ? `(${state.available.length}) Khoupeyo Rider` : 'Khoupeyo Rider';
+  document.title = state.available.length && state.rider.is_online ? `(${state.available.length}) Wanhar Mart Rider` : 'Wanhar Mart Rider';
 }
 
 // ---- Data ----
@@ -318,7 +318,7 @@ async function loadDone(){
 let refreshing = false;
 async function refresh(soft){
   if (refreshing || !state.rider) return; refreshing = true;
-  try { if (state.tab === 'jobs'){ await loadJobs(); renderTab(); } else { await loadAvailable(); document.title = state.available.length ? `(${state.available.length}) Khoupeyo Rider` : 'Khoupeyo Rider'; } }
+  try { if (state.tab === 'jobs'){ await loadJobs(); renderTab(); } else { await loadAvailable(); document.title = state.available.length ? `(${state.available.length}) Wanhar Mart Rider` : 'Wanhar Mart Rider'; } }
   catch (e) { logErr(e); } finally { refreshing = false; }
 }
 
@@ -394,7 +394,7 @@ function viewAcct(){
       <input type="checkbox" style="width:24px;height:24px" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"></div>
     <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
     <button class="btn warn" onclick="A.logout()">${t('logout')}</button></div>
-    <p class="ver" style="margin-top:14px">Khoupeyo Rider v${APP_VERSION}</p>`;
+    <p class="ver" style="margin-top:14px">Wanhar Mart Rider v${APP_VERSION}</p>`;
 }
 
 // ---- Actions ----
