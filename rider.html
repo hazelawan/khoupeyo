@@ -117,6 +117,15 @@ html[dir=rtl] .slide .knob{left:auto;right:5px}
 .facestate{text-align:center;font-weight:700;min-height:26px}
 .face{width:72px;height:72px;border-radius:50%;background:var(--line);overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--muted);flex:none}
 .face img{width:100%;height:100%;object-fit:cover}
+.waitbox{border-radius:12px;padding:12px;margin:10px 0;background:rgba(179,38,30,.1);border:2px solid var(--danger)}
+.waitbox .clock{font-size:30px;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums}
+.waitbox.done{background:rgba(31,111,74,.1);border-color:var(--green)}
+.waitbox.done .clock{color:var(--green)}
+.issuebox{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.card.back{border:2px solid var(--danger)}
+.probs{display:grid;gap:8px}
+.probs button{text-align:start;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-weight:700;cursor:pointer}
+.probs button.on{border:2px solid var(--green);background:var(--soft)}
 .switch{position:relative;display:block;width:50px;height:28px;flex:none}
 .switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
 .switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
@@ -132,7 +141,7 @@ html[dir=rtl] .slide .knob{left:auto;right:5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -222,7 +231,16 @@ const I18N = {
     face_saved:'Face registered', cam_denied:'Camera is blocked. Allow the camera for this site in your browser settings.',
     face_ok:'Face registered', face_missing:'Face not registered', register_face:'Register face',
     duty_started:'Duty started. Good luck!', duty_ended:'Duty ended', getting_loc:'Getting your location…',
-    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready'
+    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready',
+    arrived_btn:'I have arrived at the customer', arrived_at:'Arrived at {t}', report:'Report a problem', report_title:'What is the problem?',
+    note_opt:'More details (optional)', send_report:'Send to Wanhar Mart', reported:'Wanhar Mart and the shop have been informed',
+    waiting_cust:'Waiting for the customer', wait_note:'Call the customer again. When the time ends you can take the order back to the shop.',
+    wait_done:'Waiting time is over', slide_return:'Slide to return the order to the shop', returned_toast:'Order cancelled. Take it back to the shop.',
+    back_title:'Take this order back to the shop', back_note:'The shop will confirm when they receive it.', call_support:'Call Wanhar Mart',
+    problem_open:'Problem reported', k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
+    k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
+    k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
+    k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -265,12 +283,21 @@ const I18N = {
     face_saved:'چہرہ رجسٹر ہو گیا', cam_denied:'کیمرہ بند ہے۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے کیمرہ کی اجازت دیں۔',
     face_ok:'چہرہ رجسٹر ہے', face_missing:'چہرہ رجسٹر نہیں', register_face:'چہرہ رجسٹر کریں',
     duty_started:'ڈیوٹی شروع ہو گئی۔ کامیابی ہو!', duty_ended:'ڈیوٹی ختم ہو گئی', getting_loc:'لوکیشن لی جا رہی ہے…',
-    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار'
+    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار',
+    arrived_btn:'میں گاہک کے پاس پہنچ گیا', arrived_at:'{t} پر پہنچے', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟',
+    note_opt:'مزید تفصیل (اختیاری)', send_report:'Wanhar Mart کو بھیجیں', reported:'Wanhar Mart اور دکان کو اطلاع دے دی گئی',
+    waiting_cust:'گاہک کا انتظار', wait_note:'گاہک کو دوبارہ کال کریں۔ وقت ختم ہونے پر آپ آرڈر دکان واپس لے جا سکتے ہیں۔',
+    wait_done:'انتظار کا وقت ختم', slide_return:'آرڈر دکان واپس لے جانے کے لیے سلائیڈ کریں', returned_toast:'آرڈر منسوخ۔ اسے دکان واپس لے جائیں۔',
+    back_title:'یہ آرڈر دکان واپس لے جائیں', back_note:'دکان وصول کر کے تصدیق کرے گی۔', call_support:'Wanhar Mart کو کال کریں',
+    problem_open:'مسئلہ بتایا گیا', k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
+    k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'دکان پر آرڈر تیار نہیں',
+    k_shop_closed:'دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'حادثہ یا گاڑی کا مسئلہ',
+    k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں'
   }
 };
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
-  mine:[], available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
+  mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
   sound: ls.get('kh_rd_sound', true), seen:new Set(), skipped:new Set(), pos:null
 };
 const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -500,7 +527,13 @@ async function loadShift(){
 async function loadMine(){
   state.mine = need(await sb.from('orders')
     .select('*, restaurant:restaurants(name,address,phone,lat,lng), customer:profiles!customer_id(full_name,phone), order_items(name,quantity,note)')
-    .eq('rider_id', state.rider.id).in('status', ['rider_assigned', 'picked_up']).order('created_at'));
+    .eq('rider_id', state.rider.id).or('status.in.(rider_assigned,picked_up),return_status.eq.returning').order('created_at'));
+  state.issues = {};
+  const ids = state.mine.map(o => o.id);
+  if (ids.length){
+    const rows = need(await sb.from('order_issues').select('*').in('order_id', ids).order('created_at', { ascending:false }));
+    rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
+  }
 }
 async function loadAvailable(){
   if (!onDuty()){ state.available = []; return; }
@@ -605,7 +638,37 @@ function bindSliders(){
 }
 
 // ================= DELIVERIES TAB =================
+function waitIssue(o){ return (state.issues[o.id] || []).find(i => i.status === 'open' && i.wait_until); }
+function returnCard(o){
+  const r = o.restaurant || {};
+  return `<div class="card back"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('back_title')}</span></div>
+    <b>${esc(r.name || '')}</b><div class="muted">${esc(r.address || '')}</div>
+    <div class="two" style="margin-top:8px">${r.phone ? `<a class="btn ghost small" href="tel:${esc(r.phone)}">${t('call')}</a>` : '<span></span>'}
+    <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(r.lat, r.lng, (r.name || '') + ' ' + (r.address || ''))}">${t('open_maps')}</a></div>
+    <div class="note">${t('back_note')}</div></div>`;
+}
+function issueBlock(o){
+  const list = (state.issues[o.id] || []).filter(i => i.status === 'open');
+  const w = waitIssue(o); let html = '';
+  if (w){
+    const left = new Date(w.wait_until).getTime() - Date.now();
+    html += `<div class="waitbox ${left <= 0 ? 'done' : ''}" data-until="${esc(w.wait_until)}"><div class="line"><b>${left <= 0 ? t('wait_done') : t('waiting_cust')}</b><span class="clock">${clock(left)}</span></div>
+      <div style="font-size:14px">${t('k_' + w.kind)}</div><div class="muted" style="font-size:13px">${t('wait_note')}</div></div>
+      ${left <= 0 ? slider(t('slide_return'), `A.returnOrder('${o.id}')`) : ''}`;
+  }
+  list.filter(i => !i.wait_until).forEach(i => { html += `<div class="issuebox"><b>${t('problem_open')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}<br><span class="muted">${t('reported')}</span></div>`; });
+  return html;
+}
+function clock(ms){ if (ms <= 0) return '00:00'; const s = Math.ceil(ms / 1000); return pad(Math.floor(s / 60)) + ':' + pad(s % 60); }
+setInterval(() => {
+  document.querySelectorAll('.waitbox[data-until]').forEach(el => {
+    const left = new Date(el.dataset.until).getTime() - Date.now();
+    const c = el.querySelector('.clock'); if (c) c.textContent = clock(left);
+    if (left <= 0 && !el.classList.contains('done')){ el.classList.add('done'); beep(); if (state.tab === 'jobs' && !document.querySelector('.slide.dragging')) renderTab(); }
+  });
+}, 1000);
 function activeCard(o){
+  if (o.return_status === 'returning') return returnCard(o);
   const r = o.restaurant || {}, c = o.customer || {};
   const items = (o.order_items || []).map(i => `<div>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('');
   const picked = o.status === 'picked_up';
@@ -623,9 +686,12 @@ function activeCard(o){
       ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
       ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')}</a>` : `<span class="muted">${t('no_phone')}</span>`}
       <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(o.address_lat, o.address_lng, o.address_text)}">${t('open_maps')}</a></div>` : ''}</div></div>`;
+  const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
+    : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
+  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   const action = picked
-    ? slider(t('slide_delivered'), `A.markDelivered('${o.id}')`)
-    : slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" onclick="A.giveBack('${o.id}')">${t('give_back')}</button></div>`;
+    ? arrived + issueBlock(o) + slider(t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
+    : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
     <span class="pill">${t('st_' + o.status)}</span></div>${restBlock}${custBlock}
     <div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>
@@ -730,6 +796,7 @@ function viewAcct(){
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
+    ${state.settings.support_phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(state.settings.support_phone)}">${t('call_support')}</a>` : ''}
     <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
     <button class="btn warn" onclick="A.logout()">${t('logout')}</button></div>
     <p class="ver" style="margin-top:14px">Wanhar Mart Rider v${APP_VERSION}</p>`;
@@ -859,6 +926,42 @@ const A = {
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
   setSound(v){ state.sound = v; ls.set('kh_rd_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
 
+  // ---- Problems ----
+  async arrived(id){
+    await run(async () => { need(await sb.rpc('rider_arrived', { p_order_id:id })); await loadJobs(); renderTab(); toast(t('saved')); });
+  },
+  reportForm(id){
+    const o = state.mine.find(x => x.id === id); if (!o) return;
+    const kinds = o.status === 'picked_up'
+      ? ['customer_unreachable','customer_absent','customer_refused_pay','wrong_address','order_damaged','accident','rider_delay','other']
+      : ['shop_delay','shop_closed','accident','rider_delay','other'];
+    state.pickKind = null;
+    const sup = state.settings.support_phone;
+    closeOverlay();
+    const el = document.createElement('div'); el.className = 'over'; el.id = 'overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeOverlay(); });
+    el.innerHTML = `<div class="panel" role="dialog" aria-modal="true">
+      <div class="ch"><h1 style="margin:0">${t('report_title')}</h1><button class="pillbtn" onclick="closeOverlay()">✕</button></div>
+      ${o.status === 'picked_up' && o.customer && o.customer.phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(o.customer.phone)}">${t('call_customer')} ${esc(o.customer.phone)}</a>` : ''}
+      <div class="probs" id="probs">${kinds.map(k => `<button onclick="A.pickKind('${k}', this)">${t('k_' + k)}</button>`).join('')}</div>
+      <label class="f" for="pnote">${t('note_opt')}</label><textarea id="pnote" rows="2"></textarea>
+      <div class="actions"><button class="btn" onclick="A.sendReport('${id}')">${t('send_report')}</button>
+      ${sup ? `<a class="btn ghost" href="tel:${esc(sup)}">${t('call_support')}</a>` : ''}</div></div>`;
+    document.body.appendChild(el);
+  },
+  pickKind(k, btn){ state.pickKind = k; document.querySelectorAll('#probs button').forEach(b => b.classList.toggle('on', b === btn)); },
+  async sendReport(id){
+    if (!state.pickKind) return toast(t('pick_problem'), true);
+    await run(async () => {
+      need(await sb.rpc('report_issue', { p_order_id:id, p_kind:state.pickKind, p_note:($('pnote').value || '').trim() || null }));
+      closeOverlay(); await loadJobs(); renderTab(); toast(t('reported'));
+    });
+  },
+  async returnOrder(id){
+    await run(async () => { need(await sb.rpc('rider_return_order', { p_order_id:id })); await loadJobs(); renderTab(); toast(t('returned_toast')); });
+    renderTab();
+  },
+
   // ---- Deliveries ----
   skipJob(id){ state.skipped.add(id); closeJobPopup(); if (state.tab === 'jobs') renderTab(); },
   async acceptJob(id){
@@ -895,7 +998,8 @@ async function startApp(){
   try {
     if (channel) sb.removeChannel(channel);
     channel = sb.channel('rider-orders').on('postgres_changes',
-      { event:'*', schema:'public', table:'orders', filter:'rider_id=eq.' + state.rider.id }, () => refresh()).subscribe();
+      { event:'*', schema:'public', table:'orders', filter:'rider_id=eq.' + state.rider.id }, () => refresh())
+      .on('postgres_changes', { event:'*', schema:'public', table:'order_issues', filter:'rider_id=eq.' + state.rider.id }, () => refresh()).subscribe();
   } catch (e) { console.warn('Live updates are off', e); }
   if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refresh(); }, 8000);
   if (onDuty()){ startGeo(); keepAwake(); }
