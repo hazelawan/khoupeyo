@@ -145,8 +145,8 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.7';
-const APP_DATE = '28 Sep 2026';
+const APP_VERSION = '2.8';
+const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -158,7 +158,7 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
-const MORE_TABS = ['customers','promos','zones','rules','settings','publish'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','settings','publish'];
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -322,6 +322,7 @@ async function go(tab){
     if (tab === 'riders') await loadRiderMonth();
     if (tab === 'customers') await loadCustomers();
     if (tab === 'promos') await loadPromos();
+    if (tab === 'banners') await Promise.all([loadBanners(), state.restaurants.length ? null : loadRestaurants()]);
     if (tab === 'zones') await loadZones();
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
@@ -331,7 +332,7 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
+              customers:viewCustomers, promos:viewPromos, banners:viewBanners, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
   m.innerHTML = v ? v() : '';
   renderNav();
 }
@@ -616,6 +617,7 @@ function itemForm(i){
     <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> In stock</label>
     <label class="check"><input id="i_appr" type="checkbox" ${i.is_approved ? 'checked' : ''}> Approved (customers can see it)</label>
     <label class="check"><input id="i_feat" type="checkbox" ${i.is_featured ? 'checked' : ''}> Featured on the home screen</label>
+    ${OE.html()}
     <div class="actions">
       <button class="btn block" id="saveBtn" onclick="A.saveItem('${i.id || ''}','${i.restaurant_id || state.menuRestaurant}')">Save product</button>
       ${i.id ? `<button class="btn warn block" onclick="A.deleteItem('${i.id}')">Remove product</button>` : ''}
@@ -688,7 +690,8 @@ function viewMore(){
   return `<h2>More</h2><div class="list">
     <button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>
     ${item('customers', 'Customers', 'See every customer, their orders, block or unblock')}
-    ${item('promos', 'Promo codes', 'Discount codes for customers')}
+    ${item('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
+    ${item('banners', 'Home banners', 'Big pictures at the top of the customer app')}
     ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
     ${item('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
     ${item('settings', 'Settings', 'Selfie check, waiting time, auto cancel, support phone')}
@@ -712,17 +715,35 @@ function viewCustomers(){
 }
 
 // ---- Promo codes ----
-async function loadPromos(){ state.promos = need(await sb.from('promo_codes').select('*').order('code')); }
+async function loadPromos(){ state.promos = need(await sb.from('promo_codes').select('*, owner:profiles!customer_id(full_name)').order('created_at', { ascending:false })); }
+const promoValue = p => p.type === 'free_delivery' ? 'Free delivery' : p.type === 'percent' ? num(p.value) + '% off' + (p.max_discount ? ' (max ' + money(p.max_discount) + ')' : '') : money(p.value) + ' off';
 function viewPromos(){
-  const rows = state.promos.map(p => {
+  const pub = state.promos.filter(p => !p.customer_id), personal = state.promos.filter(p => p.customer_id);
+  const rows = pub.map(p => {
     const expired = p.expires_at && new Date(p.expires_at) < new Date();
     return `<button class="row" onclick="A.editPromo('${p.id}')"><div class="row-main">
       <div class="row-title">${esc(p.code)}${!p.is_active || expired ? `<span class="pill">${expired ? 'Expired' : 'Off'}</span>` : '<span class="pill g">Active</span>'}</div>
-      <div class="row-sub">${p.type === 'percent' ? num(p.value) + '% off' : money(p.value) + ' off'} · min ${money(p.min_order)}${p.expires_at ? ' · until ' + dayName(p.expires_at) : ''}</div></div>
+      <div class="row-sub">${promoValue(p)} · min ${money(p.min_order)}${p.first_order_only ? ' · first order' : ''}${p.show_in_app ? ' · shown in app' : ''}${p.expires_at ? ' · until ' + dayName(p.expires_at) : ''}</div></div>
       <div class="row-side">${p.used_count || 0}${p.usage_limit ? ' / ' + p.usage_limit : ''}<small>used</small></div></button>`;
   }).join('');
-  return `${backLink()}<h2>Promo codes</h2><div class="bar"><button class="btn" onclick="A.editPromo()">Add promo code</button></div>
-    <div class="list">${rows || '<div class="empty">No promo codes yet.</div>'}</div>`;
+  const prow = personal.slice(0, 100).map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.code)} ${p.used_count ? '<span class="pill g">Used</span>' : ''}</div>
+      <div class="row-sub">${esc(p.owner?.full_name || 'Customer')} · ${promoValue(p)} · ${esc(p.title || '')}</div></div></div>`).join('');
+  return `${backLink()}<h2>Promo codes</h2>
+    <div class="muted" style="margin:-6px 0 10px;font-size:14px">Tip: tick "Show in the customer app" so customers see the offer in Offers. Invite-a-friend settings are in Settings.</div>
+    <div class="bar"><button class="btn" onclick="A.editPromo()">Add promo code</button><button class="btn ghost" onclick="A.editPromo(null, 'first')">First order offer</button><button class="btn ghost" onclick="A.editPromo(null, 'free')">Free delivery</button></div>
+    <div class="list">${rows || '<div class="empty">No promo codes yet.</div>'}</div>
+    ${prow ? `<details style="margin-top:14px"><summary><b>Invite-a-friend codes (${personal.length})</b></summary><div class="list" style="margin-top:8px">${prow}</div></details>` : ''}`;
+}
+
+// ---- Banners ----
+async function loadBanners(){ state.banners = need(await sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false })); }
+function viewBanners(){
+  const now = new Date();
+  const rows = (state.banners || []).map(b => { const live = b.is_active && (!b.starts_at || new Date(b.starts_at) <= now) && (!b.ends_at || new Date(b.ends_at) > now);
+    return `<button class="row" onclick="A.editBanner('${b.id}')"><div class="thumb" style="width:64px;height:44px;border-radius:10px;flex:none;background:${esc(b.bg_color || '#1F6F4A')} center/cover ${b.image_url ? `url('${esc(b.image_url)}')` : ''}"></div>
+      <div class="row-main"><div class="row-title">${esc(b.title)} <span class="pill ${live ? 'g' : ''}">${live ? 'Showing' : 'Hidden'}</span></div><div class="row-sub">${esc(b.subtitle || '')}${b.action_type !== 'none' ? ' · tap: ' + esc(b.action_type) : ''}</div></div></button>`; }).join('');
+  return `${backLink()}<h2>Home banners</h2><div class="muted" style="margin:-6px 0 10px;font-size:14px">Customers see these at the top of the home screen and can swipe them. Wide photos look best (about 1200 × 500).</div>
+    <div class="bar"><button class="btn" onclick="A.editBanner()">Add banner</button></div><div class="list">${rows || '<div class="empty">No banners yet. The app shows a simple green banner.</div>'}</div>`;
 }
 
 // ---- Zones ----
@@ -792,6 +813,17 @@ function viewSettings(){
       <div class="actions"><button class="btn ghost block" onclick="A.saveExpiry()">Save</button></div>
     </div>
     <div class="card">
+      <b>Invite a friend</b>
+      <div class="muted" style="font-size:14px">Every customer gets a code. A new customer who uses it gets a discount on the first order. When that first order is delivered, the inviter gets a reward code.</div>
+      ${(() => { const r = Object.assign({ on:true, friend_discount:100, referrer_reward:100, min_order:500, days:60 }, s.referral || {}); return `
+      <label class="check"><input id="rf_on" type="checkbox" ${r.on ? 'checked' : ''}> Invite codes are on</label>
+      <div class="two"><div><label class="f" for="rf_f">New friend gets (Rs off)</label><input id="rf_f" type="number" min="0" value="${num(r.friend_discount)}"></div>
+        <div><label class="f" for="rf_r">Inviter gets (Rs off)</label><input id="rf_r" type="number" min="0" value="${num(r.referrer_reward)}"></div></div>
+      <div class="two"><div><label class="f" for="rf_m">Minimum order (Rs)</label><input id="rf_m" type="number" min="0" value="${num(r.min_order)}"></div>
+        <div><label class="f" for="rf_d">Codes last (days)</label><input id="rf_d" type="number" min="1" value="${num(r.days)}"></div></div>`; })()}
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('referral', { on:$('rf_on').checked, friend_discount:num($('rf_f').value), referrer_reward:num($('rf_r').value), min_order:num($('rf_m').value), days:Math.max(1, num($('rf_d').value)) })">Save invite settings</button></div>
+    </div>
+    <div class="card">
       <b>Rider contracts</b>
       <div class="muted" style="font-size:14px">Two kinds of riders. Set each rider's contract in Riders → rider → Rider settings. Pay per delivery is added on top of the monthly salary. Duty beyond the daily hours is overtime.</div>
       ${['company','freelance'].map(k => { const c = contractOf({ contract_type:k }); return `
@@ -838,6 +870,7 @@ const A = {
     const items = (o.order_items || []).map(i => `<div class="kv"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
     openSheet(`#${o.id.slice(-4).toUpperCase()} ${o.restaurant?.name || 'Order'}`, `
       <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${when(o.created_at)}</span></div>
+      ${o.scheduled_for ? `<div class="note"><b>🗓️ Scheduled for ${esc(new Date(o.scheduled_for).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' }))}</b></div>` : ''}
       <div class="card"><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}
         <div class="muted" style="margin-top:4px">${esc(o.address_text || 'No address')}</div>
         ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}</div>
@@ -848,6 +881,7 @@ const A = {
       <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
       <div class="kv"><span class="muted">Delivery</span><span>${money(o.delivery_fee)}</span></div>
       ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
+      ${num(o.tip) ? `<div class="kv"><span class="muted">Rider tip (goes to rider)</span><span>${money(o.tip)}</span></div>` : ''}
       <div class="kv total"><span>Cash on delivery</span><span>${money(o.total)}</span></div>
       ${o.status === 'delivered' ? `<div class="kv"><span class="muted">Commission</span><span>${money(o.commission_amount)}</span></div><div class="kv"><span class="muted">Shop gets</span><span>${money(o.restaurant_earning)}</span></div><div class="kv"><span class="muted">Rider pay</span><span>${money(o.rider_pay)}</span></div>` : ''}
       ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
@@ -1000,6 +1034,7 @@ const A = {
         : need(await sb.from('menu_categories').select('*').eq('restaurant_id', shop).order('sort_order'));
       if (!state.formCats.length) return toast('Add a section first, for example Burgers', true);
       openSheet(i ? 'Edit product' : 'Add product', itemForm(i));
+      OE.init({ sb, lang:() => 'en' }); OE.load(i ? i.id : null).catch(e => toast(e.message || 'Could not load options', true));
     });
   },
   async saveItem(id, shop){
@@ -1012,7 +1047,10 @@ const A = {
       const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
         category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop };
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
-      need(await (id ? sb.from('menu_items').update(row).eq('id', id) : sb.from('menu_items').insert(row)));
+      let itemId = id;
+      if (id) need(await sb.from('menu_items').update(row).eq('id', id));
+      else itemId = need(await sb.from('menu_items').insert(row).select('id').single()).id;
+      await OE.save(itemId);
       await loadProducts(); closeSheet(); renderTab(); toast('Product saved');
     });
     const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save product'; }
@@ -1212,14 +1250,25 @@ const A = {
   },
 
   // ---- Promos ----
-  editPromo(id){
-    const p = state.promos.find(x => x.id === id) || { type:'percent', value:10, min_order:0, is_active:true, used_count:0 };
+  editPromo(id, preset){
+    const base = preset === 'first' ? { code:'FIRST100', title:'Rs 100 off your first order', type:'fixed', value:100, min_order:500, first_order_only:true, show_in_app:true, per_customer_limit:1, is_active:true, used_count:0 }
+      : preset === 'free' ? { code:'FREEDEL', title:'Free delivery', type:'free_delivery', value:0, min_order:500, show_in_app:true, per_customer_limit:1, is_active:true, used_count:0 }
+      : { type:'percent', value:10, min_order:0, is_active:true, used_count:0, show_in_app:true };
+    const p = state.promos.find(x => x.id === id) || base;
+    const ty = p.type === 'flat' ? 'fixed' : p.type;
     openSheet(id ? 'Edit promo code' : 'Add promo code', `
       <label class="f" for="pc_code">Code</label><input id="pc_code" type="text" autocapitalize="characters" value="${esc(p.code)}" placeholder="WELCOME10">
+      <label class="f" for="pc_title">Title customers see</label><input id="pc_title" type="text" value="${esc(p.title || '')}" placeholder="10% off this weekend">
       <div class="two">
-        <div><label class="f" for="pc_type">Discount type</label><select id="pc_type"><option value="percent" ${p.type === 'percent' ? 'selected' : ''}>Percent %</option><option value="flat" ${p.type !== 'percent' ? 'selected' : ''}>Fixed Rs</option></select></div>
-        <div><label class="f" for="pc_val">Value</label><input id="pc_val" type="number" min="0" value="${num(p.value)}"></div>
+        <div><label class="f" for="pc_type">Discount type</label><select id="pc_type" onchange="$('pc_val').disabled = this.value === 'free_delivery'"><option value="percent" ${ty === 'percent' ? 'selected' : ''}>Percent %</option><option value="fixed" ${ty === 'fixed' ? 'selected' : ''}>Fixed Rs</option><option value="free_delivery" ${ty === 'free_delivery' ? 'selected' : ''}>Free delivery</option></select></div>
+        <div><label class="f" for="pc_val">Value</label><input id="pc_val" type="number" min="0" value="${num(p.value)}" ${ty === 'free_delivery' ? 'disabled' : ''}></div>
       </div>
+      <div class="two">
+        <div><label class="f" for="pc_max">Max discount (Rs, % codes)</label><input id="pc_max" type="number" min="0" value="${p.max_discount ?? ''}" placeholder="No max"></div>
+        <div><label class="f" for="pc_per">Uses per customer</label><input id="pc_per" type="number" min="0" value="${p.per_customer_limit ?? ''}" placeholder="No limit"></div>
+      </div>
+      <label class="check"><input id="pc_first" type="checkbox" ${p.first_order_only ? 'checked' : ''}> Only for a customer's first order</label>
+      <label class="check"><input id="pc_show" type="checkbox" ${p.show_in_app ? 'checked' : ''}> Show in the customer app (Offers)</label>
       <div class="two">
         <div><label class="f" for="pc_min">Minimum order (Rs)</label><input id="pc_min" type="number" min="0" value="${num(p.min_order)}"></div>
         <div><label class="f" for="pc_lim">Usage limit</label><input id="pc_lim" type="number" min="0" value="${p.usage_limit ?? ''}" placeholder="No limit"></div>
@@ -1232,18 +1281,62 @@ const A = {
   },
   async savePromo(id){
     const code = $('pc_code').value.trim().toUpperCase(); if (!code) return toast('Enter a code', true);
-    const val = num($('pc_val').value); if (val <= 0) return toast('Enter a discount value', true);
-    if ($('pc_type').value === 'percent' && val > 100) return toast('Percent cannot be more than 100', true);
-    const exp = $('pc_exp').value; const lim = $('pc_lim').value;
+    const type = $('pc_type').value;
+    const val = type === 'free_delivery' ? 0 : num($('pc_val').value); if (type !== 'free_delivery' && val <= 0) return toast('Enter a discount value', true);
+    if (type === 'percent' && val > 100) return toast('Percent cannot be more than 100', true);
+    const exp = $('pc_exp').value; const lim = $('pc_lim').value; const mx = $('pc_max').value; const per = $('pc_per').value;
     await run(async () => {
-      const row = { code, type:$('pc_type').value, value:val, min_order:num($('pc_min').value), usage_limit:lim === '' ? null : num(lim),
-        expires_at:exp ? new Date(exp + 'T23:59:59').toISOString() : null, is_active:$('pc_act').checked };
+      const row = { code, type, value:val, min_order:num($('pc_min').value), usage_limit:lim === '' ? null : num(lim),
+        expires_at:exp ? new Date(exp + 'T23:59:59').toISOString() : null, is_active:$('pc_act').checked,
+        title:$('pc_title').value.trim() || null, max_discount:mx === '' ? null : num(mx), per_customer_limit:per === '' ? null : num(per),
+        first_order_only:$('pc_first').checked, show_in_app:$('pc_show').checked };
       if (!id) row.used_count = 0;
       need(await (id ? sb.from('promo_codes').update(row).eq('id', id) : sb.from('promo_codes').insert(row)));
       await loadPromos(); closeSheet(); renderTab(); toast('Promo saved');
     });
   },
   async deletePromo(id){ if (!confirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
+
+  // ---- Banners ----
+  editBanner(id){
+    const b = (state.banners || []).find(x => x.id === id) || { title:'', bg_color:'#1F6F4A', action_type:'none', is_active:true, sort_order:(state.banners || []).length };
+    const shops = state.restaurants.map(r => `<option value="${r.id}" ${b.action_value === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+    const dt = v => v ? new Date(new Date(v).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+    openSheet(id ? 'Edit banner' : 'Add banner', `
+      <label class="f" for="bn_title">Big text</label><input id="bn_title" type="text" value="${esc(b.title)}" placeholder="Free delivery this weekend">
+      <label class="f" for="bn_sub">Small text</label><input id="bn_sub" type="text" value="${esc(b.subtitle || '')}" placeholder="On orders over Rs 500">
+      <label class="f" for="bn_img">Photo (optional)</label><input id="bn_img" type="file" accept="image/*" onchange="previewFile(this,'bn_prev')">
+      <img id="bn_prev" class="preview" alt="" style="display:${b.image_url ? 'block' : 'none'}" src="${esc(b.image_url || '')}">
+      ${b.image_url ? `<label class="check"><input id="bn_noimg" type="checkbox"> Remove photo</label>` : ''}
+      <div class="two"><div><label class="f" for="bn_color">Colour</label><input id="bn_color" type="color" value="${esc(b.bg_color || '#1F6F4A')}" style="height:48px;padding:4px"></div>
+        <div><label class="f" for="bn_sort">Order (0 = first)</label><input id="bn_sort" type="number" min="0" value="${num(b.sort_order)}"></div></div>
+      <label class="f" for="bn_act">When tapped</label>
+      <select id="bn_act" onchange="A.bannerAct()"><option value="none" ${b.action_type === 'none' ? 'selected' : ''}>Nothing</option><option value="shop" ${b.action_type === 'shop' ? 'selected' : ''}>Open a shop</option><option value="promo" ${b.action_type === 'promo' ? 'selected' : ''}>Give a promo code</option><option value="url" ${b.action_type === 'url' ? 'selected' : ''}>Open a website link</option></select>
+      <div id="bn_shopbox" style="display:${b.action_type === 'shop' ? 'block' : 'none'}"><label class="f" for="bn_shop">Shop</label><select id="bn_shop">${shops}</select></div>
+      <div id="bn_valbox" style="display:${['promo','url'].includes(b.action_type) ? 'block' : 'none'}"><label class="f" for="bn_val">Promo code or link</label><input id="bn_val" type="text" autocapitalize="off" value="${esc(b.action_type === 'shop' ? '' : (b.action_value || ''))}"></div>
+      <label class="f" for="bn_from">Show from (optional)</label><input id="bn_from" type="datetime-local" value="${dt(b.starts_at)}">
+      <label class="f" for="bn_to">Hide after (optional)</label><input id="bn_to" type="datetime-local" value="${dt(b.ends_at)}">
+      <label class="check"><input id="bn_on" type="checkbox" ${b.is_active ? 'checked' : ''}> Show this banner</label>
+      <div class="actions"><button class="btn block" id="bnSave" onclick="A.saveBanner('${id || ''}')">Save banner</button>${id ? `<button class="btn warn block" onclick="A.deleteBanner('${id}')">Delete</button>` : ''}</div>`);
+  },
+  bannerAct(){ const v = $('bn_act').value; $('bn_shopbox').style.display = v === 'shop' ? 'block' : 'none'; $('bn_valbox').style.display = ['promo','url'].includes(v) ? 'block' : 'none'; },
+  async saveBanner(id){
+    const title = $('bn_title').value.trim(); if (!title) return toast('Write the big text', true);
+    const act = $('bn_act').value; const val = act === 'shop' ? $('bn_shop').value : ($('bn_val').value || '').trim();
+    if (act === 'url' && !/^https?:\/\//.test(val)) return toast('The link must start with https://', true);
+    if (act === 'promo' && !val) return toast('Write the promo code', true);
+    const btn = $('bnSave'); btn.disabled = true; btn.textContent = 'Saving…';
+    await run(async () => {
+      const row = { title, subtitle:$('bn_sub').value.trim() || null, bg_color:$('bn_color').value, sort_order:num($('bn_sort').value), action_type:act,
+        action_value:act === 'none' ? null : (act === 'promo' ? val.toUpperCase() : val), is_active:$('bn_on').checked,
+        starts_at:$('bn_from').value ? new Date($('bn_from').value).toISOString() : null, ends_at:$('bn_to').value ? new Date($('bn_to').value).toISOString() : null };
+      const f = $('bn_img').files[0]; if (f) row.image_url = await uploadImage(f, 'banners'); else if ($('bn_noimg') && $('bn_noimg').checked) row.image_url = null;
+      need(await (id ? sb.from('banners').update(row).eq('id', id) : sb.from('banners').insert(row)));
+      await loadBanners(); closeSheet(); renderTab(); toast('Banner saved');
+    });
+    const b = $('bnSave'); if (b){ b.disabled = false; b.textContent = 'Save banner'; }
+  },
+  async deleteBanner(id){ if (!confirm('Delete this banner?')) return; await run(async () => { need(await sb.from('banners').delete().eq('id', id)); await loadBanners(); closeSheet(); renderTab(); }); },
 
   // ---- Zones ----
   editZone(id){ const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
@@ -1420,7 +1513,7 @@ const Chat = (() => {
       q_rider_rs:['I am at the shop, is the order ready?','I will reach in 5 minutes','Please pack the order properly','I am waiting outside'],
       q_rider_sup:['Customer is not answering','I need help with an order','My vehicle has a problem','Question about my pay','Please call me'],
       q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
-      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please hurry, the food is getting cold'],
+      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please come soon, I am waiting'],
       q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
       q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
       q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
@@ -1444,7 +1537,7 @@ const Chat = (() => {
       q_rider_rs:['میں دکان پر ہوں، آرڈر تیار ہے؟','میں 5 منٹ میں پہنچ رہا ہوں','آرڈر اچھی طرح پیک کریں','میں باہر انتظار کر رہا ہوں'],
       q_rider_sup:['گاہک فون نہیں اٹھا رہا','ایک آرڈر میں مدد چاہیے','میری گاڑی میں مسئلہ ہے','میری اجرت کے بارے میں سوال','مجھے کال کریں'],
       q_shop_cs:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','معذرت، ایک چیز دستیاب نہیں','10 منٹ مزید لگیں گے'],
-      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، کھانا ٹھنڈا ہو رہا ہے'],
+      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، میں انتظار کر رہا ہوں'],
       q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
       q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
       ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
@@ -1686,6 +1779,91 @@ const Push = (() => {
     hide();
   }
   return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
+})();
+
+// ================= PRODUCT OPTIONS EDITOR (Shop app and Admin) =================
+const OE = (() => {
+  const L = {
+    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. The price you add is on top of the product price.',
+         add:'+ Add option group', group:'Group name', group_ph:'Size', required:'Customer must choose', choose:'How many can they pick?', one:'Only 1', upto:'Up to {n}',
+         choice:'Choice', choice_ph:'Large', price:'+ Rs', add_choice:'+ Add choice', remove_group:'Remove group', off:'Off', presets:'Quick add:',
+         p_size:'Size', p_small:'Small', p_medium:'Medium', p_large:'Large', p_color:'Colour', p_black:'Black', p_white:'White', p_weight:'Weight', p_half:'Half kg', p_one:'1 kg', p_extras:'Extras', p_gift:'Gift wrap',
+         need_name:'Write a name for every option group', need_choice:'Every option group needs at least one choice', loading:'Loading options…' },
+    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ جو قیمت لکھیں گے وہ پروڈکٹ کی قیمت کے اوپر لگے گی۔',
+         add:'+ آپشن گروپ شامل کریں', group:'گروپ کا نام', group_ph:'سائز', required:'گاہک کو لازمی چننا ہے', choose:'کتنے چن سکتے ہیں؟', one:'صرف 1', upto:'زیادہ سے زیادہ {n}',
+         choice:'چوائس', choice_ph:'بڑا', price:'+ روپے', add_choice:'+ چوائس شامل کریں', remove_group:'گروپ ہٹائیں', off:'بند', presets:'جلدی شامل کریں:',
+         p_size:'سائز', p_small:'چھوٹا', p_medium:'درمیانہ', p_large:'بڑا', p_color:'رنگ', p_black:'کالا', p_white:'سفید', p_weight:'وزن', p_half:'آدھا کلو', p_one:'1 کلو', p_extras:'اضافی', p_gift:'گفٹ پیکنگ',
+         need_name:'ہر آپشن گروپ کا نام لکھیں', need_choice:'ہر آپشن گروپ میں کم از کم ایک چوائس ہو', loading:'آپشنز لوڈ ہو رہے ہیں…' }
+  };
+  let sbc = null, lang = () => 'en', groups = [], itemId = null, removed = { groups:[], options:[] };
+  const tt = (k, v) => { let s = L[lang() === 'ur' ? 'ur' : 'en'][k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
+  const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+  function init(c){ sbc = c.sb; lang = c.lang || lang; }
+  function html(){ return `<div class="oe"><label class="f" style="margin-bottom:2px">${tt('title')}</label><div class="muted" style="font-size:13px">${tt('hint')}</div><div id="oeBody"><div class="muted">${tt('loading')}</div></div></div>`; }
+  async function load(id){
+    itemId = id || null; groups = []; removed = { groups:[], options:[] };
+    if (id){
+      const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order)').eq('menu_item_id', id).order('sort_order').order('created_at');
+      if (error) throw error;
+      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, on:o.is_available !== false })) }));
+    }
+    draw();
+  }
+  function draw(){
+    const el = document.getElementById('oeBody'); if (!el) return;
+    const maxOpts = [1, 2, 3, 4, 5, 10];
+    el.innerHTML = groups.map((g, gi) => `<div class="oeg" style="border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:var(--paper)">
+        <div style="display:flex;gap:8px;align-items:end"><div style="flex:1"><label class="f" style="margin-top:0">${tt('group')}</label><input type="text" value="${e(g.name)}" placeholder="${tt('group_ph')}" oninput="OE.set(${gi},'name',this.value)"></div>
+          <button type="button" class="linkbtn" style="color:var(--danger);flex:none" onclick="OE.delGroup(${gi})">✕</button></div>
+        <label class="check" style="margin-top:8px"><input type="checkbox" ${g.min ? 'checked' : ''} onchange="OE.set(${gi},'min',this.checked ? 1 : 0)"> ${tt('required')}</label>
+        <label class="f">${tt('choose')}</label><select onchange="OE.set(${gi},'max',Number(this.value))">${maxOpts.map(n => `<option value="${n}" ${g.max === n ? 'selected' : ''}>${n === 1 ? tt('one') : tt('upto', { n })}</option>`).join('')}</select>
+        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 90px auto auto;gap:6px;align-items:center;margin-top:8px">
+            <input type="text" value="${e(o.name)}" placeholder="${tt('choice_ph')}" aria-label="${tt('choice')}" oninput="OE.setO(${gi},${oi},'name',this.value)">
+            <input type="number" min="0" inputmode="decimal" value="${o.price || ''}" placeholder="${tt('price')}" aria-label="${tt('price')}" oninput="OE.setO(${gi},${oi},'price',Number(this.value)||0)">
+            <label style="font-size:12px;display:flex;align-items:center;gap:3px;white-space:nowrap" title="${tt('off')}"><input type="checkbox" ${o.on ? '' : 'checked'} onchange="OE.setO(${gi},${oi},'on',!this.checked)">${tt('off')}</label>
+            <button type="button" class="linkbtn" style="color:var(--danger)" onclick="OE.delO(${gi},${oi})">✕</button></div>`).join('')}
+        <button type="button" class="linkbtn" style="margin-top:6px" onclick="OE.addO(${gi})">${tt('add_choice')}</button></div>`).join('')
+      + `<div style="margin-top:10px"><button type="button" class="btn ghost" onclick="OE.addGroup()">${tt('add')}</button></div>
+         <div class="muted" style="font-size:13px;margin-top:8px">${tt('presets')}
+           <button type="button" class="linkbtn" onclick="OE.preset('size')">${tt('p_size')}</button>
+           <button type="button" class="linkbtn" onclick="OE.preset('color')">${tt('p_color')}</button>
+           <button type="button" class="linkbtn" onclick="OE.preset('weight')">${tt('p_weight')}</button>
+           <button type="button" class="linkbtn" onclick="OE.preset('extras')">${tt('p_extras')}</button></div>`;
+  }
+  const opt = (name, price) => ({ id:uid(), name, price:price || 0, on:true });
+  function addGroup(){ groups.push({ id:uid(), name:'', min:0, max:1, options:[opt('', 0)] }); draw(); }
+  function preset(k){
+    if (k === 'size') groups.push({ id:uid(), name:tt('p_size'), min:1, max:1, options:[opt(tt('p_small'), 0), opt(tt('p_medium'), 0), opt(tt('p_large'), 0)] });
+    if (k === 'color') groups.push({ id:uid(), name:tt('p_color'), min:1, max:1, options:[opt(tt('p_black'), 0), opt(tt('p_white'), 0)] });
+    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0), opt(tt('p_one'), 0)] });
+    if (k === 'extras') groups.push({ id:uid(), name:tt('p_extras'), min:0, max:3, options:[opt(tt('p_gift'), 0)] });
+    draw();
+  }
+  function delGroup(gi){ const g = groups[gi]; if (!g) return; removed.groups.push(g.id); groups.splice(gi, 1); draw(); }
+  function addO(gi){ groups[gi].options.push(opt('', 0)); draw(); }
+  function delO(gi, oi){ const o = groups[gi].options[oi]; removed.options.push(o.id); groups[gi].options.splice(oi, 1); draw(); }
+  function set(gi, k, v){ groups[gi][k] = v; }
+  function setO(gi, oi, k, v){ groups[gi].options[oi][k] = v; }
+  function check(){
+    for (const g of groups){
+      g.name = (g.name || '').trim(); g.options = g.options.filter(o => (o.name || '').trim());
+      if (!g.name) throw new Error(tt('need_name'));
+      if (!g.options.length) throw new Error(tt('need_choice'));
+    }
+  }
+  async function save(id){
+    const need = r => { if (r.error) throw r.error; return r.data; };
+    check();
+    if (removed.groups.length) need(await sbc.from('menu_option_groups').delete().in('id', removed.groups));
+    if (removed.options.length) need(await sbc.from('menu_options').delete().in('id', removed.options));
+    if (!groups.length) return;
+    need(await sbc.from('menu_option_groups').upsert(groups.map((g, i) => ({ id:g.id, menu_item_id:id, name:g.name, min_select:Math.min(g.min, g.max), max_select:g.max, sort_order:i }))));
+    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), is_available:o.on, sort_order:i })));
+    if (rows.length) need(await sbc.from('menu_options').upsert(rows));
+    removed = { groups:[], options:[] };
+  }
+  return { init, html, load, save, addGroup, delGroup, addO, delO, set, setO, preset };
 })();
 
 (async function boot(){
