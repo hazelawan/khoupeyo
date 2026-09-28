@@ -134,7 +134,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.9';
+const APP_VERSION = '3.0';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -186,7 +186,7 @@ const I18N = {
     order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider',
     ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
     open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
-    closed_bar:'Your shop is closed. Customers cannot order.', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
+    closed_bar:'Your shop is closed. Customers cannot order.', statement:'Statement', statement_note:'Download the statement for the period chosen above.', print_pdf:'Print or save as PDF', close_word:'Close', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
     commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart',
@@ -232,7 +232,7 @@ const I18N = {
     order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر',
     ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
     open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
-    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
+    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', statement:'اسٹیٹمنٹ', statement_note:'اوپر چنے گئے وقت کی اسٹیٹمنٹ ڈاؤن لوڈ کریں۔', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے',
@@ -328,6 +328,7 @@ function showAuth(msg, ok){
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
+    ${signup ? Legal.agree(state.lang) : ''}
     ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
     <div class="ver">v${APP_VERSION}</div>
@@ -582,6 +583,7 @@ async function loadEarn(){
     sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20)
   ]);
   const orders = need(o); const del = orders.filter(x => x.status === 'delivered');
+  state.earnOrders = orders;
   const sum = (l, f) => l.reduce((n, x) => n + num(f(x)), 0);
   const by = {};
   del.forEach(x => (x.order_items || []).forEach(i => { const p = by[i.name] || (by[i.name] = { qty:0, rev:0 }); p.qty += i.quantity; p.rev += num(i.price) * i.quantity; }));
@@ -612,6 +614,8 @@ function viewEarn(){
       <div class="line total"><span>${t('your_earning')}</span><span>${money(e.earning)}</span></div>
       <div class="line"><span class="muted">${t('cancelled_n')}</span><span>${num(e.cancelled)}</span></div>
     </div>
+    <div class="two" style="margin-top:10px"><button class="btn ghost" onclick="A.statement('xlsx')">⬇️ Excel</button><button class="btn ghost" onclick="A.statement('pdf')">🧾 PDF</button></div>
+    <div class="muted" style="font-size:13px;text-align:center">${t('statement_note')}</div>
     <h2>${t('top_items')}</h2>${top || `<div class="empty">${t('no_sales')}</div>`}
     <h2>${t('payments')}</h2>${pays || `<div class="empty">${t('no_payments')}</div>`}`;
 }
@@ -655,6 +659,7 @@ function viewShop(){
       <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label></div>
     <div class="actions">
       <button class="btn ghost" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
+      ${Legal.links(state.lang)}
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
@@ -733,6 +738,23 @@ const A = {
   },
   async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else toast(t('not_linked'), true); }); },
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
+  statement(kind){
+    const e = state.earn || {}; const r = state.restaurant; const list = (state.earnOrders || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const periodName = { today:t('today'), '7d':t('d7'), month:t('month'), '30d':t('d30') }[state.period] || '';
+    const d = x => new Date(x).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const items = x => (x.order_items || []).map(i => i.quantity + '× ' + i.name).join(', ');
+    const file = 'Wanhar-Mart-' + (r.name || 'shop').replace(/[^a-z0-9]+/gi, '-') + '-' + new Date().toISOString().slice(0, 10);
+    if (kind === 'xlsx'){
+      const rows = [['Order', 'Date', 'Status', 'Items', 'Sales (Rs)', 'Commission (Rs)', 'Your earning (Rs)']];
+      list.forEach(x => rows.push(['#' + x.id.slice(-4).toUpperCase(), d(x.created_at), x.status, items(x), num(x.subtotal), num(x.commission_amount), num(x.restaurant_earning)]));
+      rows.push([]); rows.push(['Total delivered', '', '', '', num(e.sales), num(e.commission), num(e.earning)]);
+      return Report.excel(file, [{ name:'Statement', rows }, { name:'Top items', rows:[['Item', 'Qty', 'Sales (Rs)'], ...(e.top || []).map(p => [p.name, p.qty, p.rev])] }]);
+    }
+    Report.pdf({ title:t('statement') + ' · ' + r.name, subtitle:periodName + ' · ' + t('commission') + ' ' + num(r.commission_percent) + '%', printLabel:t('print_pdf'), closeLabel:t('close_word'),
+      blocks:[{ heading:t('earnings'), rows:[[t('orders_n'), num(e.orders)], [t('delivered_n'), num(e.delivered)], [t('cancelled_n'), num(e.cancelled)], [t('sales'), money(e.sales)], [t('commission'), '−' + money(e.commission)], [t('your_earning'), money(e.earning), true], [t('to_receive'), money(e.unpaid)]] }],
+      table:{ heading:t('orders_n'), head:['#', 'Date', 'Status', 'Items', 'Sales', 'Commission', 'Earning'], numFrom:4,
+        rows:list.map(x => ['#' + x.id.slice(-4).toUpperCase(), d(x.created_at), x.status, items(x), money(x.subtotal), money(x.commission_amount), money(x.restaurant_earning)]) } });
+  },
   setSound(v){ state.sound = v; ls.set('kh_r_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
   setPeriod(p){ state.period = p; go('earn'); },
 
@@ -882,6 +904,7 @@ async function loadRestaurant(){
 async function startApp(){
   renderShell(); subscribeOrders(); startAlertLoop(); keepAwake();
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'shop', ding:() => beep(), toast:(m, err) => toast(m, err) });
+  Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'shop', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   await go('orders');
 }
@@ -1259,6 +1282,86 @@ const OE = (() => {
     removed = { groups:[], options:[] };
   }
   return { init, html, load, save, addGroup, delGroup, addO, delO, set, setO, preset };
+})();
+
+// ================= LEGAL + DELETE ACCOUNT (Customer, Rider, Shop) =================
+const Legal = (() => {
+  const L = {
+    en:{ agree:'By creating an account you agree to our {t} and {p}.', terms:'Terms', privacy:'Privacy Policy', links:'Privacy Policy and Terms',
+         del:'Delete my account', del_q:'Delete your account? We will remove your personal data. Your past orders stay in our records without your name. This cannot be undone.',
+         del_reason:'Why are you leaving? (optional)', del_done:'Request sent. Wanhar Mart will delete your account within 7 days.' },
+    ur:{ agree:'اکاؤنٹ بنا کر آپ ہماری {t} اور {p} سے اتفاق کرتے ہیں۔', terms:'شرائط', privacy:'پرائیویسی پالیسی', links:'پرائیویسی پالیسی اور شرائط',
+         del:'میرا اکاؤنٹ ختم کریں', del_q:'اکاؤنٹ ختم کریں؟ آپ کی ذاتی معلومات مٹا دی جائیں گی۔ پرانے آرڈر آپ کے نام کے بغیر ریکارڈ میں رہیں گے۔ یہ واپس نہیں ہو سکتا۔',
+         del_reason:'آپ کیوں جا رہے ہیں؟ (اختیاری)', del_done:'درخواست بھیج دی گئی۔ Wanhar Mart سات دن میں اکاؤنٹ ختم کر دے گا۔' }
+  };
+  const tt = (lang, k) => L[lang === 'ur' ? 'ur' : 'en'][k];
+  const url = (lang, part) => 'legal.html?lang=' + (lang === 'ur' ? 'ur' : 'en') + '#' + part;
+  function agree(lang){
+    return `<div class="muted" style="font-size:13px;margin-top:10px;text-align:center">${tt(lang, 'agree').replace('{t}', `<a href="${url(lang, 'terms')}" target="_blank" rel="noopener">${tt(lang, 'terms')}</a>`).replace('{p}', `<a href="${url(lang, 'privacy')}" target="_blank" rel="noopener">${tt(lang, 'privacy')}</a>`)}</div>`;
+  }
+  function links(lang){
+    return `<a class="btn ghost" style="margin-bottom:10px;display:block;text-align:center;text-decoration:none" href="${url(lang, 'privacy')}" target="_blank" rel="noopener">📄 ${tt(lang, 'links')}</a>
+      <button class="btn ghost" style="margin-bottom:10px;color:var(--danger);border-color:var(--danger)" onclick="Legal.del()">🗑️ ${tt(lang, 'del')}</button>`;
+  }
+  let cfg = null;
+  function init(c){ cfg = c; }
+  async function del(){
+    const lang = cfg.lang();
+    if (!confirm(tt(lang, 'del_q'))) return;
+    const why = prompt(tt(lang, 'del_reason'), ''); if (why === null) return;
+    const { error } = await cfg.sb.rpc('request_account_deletion', { p_note:why || null });
+    if (error) return cfg.toast(error.message, true);
+    cfg.toast(tt(lang, 'del_done'));
+  }
+  return { init, agree, links, del };
+})();
+
+// ================= REPORTS: Excel and PDF (Shop app and Admin) =================
+const Report = (() => {
+  let xlsxP = null;
+  function loadXlsx(){
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (!xlsxP) xlsxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = () => res(window.XLSX); s.onerror = () => { xlsxP = null; rej(new Error('xlsx')); }; document.head.appendChild(s); });
+    return xlsxP;
+  }
+  function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+  // sheets: [{ name, rows:[[header...], [cells...]] }]
+  async function excel(file, sheets){
+    try {
+      const X = await loadXlsx(); const wb = X.utils.book_new();
+      sheets.forEach(sh => { const ws = X.utils.aoa_to_sheet(sh.rows); ws['!cols'] = (sh.rows[0] || []).map((_, i) => ({ wch:Math.min(40, Math.max(10, ...sh.rows.map(r => String(r[i] ?? '').length + 2))) })); X.utils.book_append_sheet(wb, ws, sh.name.slice(0, 31)); });
+      X.writeFile(wb, file + '.xlsx');
+    } catch (e) {
+      // Fallback: CSV opens in Excel too
+      const sh = sheets[0]; const csv = sh.rows.map(r => r.map(c => { const v = String(c ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')).join('\n');
+      download(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' }), file + '.csv');
+    }
+  }
+  const esc2 = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  // Printable page: title, subtitle, blocks of { heading, rows:[[label, value]] } and optional table { head:[], rows:[[]] }
+  function pdf(o){
+    const old = document.getElementById('rptWrap'); if (old) old.remove();
+    const w = document.createElement('div'); w.id = 'rptWrap';
+    w.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.5);overflow:auto;padding:16px';
+    const kv = rows => rows.map(([a, b, bold]) => `<tr${bold ? ' style="font-weight:800;border-top:2px solid #111"' : ''}><td>${esc2(a)}</td><td style="text-align:right">${esc2(b)}</td></tr>`).join('');
+    const tbl = t => `<table class="rt"><thead><tr>${t.head.map(h => `<th>${esc2(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map((c, i) => `<td${i >= (t.numFrom ?? 99) ? ' style="text-align:right"' : ''}>${esc2(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    w.innerHTML = `<style>
+      #rptWrap .pg{max-width:800px;margin:0 auto;background:#fff;color:#111;border-radius:12px;padding:24px;font:14px/1.5 system-ui,sans-serif}
+      #rptWrap h1{margin:0;font-size:22px} #rptWrap h2{font-size:16px;margin:18px 0 6px}
+      #rptWrap table{width:100%;border-collapse:collapse} #rptWrap td,#rptWrap th{padding:5px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+      #rptWrap .rt{font-size:12px} #rptWrap .rt th{background:#f0f3ee}
+      #rptWrap .nb{max-width:800px;margin:12px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      @media print{body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
+    </style>
+    <div class="pg"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h1>${esc2(o.title)}</h1><div style="color:#555">${esc2(o.subtitle || '')}</div></div>
+      <div style="text-align:right"><b style="font-size:18px">Wanhar Mart<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
+      ${(o.blocks || []).map(b => `<h2>${esc2(b.heading)}</h2><table>${kv(b.rows)}</table>`).join('')}
+      ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2>${tbl(o.table)}` : ''}
+      ${o.note ? `<p style="color:#555;font-size:12px;margin-top:16px">${esc2(o.note)}</p>` : ''}</div>
+    <div class="nb"><button class="btn" onclick="window.print()">${esc2(o.printLabel || 'Print or save as PDF')}</button><button class="btn ghost" style="background:#fff" onclick="document.getElementById('rptWrap').remove()">${esc2(o.closeLabel || 'Close')}</button></div>`;
+    document.body.appendChild(w);
+  }
+  return { excel, pdf };
 })();
 
 (async function boot(){
