@@ -208,7 +208,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -722,7 +722,7 @@ function drawCart(){
 
 // ================= CHECKOUT =================
 async function loadAddresses(){
-  state.addresses = need(await sb.from('addresses').select('*').order('created_at', { ascending:false }));
+  state.addresses = need(await sb.from('addresses').select('*').eq('customer_id', state.user.id).order('created_at', { ascending:false }));
   if (!state.addresses.find(a => a.id === state.selAddr)) state.selAddr = state.addresses[0] ? state.addresses[0].id : null;
 }
 async function showCheckout(){
@@ -991,7 +991,8 @@ const A = {
       if (state.editAddr){
         const upd = { label:$('ad_label').value.trim() || null, full_address:full, note:$('ad_note').value.trim() || null };
         if (state.newCoords){ upd.lat = state.newCoords.lat; upd.lng = state.newCoords.lng; }
-        data = need(await sb.from('addresses').update(upd).eq('id', state.editAddr).select().single());
+        data = need(await sb.from('addresses').update(upd).eq('id', state.editAddr).eq('customer_id', state.user.id).select().maybeSingle());
+        if (!data) throw new Error(t('error'));
       } else {
         data = need(await sb.from('addresses').insert({ customer_id:state.user.id, label:$('ad_label').value.trim() || null, full_address:full, note:$('ad_note').value.trim() || null,
           lat:state.newCoords ? state.newCoords.lat : null, lng:state.newCoords ? state.newCoords.lng : null }).select().single());
@@ -1006,8 +1007,9 @@ const A = {
   async deleteAddress(id){
     if (!confirm(t('delete_confirm'))) return;
     await run(async () => {
-      const { error } = await sb.from('addresses').delete().eq('id', id);
+      const { data, error } = await sb.from('addresses').delete().eq('id', id).eq('customer_id', state.user.id).select('id');
       if (error){ if (error.code === '23503') throw new Error(t('addr_in_use')); throw error; }
+      if (!data || !data.length) throw new Error(t('error'));
       await loadAddresses(); if (currentRoute === 'checkout') drawCheckout(); else await showAccount(); toast(t('saved'));
     });
   },
