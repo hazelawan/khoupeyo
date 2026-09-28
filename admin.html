@@ -140,7 +140,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -152,6 +152,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKe
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
+const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem' };
 const MORE_TABS = ['customers','promos','zones','rules','settings','publish'];
 
 // ---- Small helpers ----
@@ -194,7 +195,7 @@ function need(res){ if (res.error) throw res.error; return res.data; }
 
 const state = {
   tab:'home', period:'today', dash:null, shopReport:[], topProducts:[],
-  orders:[], orderFilter:'active', orderQ:'',
+  orders:[], issues:[], orderFilter:'active', orderQ:'',
   zones:[], restaurants:[], riders:[],
   riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
   menuRestaurant:'all', productFilter:'all', productQ:'', categories:[], items:[], formCats:[],
@@ -277,6 +278,10 @@ function subscribeOrders(){
       if (payload.eventType === 'INSERT') toast('New order received');
       if (state.tab === 'orders'){ await run(loadOrders); renderTab(); }
       if (state.tab === 'home'){ await run(loadDash); renderTab(); }
+    }).on('postgres_changes', { event:'*', schema:'public', table:'order_issues' }, async payload => {
+      if (payload.eventType === 'INSERT'){ toast('New problem: ' + (KIND[payload.new && payload.new.kind] || 'reported'), true); }
+      if (state.tab === 'orders'){ await run(loadOrders); renderTab(); }
+      else { await run(loadIssues); renderNav(); }
     }).subscribe();
   } catch (e) { console.warn('Live updates off', e); }
 }
@@ -292,7 +297,7 @@ function showApp(){
 }
 function renderNav(){
   const d = state.dash || {};
-  const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]];
+  const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting) + num(d.issues_open)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]];
   const cur = MORE_TABS.includes(state.tab) ? 'more' : state.tab;
   $('nav').innerHTML = tabs.map(([k, l, n]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${l}${n ? `<span class="dot">${n}</span>` : ''}</button>`).join('');
 }
@@ -333,6 +338,7 @@ async function loadDash(){
     sb.from('orders').select('order_items(name,quantity,price)').eq('status', 'delivered').gte('created_at', f.toISOString()).lt('created_at', t.toISOString()).limit(2000)
   ]);
   state.dash = need(d); state.shopReport = need(s) || [];
+  try { await loadIssues(); } catch (e) { console.warn(e); }
   const by = {};
   (p.data || []).forEach(o => (o.order_items || []).forEach(i => { const x = by[i.name] || (by[i.name] = { qty:0, rev:0 }); x.qty += i.quantity; x.rev += num(i.price) * i.quantity; }));
   state.topProducts = Object.entries(by).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty).slice(0, 8);
@@ -364,6 +370,7 @@ function viewHome(){
     </div>
     <p class="muted" style="font-size:13px">Wanhar Mart earning = commission + delivery fees − rider delivery pay − promo discounts. Rider salaries and fines are in the Riders tab.</p>
     <div class="alerts">
+      ${n('issues_open') ? `<button class="alert red" onclick="state.orderFilter='problems';go('orders')"><span>Delivery problems to handle</span><b>${n('issues_open')}</b></button>` : ''}
       ${alert(n('orders_waiting'), n('orders_waiting'), 'New orders waiting for the shop', 'orders', true)}
       ${alert(n('ready_no_rider'), n('ready_no_rider'), 'Ready orders with no rider', 'orders', true)}
       ${alert(n('riders_pending'), n('riders_pending'), 'Rider requests to approve', 'riders')}
@@ -379,7 +386,14 @@ function viewHome(){
 }
 
 // ================= ORDERS =================
+async function loadIssues(){
+  state.issues = need(await sb.from('order_issues')
+    .select('*, order:orders(id,status,total,address_text,address_lat,address_lng,failed_delivery,return_status,customer:profiles!customer_id(full_name,phone),restaurant:restaurants(name,phone)), rider:riders(profile:profiles(full_name,phone))')
+    .in('status', ['open','returning']).order('created_at', { ascending:false }).limit(100));
+  if (state.dash) state.dash.issues_open = state.issues.length;
+}
 async function loadOrders(){
+  await loadIssues();
   state.orders = need(await sb.from('orders')
     .select('*, restaurant:restaurants(name,phone), customer:profiles!customer_id(full_name,phone), rider:riders(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
     .order('created_at', { ascending:false }).limit(300));
@@ -394,11 +408,35 @@ const ORDER_FILTERS = [
   ['cancelled','Cancelled', o => ['cancelled','rejected'].includes(o.status)],
   ['all','All', () => true]
 ];
+function issueCard(i){
+  const o = i.order || {}; const c = o.customer || {}; const r = o.restaurant || {}; const rd = i.rider && i.rider.profile;
+  const left = i.wait_until ? Math.ceil((new Date(i.wait_until) - Date.now()) / 60000) : null;
+  const tel = (label, ph) => ph ? `<a class="btn ghost small" href="tel:${esc(ph)}">${label}</a>` : '';
+  return `<div class="card" style="border:2px solid ${i.status === 'returning' ? 'var(--marigold)' : 'var(--danger)'}">
+    <div class="row-title">${esc(KIND[i.kind] || i.kind)}<span class="pill ${i.status === 'returning' ? 'y' : 'r'}">${i.status === 'returning' ? 'Returning to shop' : 'Open'}</span></div>
+    <div class="row-sub">#${esc(String(o.id || '').slice(-4).toUpperCase())} · ${esc(r.name || '')} · ${money(o.total)} · ${timeAgo(i.created_at)}</div>
+    ${i.note ? `<div class="note" style="margin:8px 0">${esc(i.note)}</div>` : ''}
+    ${i.status === 'open' && left != null ? `<div class="kv"><span class="muted">Customer waiting time</span><b class="${left > 0 ? 'red' : ''}">${left > 0 ? left + ' min left' : 'Over, rider can return'}</b></div>` : ''}
+    <div class="kv"><span class="muted">Customer</span><span>${esc(c.full_name || '')}</span></div>
+    <div class="kv"><span class="muted">Rider</span><span>${esc(rd ? rd.full_name : '')}</span></div>
+    <div class="bar" style="margin:8px 0 0">${tel('Call customer', c.phone)}${tel('Call rider', rd && rd.phone)}${tel('Call shop', r.phone)}</div>
+    <div class="bar" style="margin:8px 0 0">
+      ${i.status === 'open' && i.wait_until && left > 0 ? `<button class="btn small" onclick="A.issueAction('${i.id}','allow_return')">Allow return now</button>` : ''}
+      ${i.status === 'returning' ? `<button class="btn small" onclick="A.confirmReturn('${o.id}')">Shop got it back</button>` : ''}
+      <button class="btn ghost small" onclick="A.issueAction('${i.id}','resolve')">Mark solved</button>
+      <button class="linkbtn" onclick="A.openOrder('${o.id}')">Open order</button>
+    </div></div>`;
+}
 function viewOrders(){
+  if (state.orderFilter === 'problems'){
+    const chips0 = ORDER_FILTERS.map(([k, l]) => `<button class="chip" onclick="A.orderFilter('${k}')">${l}</button>`).join('');
+    return `<h2>Orders</h2><div class="chips"><button class="chip on">Problems ${state.issues.length}</button>${chips0}</div>
+      ${state.issues.map(issueCard).join('') || '<div class="empty">No open problems. Riders and shops report problems from their apps.</div>'}`;
+  }
   const f = (ORDER_FILTERS.find(x => x[0] === state.orderFilter) || ORDER_FILTERS[0])[2];
   const q = state.orderQ.trim().toLowerCase();
   const list = state.orders.filter(f).filter(o => !q || [o.id.slice(-4), o.restaurant?.name, o.customer?.full_name, o.customer?.phone, o.address_text].some(x => String(x || '').toLowerCase().includes(q)));
-  const chips = ORDER_FILTERS.map(([k, l, fn]) => { const c = state.orders.filter(fn).length; return `<button class="chip ${state.orderFilter === k ? 'on' : ''}" onclick="A.orderFilter('${k}')">${l}${k !== 'all' && c ? ' ' + c : ''}</button>`; }).join('');
+  const chips = `<button class="chip" style="${state.issues.length ? 'border-color:var(--danger);color:var(--danger)' : ''}" onclick="A.orderFilter('problems')">Problems ${state.issues.length}</button>` + ORDER_FILTERS.map(([k, l, fn]) => { const c = state.orders.filter(fn).length; return `<button class="chip ${state.orderFilter === k ? 'on' : ''}" onclick="A.orderFilter('${k}')">${l}${k !== 'all' && c ? ' ' + c : ''}</button>`; }).join('');
   const rows = list.map(o => {
     const idx = STEPS.indexOf(o.status);
     return `<button class="row" onclick="A.openOrder('${o.id}')">
@@ -628,7 +666,7 @@ function viewMore(){
     ${item('promos', 'Promo codes', 'Discount codes for customers')}
     ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
     ${item('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
-    ${item('settings', 'Settings', 'Selfie face check at duty start')}
+    ${item('settings', 'Settings', 'Selfie check, customer waiting time, support phone')}
     ${item('publish', 'Publish updates', 'Upload new app files to GitHub')}
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button>
   </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
@@ -706,6 +744,18 @@ function viewSettings(){
       <div class="muted" style="font-size:14px">Lower is stricter. 0.5 is a good balance. Use 0.45 for stricter, 0.55 if riders are wrongly rejected.</div>
       <input id="s_th" type="number" step="0.01" min="0.3" max="0.7" value="${th}" style="margin-top:8px">
       <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('face_match_threshold', Number($('s_th').value || 0.5))">Save</button></div>
+    </div>
+    <div class="card">
+      <label class="f" for="s_wait" style="margin-top:0"><b>Customer waiting time (minutes)</b></label>
+      <div class="muted" style="font-size:14px">When a customer does not answer or is not at the address, the rider waits this long before the order can be returned to the shop.</div>
+      <input id="s_wait" type="number" min="1" max="60" value="${num(s.customer_wait_minutes ?? 10)}" style="margin-top:8px">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('customer_wait_minutes', Math.max(1, Number($('s_wait').value || 10)))">Save</button></div>
+    </div>
+    <div class="card">
+      <label class="f" for="s_sup" style="margin-top:0"><b>Support phone number</b></label>
+      <div class="muted" style="font-size:14px">Riders see a "Call Wanhar Mart" button with this number.</div>
+      <input id="s_sup" type="text" inputmode="tel" value="${esc(s.support_phone || '')}" placeholder="03001234567" style="margin-top:8px">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('support_phone', $('s_sup').value.trim())">Save</button></div>
     </div>`;
 }
 
@@ -742,8 +792,14 @@ const A = {
       <div class="kv total"><span>Cash on delivery</span><span>${money(o.total)}</span></div>
       ${o.status === 'delivered' ? `<div class="kv"><span class="muted">Commission</span><span>${money(o.commission_amount)}</span></div><div class="kv"><span class="muted">Shop gets</span><span>${money(o.restaurant_earning)}</span></div><div class="kv"><span class="muted">Rider pay</span><span>${money(o.rider_pay)}</span></div>` : ''}
       ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
+      ${o.arrived_at ? `<div class="muted">Rider arrived at customer: ${when(o.arrived_at)}</div>` : ''}
+      ${o.return_status ? `<div class="note">Failed delivery. Return: <b>${esc(o.return_status)}</b>${o.return_status === 'returning' ? ` <button class="btn small" onclick="A.confirmReturn('${o.id}')">Shop got it back</button>` : ''}</div>` : ''}
+      <div id="issuesBox"></div>
       <h3 style="margin-top:14px">Timeline</h3><ul class="timeline" id="tl"><li class="muted">Loading…</li></ul>
       <div class="actions">${orderActions(o)}</div>`);
+    sb.from('order_issues').select('*').eq('order_id', id).order('created_at').then(({ data:iss }) => {
+      const el = $('issuesBox'); if (el && iss && iss.length) el.innerHTML = '<h3 style="margin-top:14px">Problems</h3>' + iss.map(i => `<div class="kv"><span>${esc(KIND[i.kind] || i.kind)}${i.note ? ' · ' + esc(i.note) : ''}<br><small class="muted">${when(i.created_at)}${i.resolution ? ' · ' + esc(i.resolution) : ''}</small></span><span class="pill ${i.status === 'resolved' ? 'g' : 'r'}">${esc(i.status)}</span></div>`).join('');
+    });
     const { data } = await sb.from('order_status_log').select('status,changed_at').eq('order_id', id).order('changed_at');
     const tl = $('tl'); if (tl) tl.innerHTML = (data || []).map(x => `<li><span>${LABEL[x.status] || x.status}</span><span class="muted">${when(x.changed_at)}</span></li>`).join('') || '<li class="muted">No history</li>';
   },
@@ -755,6 +811,16 @@ const A = {
       need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason }));
       closeSheet(); await loadOrders(); renderTab(); toast('Order updated');
     });
+  },
+  async issueAction(id, action){
+    let note = null;
+    if (action === 'resolve'){ note = prompt('How was it solved? (optional)', ''); if (note === null) return; }
+    if (action === 'allow_return' && !confirm('Allow the rider to return this order to the shop now?')) return;
+    await run(async () => { need(await sb.rpc('admin_issue_action', { p_issue_id:id, p_action:action, p_note:note || null })); await loadOrders(); renderTab(); toast('Done'); });
+  },
+  async confirmReturn(orderId){
+    if (!confirm('Confirm the shop received this order back?')) return;
+    await run(async () => { need(await sb.rpc('confirm_return', { p_order_id:orderId })); closeSheet(); await loadOrders(); renderTab(); toast('Return confirmed'); });
   },
   async assign(id){
     const rid = $('riderSel').value;
