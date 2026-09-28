@@ -140,7 +140,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -671,7 +671,7 @@ function viewMore(){
     ${item('promos', 'Promo codes', 'Discount codes for customers')}
     ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
     ${item('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
-    ${item('settings', 'Settings', 'Selfie check, customer waiting time, support phone')}
+    ${item('settings', 'Settings', 'Selfie check, waiting time, auto cancel, support phone')}
     ${item('publish', 'Publish updates', 'Upload new app files to GitHub')}
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button>
   </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
@@ -755,6 +755,15 @@ function viewSettings(){
       <div class="muted" style="font-size:14px">When a customer does not answer or is not at the address, the rider waits this long before the order can be returned to the shop.</div>
       <input id="s_wait" type="number" min="1" max="60" value="${num(s.customer_wait_minutes ?? 10)}" style="margin-top:8px">
       <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('customer_wait_minutes', Math.max(1, Number($('s_wait').value || 10)))">Save</button></div>
+    </div>
+    <div class="card">
+      <b>Automatic order cancelling</b>
+      <div class="muted" style="font-size:14px">The server checks every 5 minutes. Orders already picked up by a rider are never cancelled automatically.</div>
+      <div class="two">
+        <div><label class="f" for="s_acc">Shop must accept within (minutes)</label><input id="s_acc" type="number" min="5" max="120" value="${num(s.shop_accept_minutes ?? 15)}"></div>
+        <div><label class="f" for="s_exp">Order expires after (hours)</label><input id="s_exp" type="number" min="1" max="48" step="0.5" value="${num(s.order_expiry_hours ?? 3)}"></div>
+      </div>
+      <div class="actions"><button class="btn ghost block" onclick="A.saveExpiry()">Save</button></div>
     </div>
     <div class="card">
       <label class="f" for="s_sup" style="margin-top:0"><b>Support phone number</b></label>
@@ -1201,6 +1210,13 @@ const A = {
   },
 
   // ---- Settings ----
+  async saveExpiry(){
+    const acc = Math.max(5, num($('s_acc').value) || 15), exp = Math.max(1, num($('s_exp').value) || 3);
+    await run(async () => {
+      need(await sb.from('app_settings').upsert([{ key:'shop_accept_minutes', value:acc, updated_at:new Date().toISOString() }, { key:'order_expiry_hours', value:exp, updated_at:new Date().toISOString() }]));
+      await loadSettings(); renderTab(); toast('Saved');
+    });
+  },
   async saveSetting(key, value){
     await run(async () => { need(await sb.from('app_settings').upsert({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
   }
