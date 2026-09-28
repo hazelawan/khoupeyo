@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
 <title>Wanhar Mart Rider</title>
+<link rel="manifest" href="manifest-rider.json">
+<link rel="apple-touch-icon" href="icon-rider-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -141,7 +146,7 @@ html[dir=rtl] .slide .knob{left:auto;right:5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.6';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -192,7 +197,7 @@ const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
 const I18N = {
   en: {
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
-    have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
+    forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
     submit:'Send for approval', pending_title:'Waiting for approval',
     pending_msg:'Your account is with the Wanhar Mart admin. You will see deliveries once it is approved.',
@@ -208,7 +213,7 @@ const I18N = {
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call',
     cash_collect:'Collect cash', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
-    today:'Today', deliveries_n:'Deliveries', on_duty_time:'On duty',
+    today:'Today', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol', c_freelance:'Own bike + petrol (freelance)', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
     paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand',
     cash_note:'All cash you collected must be deposited at the Wanhar Mart office. Your pay comes with your salary.',
@@ -245,7 +250,7 @@ const I18N = {
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
-    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
+    forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
     submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
     pending_msg:'آپ کا اکاؤنٹ Wanhar Mart کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
@@ -261,7 +266,7 @@ const I18N = {
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال',
     cash_collect:'وصول کریں', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
-    today:'آج', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت',
+    today:'آج', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول', c_freelance:'اپنی بائیک + پیٹرول (فری لانس)', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
     paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد',
     cash_note:'وصول شدہ تمام نقد رقم Wanhar Mart کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
@@ -442,6 +447,7 @@ function showAuth(msg, ok){
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
+    ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
     <div class="ver">v${APP_VERSION}</div>
   </div>`;
@@ -524,6 +530,7 @@ async function loadShift(){
   const since = new Date(); since.setHours(0, 0, 0, 0);
   const rows = need(await sb.from('rider_shifts').select('id,started_at,ended_at').eq('rider_id', state.rider.id).or(`ended_at.is.null,ended_at.gte.${since.toISOString()}`).order('started_at', { ascending:false }).limit(20));
   state.shift = rows.find(r => !r.ended_at) || null;
+  state.todayAt = Date.now();
   state.todayMinutes = rows.reduce((n, r) => n + ((r.ended_at ? new Date(r.ended_at) : new Date()) - Math.max(new Date(r.started_at), since)) / 60000, 0);
 }
 async function loadMine(){
@@ -559,6 +566,10 @@ async function loadMoney(){
   ]);
   state.done = need(done); state.cash = need(unsettled).reduce((n, o) => n + num(o.total), 0);
   state.fines = need(fines); state.payouts = need(pays); state.handovers = need(hand);
+  try {
+    const ot = need(await sb.rpc('rider_overtime', { p_rider_id:state.rider.id, p_from:m.toISOString(), p_to:new Date().toISOString() }));
+    state.ot = (Array.isArray(ot) ? ot[0] : ot) || null;
+  } catch (e) { state.ot = null; }
   await loadShift();
 }
 async function loadRules(){
@@ -722,6 +733,24 @@ function cashWarning(){
   if (cash >= lim * 0.8) return `<div class="note">${t('near_limit')} (${money(cash)} / ${money(lim)})</div>`;
   return '';
 }
+// Contract and 8-hour duty
+const CONTRACT_DEFAULT = { company:{ delivery_pay:40, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:150, daily_hours:8 } };
+function myContract(){
+  const k = state.rider && state.rider.contract_type === 'company' ? 'company' : 'freelance';
+  const all = (state.settings && state.settings.rider_contracts) || CONTRACT_DEFAULT;
+  return Object.assign({ kind:k }, CONTRACT_DEFAULT[k], all[k] || {});
+}
+function dutyCard(){
+  const c = myContract(); const goal = num(c.daily_hours) * 60;
+  const m = num(state.todayMinutes) + (state.shift && state.todayAt ? (Date.now() - state.todayAt) / 60000 : 0);
+  const pct = goal ? Math.min(100, m / goal * 100) : 0; const ot = Math.max(0, m - goal);
+  return `<div class="card">
+    <div class="line"><b>${t('duty_today')}</b><span class="muted" style="font-size:13px">${t('c_' + c.kind)}</span></div>
+    <div class="line"><b style="font-size:24px">${hm(m)}</b><span class="muted">${t('of_hours').replace('{h}', num(c.daily_hours))}</span></div>
+    <div class="bar"><i style="width:${pct}%;${ot > 0 ? 'background:var(--marigold,#F2A900)' : ''}"></i></div>
+    <div style="font-size:14px;margin-top:6px">${ot > 0 ? `<b style="color:var(--green)">${t('ot_now')}: +${hm(ot)}</b>` : (m >= goal ? t('hours_done') : `<span class="muted">${t('hours_left').replace('{t}', hm(goal - m))}</span>`)}</div>
+  </div>`;
+}
 function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -736,7 +765,7 @@ function viewJobs(){
   const list = state.available.filter(j => !state.skipped.has(j.order_id));
   const jobs = onDuty() ? (list.length ? `<h2>${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
     : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
-  return sound + cashWarning() + mine + (state.mine.length ? '' : stats) + jobs;
+  return sound + cashWarning() + (onDuty() && !state.mine.length ? dutyCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
 }
 
 // ================= EARNINGS TAB =================
@@ -745,7 +774,9 @@ function viewEarn(){
   const deliveryPay = sum(state.done, o => o.rider_pay);
   const activeFines = state.fines.filter(f => f.status === 'active');
   const fines = sum(activeFines, f => f.amount);
-  const monthPay = num(r.monthly_salary) + deliveryPay - fines;
+  const c = myContract(); const otMin = num(state.ot && state.ot.overtime_minutes);
+  const otPay = Math.round(otMin / 60 * num(c.overtime_per_hour));
+  const monthPay = num(r.monthly_salary) + deliveryPay + otPay - fines;
   const ms = ymd(monthStart());
   const paid = sum(state.payouts.filter(p => p.period_start === ms), p => p.amount);
   const lim = num(r.cash_limit), cash = num(state.cash);
@@ -762,10 +793,17 @@ function viewEarn(){
       <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
       <div class="tile"><b>${hm(state.todayMinutes)}</b><span>${t('on_duty_time')} · ${t('today')}</span></div>
     </div>
+    ${dutyCard()}
+    <div class="card">
+      <div class="line"><span class="muted">${t('contract')}</span><b>${t('c_' + c.kind)}</b></div>
+      <div class="line"><span class="muted">${money(c.delivery_pay)} ${t('per_delivery')}</span><span class="muted" style="font-size:13px;text-align:end">${t('ot_rate').replace('{r}', money(c.overtime_per_hour)).replace('{h}', num(c.daily_hours))}</span></div>
+    </div>
     <h2>${esc(monthName)}</h2>
     <div class="card">
       <div class="line"><span class="muted">${t('salary')}</span><span>${money(r.monthly_salary)}</span></div>
       <div class="line"><span class="muted">${t('delivery_pay')} (${state.done.length})</span><span>${money(deliveryPay)}</span></div>
+      <div class="line"><span class="muted">${t('overtime')} (${hm(otMin)})</span><span>${money(otPay)}</span></div>
+      ${state.ot ? `<div class="line"><span class="muted">${t('on_duty_time')} · ${t('days_worked')} ${num(state.ot.days_worked)}</span><span>${hm(num(state.ot.duty_minutes))}</span></div>` : ''}
       <div class="line"><span class="muted">${t('fines')} (${activeFines.length})</span><span class="red">−${money(fines)}</span></div>
       <div class="line total"><span>${t('month_pay')}</span><span>${money(monthPay)}</span></div>
       <div class="line"><span class="muted">${t('paid')}</span><span>${money(paid)}</span></div>
@@ -825,6 +863,15 @@ const A = {
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
     renderShell(); markTab(); renderTab();
   },
+  async forgotPw(){
+    const email = ($('a_email') && $('a_email').value.trim()) || '';
+    const msg = $('authMsg');
+    if (!email){ msg.style.color = ''; msg.textContent = t('enter_email_first'); $('a_email').focus(); return; }
+    msg.textContent = t('loading');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:new URL('reset.html?app=rider', location.href).href });
+    if (error){ msg.style.color = ''; msg.textContent = error.message; return; }
+    msg.style.color = 'var(--green)'; msg.textContent = t('reset_sent');
+  },
   switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
   async submitAuth(e){
     e.preventDefault(); unlockAudio();
@@ -868,7 +915,7 @@ const A = {
   async recheck(){ await run(async () => { await loadRider(); await route(); }); },
   async logout(){
     if (onDuty()){ try { await sb.rpc('end_shift'); } catch (e) {} }
-    Chat.stop(); Chat.close(); await sb.auth.signOut(); stopGeo(); closeJobPopup();
+    await Push.logout(); Chat.stop(); Chat.close(); await sb.auth.signOut(); stopGeo(); closeJobPopup();
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
     state.user = null; state.rider = null; state.profile = null; state.mine = []; state.available = []; state.authMode = 'login'; showAuth();
@@ -1013,6 +1060,7 @@ async function startApp(){
   } catch (e) { console.warn('Live updates are off', e); }
   if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refresh(); }, 8000);
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'rider', ding:() => beep(), toast:(m, err) => toast(m, err) });
+  Push.init({ sb, app:'rider', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   if (onDuty()){ startGeo(); keepAwake(); }
   getPosOnce();
   await run(loadShift); updateDutyBtn();
@@ -1224,6 +1272,85 @@ const Chat = (() => {
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
   return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
+// ================= PUSH + INSTALL (same code in all four apps) =================
+const Push = (() => {
+  const VAPID = 'BB7DLfT-2lWO5GdEBRw40xpz0jVcRYmXrjlzn84Z__HZODNrLJueYsar3rEAMUqSOCSVEOHApgJzEDrxLM2z6-E';
+  const L = {
+    en:{ title:'Turn on notifications', text:'Get new orders, messages and updates even when the app is closed.', on:'Turn on', later:'Later',
+         install:'Install app', install_t:'Add to home screen', ios:'On iPhone: tap Share ⬆️ then “Add to Home Screen”, open the app from there, then turn on notifications.',
+         done:'Notifications are on', blocked:'Notifications are blocked. Allow them in your browser settings for this site.', fail:'Could not turn on notifications' },
+    ur:{ title:'نوٹیفکیشن آن کریں', text:'ایپ بند ہو تب بھی نئے آرڈر، میسج اور اپڈیٹس ملیں گے۔', on:'آن کریں', later:'بعد میں',
+         install:'ایپ انسٹال کریں', install_t:'ہوم اسکرین پر لگائیں', ios:'آئی فون پر: Share ⬆️ دبائیں پھر “Add to Home Screen”، وہاں سے ایپ کھولیں، پھر نوٹیفکیشن آن کریں۔',
+         done:'نوٹیفکیشن آن ہو گئے', blocked:'نوٹیفکیشن بند ہیں۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے اجازت دیں۔', fail:'نوٹیفکیشن آن نہیں ہو سکے' }
+  };
+  let cfg = null, deferred = null;
+  const tt = k => (L[(cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en'][k]);
+  const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+  const snoozed = () => { try { return Number(localStorage.getItem('kh_push_later') || 0) > Date.now(); } catch (e) { return false; } };
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(); });
+  window.addEventListener('appinstalled', () => { deferred = null; show(); });
+
+  async function reg(){ return navigator.serviceWorker.register('sw.js'); }
+  async function subscribe(){
+    const r = await reg(); await navigator.serviceWorker.ready;
+    let s = await r.pushManager.getSubscription();
+    if (!s) s = await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64(VAPID) });
+    const j = s.toJSON();
+    const { error } = await cfg.sb.rpc('save_push_subscription', { p_endpoint:j.endpoint, p_p256dh:j.keys.p256dh, p_auth:j.keys.auth, p_app:cfg.app });
+    if (error) throw error;
+  }
+  async function turnOn(){
+    try {
+      const p = await Notification.requestPermission();
+      if (p !== 'granted'){ cfg.toast(tt('blocked'), true); hide(); return; }
+      await subscribe(); cfg.toast(tt('done')); hide();
+    } catch (e) { cfg.toast(tt('fail') + ': ' + (e.message || e), true); }
+  }
+  async function install(){ if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; show(); }
+  function later(){ try { localStorage.setItem('kh_push_later', String(Date.now() + 3 * 864e5)); } catch (e) {} hide(); }
+  function hide(){ const el = document.getElementById('pushCard'); if (el) el.remove(); }
+  function show(){
+    hide();
+    if (!cfg || !cfg.me() || snoozed()) return;
+    const needPush = supported() && Notification.permission === 'default';
+    const iosHint = isIOS() && !standalone();
+    if (!needPush && !deferred && !iosHint) return;
+    const el = document.createElement('div'); el.id = 'pushCard';
+    el.setAttribute('role', 'dialog');
+    el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9000;max-width:460px;margin:0 auto;background:var(--surface,#fff);color:var(--ink,#1E2B25);border:1px solid var(--line,#DDE3DB);border-radius:18px;padding:14px 14px 12px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:15px';
+    const btn = 'border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer';
+    el.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px;line-height:1">🔔</div><div style="flex:1">
+      <b style="font-size:16px">${needPush ? tt('title') : tt('install_t')}</b>
+      <div style="color:var(--muted,#66746C);margin-top:2px">${iosHint ? tt('ios') : tt('text')}</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--green,#1F6F4A);color:#fff;flex:1">${tt('on')}</button>` : ''}
+        ${deferred ? `<button data-a="inst" style="${btn};background:var(--marigold,#F2A900);color:#1E2B25;flex:1">${tt('install')}</button>` : ''}
+        <button data-a="later" style="${btn};background:transparent;color:var(--muted,#66746C)">${tt('later')}</button></div>`;
+    el.addEventListener('click', ev => { const a = ev.target.closest('button') && ev.target.closest('button').dataset.a; if (a === 'on') turnOn(); else if (a === 'inst') install(); else if (a === 'later') later(); });
+    document.body.appendChild(el);
+  }
+  async function init(c){
+    cfg = c;
+    if (!('serviceWorker' in navigator)) return;
+    try { await reg(); } catch (e) { return; }
+    // Already allowed before: refresh the saved subscription quietly for this account
+    if (supported() && Notification.permission === 'granted'){ try { await subscribe(); } catch (e) {} }
+    setTimeout(show, 2500);
+  }
+  async function logout(){
+    try {
+      const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+      if (sub && cfg) await cfg.sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    } catch (e) {}
+    hide();
+  }
+  return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
 })();
 
 (async function boot(){
