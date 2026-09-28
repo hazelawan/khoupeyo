@@ -176,6 +176,9 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .statushero{background:var(--green);color:#fff;border-radius:18px;padding:18px;margin:10px 0}
 .statushero b{display:block;font-size:24px;line-height:1.2}
 .banner2{border-radius:12px;padding:12px;margin:12px 0;font-weight:700}
+.waitwarn{background:rgba(179,38,30,.1);border:2px solid var(--danger);border-radius:14px;padding:14px;margin:12px 0}
+.waitwarn .clock{font-size:30px;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums}
+.arrived{background:var(--marigold);color:#1E2B25;border-radius:14px;padding:14px;margin:12px 0;font-weight:800;font-size:18px}
 .banner2.bad{background:var(--surface);border:1px solid var(--danger);color:var(--danger)}
 .orow{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
 .orow .r{text-align:end;font-weight:700}
@@ -208,7 +211,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.2';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -280,7 +283,8 @@ const I18N = {
     sort_best:'Best selling', sort_new:'Newest', sort_low:'Price: low to high', sort_high:'Price: high to low',
     sold_n:'{n} sold', off:'OFF', you_save:'You save {n}', qty:'Quantity', favourites:'Saved items', no_favs:'Tap the heart on a product to save it here.',
     banner_t:'Everything delivered to your door', banner_s:'Order from local shops. Pay cash on delivery.', minutes:'min',
-    search_shop:'Search in this shop', results_for:'Results for "{q}"', blocked:'Your account is blocked. Please contact Wanhar Mart.'
+    search_shop:'Search in this shop', results_for:'Results for "{q}"', blocked:'Your account is blocked. Please contact Wanhar Mart.',
+    rider_here:'Your rider has arrived. Please come to the door.', rider_waiting:'Your rider is waiting for you', wait_warn:'Please pick up the phone or come to the door. If you do not respond before the time ends, your order will be cancelled.', failed:'The rider could not deliver your order and it was cancelled.'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -329,7 +333,8 @@ const I18N = {
     sort_best:'سب سے زیادہ بکنے والی', sort_new:'نئی', sort_low:'قیمت: کم سے زیادہ', sort_high:'قیمت: زیادہ سے کم',
     sold_n:'{n} بکے', off:'رعایت', you_save:'آپ کی بچت {n}', qty:'تعداد', favourites:'محفوظ چیزیں', no_favs:'کسی پروڈکٹ پر دل دبائیں، وہ یہاں محفوظ ہو جائے گی۔',
     banner_t:'ہر چیز آپ کے دروازے پر', banner_s:'مقامی دکانوں سے آرڈر کریں۔ ادائیگی ڈیلیوری پر نقد۔', minutes:'منٹ',
-    search_shop:'اس دکان میں تلاش کریں', results_for:'"{q}" کے نتائج', blocked:'آپ کا اکاؤنٹ بلاک ہے۔ براہ کرم Wanhar Mart سے رابطہ کریں۔'
+    search_shop:'اس دکان میں تلاش کریں', results_for:'"{q}" کے نتائج', blocked:'آپ کا اکاؤنٹ بلاک ہے۔ براہ کرم Wanhar Mart سے رابطہ کریں۔',
+    rider_here:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', rider_waiting:'آپ کا رائیڈر آپ کا انتظار کر رہا ہے', wait_warn:'براہ کرم فون اٹھائیں یا دروازے پر آئیں۔ وقت ختم ہونے تک جواب نہ دیا تو آرڈر منسوخ ہو جائے گا۔', failed:'رائیڈر آپ کا آرڈر نہیں پہنچا سکا اور یہ منسوخ ہو گیا۔'
   }
 };
 
@@ -817,6 +822,15 @@ async function showOrder(id){
   }
   if (['rider_assigned', 'picked_up'].includes(o.status)){ const rr = await sb.rpc('order_rider_info', { p_order_id:id }); if (rr.data && rr.data[0]) rider = rr.data[0]; }
   if (o.status === 'delivered'){ const rv = await sb.from('reviews').select('*').eq('order_id', id).maybeSingle(); review = rv.data || null; }
+  let waitHtml = '';
+  if (o.status === 'picked_up'){
+    const iss = await sb.from('order_issues').select('kind,wait_until,status').eq('order_id', id).eq('status', 'open').not('wait_until', 'is', null).limit(1);
+    const w = iss.data && iss.data[0];
+    if (w) waitHtml = `<div class="waitwarn" data-until="${esc(w.wait_until)}"><div class="line"><b>${t('rider_waiting')}</b><span class="clock">--:--</span></div><div>${t('wait_warn')}</div>
+      ${rider && rider.phone ? `<a class="btn" style="margin-top:10px" href="tel:${esc(rider.phone)}">${t('call_rider')} ${esc(rider.phone)}</a>` : ''}</div>`;
+    else if (o.arrived_at) waitHtml = `<div class="arrived">${t('rider_here')}</div>`;
+  }
+  if (o.failed_delivery) waitHtml = `<div class="banner2 bad">${t('failed')}</div>`;
   const riderBox = rider ? `<div class="box"><b>${t('your_rider')}</b><div>${esc(rider.full_name || '')}</div>
     <div style="display:grid;gap:10px;margin-top:10px">${rider.phone ? `<a class="btn ghost" href="tel:${esc(rider.phone)}">${t('call_rider')} ${esc(rider.phone)}</a>` : ''}
     ${rider.lat ? `<a class="btn gold" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${rider.lat},${rider.lng}">${t('track_rider')}</a>` : ''}</div></div>` : '';
@@ -825,6 +839,7 @@ async function showOrder(id){
   $('view').innerHTML = `
     ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
     <div class="muted">${when(o.created_at)}</div>
+    ${waitHtml}
     ${trackerHtml(o)}
     ${riderBox}
     <div class="box"><b>${t('order_items')}</b>${items}
@@ -841,6 +856,13 @@ async function showOrder(id){
     </div>${o.status === 'delivered' ? ratingHtml(o, review) : ''}`;
   if (!FINAL.includes(o.status)) pollTimer = setInterval(() => route(true), 15000);
 }
+
+setInterval(() => {
+  document.querySelectorAll('.waitwarn[data-until]').forEach(el => {
+    const ms = new Date(el.dataset.until).getTime() - Date.now(); const c = el.querySelector('.clock');
+    if (c){ const x = Math.max(0, Math.ceil(ms / 1000)); c.textContent = String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); }
+  });
+}, 1000);
 
 // ================= ACCOUNT =================
 async function showAccount(){
