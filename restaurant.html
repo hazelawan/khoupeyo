@@ -127,7 +127,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.4';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -204,7 +204,7 @@ const I18N = {
     k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
     k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
-    k_rider_delay:'Rider will be late', k_other:'Other problem'
+    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -250,11 +250,11 @@ const I18N = {
     k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
     k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
-    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ'
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا'
   }
 };
 const state = {
-  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, acceptedAt:{}, cats:[], items:[], tab:'orders',
+  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
   sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, productFilter:'all', productQ:'', alerted:new Set()
 };
 const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -338,7 +338,7 @@ function renderShell(){
   $('app').innerHTML = `
     <header class="top">
       <div class="brand">${esc(r.name)}<small>Wanhar Mart Shop</small></div>
-      <button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button>
+      <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button></div>
     </header>
     <main id="view"></main>
     <nav class="nav"><div class="nav-in">
@@ -392,6 +392,9 @@ async function loadOrders(){
   if (recent.length){
     const rows = need(await sb.from('order_issues').select('*').in('order_id', recent).in('status', ['open','returning']).order('created_at', { ascending:false }));
     rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
+    const newIss = rows.filter(i => !state.seenIssues.has(i.id));
+    newIss.forEach(i => state.seenIssues.add(i.id));
+    if (newIss.length && state.loadedOnce){ beep(); toast(t('new_problem') + ': ' + t('k_' + newIss[0].kind), true); }
   }
   state.orders = data;
   const fresh = data.filter(o => o.status === 'placed' && !state.alerted.has(o.id));
@@ -425,6 +428,11 @@ function orderCard(o){
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
+  const cid = JSON.stringify(o.id);
+  actions += `<div style="display:grid;grid-template-columns:${o.rider_id ? '1fr 1fr 1fr' : '1fr 1fr'};gap:8px;margin-top:10px">
+    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "cs", null)'>💬 ${t('customer')}</button>
+    ${o.rider_id ? `<button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "rs", null)'>💬 ${t('rider_label')}</button>` : ''}
+    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "sup_s", null)'>💬 ${t('help_word')}</button></div>`;
   if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
@@ -455,7 +463,8 @@ function viewOrders(){
   const live = fresh.length || kitchen.length || ready.length || back.length;
   const backHtml = back.length ? `<h2>${t('coming_back')} <span class="count">${back.length}</span></h2>${back.map(o => `<div class="card back">
       <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('coming_back')}</span></div>
-      ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>${o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : ''}
+      ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>
+      ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}</div>`).join('') || (o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : '')}
       <button class="btn" onclick="A.receivedBack('${o.id}')">${t('received_back')}</button></div>`).join('')}` : '';
   return `${sound}${closed}${backHtml}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
@@ -619,6 +628,7 @@ function viewShop(){
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b>${t('sound')}</b>
       <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label></div>
     <div class="actions">
+      <button class="btn ghost" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
@@ -680,7 +690,7 @@ const A = {
     }
   },
   async logout(){
-    await sb.auth.signOut();
+    Chat.stop(); Chat.close(); await sb.auth.signOut();
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
@@ -808,7 +818,7 @@ function subscribeOrders(){
       { event:'*', schema:'public', table:'orders', filter:'restaurant_id=eq.' + state.restaurant.id },
       async payload => { if (payload.eventType === 'INSERT'){ unlockAudio(); beep(); } await refreshOrders(); }
     ).on('postgres_changes', { event:'INSERT', schema:'public', table:'order_issues', filter:'restaurant_id=eq.' + state.restaurant.id },
-      async payload => { unlockAudio(); beep(); toast(t('new_problem') + ': ' + t('k_' + (payload.new && payload.new.kind)), true); await refreshOrders(); }
+      async () => { unlockAudio(); await refreshOrders(); }
     ).subscribe();
   } catch (e) { console.warn('Live updates are off', e); }
   if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refreshOrders(); }, 15000);
@@ -820,13 +830,205 @@ async function loadRestaurant(){
   state.restaurant = data[0] || null;
 }
 async function startApp(){
-  renderShell(); subscribeOrders(); startAlertLoop(); keepAwake(); await go('orders');
+  renderShell(); subscribeOrders(); startAlertLoop(); keepAwake();
+  Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'shop', ding:() => beep(), toast:(m, err) => toast(m, err) });
+  await go('orders');
 }
 async function afterLogin(user){
   state.user = user; await loadRestaurant();
   if (!state.restaurant) return showUnlinked();
   await startApp();
 }
+// ================= CHAT (same code in all four apps) =================
+const Chat = (() => {
+  const L = {
+    en: {
+      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
+      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
+      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
+      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
+      'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
+      'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
+      q_customer:['Please call me','I am coming down','Please leave it at the door','Where are you?'],
+      q_rider:['I am on my way','I have arrived, please come outside','I cannot find your address, please call me','I am at the shop, waiting for the order'],
+      q_shop:['Your order is being prepared','Your order is ready','The rider can come to pick up now'],
+      q_admin:['We are looking into it','Thank you for waiting','Please call us'],
+      ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
+      sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
+    },
+    ur: {
+      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
+      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
+      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
+      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
+      sup:'سپورٹ',
+      q_customer:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ کہاں ہیں؟'],
+      q_rider:['میں راستے میں ہوں','میں پہنچ گیا ہوں، براہ کرم باہر آئیں','آپ کا پتہ نہیں مل رہا، مجھے کال کریں','میں دکان پر آرڈر کا انتظار کر رہا ہوں'],
+      q_shop:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','رائیڈر اب آرڈر لینے آ سکتا ہے'],
+      q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
+      ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
+      sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
+    }
+  };
+  let cfg = null, cur = null, chan = null, seenIds = new Set(), unread = {};
+  const lang = () => (cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en';
+  const tr = k => (L[lang()][k] !== undefined ? L[lang()][k] : L.en[k] !== undefined ? L.en[k] : k);
+  const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const me = () => cfg && cfg.me && cfg.me();
+  const keyOf = m => (m.order_id || '') + '|' + m.thread + '|' + (m.user_id || '');
+  const seenTs = k => { try { return localStorage.getItem('wm_chat_' + k) || ''; } catch (x) { return ''; } };
+  const setSeen = (k, ts) => { try { if (ts > seenTs(k)) localStorage.setItem('wm_chat_' + k, ts); } catch (x) {} };
+  const hm = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  function label(thread, orderId, name){
+    const base = thread === 'sup' ? (cfg.role === 'admin' ? tr('sup') + (name ? ': ' + name : '') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    return base + (orderId ? ' · #' + String(orderId).slice(-4).toUpperCase() : '');
+  }
+  if (!document.getElementById('chatCss')){
+    const st = document.createElement('style'); st.id = 'chatCss';
+    st.textContent = `.cbtn{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:none;font-size:19px}
+.cbtn .cn{position:absolute;top:-4px;inset-inline-end:-4px;background:#B3261E;color:#fff;font-size:11px;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:none;place-items:center;padding:0 4px}
+.chatwrap{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.chatbox{background:var(--paper);width:100%;max-width:640px;height:92%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.chathead{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.chathead b{flex:1;font-size:18px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chathead button{background:none;border:0;font-size:26px;cursor:pointer;color:var(--muted);padding:2px 8px}
+.chatlist{flex:1;overflow:auto;padding:12px}
+.chatrow{display:flex;gap:12px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;color:inherit}
+.chatrow .av{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.chatrow .tx{flex:1;min-width:0}.chatrow .tx div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatrow .ub{background:#B3261E;color:#fff;border-radius:10px;font-size:12px;font-weight:800;padding:1px 8px}
+.msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.bub{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);align-self:flex-start;word-wrap:break-word;white-space:pre-wrap}
+.sysmsg{align-self:center;max-width:90%;text-align:center;background:rgba(242,169,0,.18);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.sysmsg small{display:block;font-weight:400;opacity:.7;font-size:11px}
+.askbtn{border:1px solid #B3261E !important;color:#B3261E !important;background:transparent;border-radius:999px;font-size:13px !important;font-weight:800;padding:6px 10px !important;white-space:nowrap}
+.bub.mine{align-self:flex-end;background:var(--green);color:#fff;border-color:var(--green)}
+.bub small{display:block;font-size:11px;opacity:.7;margin-top:2px}
+.bub .who{font-size:12px;font-weight:800;color:var(--green);display:block}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0}
+.quick button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:inherit}
+.chatin{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.chatin textarea{flex:1;min-height:44px;max-height:120px;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--paper);color:var(--ink)}
+.chatin button{border:0;background:var(--green);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
+    document.head.appendChild(st);
+  }
+  function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
+  function paintBadge(){
+    const n = Object.values(unread).reduce((a, b) => a + b, 0);
+    document.querySelectorAll('#chatN').forEach(el => { el.textContent = n; el.style.display = n ? 'grid' : 'none'; });
+    if (cfg && cfg.onUnread) cfg.onUnread(n);
+  }
+  function init(c){
+    cfg = c; stop();
+    chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
+    refresh();
+  }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  async function refresh(){
+    if (!me()) return;
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
+    unread = {};
+    (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    paintBadge();
+  }
+  function onMsg(m){
+    if (!m || seenIds.has(m.id)) return; seenIds.add(m.id);
+    const k = keyOf(m);
+    if (cur && cur.k === k){ if (!cur.msgs.some(x => x.id === m.id)) cur.msgs.push(m); draw(); setSeen(k, m.created_at); return; }
+    if (m.sender_id !== me()){
+      unread[k] = (unread[k] || 0) + 1; paintBadge();
+      if (cfg.ding) cfg.ding();
+      if (cfg.toast) cfg.toast('💬 ' + tr('new_msg') + ': ' + fmt(m).slice(0, 70));
+      if ($('inboxList')) inbox();
+    }
+  }
+  function shell(title, inner, extra){
+    close();
+    const w = document.createElement('div'); w.className = 'chatwrap'; w.id = 'chatWrap';
+    w.addEventListener('click', ev => { if (ev.target === w) close(); });
+    w.innerHTML = `<div class="chatbox" role="dialog" aria-modal="true"><div class="chathead"><b>${e(title)}</b>${extra || ''}<button onclick="Chat.close()" aria-label="Close">&times;</button></div>${inner}</div>`;
+    document.body.appendChild(w);
+  }
+  function close(){ cur = null; const w = document.getElementById('chatWrap'); if (w) w.remove(); }
+  async function inbox(){
+    const since = new Date(Date.now() - 14 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('*').gte('created_at', since).order('created_at', { ascending:false }).limit(cfg.role === 'admin' ? 800 : 300);
+    const groups = {};
+    (data || []).forEach(m => { const k = keyOf(m); if (!groups[k]) groups[k] = { k, last:m, order_id:m.order_id, thread:m.thread, user_id:m.user_id }; });
+    let names = {};
+    const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
+    if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    const rows = Object.values(groups).map(g => {
+      const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
+      return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
+        <span class="av">${g.thread.startsWith('sup') ? '★' : e(title[0])}</span>
+        <span class="tx"><div><b>${e(title)}</b></div><div class="muted" style="font-size:14px">${g.last.sender_id === me() && g.last.sender_role !== 'system' ? e(tr('you')) + ': ' : ''}${e(fmt(g.last))}</div><div class="muted" style="font-size:12px">${hm(g.last.created_at)}</div></span>
+        ${n ? `<span class="ub">${n}</span>` : ''}</button>`;
+    }).join('');
+    const sup = cfg.role === 'admin' ? '' : `<button class="chatrow" onclick='Chat.open(null, "sup", ${e(JSON.stringify(me()))}, ${e(JSON.stringify(tr('support')))})'><span class="av">★</span><span class="tx"><div><b>${e(tr('support'))}</b></div><div class="muted" style="font-size:14px">${e(tr('support_sub'))}</div></span></button>`;
+    if (document.getElementById('inboxList')) document.getElementById('inboxList').innerHTML = sup + (rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`);
+    else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
+  }
+  async function open(orderId, thread, userId, title){
+    const k = (orderId || '') + '|' + thread + '|' + (userId || '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    const quick = (L[lang()]['q_' + cfg.role] || L.en['q_' + cfg.role] || []);
+    shell(title || label(thread, orderId), `<div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
+      ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
+      <div class="chatin"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
+    q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
+    if (!orderId) q = q.eq('user_id', userId);
+    const { data } = await q;
+    if (!cur || cur.k !== k) return;
+    cur.msgs = data || []; cur.msgs.forEach(m => seenIds.add(m.id));
+    draw();
+    if (cur.msgs.length) setSeen(k, cur.msgs[cur.msgs.length - 1].created_at);
+    delete unread[k]; paintBadge();
+  }
+  function fmt(m){
+    if (m.sender_role !== 'system') return String(m.body);
+    const parts = String(m.body).split('|');
+    if (parts[0] === 'join_request') return tr('sys_req').replace('{w}', tr(parts[1] || '')) + (parts.slice(2).join('|') ? ': ' + parts.slice(2).join('|') : '');
+    if (parts[0] === 'joined') return tr('sys_joined');
+    return String(m.body);
+  }
+  async function askJoin(){
+    if (!cur || !cur.orderId) return;
+    const reason = prompt(tr('ask_reason'), ''); if (reason === null) return;
+    const { error } = await sb.rpc('request_support', { p_order_id:cur.orderId, p_thread:cur.thread, p_reason:reason });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); return; }
+    if (cfg.toast) cfg.toast(tr('ask_sent'));
+    const k = cur.k; let q = sb.from('messages').select('*').eq('thread', cur.thread).eq('order_id', cur.orderId).order('created_at').limit(300);
+    const { data } = await q; if (cur && cur.k === k){ cur.msgs = data || []; cur.msgs.forEach(x => seenIds.add(x.id)); draw(); }
+  }
+  function draw(){
+    const box = document.getElementById('msgs'); if (!box || !cur) return;
+    box.innerHTML = cur.msgs.map(m => {
+      if (m.sender_role === 'system') return `<div class="sysmsg">🛟 ${e(fmt(m))}<small>${hm(m.created_at)}</small></div>`;
+      const mine = m.sender_id === me();
+      return `<div class="bub ${mine ? 'mine' : ''}">${mine ? '' : `<span class="who">${e(tr(m.sender_role))}</span>`}${e(m.body)}<small>${hm(m.created_at)}</small></div>`;
+    }).join('') || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+  async function send(text){
+    if (!cur) return;
+    const ta = document.getElementById('chatText');
+    const body = (text || (ta && ta.value) || '').trim(); if (!body) return;
+    if (ta && !text) ta.value = '';
+    const { data:id, error } = await sb.rpc('send_message', { p_order_id:cur.orderId, p_thread:cur.thread, p_body:body, p_user_id:cur.userId });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); if (ta && !text) ta.value = body; return; }
+    const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
+    seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
 (async function boot(){
   applyLang();
   try {
