@@ -10,86 +10,127 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB;
-  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E;
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB; --soft:#EAF1EC;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E; --blue:#2A6F97;
   --s-placed:#B7791F; --s-accepted:#2A6F97; --s-preparing:#C4571A; --s-ready:#0F766E;
   --s-rider_assigned:#6B4FA0; --s-picked_up:#6B4FA0; --s-delivered:#1F6F4A; --s-cancelled:#B3261E; --s-rejected:#B3261E;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; }
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --soft:#1F3129; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; --blue:#6FB3DA; }
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
-#app{max-width:760px;margin:0 auto;min-height:100%;padding-top:env(safe-area-inset-top,0px)}
-.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+a{color:var(--green)}
+#app{max-width:820px;margin:0 auto;min-height:100%;padding-top:env(safe-area-inset-top,0px)}
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
 .brand{font-weight:800;font-size:22px;letter-spacing:-.02em}
 .brand b{color:var(--marigold)}
-.linkbtn{background:none;border:0;color:var(--muted);padding:8px;cursor:pointer;text-decoration:underline}
+.ver{font-size:12px;font-weight:600;color:var(--muted);margin-left:6px;letter-spacing:0}
+.linkbtn{background:none;border:0;color:var(--green);padding:6px 4px;cursor:pointer;text-decoration:underline;font-weight:600}
 main{padding:12px 16px 110px}
-h2{font-size:22px;letter-spacing:-.01em;margin:8px 0 12px}
+h2{font-size:24px;letter-spacing:-.01em;margin:6px 0 12px}
+h3{font-size:18px;margin:22px 0 8px}
 .nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav-inner{display:flex;width:100%;max-width:760px}
-.nav button{flex:1;background:none;border:0;padding:11px 2px 9px;cursor:pointer;color:var(--muted);font-weight:600;font-size:12px;border-top:3px solid transparent}
+.nav-inner{display:flex;width:100%;max-width:820px}
+.nav button{position:relative;flex:1;background:none;border:0;padding:12px 2px 10px;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;border-top:3px solid transparent}
 .nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.nav .dot{position:absolute;top:6px;left:50%;margin-left:14px;min-width:17px;height:17px;border-radius:9px;background:var(--danger);color:#fff;font-size:11px;display:grid;place-items:center;padding:0 4px}
 .bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:700;font-size:14px}
 .chip.on{background:var(--green);border-color:var(--green);color:#fff}
-.btn{background:var(--green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;cursor:pointer}
+.btn{background:var(--green);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:inline-block}
 .btn:active{background:var(--green-dark)}
 .btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
 .btn.warn{background:transparent;color:var(--danger);border:1px solid var(--danger)}
-.btn.block{width:100%}
+.btn.small{padding:8px 12px;font-size:14px}
+.btn.block{display:block;width:100%}
 .btn[disabled]{opacity:.5}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media (min-width:600px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.tile b{display:block;font-size:20px;letter-spacing:-.01em}
+.tile span{color:var(--muted);font-size:13px}
+.tile.hi{background:var(--green);border-color:var(--green);color:#fff}
+.tile.hi span{color:rgba(255,255,255,.8)}
+.alerts{display:grid;gap:8px;margin:14px 0}
+.alert{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--marigold);border-radius:12px;padding:12px;cursor:pointer;text-align:left;width:100%}
+.alert.red{border-left-color:var(--danger)}
+.alert b{font-size:18px}
+.chart{display:flex;align-items:flex-end;gap:4px;height:120px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 10px 26px;position:relative}
+.chart .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.chart .c i{display:block;width:100%;max-width:26px;background:var(--green);border-radius:4px 4px 0 0;min-height:2px}
+.chart .c small{position:absolute;bottom:-20px;font-size:10px;color:var(--muted)}
 .list{border-top:1px solid var(--line)}
-.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 2px;cursor:pointer}
-.row-main{flex:1;min-width:0}
-.row-title{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:13px 2px;cursor:pointer;color:inherit}
+.row-main{flex:1;min-width:0;background:none;border:0;text-align:left;padding:0;cursor:pointer;color:inherit}
+.row-title{font-weight:700;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .row-sub{color:var(--muted);font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row-side{text-align:right;font-weight:600;white-space:nowrap}
-.row-side small{display:block;color:var(--muted);font-weight:400;font-size:12px}
-.thumb{width:48px;height:48px;border-radius:10px;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
-.pill{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;color:#fff}
-.pill.off{background:var(--muted)}
+.row-side{text-align:right;font-weight:700;white-space:nowrap}
+.row-side small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.thumb{width:48px;height:48px;border-radius:10px;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.face{width:64px;height:64px;border-radius:50%;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;font-size:22px;color:var(--muted);overflow:hidden}
+.face img{width:100%;height:100%;object-fit:cover}
+.pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff;background:var(--muted);white-space:nowrap}
+.pill.g{background:var(--green)} .pill.r{background:var(--danger)} .pill.y{background:#B7791F} .pill.b{background:var(--blue)}
 .steps{display:flex;gap:3px;margin-top:8px}
 .steps i{flex:1;height:5px;border-radius:3px;background:var(--line)}
 .steps i.on{background:var(--marigold)}
-.empty{padding:36px 8px;text-align:center;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card.click{cursor:pointer}
+.card-head{display:flex;gap:12px;align-items:center}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.mini div{background:var(--soft);border-radius:10px;padding:8px;text-align:center}
+.mini b{display:block;font-size:15px}
+.mini span{font-size:11px;color:var(--muted)}
+.empty{padding:34px 8px;text-align:center;color:var(--muted)}
 .switch{display:block;position:relative;width:46px;height:26px;flex:none;margin:0 auto 4px}
-.row > div small{font-size:12px}
 .switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
 .switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
 .switch span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
 .switch input:checked + span{background:var(--green)}
 .switch input:checked + span::after{transform:translateX(20px)}
+.side-sw{text-align:center;flex:none}
+.side-sw small{font-size:11px;color:var(--muted)}
 .cat{display:flex;justify-content:space-between;align-items:center;margin:20px 0 6px}
-.cat h3{margin:0;font-size:18px}
+.cat h3{margin:0}
 .sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--surface);width:100%;max-width:760px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
-.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet{background:var(--surface);width:100%;max-width:820px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
 .sheet-head h3{margin:0;font-size:20px}
-.x{background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+.x{background:none;border:0;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
 label.f{display:block;margin:12px 0 4px;font-weight:600;font-size:14px}
-input[type=text],input[type=password],input[type=email],input[type=number],input[type=time],select,textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:12px;font-size:16px}
+input[type=text],input[type=password],input[type=email],input[type=number],input[type=time],input[type=date],input[type=search],select,textarea{width:100%;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:12px;font-size:16px}
 textarea{min-height:70px;resize:vertical}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .check{display:flex;align-items:center;gap:10px;margin:14px 0 4px}
 .check input{width:20px;height:20px}
-.actions{display:grid;gap:10px;margin-top:18px}
-.kv{display:flex;justify-content:space-between;padding:5px 0}
+.actions{display:grid;gap:10px;margin-top:16px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
 .kv.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:800;font-size:18px}
+.kv .neg{color:var(--danger)}
 .muted{color:var(--muted)}
+.red{color:var(--danger)}
 .preview{width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px}
-.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:10px;z-index:30;max-width:90%;font-weight:600}
+.selfies{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.selfie{background:var(--soft);border-radius:12px;padding:8px;font-size:13px}
+.selfie img,.selfie .ph{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;background:var(--line);display:grid;place-items:center;color:var(--muted)}
+.selfie .btns{display:flex;gap:6px;margin-top:6px}
+.selfie .btns button{flex:1;padding:6px;font-size:13px}
+.strike{text-decoration:line-through;color:var(--muted);font-weight:400;font-size:13px;margin-left:4px}
+.timeline{list-style:none;margin:10px 0;padding:0;font-size:14px}
+.timeline li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line)}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:10px;z-index:40;max-width:90%;font-weight:600;text-align:center}
 .toast.err{background:var(--danger);color:#fff}
 .login{max-width:380px;margin:0 auto;padding:12vh 20px 20px}
 .login .brand{font-size:38px;margin-bottom:4px}
 .note{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;font-size:14px;line-height:1.5}
-.ver{font-size:12px;font-weight:600;color:var(--muted);margin-left:6px;letter-spacing:0}
 .err-text{color:var(--danger);margin-top:10px;min-height:20px}
-a{color:var(--green)}
+.menu-list .row{padding:16px 2px}
 :focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -99,51 +140,72 @@ a{color:var(--green)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '1.7';
-const APP_DATE = '20 Sep 2026';
+const APP_VERSION = '2.0';
+const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
-// Each app keeps its own login so admin and customer never mix on the same phone
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-customer-auth' } });
+// Admin has its own login, separate from the customer app on the same phone
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-admin-auth' } });
 
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
+const MORE_TABS = ['customers','promos','zones','rules','settings','publish'];
 
-const state = { tab:'orders', orderFilter:'active', zones:[], restaurants:[], orders:[], riders:[], adminRiders:[], riderStats:{}, reportOrders:[], menuRestaurant:null, categories:[], items:[] };
-
+// ---- Small helpers ----
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money = n => 'PKR ' + Number(n || 0).toLocaleString('en-PK');
-const hhmm = t => t ? String(t).slice(0,5) : '';
+const money = n => 'Rs ' + Math.round(Number(n || 0)).toLocaleString('en-PK');
+const num = n => Number(n || 0);
+const hhmm = t => t ? String(t).slice(0, 5) : '';
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const when = ts => ts ? new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+const dayName = ts => new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+const hours = m => { m = Math.round(num(m)); return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h ' + (m % 60) + 'm'; };
 function timeAgo(ts){
   const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return m + ' min ago';
-  const h = Math.round(m / 60);
-  if (h < 24) return h + ' h ago';
-  return new Date(ts).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+  if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60); if (h < 24) return h + ' h ago';
+  return dayName(ts);
 }
+function monthStart(back){ const d = new Date(); return ymd(new Date(d.getFullYear(), d.getMonth() - back, 1)); }
+function monthLabel(s){ const [y, m] = s.split('-'); return new Date(+y, +m - 1, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' }); }
+function monthEnd(s){ const [y, m] = s.split('-'); return ymd(new Date(+y, +m, 0)); }
+function range(p){
+  const now = new Date(); const s = new Date(now); s.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(s.getTime() + 864e5);
+  if (p === '7d'){ const f = new Date(s); f.setDate(f.getDate() - 6); return [f, tomorrow]; }
+  if (p === '30d'){ const f = new Date(s); f.setDate(f.getDate() - 29); return [f, tomorrow]; }
+  if (p === 'month') return [new Date(now.getFullYear(), now.getMonth(), 1), new Date(now.getFullYear(), now.getMonth() + 1, 1)];
+  if (p === 'last') return [new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 1)];
+  return [s, tomorrow];
+}
+const PERIODS = [['today','Today'],['7d','7 days'],['month','This month'],['last','Last month'],['30d','30 days']];
 function toast(msg, isErr){
-  const t = document.createElement('div');
-  t.className = 'toast' + (isErr ? ' err' : '');
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3200);
+  const t = document.createElement('div'); t.className = 'toast' + (isErr ? ' err' : ''); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3400);
 }
-async function run(fn){
-  try { return await fn(); }
-  catch (e) { console.error(e); toast(e.message || 'Something went wrong', true); }
-}
+function errMsg(e){ return (e && (e.message || e.error_description)) || 'Something went wrong'; }
+async function run(fn){ try { return await fn(); } catch (e) { console.error(e); toast(errMsg(e), true); } }
+function need(res){ if (res.error) throw res.error; return res.data; }
+
+const state = {
+  tab:'home', period:'today', dash:null, shopReport:[], topProducts:[],
+  orders:[], orderFilter:'active', orderQ:'',
+  zones:[], restaurants:[], riders:[],
+  riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
+  menuRestaurant:'all', productFilter:'all', productQ:'', categories:[], items:[], formCats:[],
+  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}
+};
 
 // ---- Bottom sheet ----
 function openSheet(title, html){
   closeSheet();
-  const back = document.createElement('div');
-  back.className = 'sheet-back'; back.id = 'sheet';
-  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div>${html}</div>`;
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div><div id="sheetBody">${html}</div></div>`;
   back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
   document.body.appendChild(back);
 }
@@ -156,27 +218,23 @@ function resizeImage(file, max){
     const img = new Image(); const url = URL.createObjectURL(file);
     img.onload = () => {
       const s = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
       c.toBlob(b => b ? res(b) : rej(new Error('Could not read this image')), 'image/jpeg', 0.82);
     };
-    img.onerror = () => rej(new Error('Could not read this image'));
-    img.src = url;
+    img.onerror = () => rej(new Error('Could not read this image')); img.src = url;
   });
 }
 async function uploadImage(file, folder){
-  const blob = await resizeImage(file, 900);
-  const path = `${folder}/${Date.now()}.jpg`;
-  const { error } = await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' });
-  if (error) throw error;
+  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}.jpg`;
+  need(await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' }));
   return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
 }
-function previewFile(input, imgId){
-  const f = input.files && input.files[0];
-  if (!f) return;
-  const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block';
+function previewFile(input, imgId){ const f = input.files && input.files[0]; if (!f) return; const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
+async function signedUrls(paths){
+  const list = [...new Set(paths.filter(Boolean))]; if (!list.length) return {};
+  const { data } = await sb.storage.from('rider-selfies').createSignedUrls(list, 3600);
+  const map = {}; (data || []).forEach(x => { if (x.signedUrl) map[x.path] = x.signedUrl; }); return map;
 }
 
 // ---- Login ----
@@ -186,55 +244,30 @@ function showLogin(msg){
     <div class="brand">Wanhar Mart<b>.</b></div>
     <p class="muted">Admin sign in <span class="ver">v${APP_VERSION}</span></p>
     <form onsubmit="A.login(event)">
-      <label class="f" for="em">Email</label>
-      <input id="em" type="email" autocomplete="username" required>
-      <label class="f" for="pw">Password</label>
-      <input id="pw" type="password" autocomplete="current-password" required>
+      <label class="f" for="em">Email</label><input id="em" type="email" autocomplete="username" required>
+      <label class="f" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
       <div class="actions"><button class="btn block" id="loginBtn" type="submit">Sign in</button></div>
       <div class="err-text" id="loginErr">${esc(msg || '')}</div>
     </form>
   </div>`;
 }
-
 async function afterLogin(user){
   const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
-  if (error || !data || data.role !== 'admin'){
-    await sb.auth.signOut();
-    showLogin('This account is not an admin.');
-    return;
-  }
+  if (error || !data || data.role !== 'admin'){ await sb.auth.signOut(); showLogin('This account is not an admin.'); return; }
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
-  showApp();
-  subscribeOrders();
+  showApp(); subscribeOrders();
 }
 
-// ---- Data loading ----
-async function loadZones(){
-  const { data, error } = await sb.from('zones').select('*').order('created_at');
-  if (error) throw error; state.zones = data;
-}
-async function loadRestaurants(){
-  const { data, error } = await sb.from('restaurants').select('*').order('created_at');
-  if (error) throw error; state.restaurants = data;
-}
+// ---- Shared data ----
+async function loadZones(){ state.zones = need(await sb.from('zones').select('*').order('created_at')); }
+async function loadRestaurants(){ state.restaurants = need(await sb.from('restaurants').select('*').order('name')); }
 async function loadRiders(){
-  const { data, error } = await sb.from('riders').select('id,is_approved,is_online,profile:profiles(full_name,phone)').eq('is_approved', true);
-  if (!error) state.riders = data || [];
+  const { data } = await sb.from('riders').select('id,is_approved,is_online,profile:profiles(full_name,phone)').eq('is_approved', true);
+  state.riders = (data || []).sort((a, b) => (b.is_online - a.is_online));
 }
-async function loadOrders(){
-  const { data, error } = await sb.from('orders')
-    .select('*, restaurant:restaurants(name), customer:profiles!customer_id(full_name,phone), rider:riders(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
-    .order('created_at', { ascending:false }).limit(100);
-  if (error) throw error; state.orders = data;
-}
-async function loadMenu(){
-  if (!state.menuRestaurant) { state.categories = []; state.items = []; return; }
-  const [c, i] = await Promise.all([
-    sb.from('menu_categories').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order'),
-    sb.from('menu_items').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order').order('name')
-  ]);
-  if (c.error) throw c.error; if (i.error) throw i.error;
-  state.categories = c.data; state.items = i.data;
+async function loadSettings(){
+  const rows = need(await sb.from('app_settings').select('*'));
+  state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
 }
 let channel;
 function subscribeOrders(){
@@ -242,7 +275,8 @@ function subscribeOrders(){
     if (channel) sb.removeChannel(channel);
     channel = sb.channel('orders-live').on('postgres_changes', { event:'*', schema:'public', table:'orders' }, async payload => {
       if (payload.eventType === 'INSERT') toast('New order received');
-      if (state.tab === 'orders') { await run(loadOrders); renderTab(); }
+      if (state.tab === 'orders'){ await run(loadOrders); renderTab(); }
+      if (state.tab === 'home'){ await run(loadDash); renderTab(); }
     }).subscribe();
   } catch (e) { console.warn('Live updates off', e); }
 }
@@ -250,110 +284,195 @@ function subscribeOrders(){
 // ---- Shell ----
 function showApp(){
   $('app').innerHTML = `
-    <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">v${APP_VERSION}</span></div><div><button class="linkbtn" onclick="go('publish')">Publish</button><button class="linkbtn" onclick="A.logout()">Sign out</button></div></div>
+    <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">Admin v${APP_VERSION}</span></div>
+      <button class="linkbtn" onclick="go(state.tab)">Refresh</button></div>
     <main id="main"></main>
     <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
   renderNav(); go(state.tab);
 }
 function renderNav(){
-  const tabs = [['orders','Orders'],['restaurants','Shops'],['menu','Products'],['riders','Riders'],['reports','Reports'],['zones','Zones']];
-  $('nav').innerHTML = tabs.map(([k,l]) => `<button class="${state.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+  const d = state.dash || {};
+  const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]];
+  const cur = MORE_TABS.includes(state.tab) ? 'more' : state.tab;
+  $('nav').innerHTML = tabs.map(([k, l, n]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${l}${n ? `<span class="dot">${n}</span>` : ''}</button>`).join('');
 }
 async function go(tab){
   state.tab = tab; renderNav();
-  $('main').innerHTML = '<div class="empty">Loading…</div>';
+  const m = $('main'); if (!m) return;
+  m.innerHTML = '<div class="empty">Loading…</div>';
   await run(async () => {
-    if (tab === 'orders') await loadOrders();
-    if (tab === 'riders') await loadRiderAdmin();
-    if (tab === 'reports') await loadReports();
-    if (tab === 'menu') { if (!state.menuRestaurant && state.restaurants[0]) state.menuRestaurant = state.restaurants[0].id; await loadMenu(); }
+    if (tab === 'home') await loadDash();
+    if (tab === 'orders') await Promise.all([loadOrders(), loadRiders()]);
+    if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport()]);
+    if (tab === 'menu') await loadProducts();
+    if (tab === 'riders') await loadRiderMonth();
+    if (tab === 'customers') await loadCustomers();
+    if (tab === 'promos') await loadPromos();
+    if (tab === 'zones') await loadZones();
+    if (tab === 'rules') await loadFineRules();
+    if (tab === 'settings') await loadSettings();
   });
-  renderTab();
+  renderTab(); window.scrollTo(0, 0);
 }
 function renderTab(){
   const m = $('main'); if (!m) return;
-  if (state.tab === 'orders') m.innerHTML = viewOrders();
-  if (state.tab === 'restaurants') m.innerHTML = viewRestaurants();
-  if (state.tab === 'menu') m.innerHTML = viewMenu();
-  if (state.tab === 'riders') m.innerHTML = viewRiders();
-  if (state.tab === 'reports') m.innerHTML = viewReports();
-  if (state.tab === 'zones') m.innerHTML = viewZones();
-  if (state.tab === 'publish') m.innerHTML = viewPublish();
+  const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
+              customers:viewCustomers, promos:viewPromos, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
+  m.innerHTML = v ? v() : '';
+  renderNav();
+}
+function periodChips(){ return `<div class="chips">${PERIODS.map(([k, l]) => `<button class="chip ${state.period === k ? 'on' : ''}" onclick="A.setPeriod('${k}')">${l}</button>`).join('')}</div>`; }
+const backLink = () => `<button class="linkbtn" style="padding-left:0" onclick="go('more')">‹ More</button>`;
+
+// ================= HOME / DASHBOARD =================
+async function loadDash(){
+  const [f, t] = range(state.period);
+  const [d, s, p] = await Promise.all([
+    sb.rpc('admin_dashboard', { p_from:f.toISOString(), p_to:t.toISOString() }),
+    sb.rpc('admin_shop_report', { p_from:f.toISOString(), p_to:t.toISOString() }),
+    sb.from('orders').select('order_items(name,quantity,price)').eq('status', 'delivered').gte('created_at', f.toISOString()).lt('created_at', t.toISOString()).limit(2000)
+  ]);
+  state.dash = need(d); state.shopReport = need(s) || [];
+  const by = {};
+  (p.data || []).forEach(o => (o.order_items || []).forEach(i => { const x = by[i.name] || (by[i.name] = { qty:0, rev:0 }); x.qty += i.quantity; x.rev += num(i.price) * i.quantity; }));
+  state.topProducts = Object.entries(by).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty).slice(0, 8);
+}
+function viewHome(){
+  const d = state.dash || {}; const n = k => num(d[k]);
+  const platform = n('commission') + n('delivery_fees') - n('rider_pay') - n('discounts');
+  const aov = n('delivered') ? n('gmv') / n('delivered') : 0;
+  const tile = (v, l, hi) => `<div class="tile ${hi ? 'hi' : ''}"><b>${v}</b><span>${l}</span></div>`;
+  const alert = (cond, val, label, tab, red) => cond ? `<button class="alert ${red ? 'red' : ''}" onclick="go('${tab}')"><span>${label}</span><b>${val}</b></button>` : '';
+  const days = d.daily || []; const max = Math.max(1, ...days.map(x => num(x.sales)));
+  const chart = days.length > 1 ? `<h3>Sales by day</h3><div class="chart">${days.slice(-31).map(x => `<div class="c" title="${esc(x.day)}: ${money(x.sales)}"><i style="height:${Math.max(2, num(x.sales) / max * 100)}%"></i><small>${esc(String(x.day).slice(8))}</small></div>`).join('')}</div>` : '';
+  const topShops = state.shopReport.filter(r => num(r.orders)).slice(0, 5).map(r => `<button class="row" onclick="A.openShop('${r.restaurant_id}')"><div class="row-main"><div class="row-title">${esc(r.name)}</div><div class="row-sub">${r.delivered} delivered, commission ${money(r.commission)}</div></div><div class="row-side">${money(r.food_sales)}</div></button>`).join('');
+  const topProd = state.topProducts.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${p.qty} sold</div></div><div class="row-side">${money(p.rev)}</div></div>`).join('');
+  return `<h2>Dashboard</h2>${periodChips()}
+    <div class="tiles">
+      ${tile(money(n('gmv')), 'Total sales (collected)', true)}
+      ${tile(money(platform), 'Wanhar Mart earning', true)}
+      ${tile(n('orders'), 'Orders')}
+      ${tile(n('delivered'), 'Delivered')}
+      ${tile(money(n('commission')), 'Shop commission')}
+      ${tile(money(n('delivery_fees')), 'Delivery fees')}
+      ${tile(money(n('rider_pay')), 'Rider delivery pay')}
+      ${tile(money(n('discounts')), 'Promo discounts')}
+      ${tile(money(n('food_sales')), 'Food / product sales')}
+      ${tile(money(aov), 'Average order')}
+      ${tile(n('cancelled'), 'Cancelled or rejected')}
+      ${tile(n('customers'), 'Customers ordered')}
+    </div>
+    <p class="muted" style="font-size:13px">Wanhar Mart earning = commission + delivery fees − rider delivery pay − promo discounts. Rider salaries and fines are in the Riders tab.</p>
+    <div class="alerts">
+      ${alert(n('orders_waiting'), n('orders_waiting'), 'New orders waiting for the shop', 'orders', true)}
+      ${alert(n('ready_no_rider'), n('ready_no_rider'), 'Ready orders with no rider', 'orders', true)}
+      ${alert(n('riders_pending'), n('riders_pending'), 'Rider requests to approve', 'riders')}
+      ${alert(n('products_pending'), n('products_pending'), 'New products to approve', 'menu')}
+      ${alert(n('cash_with_riders'), money(n('cash_with_riders')), 'Cash held by riders', 'riders')}
+      ${alert(n('shops_unpaid'), money(n('shops_unpaid')), 'Unpaid shop earnings', 'restaurants')}
+      <button class="alert" onclick="go('riders')"><span>Riders online now</span><b>${n('riders_online')}</b></button>
+      <button class="alert" onclick="go('restaurants')"><span>Shops open now</span><b>${n('shops_open')} / ${n('shops_total')}</b></button>
+    </div>
+    ${chart}
+    <h3>Top shops</h3><div class="list">${topShops || '<div class="empty">No orders in this period.</div>'}</div>
+    <h3>Top products</h3><div class="list">${topProd || '<div class="empty">No sales in this period.</div>'}</div>`;
 }
 
-// ---- Orders ----
+// ================= ORDERS =================
+async function loadOrders(){
+  state.orders = need(await sb.from('orders')
+    .select('*, restaurant:restaurants(name,phone), customer:profiles!customer_id(full_name,phone), rider:riders(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
+    .order('created_at', { ascending:false }).limit(300));
+}
+const ORDER_FILTERS = [
+  ['active','Active', o => !FINAL.includes(o.status)],
+  ['placed','New', o => o.status === 'placed'],
+  ['kitchen','Preparing', o => ['accepted','preparing'].includes(o.status)],
+  ['ready','Ready', o => o.status === 'ready'],
+  ['road','On the way', o => ['rider_assigned','picked_up'].includes(o.status)],
+  ['delivered','Delivered', o => o.status === 'delivered'],
+  ['cancelled','Cancelled', o => ['cancelled','rejected'].includes(o.status)],
+  ['all','All', () => true]
+];
 function viewOrders(){
-  const list = state.orders.filter(o => state.orderFilter === 'all' ? true : !FINAL.includes(o.status));
-  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-  const todayOrders = state.orders.filter(o => new Date(o.created_at) >= dayStart);
-  const deliveredToday = todayOrders.filter(o => o.status === 'delivered');
-  const salesToday = deliveredToday.reduce((n, o) => n + Number(o.subtotal || 0), 0);
-  const tile = (v, l) => `<div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center"><b style="display:block;font-size:18px">${v}</b><span class="muted" style="font-size:12px">${l}</span></div>`;
-  const stats = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">${tile(todayOrders.length, 'Orders today')}${tile(deliveredToday.length, 'Delivered')}${tile(money(salesToday), 'Food sales')}</div>`;
+  const f = (ORDER_FILTERS.find(x => x[0] === state.orderFilter) || ORDER_FILTERS[0])[2];
+  const q = state.orderQ.trim().toLowerCase();
+  const list = state.orders.filter(f).filter(o => !q || [o.id.slice(-4), o.restaurant?.name, o.customer?.full_name, o.customer?.phone, o.address_text].some(x => String(x || '').toLowerCase().includes(q)));
+  const chips = ORDER_FILTERS.map(([k, l, fn]) => { const c = state.orders.filter(fn).length; return `<button class="chip ${state.orderFilter === k ? 'on' : ''}" onclick="A.orderFilter('${k}')">${l}${k !== 'all' && c ? ' ' + c : ''}</button>`; }).join('');
   const rows = list.map(o => {
     const idx = STEPS.indexOf(o.status);
-    const seg = STEPS.map((s,i) => `<i class="${i<=idx?'on':''}"></i>`).join('');
     return `<button class="row" onclick="A.openOrder('${o.id}')">
       <div class="row-main">
-        <div class="row-title">${esc(o.restaurant?.name || 'Restaurant')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div>
-        <div class="row-sub">${esc(o.customer?.full_name || 'Customer')}</div>
-        <div class="steps">${seg}</div>
+        <div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || 'Shop')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div>
+        <div class="row-sub">${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
+        ${FINAL.includes(o.status) ? '' : `<div class="steps">${STEPS.map((s, i) => `<i class="${i <= idx ? 'on' : ''}"></i>`).join('')}</div>`}
       </div>
-      <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div>
-    </button>`;
+      <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div></button>`;
   }).join('');
-  return `<h2>Orders</h2>${stats}
-    <div class="bar">
-      <button class="chip ${state.orderFilter==='active'?'on':''}" onclick="A.filter('active')">Active</button>
-      <button class="chip ${state.orderFilter==='all'?'on':''}" onclick="A.filter('all')">All</button>
-      <button class="chip" onclick="A.refreshOrders()">Refresh</button>
-    </div>
-    <div class="list">${rows || '<div class="empty">No orders here yet. New orders appear on this screen by themselves.</div>'}</div>`;
+  return `<h2>Orders</h2>
+    <input type="search" placeholder="Search order no, shop, customer, phone" value="${esc(state.orderQ)}" oninput="A.orderSearch(this.value)" style="margin-bottom:10px">
+    <div class="chips">${chips}</div>
+    <div class="list" id="orderList">${rows || '<div class="empty">No orders here. New orders appear by themselves.</div>'}</div>`;
 }
 function orderActions(o){
   const b = [];
-  const st = (s, label, cls) => b.push(`<button class="btn ${cls||''}" onclick="A.setStatus('${o.id}','${s}')">${label}</button>`);
-  if (o.status === 'placed'){ st('accepted','Accept order'); st('rejected','Reject order','warn'); }
-  if (o.status === 'accepted'){ st('preparing','Start preparing'); st('ready','Mark ready','ghost'); }
-  if (o.status === 'preparing') st('ready','Mark ready');
+  const st = (s, label, cls) => b.push(`<button class="btn block ${cls || ''}" onclick="A.setStatus('${o.id}','${s}')">${label}</button>`);
+  if (o.status === 'placed'){ st('accepted', 'Accept order'); st('rejected', 'Reject order', 'warn'); }
+  if (o.status === 'accepted'){ st('preparing', 'Start preparing'); st('ready', 'Mark ready', 'ghost'); }
+  if (o.status === 'preparing') st('ready', 'Mark ready');
   if (o.status === 'ready' || o.status === 'rider_assigned'){
     if (state.riders.length){
-      const opts = state.riders.map(r => `<option value="${r.id}" ${o.rider_id===r.id?'selected':''}>${esc(r.profile?.full_name || 'Rider')}${r.is_online?' (online)':''}</option>`).join('');
-      b.push(`<label class="f" for="riderSel">Rider</label><select id="riderSel">${opts}</select>
-              <button class="btn" onclick="A.assign('${o.id}')">${o.status==='ready'?'Assign rider':'Change rider'}</button>`);
-    } else {
-      b.push('<div class="muted">No approved riders yet. Riders appear here once they are approved.</div>');
-    }
+      const opts = state.riders.map(r => `<option value="${r.id}" ${o.rider_id === r.id ? 'selected' : ''}>${esc(r.profile?.full_name || 'Rider')}${r.is_online ? ' (online)' : ' (offline)'}</option>`).join('');
+      b.push(`<div><label class="f" for="riderSel">Rider</label><select id="riderSel">${opts}</select></div>
+              <button class="btn block" onclick="A.assign('${o.id}')">${o.status === 'ready' ? 'Assign rider' : 'Change rider'}</button>`);
+    } else b.push('<div class="muted">No approved riders yet.</div>');
   }
-  if (o.status === 'rider_assigned') st('picked_up','Mark picked up','ghost');
-  if (o.status === 'picked_up') st('delivered','Mark delivered');
-  if (!FINAL.includes(o.status)) st('cancelled','Cancel order','warn');
+  if (o.status === 'rider_assigned') st('picked_up', 'Mark picked up', 'ghost');
+  if (o.status === 'picked_up') st('delivered', 'Mark delivered');
+  if (!FINAL.includes(o.status)) st('cancelled', 'Cancel order', 'warn');
   return b.join('');
 }
-// ---- Restaurants ----
-function viewRestaurants(){
-  const rows = state.restaurants.map(r => `
-    <div class="row" style="cursor:default">
-      ${r.logo_url ? `<img class="thumb" src="${esc(r.logo_url)}" alt="">` : `<div class="thumb">${esc((r.name||'?')[0])}</div>`}
-      <button class="row-main" style="background:none;border:0;text-align:left;padding:0;cursor:pointer" onclick="A.editRestaurant('${r.id}')">
-        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill off">Hidden</span>'}</div>
-        <div class="row-sub">${esc(r.address || 'No address yet')}</div>
+
+// ================= SHOPS =================
+async function loadShopReport(){
+  const [f, t] = range(state.period);
+  state.shopReport = need(await sb.rpc('admin_shop_report', { p_from:f.toISOString(), p_to:t.toISOString() })) || [];
+}
+function viewShops(){
+  const rep = {}; state.shopReport.forEach(r => { rep[r.restaurant_id] = r; });
+  const totUnpaid = state.shopReport.reduce((n, r) => n + num(r.unpaid), 0);
+  const totSales = state.shopReport.reduce((n, r) => n + num(r.food_sales), 0);
+  const totComm = state.shopReport.reduce((n, r) => n + num(r.commission), 0);
+  const rows = state.restaurants.map(r => {
+    const s = rep[r.id] || {};
+    return `<div class="row" style="cursor:default">
+      <div class="thumb">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : esc((r.name || '?')[0])}</div>
+      <button class="row-main" onclick="A.openShop('${r.id}')">
+        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
+        <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>
       </button>
-      <div style="text-align:center"><label class="switch"><input type="checkbox" ${r.is_open?'checked':''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small class="muted">${r.is_open?'Open':'Closed'}</small></div>
-    </div>`).join('');
-  return `<h2>Shops</h2>
+      <div class="side-sw"><label class="switch"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small>${r.is_open ? 'Open' : 'Closed'}</small></div>
+    </div>`;
+  }).join('');
+  return `<h2>Shops</h2>${periodChips()}
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile"><b>${money(totSales)}</b><span>Shop sales</span></div>
+      <div class="tile"><b>${money(totComm)}</b><span>Your commission</span></div>
+      <div class="tile"><b>${money(totUnpaid)}</b><span>To pay shops (all time)</span></div>
+      <div class="tile"><b>${state.restaurants.filter(r => r.is_open && r.is_active).length} / ${state.restaurants.length}</b><span>Open now</span></div>
+    </div>
     <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
-    <div class="list">${rows || '<div class="empty">No restaurants yet. Add your first one.</div>'}</div>`;
+    <div class="list">${rows || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
 }
 function restaurantForm(r){
   r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
-  const zoneOpts = state.zones.map(z => `<option value="${z.id}" ${r.zone_id===z.id?'selected':''}>${esc(z.name)}</option>`).join('');
+  const zoneOpts = state.zones.map(z => `<option value="${z.id}" ${r.zone_id === z.id ? 'selected' : ''}>${esc(z.name)}</option>`).join('');
   return `
     <label class="f" for="r_name">Shop name</label><input id="r_name" type="text" value="${esc(r.name)}">
     <label class="f" for="r_desc">Short description</label><input id="r_desc" type="text" value="${esc(r.description)}" placeholder="Burgers, fries and shakes">
     <label class="f" for="r_addr">Address</label><input id="r_addr" type="text" value="${esc(r.address)}">
     <label class="f" for="r_phone">Phone</label><input id="r_phone" type="text" inputmode="tel" value="${esc(r.phone)}">
-    <label class="f" for="r_owner">Owner email (the owner signs up in the Restaurant app first)</label>
+    <label class="f" for="r_owner">Owner email (the owner signs up in the Shop app first)</label>
     <input id="r_owner" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="owner@gmail.com">
     <label class="f" for="r_zone">Zone</label><select id="r_zone">${zoneOpts}</select>
     <div class="two">
@@ -366,366 +485,655 @@ function restaurantForm(r){
     </div>
     <label class="f" for="r_logo">Logo or photo</label>
     <input id="r_logo" type="file" accept="image/*" onchange="previewFile(this,'r_prev')">
-    <img id="r_prev" class="preview" alt="" style="display:${r.logo_url?'block':'none'}" src="${esc(r.logo_url || '')}">
-    <label class="check"><input id="r_isopen" type="checkbox" ${r.is_open?'checked':''}> Open for orders now</label>
-    <label class="check"><input id="r_active" type="checkbox" ${r.is_active?'checked':''}> Show in the customer app</label>
+    <img id="r_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
+    <label class="check"><input id="r_isopen" type="checkbox" ${r.is_open ? 'checked' : ''}> Open for orders now</label>
+    <label class="check"><input id="r_active" type="checkbox" ${r.is_active ? 'checked' : ''}> Show in the customer app</label>
     <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveRestaurant('${r.id || ''}')">Save shop</button></div>`;
 }
 
-// ---- Menu ----
-function viewMenu(){
-  if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a restaurant first, then build its menu here.</div>';
-  const opts = state.restaurants.map(r => `<option value="${r.id}" ${r.id===state.menuRestaurant?'selected':''}>${esc(r.name)}</option>`).join('');
-  const uncategorised = state.items.filter(i => !state.categories.some(c => c.id === i.category_id));
-  const block = (title, catId, items) => `
-    <div class="cat"><h3>${esc(title)}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
-    <div class="list">${items.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
-  const cats = state.categories.map(c => block(c.name, c.id, state.items.filter(i => i.category_id === c.id))).join('');
-  return `<h2>Products</h2>
-    <select id="menuRest" onchange="A.pickMenuRestaurant(this.value)" aria-label="Restaurant">${opts}</select>
-    <div class="bar" style="margin-top:12px">
-      <button class="btn ghost" onclick="A.editCategory()">Add section</button>
-      <button class="btn" onclick="A.editItem()">Add item</button>
-    </div>
-    ${cats}${uncategorised.length ? block('Other items', null, uncategorised) : ''}
-    ${!state.categories.length && !uncategorised.length ? '<div class="empty">This menu is empty. Add a section such as Burgers, then add items to it.</div>' : ''}`;
+// ================= PRODUCTS =================
+async function loadProducts(){
+  if (state.menuRestaurant === 'all'){
+    state.items = need(await sb.from('menu_items').select('*, restaurant:restaurants(name)').order('created_at', { ascending:false }).limit(1000));
+    state.categories = [];
+  } else {
+    const [c, i] = await Promise.all([
+      sb.from('menu_categories').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order'),
+      sb.from('menu_items').select('*, restaurant:restaurants(name)').eq('restaurant_id', state.menuRestaurant).order('sort_order').order('name')
+    ]);
+    state.categories = need(c); state.items = need(i);
+  }
+}
+const PRODUCT_FILTERS = [['all','All',() => true],['pending','Waiting approval',i => !i.is_approved],['out','Out of stock',i => !i.is_available],['featured','Featured',i => i.is_featured]];
+function filteredItems(){
+  const f = PRODUCT_FILTERS.find(x => x[0] === state.productFilter)[2]; const q = state.productQ.trim().toLowerCase();
+  return state.items.filter(f).filter(i => !q || (i.name || '').toLowerCase().includes(q) || (i.restaurant?.name || '').toLowerCase().includes(q));
 }
 function itemRow(i){
+  const all = state.menuRestaurant === 'all';
   return `<div class="row" style="cursor:default">
-    ${i.photo_url ? `<img class="thumb" src="${esc(i.photo_url)}" alt="">` : `<div class="thumb">${esc((i.name||'?')[0])}</div>`}
-    <button class="row-main" style="background:none;border:0;text-align:left;padding:0;cursor:pointer" onclick="A.editItem('${i.id}')">
-      <div class="row-title">${esc(i.name)}</div>
-      <div class="row-sub">${money(i.price)}</div>
+    <div class="thumb">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : esc((i.name || '?')[0])}</div>
+    <button class="row-main" onclick="A.editItem('${i.id}')">
+      <div class="row-title">${esc(i.name)}${i.is_approved ? '' : '<span class="pill y">Waiting approval</span>'}${i.is_featured ? '<span class="pill b">Featured</span>' : ''}</div>
+      <div class="row-sub">${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}${all && i.restaurant ? ' · ' + esc(i.restaurant.name) : ''}</div>
     </button>
-    <div style="text-align:center"><label class="switch"><input type="checkbox" ${i.is_available?'checked':''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="Available"><span></span></label><small class="muted">${i.is_available?'In stock':'Out'}</small></div>
+    ${i.is_approved ? '' : `<button class="btn small" onclick="A.approveItem('${i.id}')">Approve</button>`}
+    <div class="side-sw"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="In stock"><span></span></label><small>${i.is_available ? 'In stock' : 'Out'}</small></div>
   </div>`;
 }
-function itemForm(i){
-  i = i || { is_available:true };
-  const catOpts = state.categories.map(c => `<option value="${c.id}" ${i.category_id===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
-  return `
-    <label class="f" for="i_name">Item name</label><input id="i_name" type="text" value="${esc(i.name)}">
-    <label class="f" for="i_desc">Description</label><input id="i_desc" type="text" value="${esc(i.description)}">
-    <div class="two">
-      <div><label class="f" for="i_price">Price (PKR)</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
-      <div><label class="f" for="i_cat">Section</label><select id="i_cat">${catOpts || '<option value="">No sections yet</option>'}</select></div>
+function viewProducts(){
+  if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a shop first, then its products here.</div>';
+  const opts = `<option value="all" ${state.menuRestaurant === 'all' ? 'selected' : ''}>All shops</option>` + state.restaurants.map(r => `<option value="${r.id}" ${r.id === state.menuRestaurant ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+  const chips = PRODUCT_FILTERS.map(([k, l, fn]) => { const c = state.items.filter(fn).length; return `<button class="chip ${state.productFilter === k ? 'on' : ''}" onclick="A.productFilter('${k}')">${l}${k !== 'all' && c ? ' ' + c : ''}</button>`; }).join('');
+  const items = filteredItems();
+  let body;
+  if (state.menuRestaurant === 'all' || state.productFilter !== 'all' || state.productQ.trim()){
+    body = `<div class="list menu-list">${items.map(itemRow).join('') || '<div class="empty">No products match.</div>'}</div>`;
+  } else {
+    const loose = items.filter(i => !state.categories.some(c => c.id === i.category_id));
+    const block = (title, catId, list) => `<div class="cat"><h3>${esc(title)}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
+      <div class="list menu-list">${list.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
+    body = state.categories.map(c => block(c.name, c.id, items.filter(i => i.category_id === c.id))).join('') + (loose.length ? block('Other items', null, loose) : '');
+    if (!state.categories.length && !loose.length) body = '<div class="empty">This shop has no products. Add a section such as Burgers, then add items to it.</div>';
+  }
+  const pending = state.items.filter(i => !i.is_approved).length;
+  return `<h2>Products</h2>
+    <select onchange="A.pickMenuRestaurant(this.value)" aria-label="Shop">${opts}</select>
+    <input type="search" placeholder="Search products" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)" style="margin:10px 0">
+    <div class="chips">${chips}</div>
+    <div class="bar">
+      ${state.menuRestaurant !== 'all' ? `<button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
+      ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve all ${pending}</button>` : ''}
     </div>
+    <div id="prodBody">${body}</div>`;
+}
+function itemForm(i){
+  i = i || { is_available:true, is_approved:true };
+  const catOpts = state.formCats.map(c => `<option value="${c.id}" ${i.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  return `
+    <label class="f" for="i_name">Product name</label><input id="i_name" type="text" value="${esc(i.name)}">
+    <label class="f" for="i_desc">Description</label><textarea id="i_desc">${esc(i.description)}</textarea>
+    <div class="two">
+      <div><label class="f" for="i_price">Selling price (Rs)</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
+      <div><label class="f" for="i_cmp">Price before discount</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}" placeholder="Optional"></div>
+    </div>
+    <label class="f" for="i_cat">Section</label><select id="i_cat">${catOpts || '<option value="">No sections yet</option>'}</select>
     <label class="f" for="i_photo">Photo</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
-    <img id="i_prev" class="preview" alt="" style="display:${i.photo_url?'block':'none'}" src="${esc(i.photo_url || '')}">
-    <label class="check"><input id="i_avail" type="checkbox" ${i.is_available?'checked':''}> In stock</label>
+    <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> In stock</label>
+    <label class="check"><input id="i_appr" type="checkbox" ${i.is_approved ? 'checked' : ''}> Approved (customers can see it)</label>
+    <label class="check"><input id="i_feat" type="checkbox" ${i.is_featured ? 'checked' : ''}> Featured on the home screen</label>
     <div class="actions">
-      <button class="btn block" id="saveBtn" onclick="A.saveItem('${i.id || ''}')">Save item</button>
-      ${i.id ? `<button class="btn warn block" onclick="A.deleteItem('${i.id}')">Delete item</button>` : ''}
+      <button class="btn block" id="saveBtn" onclick="A.saveItem('${i.id || ''}','${i.restaurant_id || state.menuRestaurant}')">Save product</button>
+      ${i.id ? `<button class="btn warn block" onclick="A.deleteItem('${i.id}')">Remove product</button>` : ''}
     </div>`;
 }
 
-// ---- Riders ----
-async function loadRiderAdmin(){
-  const [r, o] = await Promise.all([
-    sb.from('riders').select('id,profile_id,vehicle,cnic,is_approved,is_online,location_updated_at,created_at,profile:profiles(full_name,phone)').order('created_at'),
-    sb.from('orders').select('rider_id,total,rider_pay').eq('status', 'delivered').eq('rider_settled', false).limit(5000)
-  ]);
-  if (r.error) throw r.error; if (o.error) throw o.error;
-  state.adminRiders = r.data; const st = {};
-  o.data.forEach(x => { const s = st[x.rider_id] || (st[x.rider_id] = { n:0, cash:0, pay:0 }); s.n++; s.cash += Number(x.total || 0); s.pay += Number(x.rider_pay || 0); });
-  state.riderStats = st;
+// ================= RIDERS =================
+async function loadRiderMonth(){
+  state.riderRows = need(await sb.rpc('admin_rider_month', { p_month:state.riderMonth })) || [];
 }
+const riderNet = r => num(r.monthly_salary) + num(r.delivery_pay) - num(r.fines);
 function viewRiders(){
-  const pending = state.adminRiders.filter(r => !r.is_approved);
-  const active = state.adminRiders.filter(r => r.is_approved);
-  const box = 'border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:var(--surface)';
-  const pRows = pending.map(r => `<div style="${box}"><div class="row-title">${esc(r.profile ? r.profile.full_name : 'Rider')}</div>
-    <div class="row-sub">${esc(r.profile ? r.profile.phone || '' : '')}, ${esc(r.vehicle || '')}${r.cnic ? ', CNIC ' + esc(r.cnic) : ''}</div>
-    <div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.approveRider('${r.id}')">Approve</button><button class="btn warn" onclick="A.rejectRider('${r.id}')">Reject</button></div></div>`).join('');
-  const aRows = active.map(r => {
-    const s = state.riderStats[r.id] || { n:0, cash:0, pay:0 };
-    return `<div style="${box}"><div class="row-title">${esc(r.profile ? r.profile.full_name : 'Rider')}<span class="pill ${r.is_online ? '' : 'off'}" style="${r.is_online ? 'background:var(--green)' : ''}">${r.is_online ? 'Online' : 'Offline'}</span></div>
-      <div class="row-sub">${r.profile && r.profile.phone ? `<a href="tel:${esc(r.profile.phone)}">${esc(r.profile.phone)}</a>` : ''} ${esc(r.vehicle || '')}</div>
-      <div class="kv"><span class="muted">Deliveries not settled</span><span>${s.n}</span></div>
-      <div class="kv"><span class="muted">Cash collected</span><span>${money(s.cash)}</span></div>
-      <div class="kv"><span class="muted">Rider pay</span><span>${money(s.pay)}</span></div>
-      <div class="kv total"><span>Rider must hand over</span><span>${money(s.cash - s.pay)}</span></div>
-      <div class="bar" style="margin:10px 0 0">${s.n ? `<button class="btn" onclick="A.settleRider('${r.id}')">Mark settled</button>` : ''}<button class="btn warn" onclick="A.blockRider('${r.id}')">Block</button></div></div>`;
-  }).join('');
+  const rows = state.riderRows;
+  const pending = rows.filter(r => !r.is_approved && !r.blocked);
+  const blocked = rows.filter(r => r.blocked);
+  const active = rows.filter(r => r.is_approved);
+  const fl = state.riderFilter;
+  const shown = active.filter(r => fl === 'all' || (fl === 'online' && r.is_online) || (fl === 'cash' && num(r.cash_in_hand) > 0) || (fl === 'unpaid' && riderNet(r) - num(r.paid) > 0) || (fl === 'flag' && num(r.flagged_shifts) > 0));
+  const months = [0, 1, 2, 3, 4, 5].map(b => monthStart(b)).map(m => `<option value="${m}" ${m === state.riderMonth ? 'selected' : ''}>${monthLabel(m)}</option>`).join('');
+  const tot = (f) => active.reduce((n, r) => n + f(r), 0);
+  const pRows = pending.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill y">New request</span></div>
+    <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}${r.cnic ? ' · CNIC ' + esc(r.cnic) : ''} · ${dayName(r.created_at)}</div>
+    <div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.approveRider('${r.rider_id}')">Approve</button><button class="btn warn" onclick="A.rejectRider('${r.rider_id}')">Reject</button></div></div>`).join('');
+  const card = r => {
+    const net = riderNet(r); const due = net - num(r.paid); const over = num(r.cash_limit) > 0 && num(r.cash_in_hand) >= num(r.cash_limit);
+    return `<div class="card click" onclick="A.openRider('${r.rider_id}')">
+      <div class="row-title">${esc(r.full_name || 'Rider')}
+        <span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span>
+        ${r.face_registered ? '' : '<span class="pill y">No face</span>'}
+        ${num(r.flagged_shifts) ? `<span class="pill r">${r.flagged_shifts} selfie issue</span>` : ''}
+        ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
+      <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}</div>
+      <div class="mini">
+        <div><b>${r.deliveries}</b><span>Deliveries</span></div>
+        <div><b>${hours(r.online_minutes)}</b><span>On duty</span></div>
+        <div><b class="${num(r.fines) ? 'red' : ''}">${money(r.fines)}</b><span>Fines</span></div>
+        <div><b>${money(net)}</b><span>Month pay</span></div>
+        <div><b>${money(due)}</b><span>${due > 0 ? 'Still to pay' : 'Paid'}</span></div>
+        <div><b class="${over ? 'red' : ''}">${money(r.cash_in_hand)}</b><span>Cash in hand</span></div>
+      </div></div>`;
+  };
+  const chips = [['all','All'],['online','On duty'],['cash','Holding cash'],['unpaid','Pay due'],['flag','Selfie issues']].map(([k, l]) => `<button class="chip ${fl === k ? 'on' : ''}" onclick="A.riderFilter('${k}')">${l}</button>`).join('');
   return `<h2>Riders</h2>
-    ${pending.length ? `<h3 style="margin:8px 0">New requests (${pending.length})</h3>${pRows}` : ''}
-    ${aRows || '<div class="empty">No approved riders yet. A rider signs up in the Rider app, then you approve them here.</div>'}`;
+    <select onchange="A.pickMonth(this.value)" aria-label="Month" style="margin-bottom:12px">${months}</select>
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile hi"><b>${money(tot(r => num(r.cash_in_hand)))}</b><span>Cash with riders now</span></div>
+      <div class="tile hi"><b>${money(tot(r => Math.max(0, riderNet(r) - num(r.paid))))}</b><span>Pay due this month</span></div>
+      <div class="tile"><b>${active.filter(r => r.is_online).length} / ${active.length}</b><span>On duty now</span></div>
+      <div class="tile"><b>${money(tot(r => num(r.fines)))}</b><span>Fines this month</span></div>
+    </div>
+    ${pending.length ? `<h3>New requests (${pending.length})</h3>${pRows}` : ''}
+    <div class="chips">${chips}</div>
+    ${shown.map(card).join('') || '<div class="empty">No riders here. A rider signs up in the Rider app, then you approve them.</div>'}
+    ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}`;
 }
 
-// ---- Reports ----
-async function loadReports(){
-  const { data, error } = await sb.from('orders')
-    .select('restaurant_id, status, subtotal, rider_id, rider_pay, rider_settled, created_at, order_items(name,quantity,price)')
-    .order('created_at', { ascending:false }).limit(3000);
-  if (error) throw error; state.reportOrders = data;
-  if (!state.adminRiders.length) await loadRiderAdmin();
+// ================= MORE =================
+function viewMore(){
+  const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
+  return `<h2>More</h2><div class="list">
+    ${item('customers', 'Customers', 'See every customer, their orders, block or unblock')}
+    ${item('promos', 'Promo codes', 'Discount codes for customers')}
+    ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
+    ${item('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
+    ${item('settings', 'Settings', 'Selfie face check at duty start')}
+    ${item('publish', 'Publish updates', 'Upload new app files to GitHub')}
+    <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button>
+  </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
-function viewReports(){
-  const delivered = state.reportOrders.filter(o => o.status === 'delivered');
-  const byShop = {};
-  delivered.forEach(o => {
-    const s = byShop[o.restaurant_id] || (byShop[o.restaurant_id] = { orders:0, sales:0 });
-    s.orders++; s.sales += Number(o.subtotal || 0);
-  });
-  const shopRows = Object.entries(byShop).map(([id, s]) => {
-    const r = state.restaurants.find(x => x.id === id);
-    return { name: r ? r.name : 'Unknown shop', ...s };
-  }).sort((a, b) => b.sales - a.sales);
 
-  const byProduct = {};
-  delivered.forEach(o => (o.order_items || []).forEach(i => {
-    const p = byProduct[i.name] || (byProduct[i.name] = { qty:0, revenue:0 });
-    p.qty += i.quantity; p.revenue += Number(i.price || 0) * i.quantity;
-  }));
-  const productRows = Object.entries(byProduct).map(([name, p]) => ({ name, ...p })).sort((a, b) => b.qty - a.qty).slice(0, 10);
+// ---- Customers ----
+async function loadCustomers(){ state.customers = need(await sb.rpc('admin_customers')) || []; }
+function viewCustomers(){
+  const q = state.customerQ.trim().toLowerCase();
+  const list = state.customers.filter(c => !q || (c.full_name || '').toLowerCase().includes(q) || (c.phone || '').includes(q));
+  const rows = list.slice(0, 300).map(c => `<button class="row" onclick="A.openCustomer('${c.id}')"><div class="row-main">
+      <div class="row-title">${esc(c.full_name || 'No name')}${c.is_blocked ? '<span class="pill r">Blocked</span>' : ''}</div>
+      <div class="row-sub">${esc(c.phone || 'No phone')} · ${c.orders} orders${c.last_order ? ' · last ' + timeAgo(c.last_order) : ''}</div></div>
+      <div class="row-side">${money(c.spent)}<small>spent</small></div></button>`).join('');
+  return `${backLink()}<h2>Customers (${state.customers.length})</h2>
+    <input type="search" placeholder="Search name or phone" value="${esc(state.customerQ)}" oninput="A.customerSearch(this.value)" style="margin-bottom:10px">
+    <div class="list" id="custList">${rows || '<div class="empty">No customers yet.</div>'}</div>`;
+}
 
-  const byRider = {};
-  delivered.forEach(o => {
-    if (!o.rider_id) return;
-    const r = byRider[o.rider_id] || (byRider[o.rider_id] = { n:0, earn:0, cashHeld:0 });
-    r.n++; r.earn += Number(o.rider_pay || 0);
-    if (!o.rider_settled) r.cashHeld += Number(o.subtotal || 0);
-  });
-  const riderRows = Object.entries(byRider).map(([id, s]) => {
-    const rr = state.adminRiders.find(x => x.id === id);
-    return { name: rr && rr.profile ? (rr.profile.full_name || 'Rider') : 'Rider', ...s };
-  }).sort((a, b) => b.n - a.n);
-
-  const rowLine = (title, sub, right, small) => `<div class="row"><div class="row-main"><div class="row-title">${esc(title)}</div><div class="row-sub">${esc(sub)}</div></div><div class="row-side">${right}${small ? `<small>${small}</small>` : ''}</div></div>`;
-  const shopTable = shopRows.length ? shopRows.map(s => rowLine(s.name, s.orders + ' orders', money(s.sales))).join('') : '<div class="empty">No sales yet.</div>';
-  const productTable = productRows.length ? productRows.map(p => rowLine(p.name, p.qty + ' sold', money(p.revenue))).join('') : '<div class="empty">No sales yet.</div>';
-  const riderTable = riderRows.length ? riderRows.map(r => rowLine(r.name, r.n + ' deliveries', money(r.earn), 'Cash held ' + money(r.cashHeld))).join('') : '<div class="empty">No deliveries yet.</div>';
-
-  return `<h2>Reports</h2>
-    <p class="muted" style="margin-top:-6px">Based on the last 3000 orders</p>
-    <h3 style="margin:16px 0 6px">Sales by shop</h3><div class="list">${shopTable}</div>
-    <h3 style="margin:20px 0 6px">Top products</h3><div class="list">${productTable}</div>
-    <h3 style="margin:20px 0 6px">Riders</h3><div class="list">${riderTable}</div>`;
+// ---- Promo codes ----
+async function loadPromos(){ state.promos = need(await sb.from('promo_codes').select('*').order('code')); }
+function viewPromos(){
+  const rows = state.promos.map(p => {
+    const expired = p.expires_at && new Date(p.expires_at) < new Date();
+    return `<button class="row" onclick="A.editPromo('${p.id}')"><div class="row-main">
+      <div class="row-title">${esc(p.code)}${!p.is_active || expired ? `<span class="pill">${expired ? 'Expired' : 'Off'}</span>` : '<span class="pill g">Active</span>'}</div>
+      <div class="row-sub">${p.type === 'percent' ? num(p.value) + '% off' : money(p.value) + ' off'} · min ${money(p.min_order)}${p.expires_at ? ' · until ' + dayName(p.expires_at) : ''}</div></div>
+      <div class="row-side">${p.used_count || 0}${p.usage_limit ? ' / ' + p.usage_limit : ''}<small>used</small></div></button>`;
+  }).join('');
+  return `${backLink()}<h2>Promo codes</h2><div class="bar"><button class="btn" onclick="A.editPromo()">Add promo code</button></div>
+    <div class="list">${rows || '<div class="empty">No promo codes yet.</div>'}</div>`;
 }
 
 // ---- Zones ----
 function viewZones(){
-  const rows = state.zones.map(z => `
-    <button class="row" onclick="A.editZone('${z.id}')">
-      <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active?'':'<span class="pill off">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
-      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}, rider ${money(z.rider_pay ?? 60)}</small></div>
-    </button>`).join('');
-  return `<h2>Delivery zones</h2>
-    <div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
+  const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
+      <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
+      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}, rider ${money(z.rider_pay ?? 60)}</small></div></button>`).join('');
+  return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
 }
 function zoneForm(z){
-  z = z || { delivery_fee:100, min_order:0, is_active:true };
-  return `
-    <label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
+  z = z || { delivery_fee:100, min_order:0, rider_pay:60, is_active:true };
+  return `<label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
     <label class="f" for="z_city">City</label><input id="z_city" type="text" value="${esc(z.city)}">
     <div class="two">
-      <div><label class="f" for="z_fee">Delivery fee (PKR)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
-      <div><label class="f" for="z_min">Minimum order (PKR)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
+      <div><label class="f" for="z_fee">Delivery fee (Rs)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
+      <div><label class="f" for="z_min">Minimum order (Rs)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
     </div>
-    <label class="f" for="z_pay">Rider pay per delivery (PKR)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
-    <label class="check"><input id="z_active" type="checkbox" ${z.is_active?'checked':''}> Zone is open for orders</label>
-    <div class="actions"><button class="btn block" id="saveBtn" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
+    <label class="f" for="z_pay">Rider pay per delivery (Rs)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
+    <label class="check"><input id="z_active" type="checkbox" ${z.is_active ? 'checked' : ''}> Zone is open for orders</label>
+    <div class="actions"><button class="btn block" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
 }
 
-// ---- Actions ----
+// ---- Fine rules ----
+async function loadFineRules(){ state.fineRules = need(await sb.from('fine_rules').select('*').order('created_at')); }
+function viewRules(){
+  const rows = state.fineRules.map(r => `<button class="row" onclick="A.editRule('${r.id}')"><div class="row-main"><div class="row-title">${esc(r.title)}${r.is_active ? '' : '<span class="pill">Off</span>'}</div></div><div class="row-side">${money(r.amount)}</div></button>`).join('');
+  return `${backLink()}<h2>Rider fine rules</h2>
+    <p class="muted" style="margin-top:-6px">Riders see these rules in their app. You pick one when you fine a rider, and the amount is cut from their monthly pay.</p>
+    <div class="bar"><button class="btn" onclick="A.editRule()">Add rule</button></div>
+    <div class="list">${rows || '<div class="empty">No rules yet.</div>'}</div>`;
+}
+
+// ---- Settings ----
+function viewSettings(){
+  const s = state.settings; const req = s.require_selfie === true; const th = num(s.face_match_threshold ?? 0.5);
+  return `${backLink()}<h2>Settings</h2>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div><b>Selfie face check at duty start</b><div class="muted" style="font-size:14px">When on, a rider must take a selfie that matches their registered face before going online. Turn this on after the new Rider app is published.</div></div>
+      <div class="side-sw"><label class="switch"><input type="checkbox" ${req ? 'checked' : ''} onchange="A.saveSetting('require_selfie', this.checked)"><span></span></label><small>${req ? 'On' : 'Off'}</small></div>
+    </div>
+    <div class="card">
+      <label class="f" for="s_th" style="margin-top:0"><b>Face match strictness</b></label>
+      <div class="muted" style="font-size:14px">Lower is stricter. 0.5 is a good balance. Use 0.45 for stricter, 0.55 if riders are wrongly rejected.</div>
+      <input id="s_th" type="number" step="0.01" min="0.3" max="0.7" value="${th}" style="margin-top:8px">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('face_match_threshold', Number($('s_th').value || 0.5))">Save</button></div>
+    </div>`;
+}
+
+// ================= ACTIONS =================
 const A = {
   async login(e){
     e.preventDefault();
     const btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Signing in…';
-    const { data, error } = await sb.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+    const { data, error } = await sb.auth.signInWithPassword({ email:$('em').value.trim(), password:$('pw').value });
     if (error){ $('loginErr').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in'; return; }
     await run(() => afterLogin(data.user));
   },
-  async logout(){ await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+  async logout(){ if (!confirm('Sign out?')) return; await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+  setPeriod(p){ state.period = p; go(state.tab); },
 
-  filter(f){ state.orderFilter = f; renderTab(); },
-  async refreshOrders(){ await run(loadOrders); renderTab(); toast('Orders updated'); },
-  openOrder(id){
+  // ---- Orders ----
+  orderFilter(f){ state.orderFilter = f; renderTab(); },
+  orderSearch(v){ state.orderQ = v; const el = $('orderList'); renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
+  async openOrder(id){
     const o = state.orders.find(x => x.id === id); if (!o) return;
     const items = (o.order_items || []).map(i => `<div class="kv"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
-    openSheet(`${o.restaurant?.name || 'Order'}`, `
-      <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${timeAgo(o.created_at)}</span></div>
-      <div><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}</div>
-      <div class="muted" style="margin:4px 0 8px">${esc(o.address_text || 'No address')}</div>
-      ${o.rider && o.rider.profile ? `<div style="margin-bottom:12px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : '<div style="height:4px"></div>'}
-      ${o.customer_note ? `<div style="margin-bottom:12px"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
+    openSheet(`#${o.id.slice(-4).toUpperCase()} ${o.restaurant?.name || 'Order'}`, `
+      <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${when(o.created_at)}</span></div>
+      <div class="card"><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}
+        <div class="muted" style="margin-top:4px">${esc(o.address_text || 'No address')}</div>
+        ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}</div>
+      ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
+      ${o.rider && o.rider.profile ? `<div style="margin-bottom:8px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : ''}
+      ${o.customer_note ? `<div class="note"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
       ${items}
       <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
       <div class="kv"><span class="muted">Delivery</span><span>${money(o.delivery_fee)}</span></div>
-      ${Number(o.discount) ? `<div class="kv"><span class="muted">Discount</span><span>-${money(o.discount)}</span></div>` : ''}
-      <div class="kv total"><span>Total, cash on delivery</span><span>${money(o.total)}</span></div>
+      ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
+      <div class="kv total"><span>Cash on delivery</span><span>${money(o.total)}</span></div>
+      ${o.status === 'delivered' ? `<div class="kv"><span class="muted">Commission</span><span>${money(o.commission_amount)}</span></div><div class="kv"><span class="muted">Shop gets</span><span>${money(o.restaurant_earning)}</span></div><div class="kv"><span class="muted">Rider pay</span><span>${money(o.rider_pay)}</span></div>` : ''}
       ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
+      <h3 style="margin-top:14px">Timeline</h3><ul class="timeline" id="tl"><li class="muted">Loading…</li></ul>
       <div class="actions">${orderActions(o)}</div>`);
+    const { data } = await sb.from('order_status_log').select('status,changed_at').eq('order_id', id).order('changed_at');
+    const tl = $('tl'); if (tl) tl.innerHTML = (data || []).map(x => `<li><span>${LABEL[x.status] || x.status}</span><span class="muted">${when(x.changed_at)}</span></li>`).join('') || '<li class="muted">No history</li>';
   },
   async setStatus(id, status){
     let reason = null;
-    if (status === 'rejected') reason = prompt('Reason for rejecting (optional)') ;
+    if (status === 'rejected'){ reason = prompt('Reason for rejecting (optional)'); if (reason === null) return; }
     if (status === 'cancelled' && !confirm('Cancel this order?')) return;
     await run(async () => {
-      const { error } = await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason });
-      if (error) throw error;
+      need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason }));
       closeSheet(); await loadOrders(); renderTab(); toast('Order updated');
     });
   },
   async assign(id){
     const rid = $('riderSel').value;
-    await run(async () => {
-      const { error } = await sb.rpc('assign_rider', { p_order_id:id, p_rider_id:rid });
-      if (error) throw error;
-      closeSheet(); await loadOrders(); renderTab(); toast('Rider assigned');
-    });
+    await run(async () => { need(await sb.rpc('assign_rider', { p_order_id:id, p_rider_id:rid })); closeSheet(); await loadOrders(); renderTab(); toast('Rider assigned'); });
   },
 
+  // ---- Shops ----
+  async openShop(id){
+    const r = state.restaurants.find(x => x.id === id); if (!r) return;
+    if (!state.shopReport.length) await run(loadShopReport);
+    const s = state.shopReport.find(x => x.restaurant_id === id) || {};
+    const zone = state.zones.find(z => z.id === r.zone_id);
+    const label = (PERIODS.find(p => p[0] === state.period) || [])[1];
+    openSheet(r.name, `
+      <div class="card-head" style="margin-bottom:10px"><div class="thumb" style="width:64px;height:64px">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : esc((r.name || '?')[0])}</div>
+        <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}</div>
+        <div class="muted" style="font-size:14px">${esc(r.address || '')}</div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}</div></div>
+      <div class="muted" style="font-size:14px">${esc(zone ? zone.name : '')} · Commission ${num(r.commission_percent)}% · ${s.rating ? '★ ' + s.rating + ' (' + s.reviews + ' reviews)' : 'No reviews'}</div>
+      <h3 style="margin-top:14px">${esc(label)}</h3>
+      <div class="kv"><span class="muted">Orders</span><span>${num(s.orders)}</span></div>
+      <div class="kv"><span class="muted">Delivered</span><span>${num(s.delivered)}</span></div>
+      <div class="kv"><span class="muted">Cancelled or rejected</span><span>${num(s.cancelled)}</span></div>
+      <div class="kv"><span class="muted">Sales</span><span>${money(s.food_sales)}</span></div>
+      <div class="kv"><span class="muted">Your commission</span><span>${money(s.commission)}</span></div>
+      <div class="kv"><span class="muted">Shop earning</span><span>${money(s.shop_earning)}</span></div>
+      <div class="kv total"><span>Unpaid to shop (all time)</span><span>${money(s.unpaid)}</span></div>
+      ${s.last_paid ? `<div class="muted" style="font-size:13px">Last paid ${when(s.last_paid)}</div>` : ''}
+      <div class="actions">
+        ${num(s.unpaid) ? `<button class="btn block" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
+        <button class="btn ghost block" onclick="A.shopProducts('${id}')">Manage products</button>
+        <button class="btn ghost block" onclick="A.editRestaurant('${id}')">Edit shop details</button>
+      </div>
+      <h3>Payment history</h3><div id="payHist" class="list"><div class="empty">Loading…</div></div>`);
+    const { data } = await sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20);
+    const el = $('payHist'); if (el) el.innerHTML = (data || []).map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(p.amount)}</div><div class="row-sub">${p.period_start ? dayName(p.period_start) + ' to ' + dayName(p.period_end) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div><div class="row-side"><small>${when(p.created_at)}</small></div></div>`).join('') || '<div class="empty">No payments yet.</div>';
+  },
+  async payShop(id, amt){
+    const note = prompt(`Pay ${money(amt)} to this shop. Add a note (for example: cash, JazzCash, bank):`, 'Cash');
+    if (note === null) return;
+    await run(async () => {
+      const v = need(await sb.rpc('settle_restaurant', { p_restaurant_id:id, p_note:note || null }));
+      toast('Paid ' + money(v)); await loadShopReport(); if (state.tab === 'restaurants') renderTab(); A.openShop(id);
+    });
+  },
+  shopProducts(id){ closeSheet(); state.menuRestaurant = id; state.productFilter = 'all'; state.productQ = ''; go('menu'); },
   editRestaurant(id){
     const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit shop' : 'Add shop', restaurantForm(r));
     if (r) sb.rpc('admin_owner_email', { p_restaurant_id:id }).then(({ data }) => { const el = $('r_owner'); if (el && data){ el.value = data; el.dataset.orig = data; } });
   },
   async saveRestaurant(id){
     const name = $('r_name').value.trim();
-    if (!name) return toast('Enter the restaurant name', true);
-    if (!state.zones.length) return toast('Add a zone first', true);
+    if (!name) return toast('Enter the shop name', true);
+    if (!state.zones.length) return toast('Add a zone first (More › Delivery zones)', true);
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
     await run(async () => {
-      const row = {
-        name, description:$('r_desc').value.trim() || null, address:$('r_addr').value.trim() || null, phone:$('r_phone').value.trim() || null,
+      const row = { name, description:$('r_desc').value.trim() || null, address:$('r_addr').value.trim() || null, phone:$('r_phone').value.trim() || null,
         zone_id:$('r_zone').value, open_time:$('r_open').value || null, close_time:$('r_close').value || null,
-        commission_percent:Number($('r_comm').value || 0), prep_time_minutes:Number($('r_prep').value || 25),
-        is_open:$('r_isopen').checked, is_active:$('r_active').checked
-      };
-      const f = $('r_logo').files[0];
-      if (f) row.logo_url = await uploadImage(f, 'restaurants');
-      const q = id ? sb.from('restaurants').update(row).eq('id', id).select('id').single() : sb.from('restaurants').insert(row).select('id').single();
-      const { data:saved, error } = await q; if (error) throw error;
+        commission_percent:num($('r_comm').value), prep_time_minutes:num($('r_prep').value) || 25,
+        is_open:$('r_isopen').checked, is_active:$('r_active').checked };
+      const f = $('r_logo').files[0]; if (f) row.logo_url = await uploadImage(f, 'restaurants');
+      const saved = need(await (id ? sb.from('restaurants').update(row).eq('id', id).select('id').single() : sb.from('restaurants').insert(row).select('id').single()));
       const ownerEmail = ($('r_owner').value || '').trim(); const origEmail = $('r_owner').dataset.orig || '';
-      if (ownerEmail !== origEmail){
-        const { error:e2 } = await sb.rpc('link_restaurant_owner', { p_restaurant_id:saved.id, p_email:ownerEmail });
-        if (e2) throw e2;
-      }
-      await loadRestaurants(); closeSheet(); renderTab(); toast('Shop saved');
+      if (ownerEmail !== origEmail) need(await sb.rpc('link_restaurant_owner', { p_restaurant_id:saved.id, p_email:ownerEmail }));
+      await Promise.all([loadRestaurants(), loadShopReport()]); closeSheet(); renderTab(); toast('Shop saved');
     });
-    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save restaurant'; }
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save shop'; }
   },
   async toggleOpen(id, val){
-    await run(async () => {
-      const { error } = await sb.from('restaurants').update({ is_open:val }).eq('id', id); if (error) throw error;
-      await loadRestaurants(); renderTab();
-    });
+    await run(async () => { need(await sb.from('restaurants').update({ is_open:val }).eq('id', id)); await loadRestaurants(); renderTab(); });
   },
 
-  async pickMenuRestaurant(id){ state.menuRestaurant = id; await run(loadMenu); renderTab(); },
+  // ---- Products ----
+  async pickMenuRestaurant(id){ state.menuRestaurant = id; await run(loadProducts); renderTab(); },
+  productFilter(f){ state.productFilter = f; renderTab(); },
+  productSearch(v){ state.productQ = v; renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
   editCategory(id){
     const c = state.categories.find(x => x.id === id);
     openSheet(c ? 'Edit section' : 'Add section', `
       <label class="f" for="c_name">Section name</label><input id="c_name" type="text" value="${esc(c?.name)}" placeholder="Burgers">
-      <div class="actions">
-        <button class="btn block" onclick="A.saveCategory('${id || ''}')">Save section</button>
-        ${c ? `<button class="btn warn block" onclick="A.deleteCategory('${id}')">Delete section and its items</button>` : ''}
-      </div>`);
+      <div class="actions"><button class="btn block" onclick="A.saveCategory('${id || ''}')">Save section</button>
+      ${c ? `<button class="btn warn block" onclick="A.deleteCategory('${id}')">Delete section and its products</button>` : ''}</div>`);
   },
   async saveCategory(id){
     const name = $('c_name').value.trim(); if (!name) return toast('Enter a section name', true);
     await run(async () => {
-      const q = id ? sb.from('menu_categories').update({ name }).eq('id', id)
-                   : sb.from('menu_categories').insert({ name, restaurant_id:state.menuRestaurant, sort_order:state.categories.length + 1 });
-      const { error } = await q; if (error) throw error;
-      await loadMenu(); closeSheet(); renderTab(); toast('Section saved');
+      need(await (id ? sb.from('menu_categories').update({ name }).eq('id', id) : sb.from('menu_categories').insert({ name, restaurant_id:state.menuRestaurant, sort_order:state.categories.length + 1 })));
+      await loadProducts(); closeSheet(); renderTab(); toast('Section saved');
     });
   },
   async deleteCategory(id){
-    if (!confirm('Delete this section and all items inside it?')) return;
+    if (!confirm('Delete this section and all products inside it?')) return;
+    await run(async () => { need(await sb.from('menu_categories').delete().eq('id', id)); await loadProducts(); closeSheet(); renderTab(); toast('Section deleted'); });
+  },
+  async editItem(id){
+    const i = state.items.find(x => x.id === id);
+    const shop = i ? i.restaurant_id : state.menuRestaurant;
+    if (!shop || shop === 'all') return toast('Choose a shop first', true);
     await run(async () => {
-      const { error } = await sb.from('menu_categories').delete().eq('id', id); if (error) throw error;
-      await loadMenu(); closeSheet(); renderTab(); toast('Section deleted');
+      state.formCats = shop === state.menuRestaurant && state.categories.length ? state.categories
+        : need(await sb.from('menu_categories').select('*').eq('restaurant_id', shop).order('sort_order'));
+      if (!state.formCats.length) return toast('Add a section first, for example Burgers', true);
+      openSheet(i ? 'Edit product' : 'Add product', itemForm(i));
     });
   },
-  editItem(id){
-    if (!state.categories.length) return toast('Add a section first, for example Burgers', true);
-    const i = state.items.find(x => x.id === id); openSheet(i ? 'Edit item' : 'Add item', itemForm(i));
-  },
-  async saveItem(id){
-    const name = $('i_name').value.trim(); const price = $('i_price').value;
-    if (!name) return toast('Enter the item name', true);
-    if (price === '' || Number(price) < 0) return toast('Enter a price', true);
+  async saveItem(id, shop){
+    const name = $('i_name').value.trim(); const price = $('i_price').value; const cmp = $('i_cmp').value;
+    if (!name) return toast('Enter the product name', true);
+    if (price === '' || num(price) < 0) return toast('Enter a price', true);
     if (!$('i_cat').value) return toast('Choose a section', true);
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
     await run(async () => {
-      const row = { name, description:$('i_desc').value.trim() || null, price:Number(price), category_id:$('i_cat').value, is_available:$('i_avail').checked, restaurant_id:state.menuRestaurant };
-      const f = $('i_photo').files[0];
-      if (f) row.photo_url = await uploadImage(f, 'items');
-      const q = id ? sb.from('menu_items').update(row).eq('id', id) : sb.from('menu_items').insert(row);
-      const { error } = await q; if (error) throw error;
-      await loadMenu(); closeSheet(); renderTab(); toast('Item saved');
+      const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
+        category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop };
+      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
+      need(await (id ? sb.from('menu_items').update(row).eq('id', id) : sb.from('menu_items').insert(row)));
+      await loadProducts(); closeSheet(); renderTab(); toast('Product saved');
     });
-    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save item'; }
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = 'Save product'; }
   },
-  async toggleItem(id, val){
-    await run(async () => {
-      const { error } = await sb.from('menu_items').update({ is_available:val }).eq('id', id); if (error) throw error;
-      await loadMenu(); renderTab();
-    });
+  async toggleItem(id, val){ await run(async () => { need(await sb.from('menu_items').update({ is_available:val }).eq('id', id)); await loadProducts(); renderTab(); }); },
+  async approveItem(id){ await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).eq('id', id)); await loadProducts(); renderTab(); toast('Approved'); }); },
+  async approveAll(){
+    const ids = state.items.filter(i => !i.is_approved).map(i => i.id); if (!ids.length) return;
+    if (!confirm(`Approve ${ids.length} products?`)) return;
+    await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).in('id', ids)); await loadProducts(); renderTab(); toast('Approved'); });
   },
   async deleteItem(id){
-    if (!confirm('Delete this item?')) return;
-    await run(async () => {
-      const { error } = await sb.from('menu_items').delete().eq('id', id); if (error) throw error;
-      await loadMenu(); closeSheet(); renderTab(); toast('Item deleted');
-    });
+    if (!confirm('Remove this product? Old orders keep their history.')) return;
+    await run(async () => { need(await sb.from('menu_items').delete().eq('id', id)); await loadProducts(); closeSheet(); renderTab(); toast('Product removed'); });
   },
 
+  // ---- Riders ----
+  async pickMonth(m){ state.riderMonth = m; await run(loadRiderMonth); renderTab(); },
+  riderFilter(f){ state.riderFilter = f; renderTab(); },
   async approveRider(id){
-    const r = state.adminRiders.find(x => x.id === id); if (!r) return;
+    const r = state.riderRows.find(x => x.rider_id === id); if (!r) return;
     await run(async () => {
-      const { error } = await sb.from('riders').update({ is_approved:true }).eq('id', id); if (error) throw error;
+      need(await sb.from('riders').update({ is_approved:true, blocked:false }).eq('id', id));
       await sb.from('profiles').update({ role:'rider' }).eq('id', r.profile_id).eq('role', 'customer');
-      await loadRiderAdmin(); await loadRiders(); renderTab(); toast('Rider approved');
+      await Promise.all([loadRiderMonth(), loadRiders()]); renderTab(); toast('Rider approved');
     });
   },
   async rejectRider(id){
     if (!confirm('Reject and remove this rider request?')) return;
-    await run(async () => {
-      const { error } = await sb.from('riders').delete().eq('id', id); if (error) throw error;
-      await loadRiderAdmin(); renderTab(); toast('Removed');
-    });
+    await run(async () => { need(await sb.from('riders').delete().eq('id', id)); await loadRiderMonth(); renderTab(); toast('Removed'); });
   },
   async blockRider(id){
-    if (!confirm('Block this rider? They will stop seeing deliveries.')) return;
+    if (!confirm('Block this rider? They go off duty and stop seeing deliveries.')) return;
+    await run(async () => { need(await sb.from('riders').update({ is_approved:false, blocked:true, is_online:false }).eq('id', id)); closeSheet(); await Promise.all([loadRiderMonth(), loadRiders()]); renderTab(); toast('Rider blocked'); });
+  },
+  async unblockRider(id){
+    await run(async () => { need(await sb.from('riders').update({ is_approved:true, blocked:false }).eq('id', id)); closeSheet(); await Promise.all([loadRiderMonth(), loadRiders()]); renderTab(); toast('Rider unblocked'); });
+  },
+  async openRider(id){
+    const r = state.riderRows.find(x => x.rider_id === id); if (!r) return;
+    openSheet(r.full_name || 'Rider', '<div class="empty">Loading…</div>');
     await run(async () => {
-      const { error } = await sb.from('riders').update({ is_approved:false, is_online:false }).eq('id', id); if (error) throw error;
-      await loadRiderAdmin(); await loadRiders(); renderTab(); toast('Rider blocked');
+      const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
+      const [rd, fines, shifts, hand, pays] = await Promise.all([
+        sb.from('riders').select('face_photo_path,current_lat,current_lng').eq('id', id).single(),
+        sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
+        sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
+        sb.from('cash_handovers').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(10),
+        sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', id).order('created_at', { ascending:false }).limit(12)
+      ]);
+      const rider = need(rd); const fl = need(fines); const sh = need(shifts); const hd = need(hand); const py = need(pays);
+      const urls = await signedUrls([rider.face_photo_path, ...sh.map(s => s.selfie_path)]);
+      const net = riderNet(r); const due = net - num(r.paid);
+      const over = num(r.cash_limit) > 0 && num(r.cash_in_hand) >= num(r.cash_limit);
+      const faceImg = rider.face_photo_path && urls[rider.face_photo_path] ? `<img src="${urls[rider.face_photo_path]}" alt="">` : esc((r.full_name || '?')[0]);
+      const fineRows = fl.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(x.reason)}${x.status === 'waived' ? '<span class="pill">Waived</span>' : ''}</div><div class="row-sub">${when(x.fined_at)}${x.order ? ' · order #' + esc(x.order.id.slice(-4).toUpperCase()) : ''}</div></div>
+        <div class="row-side ${x.status === 'waived' ? 'muted' : 'red'}">−${money(x.amount)}<small><button class="linkbtn" style="font-size:12px" onclick="A.toggleFine('${x.id}','${x.status === 'waived' ? 'active' : 'waived'}','${id}')">${x.status === 'waived' ? 'Apply again' : 'Waive'}</button></small></div></div>`).join('');
+      const shiftCards = sh.map(s => {
+        const mins = ((s.ended_at ? new Date(s.ended_at) : new Date()) - new Date(s.started_at)) / 60000;
+        const st = s.review_status === 'flagged' ? '<span class="pill r">Flagged</span>' : s.review_status === 'ok' ? '<span class="pill g">Checked</span>' : (s.face_ok === false ? '<span class="pill r">No match</span>' : '');
+        return `<div class="selfie">${s.selfie_path && urls[s.selfie_path] ? `<img src="${urls[s.selfie_path]}" alt="Selfie" loading="lazy">` : '<div class="ph">No selfie</div>'}
+          <div style="margin-top:6px"><b>${when(s.started_at)}</b> ${st}</div>
+          <div class="muted">${s.ended_at ? hours(mins) : 'On duty now, ' + hours(mins)}${s.face_score != null ? ' · match ' + Math.round((1 - num(s.face_score)) * 100) + '%' : ''}</div>
+          <div class="btns"><button class="btn ghost" onclick="A.reviewShift('${s.id}','ok','${id}')">OK</button><button class="btn warn" onclick="A.reviewShift('${s.id}','flagged','${id}')">Flag</button></div></div>`;
+      }).join('');
+      const handRows = hd.map(h => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(h.amount)}</div><div class="row-sub">${h.orders_count} deliveries${h.note ? ' · ' + esc(h.note) : ''}</div></div><div class="row-side"><small>${when(h.created_at)}</small></div></div>`).join('');
+      const payRows = py.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(p.amount)}</div><div class="row-sub">${p.period_start ? monthLabel(p.period_start) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div><div class="row-side"><small>${when(p.created_at)}</small></div></div>`).join('');
+      const body = $('sheetBody'); if (!body) return;
+      body.innerHTML = `
+        <div class="card-head"><div class="face">${faceImg}</div><div>
+          <div><span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span> ${r.blocked ? '<span class="pill r">Blocked</span>' : ''} ${r.face_registered ? '<span class="pill b">Face registered</span>' : '<span class="pill y">Face not registered</span>'}</div>
+          <div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''} · ${esc(r.vehicle || '')}</div>
+          <div class="muted" style="font-size:13px">${r.cnic ? 'CNIC ' + esc(r.cnic) + ' · ' : ''}Joined ${dayName(r.created_at)}${r.rating ? ' · ★ ' + r.rating : ''}</div>
+          ${rider.current_lat ? `<a style="font-size:14px" href="https://www.google.com/maps/search/?api=1&query=${rider.current_lat},${rider.current_lng}" target="_blank" rel="noopener">Last location${r.location_updated_at ? ' (' + timeAgo(r.location_updated_at) + ')' : ''}</a>` : ''}
+        </div></div>
+
+        <h3>${monthLabel(state.riderMonth)} pay</h3>
+        <div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>
+        <div class="kv"><span class="muted">Delivery pay (${r.deliveries} deliveries)</span><span>${money(r.delivery_pay)}</span></div>
+        <div class="kv"><span class="muted">Fines (${r.fines_count})</span><span class="neg">−${money(r.fines)}</span></div>
+        <div class="kv total"><span>Month pay</span><span>${money(net)}</span></div>
+        <div class="kv"><span class="muted">Already paid</span><span>${money(r.paid)}</span></div>
+        <div class="kv"><b>Still to pay</b><b>${money(Math.max(0, due))}</b></div>
+        <div class="kv"><span class="muted">On duty</span><span>${hours(r.online_minutes)} in ${r.shifts} shifts</span></div>
+        <div class="actions">${due > 0 ? `<button class="btn block" onclick="A.payRider('${id}', ${Math.round(due)})">Pay ${money(due)}</button>` : ''}</div>
+
+        <h3>Cash</h3>
+        <div class="kv total"><span>Cash in hand</span><span class="${over ? 'red' : ''}">${money(r.cash_in_hand)}</span></div>
+        <div class="muted" style="font-size:13px">All cash the rider collected and has not handed over yet. Limit ${num(r.cash_limit) ? money(r.cash_limit) : 'none'}${over ? '. Over the limit, rider cannot take new deliveries.' : ''}</div>
+        <div class="actions">${num(r.cash_in_hand) ? `<button class="btn block" onclick="A.receiveCash('${id}', ${num(r.cash_in_hand)})">Receive ${money(r.cash_in_hand)} cash</button>` : ''}</div>
+
+        <h3>Fines</h3>
+        <div class="list">${fineRows || '<div class="empty" style="padding:14px">No fines this month.</div>'}</div>
+        <div class="actions"><button class="btn warn block" onclick="A.fineForm('${id}')">Add a fine</button></div>
+
+        <h3>Duty and selfies</h3>
+        ${shiftCards ? `<div class="selfies">${shiftCards}</div>` : '<div class="empty" style="padding:14px">No duty shifts this month.</div>'}
+
+        <h3>Rider settings</h3>
+        <div class="two">
+          <div><label class="f" for="rs_sal">Monthly salary (Rs)</label><input id="rs_sal" type="number" min="0" value="${num(r.monthly_salary)}"></div>
+          <div><label class="f" for="rs_lim">Cash limit (Rs, 0 = none)</label><input id="rs_lim" type="number" min="0" value="${num(r.cash_limit)}"></div>
+        </div>
+        <div class="actions"><button class="btn ghost block" onclick="A.saveRiderSettings('${id}')">Save settings</button></div>
+
+        <h3>Cash handovers</h3><div class="list">${handRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
+        <h3>Salary payments</h3><div class="list">${payRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
+
+        <div class="actions" style="margin-top:22px">
+          ${r.face_registered ? `<button class="btn ghost block" onclick="A.resetFace('${id}')">Reset face (rider registers again)</button>` : ''}
+          ${r.blocked ? `<button class="btn block" onclick="A.unblockRider('${id}')">Unblock rider</button>` : `<button class="btn warn block" onclick="A.blockRider('${id}')">Block rider</button>`}
+        </div>`;
     });
   },
-  async settleRider(id){
-    const s = state.riderStats[id]; if (!s) return;
-    if (!confirm(`Mark ${s.n} deliveries as settled? The rider hands over ${money(s.cash - s.pay)}.`)) return;
+  async refreshRider(id){ await loadRiderMonth(); if (state.tab === 'riders') renderTab(); await A.openRider(id); },
+  async payRider(id, due){
+    const v = prompt(`Pay rider for ${monthLabel(state.riderMonth)}. Amount (Rs):`, String(due)); if (v === null) return;
+    const amt = num(v); if (amt <= 0) return toast('Enter an amount', true);
+    const note = prompt('Note (for example: cash, JazzCash):', 'Cash'); if (note === null) return;
     await run(async () => {
-      const { error } = await sb.from('orders').update({ rider_settled:true }).eq('rider_id', id).eq('status', 'delivered').eq('rider_settled', false);
-      if (error) throw error;
-      await loadRiderAdmin(); renderTab(); toast('Settled');
+      need(await sb.from('payouts').insert({ party_type:'rider', party_id:id, amount:amt, period_start:state.riderMonth, period_end:monthEnd(state.riderMonth), status:'paid', note:note || null }));
+      toast('Payment saved'); await A.refreshRider(id);
     });
   },
+  async receiveCash(id, amt){
+    const note = prompt(`Confirm you received ${money(amt)} from this rider. Note (optional):`, ''); if (note === null) return;
+    await run(async () => { const v = need(await sb.rpc('settle_rider_cash', { p_rider_id:id, p_note:note || null })); toast('Received ' + money(v)); await A.refreshRider(id); });
+  },
+  async fineForm(id){
+    await run(async () => {
+      if (!state.fineRules.length) await loadFineRules();
+      const opts = state.fineRules.filter(r => r.is_active).map(r => `<option value="${r.id}" data-amt="${num(r.amount)}">${esc(r.title)} (${money(r.amount)})</option>`).join('');
+      openSheet('Add a fine', `
+        <label class="f" for="fn_rule">Rule broken</label>
+        <select id="fn_rule" onchange="A.fineRulePicked()"><option value="">Other reason</option>${opts}</select>
+        <label class="f" for="fn_reason">Reason</label><input id="fn_reason" type="text" placeholder="What happened">
+        <label class="f" for="fn_amt">Amount (Rs)</label><input id="fn_amt" type="number" min="0">
+        <label class="f" for="fn_order">Order number (optional, last 4 letters)</label><input id="fn_order" type="text" autocapitalize="characters" placeholder="A1B2">
+        <div class="actions"><button class="btn warn block" onclick="A.saveFine('${id}')">Save fine</button><button class="btn ghost block" onclick="A.openRider('${id}')">Back</button></div>`);
+      if (state.fineRules.length){ $('fn_rule').selectedIndex = 1; A.fineRulePicked(); }
+    });
+  },
+  fineRulePicked(){
+    const sel = $('fn_rule'); const o = sel.options[sel.selectedIndex];
+    if (sel.value){ $('fn_amt').value = o.dataset.amt; $('fn_reason').value = o.textContent.replace(/\s*\(Rs.*\)$/, ''); }
+  },
+  async saveFine(id){
+    const reason = $('fn_reason').value.trim(); const amt = num($('fn_amt').value); const code = $('fn_order').value.trim().toLowerCase();
+    if (!reason) return toast('Write the reason', true);
+    if (amt <= 0) return toast('Enter the fine amount', true);
+    await run(async () => {
+      let orderId = null;
+      if (code){
+        const list = need(await sb.from('orders').select('id').eq('rider_id', id).order('created_at', { ascending:false }).limit(500));
+        const hit = list.find(o => o.id.toLowerCase().endsWith(code)); if (!hit) throw new Error('No order of this rider ends with ' + code.toUpperCase());
+        orderId = hit.id;
+      }
+      need(await sb.from('rider_fines').insert({ rider_id:id, rule_id:$('fn_rule').value || null, reason, amount:amt, order_id:orderId }));
+      toast('Fine added'); await A.refreshRider(id);
+    });
+  },
+  async toggleFine(fid, status, id){ await run(async () => { need(await sb.from('rider_fines').update({ status }).eq('id', fid)); await A.refreshRider(id); }); },
+  async reviewShift(sid, status, id){ await run(async () => { need(await sb.from('rider_shifts').update({ review_status:status }).eq('id', sid)); toast(status === 'ok' ? 'Marked OK' : 'Flagged'); await A.refreshRider(id); }); },
+  async saveRiderSettings(id){
+    await run(async () => { need(await sb.from('riders').update({ monthly_salary:num($('rs_sal').value), cash_limit:num($('rs_lim').value) }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
+  },
+  async resetFace(id){
+    if (!confirm('Reset this rider\'s face? They must register a new selfie before the next duty.')) return;
+    await run(async () => { need(await sb.from('riders').update({ face_descriptor:null, face_photo_path:null }).eq('id', id)); toast('Face reset'); await A.refreshRider(id); });
+  },
+
+  // ---- Customers ----
+  customerSearch(v){ state.customerQ = v; renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
+  async openCustomer(id){
+    const c = state.customers.find(x => x.id === id); if (!c) return;
+    openSheet(c.full_name || 'Customer', `
+      <div>${c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : 'No phone'} · joined ${dayName(c.created_at)}</div>
+      <div class="kv"><span class="muted">Orders</span><span>${c.orders}</span></div>
+      <div class="kv"><span class="muted">Delivered</span><span>${c.delivered}</span></div>
+      <div class="kv"><span class="muted">Cancelled by customer</span><span>${c.cancelled}</span></div>
+      <div class="kv total"><span>Total spent</span><span>${money(c.spent)}</span></div>
+      <div class="actions">${c.is_blocked ? `<button class="btn block" onclick="A.blockCustomer('${id}', false)">Unblock customer</button>` : `<button class="btn warn block" onclick="A.blockCustomer('${id}', true)">Block customer (cannot order)</button>`}</div>
+      <h3>Recent orders</h3><div class="list" id="custOrders"><div class="empty">Loading…</div></div>`);
+    const { data } = await sb.from('orders').select('id,status,total,created_at,restaurant:restaurants(name)').eq('customer_id', id).order('created_at', { ascending:false }).limit(15);
+    const el = $('custOrders'); if (el) el.innerHTML = (data || []).map(o => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || '')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div><div class="row-sub">${when(o.created_at)}</div></div><div class="row-side">${money(o.total)}</div></div>`).join('') || '<div class="empty">No orders.</div>';
+  },
+  async blockCustomer(id, v){
+    if (v && !confirm('Block this customer? They will not be able to place orders.')) return;
+    await run(async () => { need(await sb.from('profiles').update({ is_blocked:v }).eq('id', id)); await loadCustomers(); closeSheet(); renderTab(); toast(v ? 'Customer blocked' : 'Customer unblocked'); });
+  },
+
+  // ---- Promos ----
+  editPromo(id){
+    const p = state.promos.find(x => x.id === id) || { type:'percent', value:10, min_order:0, is_active:true, used_count:0 };
+    openSheet(id ? 'Edit promo code' : 'Add promo code', `
+      <label class="f" for="pc_code">Code</label><input id="pc_code" type="text" autocapitalize="characters" value="${esc(p.code)}" placeholder="WELCOME10">
+      <div class="two">
+        <div><label class="f" for="pc_type">Discount type</label><select id="pc_type"><option value="percent" ${p.type === 'percent' ? 'selected' : ''}>Percent %</option><option value="flat" ${p.type !== 'percent' ? 'selected' : ''}>Fixed Rs</option></select></div>
+        <div><label class="f" for="pc_val">Value</label><input id="pc_val" type="number" min="0" value="${num(p.value)}"></div>
+      </div>
+      <div class="two">
+        <div><label class="f" for="pc_min">Minimum order (Rs)</label><input id="pc_min" type="number" min="0" value="${num(p.min_order)}"></div>
+        <div><label class="f" for="pc_lim">Usage limit</label><input id="pc_lim" type="number" min="0" value="${p.usage_limit ?? ''}" placeholder="No limit"></div>
+      </div>
+      <label class="f" for="pc_exp">Expires on</label><input id="pc_exp" type="date" value="${p.expires_at ? ymd(new Date(p.expires_at)) : ''}">
+      <label class="check"><input id="pc_act" type="checkbox" ${p.is_active ? 'checked' : ''}> Active</label>
+      ${id ? `<div class="muted" style="font-size:14px">Used ${p.used_count || 0} times</div>` : ''}
+      <div class="actions"><button class="btn block" onclick="A.savePromo('${id || ''}')">Save promo code</button>
+      ${id ? `<button class="btn warn block" onclick="A.deletePromo('${id}')">Delete</button>` : ''}</div>`);
+  },
+  async savePromo(id){
+    const code = $('pc_code').value.trim().toUpperCase(); if (!code) return toast('Enter a code', true);
+    const val = num($('pc_val').value); if (val <= 0) return toast('Enter a discount value', true);
+    if ($('pc_type').value === 'percent' && val > 100) return toast('Percent cannot be more than 100', true);
+    const exp = $('pc_exp').value; const lim = $('pc_lim').value;
+    await run(async () => {
+      const row = { code, type:$('pc_type').value, value:val, min_order:num($('pc_min').value), usage_limit:lim === '' ? null : num(lim),
+        expires_at:exp ? new Date(exp + 'T23:59:59').toISOString() : null, is_active:$('pc_act').checked };
+      if (!id) row.used_count = 0;
+      need(await (id ? sb.from('promo_codes').update(row).eq('id', id) : sb.from('promo_codes').insert(row)));
+      await loadPromos(); closeSheet(); renderTab(); toast('Promo saved');
+    });
+  },
+  async deletePromo(id){ if (!confirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
+
+  // ---- Zones ----
   editZone(id){ const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
   async saveZone(id){
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
-      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:Number($('z_fee').value || 0), min_order:Number($('z_min').value || 0), rider_pay:Number($('z_pay').value || 0), is_active:$('z_active').checked };
-      const q = id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row);
-      const { error } = await q; if (error) throw error;
+      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked };
+      need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
     });
+  },
+
+  // ---- Fine rules ----
+  editRule(id){
+    const r = state.fineRules.find(x => x.id === id) || { amount:100, is_active:true };
+    openSheet(id ? 'Edit rule' : 'Add rule', `
+      <label class="f" for="fr_t">Rule</label><input id="fr_t" type="text" value="${esc(r.title)}" placeholder="Late delivery">
+      <label class="f" for="fr_a">Fine amount (Rs)</label><input id="fr_a" type="number" min="0" value="${num(r.amount)}">
+      <label class="check"><input id="fr_on" type="checkbox" ${r.is_active ? 'checked' : ''}> Active</label>
+      <div class="actions"><button class="btn block" onclick="A.saveRule('${id || ''}')">Save rule</button></div>`);
+  },
+  async saveRule(id){
+    const title = $('fr_t').value.trim(); if (!title) return toast('Write the rule', true);
+    await run(async () => {
+      const row = { title, amount:num($('fr_a').value), is_active:$('fr_on').checked };
+      need(await (id ? sb.from('fine_rules').update(row).eq('id', id) : sb.from('fine_rules').insert(row)));
+      await loadFineRules(); closeSheet(); renderTab(); toast('Rule saved');
+    });
+  },
+
+  // ---- Settings ----
+  async saveSetting(key, value){
+    await run(async () => { need(await sb.from('app_settings').upsert({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
   }
 };
 
-
-// ---- Publish updates straight to GitHub ----
+// ================= PUBLISH TO GITHUB =================
 const GH = { owner:'hazelawan', repo:'khoupeyo', branch:'main' };
 function ghToken(){ try { return localStorage.getItem('gh_token') || ''; } catch (e) { return ''; } }
-function toBase64(bytes){
-  let s = ''; const CH = 0x8000;
-  for (let i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
-  return btoa(s);
-}
+function toBase64(bytes){ let s = ''; const CH = 0x8000; for (let i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH)); return btoa(s); }
 async function gh(path, opts){
   const t = ghToken(); if (!t) throw new Error('Connect GitHub first');
   const method = (opts && opts.method) || 'GET';
@@ -738,43 +1146,34 @@ async function ghPublish(path, bytes){
   if (cur.status === 200){ const j = await cur.json(); sha = j.sha; oldContent = (j.content || '').replace(/\n/g, ''); }
   else if (cur.status === 401) throw new Error('GitHub token expired or removed. Disconnect and connect again.');
   else if (cur.status !== 404) throw new Error('GitHub error ' + cur.status);
-
   if (sha && oldContent){
     const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12);
-    const bp = `backups/${path.replace(/\//g, '_')}.${stamp}.bak`;
-    const b = await gh(bp, { method:'PUT', body:JSON.stringify({ message:'Backup ' + path, content:oldContent, branch:GH.branch }) });
+    const b = await gh(`backups/${path.replace(/\//g, '_')}.${stamp}.bak`, { method:'PUT', body:JSON.stringify({ message:'Backup ' + path, content:oldContent, branch:GH.branch }) });
     if (!b.ok && b.status !== 422) throw new Error('Could not save a backup, so nothing was changed.');
   }
-  const body = { message:`Update ${path} from admin`, content:toBase64(bytes), branch:GH.branch };
-  if (sha) body.sha = sha;
+  const body = { message:`Update ${path} from admin`, content:toBase64(bytes), branch:GH.branch }; if (sha) body.sha = sha;
   const put = await gh(path, { method:'PUT', body:JSON.stringify(body) });
   if (!put.ok){ let m = 'GitHub error ' + put.status; try { m = (await put.json()).message || m; } catch (e) {} throw new Error(m); }
   return { url:`https://${GH.owner}.github.io/${GH.repo}/${path}`, updated:!!sha };
 }
 function viewPublish(){
-  if (!ghToken()) return `<h2>Publish updates</h2>
+  if (!ghToken()) return `${backLink()}<h2>Publish updates</h2>
     <p class="muted">Upload new app files to GitHub from here. They go live in 1 to 2 minutes.</p>
     <div class="note">Connect GitHub once. Create a token that can only edit the <b>${esc(GH.repo)}</b> repository (Contents: Read and write) and paste it below. It stays on this phone only.</div>
-    <label class="f" for="gh_tok">GitHub token</label>
-    <input id="gh_tok" type="password" autocomplete="off" autocapitalize="off" placeholder="github_pat_...">
+    <label class="f" for="gh_tok">GitHub token</label><input id="gh_tok" type="password" autocomplete="off" autocapitalize="off" placeholder="github_pat_...">
     <div class="actions"><button class="btn block" id="tokBtn" onclick="A.saveToken()">Connect GitHub</button></div>`;
-  return `<h2>Publish updates</h2>
+  return `${backLink()}<h2>Publish updates</h2>
     <p class="muted">Choose a file or paste code, then publish. If the file already exists, the old version is saved in the backups folder first.</p>
-    <label class="f" for="pub_file">File from your phone</label>
-    <input id="pub_file" type="file" onchange="A.pickPublishFile(this)">
+    <label class="f" for="pub_file">File from your phone</label><input id="pub_file" type="file" onchange="A.pickPublishFile(this)">
     <label class="f" for="pub_path">Save as (path in the repository)</label>
     <input id="pub_path" type="text" list="paths" placeholder="customer/index.html" autocapitalize="off" autocorrect="off" spellcheck="false">
     <datalist id="paths"><option value="admin.html"><option value="customer/index.html"><option value="restaurant/index.html"><option value="rider/index.html"></datalist>
-    <label class="f" for="pub_code">Or paste the code</label>
-    <textarea id="pub_code" style="min-height:140px;font-family:monospace;font-size:13px" spellcheck="false"></textarea>
+    <label class="f" for="pub_code">Or paste the code</label><textarea id="pub_code" style="min-height:140px;font-family:monospace;font-size:13px" spellcheck="false"></textarea>
     <div class="actions"><button class="btn block" id="pubBtn" onclick="A.publish()">Publish to GitHub</button></div>
     <div id="pubResult"></div>
     <div style="margin-top:24px"><button class="linkbtn" onclick="A.removeToken()">Disconnect GitHub from this phone</button></div>`;
 }
-A.pickPublishFile = function(input){
-  const f = input.files && input.files[0];
-  if (f && !$('pub_path').value) $('pub_path').value = f.name;
-};
+A.pickPublishFile = function(input){ const f = input.files && input.files[0]; if (f && !$('pub_path').value) $('pub_path').value = f.name; };
 A.saveToken = async function(){
   const t = $('gh_tok').value.trim(); if (!t) return toast('Paste your token', true);
   const btn = $('tokBtn'); btn.disabled = true; btn.textContent = 'Checking…';
@@ -782,30 +1181,20 @@ A.saveToken = async function(){
     const r = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`, { headers:{ Authorization:'Bearer ' + t, Accept:'application/vnd.github+json' } });
     if (r.status === 401) throw new Error('GitHub did not accept this token');
     if (!r.ok) throw new Error('This token cannot see the ' + GH.repo + ' repository');
-    const j = await r.json();
-    if (j.permissions && j.permissions.push === false) throw new Error('This token cannot edit files. Give it Contents: Read and write.');
+    const j = await r.json(); if (j.permissions && j.permissions.push === false) throw new Error('This token cannot edit files. Give it Contents: Read and write.');
     try { localStorage.setItem('gh_token', t); } catch (e) { throw new Error('This browser blocked saving the token'); }
     toast('GitHub connected'); renderTab();
   });
   const b = $('tokBtn'); if (b){ b.disabled = false; b.textContent = 'Connect GitHub'; }
 };
-A.removeToken = function(){
-  if (!confirm('Disconnect GitHub from this phone?')) return;
-  try { localStorage.removeItem('gh_token'); } catch (e) {}
-  renderTab(); toast('Disconnected');
-};
+A.removeToken = function(){ if (!confirm('Disconnect GitHub from this phone?')) return; try { localStorage.removeItem('gh_token'); } catch (e) {} renderTab(); toast('Disconnected'); };
 A.publish = async function(){
   const path = ($('pub_path').value || '').trim().replace(/^\/+/, '');
   if (!path) return toast('Enter the file path', true);
   if (path.includes('..') || /\s/.test(path)) return toast('The path cannot contain spaces or ..', true);
-  const file = $('pub_file').files[0];
-  let bytes;
+  const file = $('pub_file').files[0]; let bytes;
   if (file) bytes = new Uint8Array(await file.arrayBuffer());
-  else {
-    const t = $('pub_code').value;
-    if (!t.trim()) return toast('Choose a file or paste the code', true);
-    bytes = new TextEncoder().encode(t);
-  }
+  else { const t = $('pub_code').value; if (!t.trim()) return toast('Choose a file or paste the code', true); bytes = new TextEncoder().encode(t); }
   if (/\.html?$/i.test(path)){
     const txt = new TextDecoder().decode(bytes);
     if (!/<\/html>\s*$/i.test(txt.trim())) return toast('This HTML looks cut off. Copy the whole file and try again.', true);
@@ -815,7 +1204,7 @@ A.publish = async function(){
   const btn = $('pubBtn'); btn.disabled = true; btn.textContent = 'Publishing…';
   await run(async () => {
     const res = await ghPublish(path, bytes);
-    $('pubResult').innerHTML = `<div class="note"><b>Published.</b> It will be live in 1 to 2 minutes at <a href="${esc(res.url)}" target="_blank" rel="noopener">${esc(res.url)}</a>.${res.updated ? ' The old version is saved in the backups folder.' : ''}<br>If you still see the old page, add ?v=2 to the end of the link. This page is version ${APP_VERSION} (${APP_DATE}).</div>`;
+    $('pubResult').innerHTML = `<div class="note"><b>Published.</b> Live in 1 to 2 minutes at <a href="${esc(res.url)}" target="_blank" rel="noopener">${esc(res.url)}</a>.${res.updated ? ' The old version is saved in the backups folder.' : ''}<br>If you still see the old page, add ?v=2 to the end of the link.</div>`;
     toast('Published');
   });
   const b = $('pubBtn'); if (b){ b.disabled = false; b.textContent = 'Publish to GitHub'; }
