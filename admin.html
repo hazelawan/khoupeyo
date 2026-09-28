@@ -140,7 +140,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.3';
+const APP_VERSION = '2.4';
 const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1298,9 +1298,19 @@ const Chat = (() => {
       'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
       'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
       'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
-      q_customer:['Please call me','I am coming down','Please leave it at the door','Where are you?'],
-      q_rider:['I am on my way','I have arrived, please come outside','I cannot find your address, please call me','I am at the shop, waiting for the order'],
-      q_shop:['Your order is being prepared','Your order is ready','The rider can come to pick up now'],
+      q_customer_cr:['Please call me','I am coming down','Please leave it at the door','Where are you now?'],
+      q_customer_cs:['How long will my order take?','Please make it less spicy','Please add extra sauce','Please pack it well'],
+      q_customer_sup:['My order is late','I have a problem with my order','Wrong or missing items','I want to cancel my order','Please call me'],
+      q_rider_cr:['I am on my way','I have arrived, please come outside','I cannot find your address, please call me','Please keep the cash ready'],
+      q_rider_rs:['I am at the shop, is the order ready?','I will reach in 5 minutes','Please pack the order properly','I am waiting outside'],
+      q_rider_sup:['Customer is not answering','I need help with an order','My vehicle has a problem','Question about my pay','Please call me'],
+      q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
+      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please hurry, the food is getting cold'],
+      q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
+      q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_rs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_sup:['Hello, how can we help you?','We are looking into it','Thank you for waiting','Please call us'],
       q_admin:['We are looking into it','Thank you for waiting','Please call us'],
       ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
       sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
@@ -1312,9 +1322,15 @@ const Chat = (() => {
       'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
       'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
       sup:'سپورٹ',
-      q_customer:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ کہاں ہیں؟'],
-      q_rider:['میں راستے میں ہوں','میں پہنچ گیا ہوں، براہ کرم باہر آئیں','آپ کا پتہ نہیں مل رہا، مجھے کال کریں','میں دکان پر آرڈر کا انتظار کر رہا ہوں'],
-      q_shop:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','رائیڈر اب آرڈر لینے آ سکتا ہے'],
+      q_customer_cr:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ ابھی کہاں ہیں؟'],
+      q_customer_cs:['میرا آرڈر کتنی دیر میں تیار ہوگا؟','مرچ کم رکھیں','ساس زیادہ ڈال دیں','اچھی طرح پیک کریں'],
+      q_customer_sup:['میرا آرڈر لیٹ ہے','میرے آرڈر میں مسئلہ ہے','غلط یا کم چیزیں آئیں','میں آرڈر منسوخ کرنا چاہتا ہوں','مجھے کال کریں'],
+      q_rider_cr:['میں راستے میں ہوں','میں پہنچ گیا ہوں، براہ کرم باہر آئیں','آپ کا پتہ نہیں مل رہا، مجھے کال کریں','براہ کرم نقد رقم تیار رکھیں'],
+      q_rider_rs:['میں دکان پر ہوں، آرڈر تیار ہے؟','میں 5 منٹ میں پہنچ رہا ہوں','آرڈر اچھی طرح پیک کریں','میں باہر انتظار کر رہا ہوں'],
+      q_rider_sup:['گاہک فون نہیں اٹھا رہا','ایک آرڈر میں مدد چاہیے','میری گاڑی میں مسئلہ ہے','میری اجرت کے بارے میں سوال','مجھے کال کریں'],
+      q_shop_cs:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','معذرت، ایک چیز دستیاب نہیں','10 منٹ مزید لگیں گے'],
+      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، کھانا ٹھنڈا ہو رہا ہے'],
+      q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
       q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
       ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
       sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
@@ -1423,7 +1439,8 @@ const Chat = (() => {
   async function open(orderId, thread, userId, title){
     const k = (orderId || '') + '|' + thread + '|' + (userId || '');
     cur = { orderId, thread, userId, k, msgs:[] };
-    const quick = (L[lang()]['q_' + cfg.role] || L.en['q_' + cfg.role] || []);
+    const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
+    const quick = (L[lang()][qk] || L.en[qk] || []);
     shell(title || label(thread, orderId), `<div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
       ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
       <div class="chatin"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
