@@ -1,10 +1,10 @@
 {
- "id": "rider.html",
+ "id": "./rider.html",
  "name": "Wanhar Mart Rider",
  "short_name": "WM Rider",
  "description": "Delivery partner app",
- "start_url": "rider.html",
- "scope": "./",
+ "start_url": "./rider.html",
+ "scope": "./rider.html",
  "display": "standalone",
  "orientation": "portrait",
  "background_color": "#F4F6F1",
