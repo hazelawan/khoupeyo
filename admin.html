@@ -140,7 +140,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.1';
+const APP_VERSION = '2.3';
 const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -152,7 +152,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKe
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
-const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem' };
+const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat' };
 const MORE_TABS = ['customers','promos','zones','rules','settings','publish'];
 
 // ---- Small helpers ----
@@ -255,7 +255,9 @@ function showLogin(msg){
 async function afterLogin(user){
   const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
   if (error || !data || data.role !== 'admin'){ await sb.auth.signOut(); showLogin('This account is not an admin.'); return; }
+  state.userId = user.id;
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
+  Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
   showApp(); subscribeOrders();
 }
 
@@ -290,7 +292,7 @@ function subscribeOrders(){
 function showApp(){
   $('app').innerHTML = `
     <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">Admin v${APP_VERSION}</span></div>
-      <button class="linkbtn" onclick="go(state.tab)">Refresh</button></div>
+      <div style="display:flex;gap:10px;align-items:center">${Chat.button()}<button class="linkbtn" onclick="go(state.tab)">Refresh</button></div></div>
     <main id="main"></main>
     <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
   renderNav(); go(state.tab);
@@ -416,6 +418,8 @@ function issueCard(i){
     <div class="row-title">${esc(KIND[i.kind] || i.kind)}<span class="pill ${i.status === 'returning' ? 'y' : 'r'}">${i.status === 'returning' ? 'Returning to shop' : 'Open'}</span></div>
     <div class="row-sub">#${esc(String(o.id || '').slice(-4).toUpperCase())} · ${esc(r.name || '')} · ${money(o.total)} · ${timeAgo(i.created_at)}</div>
     ${i.note ? `<div class="note" style="margin:8px 0">${esc(i.note)}</div>` : ''}
+    ${i.kind === 'chat_help' ? `<div class="kv"><span class="muted">Chat</span><b>${esc({ cr:'Customer and rider', cs:'Customer and shop', rs:'Rider and shop' }[i.thread] || i.thread)}</b></div>
+      <button class="btn block" style="margin:8px 0" onclick='A.joinChat(${JSON.stringify(o.id)}, ${JSON.stringify(i.thread)})'>🛟 Join the chat</button>` : ''}
     ${i.status === 'open' && left != null ? `<div class="kv"><span class="muted">Customer waiting time</span><b class="${left > 0 ? 'red' : ''}">${left > 0 ? left + ' min left' : 'Over, rider can return'}</b></div>` : ''}
     <div class="kv"><span class="muted">Customer</span><span>${esc(c.full_name || '')}</span></div>
     <div class="kv"><span class="muted">Rider</span><span>${esc(rd ? rd.full_name : '')}</span></div>
@@ -662,6 +666,7 @@ function viewRiders(){
 function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
   return `<h2>More</h2><div class="list">
+    <button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>
     ${item('customers', 'Customers', 'See every customer, their orders, block or unblock')}
     ${item('promos', 'Promo codes', 'Discount codes for customers')}
     ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
@@ -768,7 +773,7 @@ const A = {
     if (error){ $('loginErr').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in'; return; }
     await run(() => afterLogin(data.user));
   },
-  async logout(){ if (!confirm('Sign out?')) return; await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+  async logout(){ if (!confirm('Sign out?')) return; Chat.stop(); await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
   setPeriod(p){ state.period = p; go(state.tab); },
 
   // ---- Orders ----
@@ -795,6 +800,8 @@ const A = {
       ${o.arrived_at ? `<div class="muted">Rider arrived at customer: ${when(o.arrived_at)}</div>` : ''}
       ${o.return_status ? `<div class="note">Failed delivery. Return: <b>${esc(o.return_status)}</b>${o.return_status === 'returning' ? ` <button class="btn small" onclick="A.confirmReturn('${o.id}')">Shop got it back</button>` : ''}</div>` : ''}
       <div id="issuesBox"></div>
+      <h3 style="margin-top:14px">Chats for this order</h3>
+      <div class="bar">${[['cr','Customer and rider'],['cs','Customer and shop'],['rs','Rider and shop'],['sup_c','Support: customer'],['sup_r','Support: rider'],['sup_s','Support: shop']].map(([th, l]) => `<button class="btn ghost small" onclick='Chat.open(${JSON.stringify(o.id)}, "${th}", null)'>💬 ${l}</button>`).join('')}</div>
       <h3 style="margin-top:14px">Timeline</h3><ul class="timeline" id="tl"><li class="muted">Loading…</li></ul>
       <div class="actions">${orderActions(o)}</div>`);
     sb.from('order_issues').select('*').eq('order_id', id).order('created_at').then(({ data:iss }) => {
@@ -817,6 +824,9 @@ const A = {
     if (action === 'resolve'){ note = prompt('How was it solved? (optional)', ''); if (note === null) return; }
     if (action === 'allow_return' && !confirm('Allow the rider to return this order to the shop now?')) return;
     await run(async () => { need(await sb.rpc('admin_issue_action', { p_issue_id:id, p_action:action, p_note:note || null })); await loadOrders(); renderTab(); toast('Done'); });
+  },
+  async joinChat(orderId, thread){
+    await run(async () => { need(await sb.rpc('admin_join_chat', { p_order_id:orderId, p_thread:thread })); Chat.open(orderId, thread, null); });
   },
   async confirmReturn(orderId){
     if (!confirm('Confirm the shop received this order back?')) return;
@@ -1277,6 +1287,196 @@ A.publish = async function(){
 };
 
 // ---- Start ----
+// ================= CHAT (same code in all four apps) =================
+const Chat = (() => {
+  const L = {
+    en: {
+      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
+      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
+      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
+      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
+      'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
+      'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
+      q_customer:['Please call me','I am coming down','Please leave it at the door','Where are you?'],
+      q_rider:['I am on my way','I have arrived, please come outside','I cannot find your address, please call me','I am at the shop, waiting for the order'],
+      q_shop:['Your order is being prepared','Your order is ready','The rider can come to pick up now'],
+      q_admin:['We are looking into it','Thank you for waiting','Please call us'],
+      ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
+      sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
+    },
+    ur: {
+      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
+      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
+      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
+      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
+      sup:'سپورٹ',
+      q_customer:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ کہاں ہیں؟'],
+      q_rider:['میں راستے میں ہوں','میں پہنچ گیا ہوں، براہ کرم باہر آئیں','آپ کا پتہ نہیں مل رہا، مجھے کال کریں','میں دکان پر آرڈر کا انتظار کر رہا ہوں'],
+      q_shop:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','رائیڈر اب آرڈر لینے آ سکتا ہے'],
+      q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
+      ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
+      sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
+    }
+  };
+  let cfg = null, cur = null, chan = null, seenIds = new Set(), unread = {};
+  const lang = () => (cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en';
+  const tr = k => (L[lang()][k] !== undefined ? L[lang()][k] : L.en[k] !== undefined ? L.en[k] : k);
+  const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const me = () => cfg && cfg.me && cfg.me();
+  const keyOf = m => (m.order_id || '') + '|' + m.thread + '|' + (m.user_id || '');
+  const seenTs = k => { try { return localStorage.getItem('wm_chat_' + k) || ''; } catch (x) { return ''; } };
+  const setSeen = (k, ts) => { try { if (ts > seenTs(k)) localStorage.setItem('wm_chat_' + k, ts); } catch (x) {} };
+  const hm = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  function label(thread, orderId, name){
+    const base = thread === 'sup' ? (cfg.role === 'admin' ? tr('sup') + (name ? ': ' + name : '') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    return base + (orderId ? ' · #' + String(orderId).slice(-4).toUpperCase() : '');
+  }
+  if (!document.getElementById('chatCss')){
+    const st = document.createElement('style'); st.id = 'chatCss';
+    st.textContent = `.cbtn{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:none;font-size:19px}
+.cbtn .cn{position:absolute;top:-4px;inset-inline-end:-4px;background:#B3261E;color:#fff;font-size:11px;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:none;place-items:center;padding:0 4px}
+.chatwrap{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.chatbox{background:var(--paper);width:100%;max-width:640px;height:92%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.chathead{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.chathead b{flex:1;font-size:18px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chathead button{background:none;border:0;font-size:26px;cursor:pointer;color:var(--muted);padding:2px 8px}
+.chatlist{flex:1;overflow:auto;padding:12px}
+.chatrow{display:flex;gap:12px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;color:inherit}
+.chatrow .av{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.chatrow .tx{flex:1;min-width:0}.chatrow .tx div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatrow .ub{background:#B3261E;color:#fff;border-radius:10px;font-size:12px;font-weight:800;padding:1px 8px}
+.msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.bub{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);align-self:flex-start;word-wrap:break-word;white-space:pre-wrap}
+.sysmsg{align-self:center;max-width:90%;text-align:center;background:rgba(242,169,0,.18);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.sysmsg small{display:block;font-weight:400;opacity:.7;font-size:11px}
+.askbtn{border:1px solid #B3261E !important;color:#B3261E !important;background:transparent;border-radius:999px;font-size:13px !important;font-weight:800;padding:6px 10px !important;white-space:nowrap}
+.bub.mine{align-self:flex-end;background:var(--green);color:#fff;border-color:var(--green)}
+.bub small{display:block;font-size:11px;opacity:.7;margin-top:2px}
+.bub .who{font-size:12px;font-weight:800;color:var(--green);display:block}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0}
+.quick button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:inherit}
+.chatin{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.chatin textarea{flex:1;min-height:44px;max-height:120px;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--paper);color:var(--ink)}
+.chatin button{border:0;background:var(--green);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
+    document.head.appendChild(st);
+  }
+  function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
+  function paintBadge(){
+    const n = Object.values(unread).reduce((a, b) => a + b, 0);
+    document.querySelectorAll('#chatN').forEach(el => { el.textContent = n; el.style.display = n ? 'grid' : 'none'; });
+    if (cfg && cfg.onUnread) cfg.onUnread(n);
+  }
+  function init(c){
+    cfg = c; stop();
+    chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
+    refresh();
+  }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  async function refresh(){
+    if (!me()) return;
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
+    unread = {};
+    (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    paintBadge();
+  }
+  function onMsg(m){
+    if (!m || seenIds.has(m.id)) return; seenIds.add(m.id);
+    const k = keyOf(m);
+    if (cur && cur.k === k){ if (!cur.msgs.some(x => x.id === m.id)) cur.msgs.push(m); draw(); setSeen(k, m.created_at); return; }
+    if (m.sender_id !== me()){
+      unread[k] = (unread[k] || 0) + 1; paintBadge();
+      if (cfg.ding) cfg.ding();
+      if (cfg.toast) cfg.toast('💬 ' + tr('new_msg') + ': ' + fmt(m).slice(0, 70));
+      if ($('inboxList')) inbox();
+    }
+  }
+  function shell(title, inner, extra){
+    close();
+    const w = document.createElement('div'); w.className = 'chatwrap'; w.id = 'chatWrap';
+    w.addEventListener('click', ev => { if (ev.target === w) close(); });
+    w.innerHTML = `<div class="chatbox" role="dialog" aria-modal="true"><div class="chathead"><b>${e(title)}</b>${extra || ''}<button onclick="Chat.close()" aria-label="Close">&times;</button></div>${inner}</div>`;
+    document.body.appendChild(w);
+  }
+  function close(){ cur = null; const w = document.getElementById('chatWrap'); if (w) w.remove(); }
+  async function inbox(){
+    const since = new Date(Date.now() - 14 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('*').gte('created_at', since).order('created_at', { ascending:false }).limit(cfg.role === 'admin' ? 800 : 300);
+    const groups = {};
+    (data || []).forEach(m => { const k = keyOf(m); if (!groups[k]) groups[k] = { k, last:m, order_id:m.order_id, thread:m.thread, user_id:m.user_id }; });
+    let names = {};
+    const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
+    if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    const rows = Object.values(groups).map(g => {
+      const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
+      return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
+        <span class="av">${g.thread.startsWith('sup') ? '★' : e(title[0])}</span>
+        <span class="tx"><div><b>${e(title)}</b></div><div class="muted" style="font-size:14px">${g.last.sender_id === me() && g.last.sender_role !== 'system' ? e(tr('you')) + ': ' : ''}${e(fmt(g.last))}</div><div class="muted" style="font-size:12px">${hm(g.last.created_at)}</div></span>
+        ${n ? `<span class="ub">${n}</span>` : ''}</button>`;
+    }).join('');
+    const sup = cfg.role === 'admin' ? '' : `<button class="chatrow" onclick='Chat.open(null, "sup", ${e(JSON.stringify(me()))}, ${e(JSON.stringify(tr('support')))})'><span class="av">★</span><span class="tx"><div><b>${e(tr('support'))}</b></div><div class="muted" style="font-size:14px">${e(tr('support_sub'))}</div></span></button>`;
+    if (document.getElementById('inboxList')) document.getElementById('inboxList').innerHTML = sup + (rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`);
+    else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
+  }
+  async function open(orderId, thread, userId, title){
+    const k = (orderId || '') + '|' + thread + '|' + (userId || '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    const quick = (L[lang()]['q_' + cfg.role] || L.en['q_' + cfg.role] || []);
+    shell(title || label(thread, orderId), `<div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
+      ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
+      <div class="chatin"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
+    q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
+    if (!orderId) q = q.eq('user_id', userId);
+    const { data } = await q;
+    if (!cur || cur.k !== k) return;
+    cur.msgs = data || []; cur.msgs.forEach(m => seenIds.add(m.id));
+    draw();
+    if (cur.msgs.length) setSeen(k, cur.msgs[cur.msgs.length - 1].created_at);
+    delete unread[k]; paintBadge();
+  }
+  function fmt(m){
+    if (m.sender_role !== 'system') return String(m.body);
+    const parts = String(m.body).split('|');
+    if (parts[0] === 'join_request') return tr('sys_req').replace('{w}', tr(parts[1] || '')) + (parts.slice(2).join('|') ? ': ' + parts.slice(2).join('|') : '');
+    if (parts[0] === 'joined') return tr('sys_joined');
+    return String(m.body);
+  }
+  async function askJoin(){
+    if (!cur || !cur.orderId) return;
+    const reason = prompt(tr('ask_reason'), ''); if (reason === null) return;
+    const { error } = await sb.rpc('request_support', { p_order_id:cur.orderId, p_thread:cur.thread, p_reason:reason });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); return; }
+    if (cfg.toast) cfg.toast(tr('ask_sent'));
+    const k = cur.k; let q = sb.from('messages').select('*').eq('thread', cur.thread).eq('order_id', cur.orderId).order('created_at').limit(300);
+    const { data } = await q; if (cur && cur.k === k){ cur.msgs = data || []; cur.msgs.forEach(x => seenIds.add(x.id)); draw(); }
+  }
+  function draw(){
+    const box = document.getElementById('msgs'); if (!box || !cur) return;
+    box.innerHTML = cur.msgs.map(m => {
+      if (m.sender_role === 'system') return `<div class="sysmsg">🛟 ${e(fmt(m))}<small>${hm(m.created_at)}</small></div>`;
+      const mine = m.sender_id === me();
+      return `<div class="bub ${mine ? 'mine' : ''}">${mine ? '' : `<span class="who">${e(tr(m.sender_role))}</span>`}${e(m.body)}<small>${hm(m.created_at)}</small></div>`;
+    }).join('') || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+  async function send(text){
+    if (!cur) return;
+    const ta = document.getElementById('chatText');
+    const body = (text || (ta && ta.value) || '').trim(); if (!body) return;
+    if (ta && !text) ta.value = '';
+    const { data:id, error } = await sb.rpc('send_message', { p_order_id:cur.orderId, p_thread:cur.thread, p_body:body, p_user_id:cur.userId });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); if (ta && !text) ta.value = body; return; }
+    const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
+    seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
 (async function boot(){
   try {
     const { data:{ session } } = await sb.auth.getSession();
