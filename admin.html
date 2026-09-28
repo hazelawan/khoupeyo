@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
 <title>Wanhar Mart Admin</title>
+<link rel="manifest" href="manifest-admin.json">
+<link rel="apple-touch-icon" href="icon-admin-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
@@ -140,7 +145,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.7';
 const APP_DATE = '28 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -152,7 +157,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKe
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
-const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat' };
+const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
 const MORE_TABS = ['customers','promos','zones','rules','settings','publish'];
 
 // ---- Small helpers ----
@@ -249,6 +254,7 @@ function showLogin(msg){
       <label class="f" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
       <div class="actions"><button class="btn block" id="loginBtn" type="submit">Sign in</button></div>
       <div class="err-text" id="loginErr">${esc(msg || '')}</div>
+      <button type="button" class="linkbtn" style="margin-top:10px" onclick="A.forgotPw()">Forgot password?</button>
     </form>
   </div>`;
 }
@@ -258,6 +264,7 @@ async function afterLogin(user){
   state.userId = user.id;
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
   Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
+  Push.init({ sb, app:'admin', me:() => state.userId, lang:() => 'en', toast:(m, err) => toast(m, err) });
   showApp(); subscribeOrders();
 }
 
@@ -517,6 +524,9 @@ function restaurantForm(r){
     <label class="f" for="r_owner">Owner email (the owner signs up in the Shop app first)</label>
     <input id="r_owner" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="owner@gmail.com">
     <label class="f" for="r_zone">Zone</label><select id="r_zone">${zoneOpts}</select>
+    <label class="f" for="r_loc">Location (for delivery fee by distance)</label>
+    <input id="r_loc" type="text" inputmode="decimal" autocapitalize="off" placeholder="32.7712, 72.7031 or paste a Google Maps link" value="${r.lat != null && r.lng != null ? r.lat + ', ' + r.lng : ''}">
+    <div class="muted" style="font-size:13px">The shop owner can also set it from the Shop app. <button type="button" class="linkbtn" onclick="A.hereLoc('r_loc')">Use my location</button></div>
     <div class="two">
       <div><label class="f" for="r_open">Opens at</label><input id="r_open" type="time" value="${hhmm(r.open_time)}"></div>
       <div><label class="f" for="r_close">Closes at</label><input id="r_close" type="time" value="${hhmm(r.close_time)}"></div>
@@ -614,9 +624,18 @@ function itemForm(i){
 
 // ================= RIDERS =================
 async function loadRiderMonth(){
-  state.riderRows = need(await sb.rpc('admin_rider_month', { p_month:state.riderMonth })) || [];
+  const [rows] = await Promise.all([sb.rpc('admin_rider_month', { p_month:state.riderMonth }), state.settings && state.settings.rider_contracts ? null : loadSettings()]);
+  state.riderRows = need(rows) || [];
 }
-const riderNet = r => num(r.monthly_salary) + num(r.delivery_pay) - num(r.fines);
+const CONTRACT_DEFAULT = { company:{ delivery_pay:40, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:150, daily_hours:8 } };
+function contractOf(r){
+  const all = (state.settings && state.settings.rider_contracts) || CONTRACT_DEFAULT;
+  const k = r && r.contract_type === 'company' ? 'company' : 'freelance';
+  return Object.assign({}, CONTRACT_DEFAULT[k], all[k] || {});
+}
+const riderNet = r => num(r.monthly_salary) + num(r.delivery_pay) + num(r.overtime_pay) - num(r.fines);
+const CONTRACT = { company:'Company bike', freelance:'Own bike' };
+const contractPill = r => `<span class="pill ${r.contract_type === 'company' ? 'b' : 'y'}">${CONTRACT[r.contract_type] || CONTRACT.freelance}</span>`;
 function viewRiders(){
   const rows = state.riderRows;
   const pending = rows.filter(r => !r.is_approved && !r.blocked);
@@ -634,13 +653,14 @@ function viewRiders(){
     return `<div class="card click" onclick="A.openRider('${r.rider_id}')">
       <div class="row-title">${esc(r.full_name || 'Rider')}
         <span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span>
+        ${contractPill(r)}
         ${r.face_registered ? '' : '<span class="pill y">No face</span>'}
         ${num(r.flagged_shifts) ? `<span class="pill r">${r.flagged_shifts} selfie issue</span>` : ''}
         ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
       <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}</div>
       <div class="mini">
         <div><b>${r.deliveries}</b><span>Deliveries</span></div>
-        <div><b>${hours(r.online_minutes)}</b><span>On duty</span></div>
+        <div><b>${hours(r.online_minutes)}</b><span>On duty${num(r.overtime_minutes) ? ` · <b style="display:inline;font-size:inherit;color:var(--green)">+${hours(r.overtime_minutes)} OT</b>` : ''}</span></div>
         <div><b class="${num(r.fines) ? 'red' : ''}">${money(r.fines)}</b><span>Fines</span></div>
         <div><b>${money(net)}</b><span>Month pay</span></div>
         <div><b>${money(due)}</b><span>${due > 0 ? 'Still to pay' : 'Paid'}</span></div>
@@ -709,7 +729,7 @@ function viewPromos(){
 function viewZones(){
   const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
       <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
-      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}, rider ${money(z.rider_pay ?? 60)}</small></div></button>`).join('');
+      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
   return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
 }
@@ -721,7 +741,13 @@ function zoneForm(z){
       <div><label class="f" for="z_fee">Delivery fee (Rs)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
       <div><label class="f" for="z_min">Minimum order (Rs)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
     </div>
-    <label class="f" for="z_pay">Rider pay per delivery (Rs)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
+    <div class="note" style="margin-top:14px"><b>Fee by distance.</b> Customer pays the delivery fee above for the first km, then extra for every km after that. Needs the shop location (Shops → shop → Location) and the customer's address location.</div>
+    <div class="two">
+      <div><label class="f" for="z_base">Included km</label><input id="z_base" type="number" min="0" step="0.5" value="${z.base_km ?? 3}"></div>
+      <div><label class="f" for="z_perkm">Extra per km (Rs)</label><input id="z_perkm" type="number" min="0" value="${z.per_km_fee ?? 0}"></div>
+    </div>
+    <label class="f" for="z_max">Farthest delivery (km, empty = no limit)</label><input id="z_max" type="number" min="0" step="0.5" value="${z.max_km ?? ''}">
+    <label class="f" for="z_pay">Rider pay per delivery (Rs, only if the rider has no contract pay)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
     <label class="check"><input id="z_active" type="checkbox" ${z.is_active ? 'checked' : ''}> Zone is open for orders</label>
     <div class="actions"><button class="btn block" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
 }
@@ -766,6 +792,18 @@ function viewSettings(){
       <div class="actions"><button class="btn ghost block" onclick="A.saveExpiry()">Save</button></div>
     </div>
     <div class="card">
+      <b>Rider contracts</b>
+      <div class="muted" style="font-size:14px">Two kinds of riders. Set each rider's contract in Riders → rider → Rider settings. Pay per delivery is added on top of the monthly salary. Duty beyond the daily hours is overtime.</div>
+      ${['company','freelance'].map(k => { const c = contractOf({ contract_type:k }); return `
+      <h3 style="margin:14px 0 4px">${k === 'company' ? '🏍️ Company bike + petrol' : '🛵 Own bike + petrol (freelance)'}</h3>
+      <div class="two">
+        <div><label class="f" for="c_${k}_pay">Pay per delivery (Rs)</label><input id="c_${k}_pay" type="number" min="0" value="${num(c.delivery_pay)}"></div>
+        <div><label class="f" for="c_${k}_ot">Overtime per hour (Rs)</label><input id="c_${k}_ot" type="number" min="0" value="${num(c.overtime_per_hour)}"></div>
+      </div>
+      <label class="f" for="c_${k}_hrs">Working hours per day</label><input id="c_${k}_hrs" type="number" min="1" max="16" step="0.5" value="${num(c.daily_hours)}">`; }).join('')}
+      <div class="actions"><button class="btn ghost block" onclick="A.saveContracts()">Save contracts</button></div>
+    </div>
+    <div class="card">
       <label class="f" for="s_sup" style="margin-top:0"><b>Support phone number</b></label>
       <div class="muted" style="font-size:14px">Riders see a "Call Wanhar Mart" button with this number.</div>
       <input id="s_sup" type="text" inputmode="tel" value="${esc(s.support_phone || '')}" placeholder="03001234567" style="margin-top:8px">
@@ -775,6 +813,13 @@ function viewSettings(){
 
 // ================= ACTIONS =================
 const A = {
+  async forgotPw(){
+    const email = $('em').value.trim(); const el = $('loginErr');
+    if (!email){ el.textContent = 'Write your email above first'; $('em').focus(); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:new URL('reset.html?app=admin', location.href).href });
+    el.style.color = error ? '' : 'var(--green)';
+    el.textContent = error ? error.message : 'Password reset link sent. Open it on this phone.';
+  },
   async login(e){
     e.preventDefault();
     const btn = $('loginBtn'); btn.disabled = true; btn.textContent = 'Signing in…';
@@ -782,7 +827,7 @@ const A = {
     if (error){ $('loginErr').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in'; return; }
     await run(() => afterLogin(data.user));
   },
-  async logout(){ if (!confirm('Sign out?')) return; Chat.stop(); await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+  async logout(){ if (!confirm('Sign out?')) return; await Push.logout(); Chat.stop(); await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
   setPeriod(p){ state.period = p; go(state.tab); },
 
   // ---- Orders ----
@@ -807,6 +852,7 @@ const A = {
       ${o.status === 'delivered' ? `<div class="kv"><span class="muted">Commission</span><span>${money(o.commission_amount)}</span></div><div class="kv"><span class="muted">Shop gets</span><span>${money(o.restaurant_earning)}</span></div><div class="kv"><span class="muted">Rider pay</span><span>${money(o.rider_pay)}</span></div>` : ''}
       ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
       ${o.arrived_at ? `<div class="muted">Rider arrived at customer: ${when(o.arrived_at)}</div>` : ''}
+      ${o.status === 'delivered' ? (o.customer_disputed ? '<div class="note" style="border-color:var(--danger);color:var(--danger)"><b>Customer says they did NOT receive this order</b></div>' : o.customer_received_at ? `<div class="muted">Customer confirmed received: ${when(o.customer_received_at)}</div>` : '<div class="muted">Customer has not confirmed receiving yet</div>') : ''}
       ${o.return_status ? `<div class="note">Failed delivery. Return: <b>${esc(o.return_status)}</b>${o.return_status === 'returning' ? ` <button class="btn small" onclick="A.confirmReturn('${o.id}')">Shop got it back</button>` : ''}</div>` : ''}
       <div id="issuesBox"></div>
       <h3 style="margin-top:14px">Chats for this order</h3>
@@ -889,6 +935,11 @@ const A = {
     const r = state.restaurants.find(x => x.id === id); openSheet(r ? 'Edit shop' : 'Add shop', restaurantForm(r));
     if (r) sb.rpc('admin_owner_email', { p_restaurant_id:id }).then(({ data }) => { const el = $('r_owner'); if (el && data){ el.value = data; el.dataset.orig = data; } });
   },
+  hereLoc(inputId){
+    if (!navigator.geolocation) return toast('Location is not available', true);
+    navigator.geolocation.getCurrentPosition(p => { const el = $(inputId); if (el) el.value = p.coords.latitude.toFixed(6) + ', ' + p.coords.longitude.toFixed(6); },
+      () => toast('Location is blocked on this phone', true), { enableHighAccuracy:true, timeout:15000 });
+  },
   async saveRestaurant(id){
     const name = $('r_name').value.trim();
     if (!name) return toast('Enter the shop name', true);
@@ -899,6 +950,13 @@ const A = {
         zone_id:$('r_zone').value, open_time:$('r_open').value || null, close_time:$('r_close').value || null,
         commission_percent:num($('r_comm').value), prep_time_minutes:num($('r_prep').value) || 25,
         is_open:$('r_isopen').checked, is_active:$('r_active').checked };
+      const locTxt = ($('r_loc').value || '').trim();
+      if (!locTxt){ row.lat = null; row.lng = null; }
+      else {
+        const m = locTxt.match(/(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+        if (!m) throw new Error('Location should look like 32.7712, 72.7031');
+        row.lat = Number(m[1]); row.lng = Number(m[2]);
+      }
       const f = $('r_logo').files[0]; if (f) row.logo_url = await uploadImage(f, 'restaurants');
       const saved = need(await (id ? sb.from('restaurants').update(row).eq('id', id).select('id').single() : sb.from('restaurants').insert(row).select('id').single()));
       const ownerEmail = ($('r_owner').value || '').trim(); const origEmail = $('r_owner').dataset.orig || '';
@@ -1025,7 +1083,7 @@ const A = {
       const body = $('sheetBody'); if (!body) return;
       body.innerHTML = `
         <div class="card-head"><div class="face">${faceImg}</div><div>
-          <div><span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span> ${r.blocked ? '<span class="pill r">Blocked</span>' : ''} ${r.face_registered ? '<span class="pill b">Face registered</span>' : '<span class="pill y">Face not registered</span>'}</div>
+          <div><span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span> ${contractPill(r)} ${r.blocked ? '<span class="pill r">Blocked</span>' : ''} ${r.face_registered ? '<span class="pill b">Face registered</span>' : '<span class="pill y">Face not registered</span>'}</div>
           <div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''} · ${esc(r.vehicle || '')}</div>
           <div class="muted" style="font-size:13px">${r.cnic ? 'CNIC ' + esc(r.cnic) + ' · ' : ''}Joined ${dayName(r.created_at)}${r.rating ? ' · ★ ' + r.rating : ''}</div>
           ${rider.current_lat ? `<a style="font-size:14px" href="https://www.google.com/maps/search/?api=1&query=${rider.current_lat},${rider.current_lng}" target="_blank" rel="noopener">Last location${r.location_updated_at ? ' (' + timeAgo(r.location_updated_at) + ')' : ''}</a>` : ''}
@@ -1034,11 +1092,13 @@ const A = {
         <h3>${monthLabel(state.riderMonth)} pay</h3>
         <div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>
         <div class="kv"><span class="muted">Delivery pay (${r.deliveries} deliveries)</span><span>${money(r.delivery_pay)}</span></div>
+        <div class="kv"><span class="muted">Overtime (${hours(r.overtime_minutes)})</span><span>${money(r.overtime_pay)}</span></div>
         <div class="kv"><span class="muted">Fines (${r.fines_count})</span><span class="neg">−${money(r.fines)}</span></div>
         <div class="kv total"><span>Month pay</span><span>${money(net)}</span></div>
         <div class="kv"><span class="muted">Already paid</span><span>${money(r.paid)}</span></div>
         <div class="kv"><b>Still to pay</b><b>${money(Math.max(0, due))}</b></div>
-        <div class="kv"><span class="muted">On duty</span><span>${hours(r.online_minutes)} in ${r.shifts} shifts</span></div>
+        <div class="kv"><span class="muted">On duty</span><span>${hours(r.online_minutes)} in ${r.shifts} shifts, ${num(r.days_worked)} days</span></div>
+        <div class="muted" style="font-size:13px">Duty over ${contractOf(r).daily_hours} hours in a day counts as overtime, paid ${money(contractOf(r).overtime_per_hour)} per hour.</div>
         <div class="actions">${due > 0 ? `<button class="btn block" onclick="A.payRider('${id}', ${Math.round(due)})">Pay ${money(due)}</button>` : ''}</div>
 
         <h3>Cash</h3>
@@ -1054,6 +1114,11 @@ const A = {
         ${shiftCards ? `<div class="selfies">${shiftCards}</div>` : '<div class="empty" style="padding:14px">No duty shifts this month.</div>'}
 
         <h3>Rider settings</h3>
+        <label class="f" for="rs_contract">Contract</label>
+        <select id="rs_contract">
+          <option value="company" ${r.contract_type === 'company' ? 'selected' : ''}>Company bike and petrol (${money(contractOf({ contract_type:'company' }).delivery_pay)} per delivery)</option>
+          <option value="freelance" ${r.contract_type !== 'company' ? 'selected' : ''}>Own bike and petrol, freelance (${money(contractOf({ contract_type:'freelance' }).delivery_pay)} per delivery)</option>
+        </select>
         <div class="two">
           <div><label class="f" for="rs_sal">Monthly salary (Rs)</label><input id="rs_sal" type="number" min="0" value="${num(r.monthly_salary)}"></div>
           <div><label class="f" for="rs_lim">Cash limit (Rs, 0 = none)</label><input id="rs_lim" type="number" min="0" value="${num(r.cash_limit)}"></div>
@@ -1119,7 +1184,7 @@ const A = {
   async toggleFine(fid, status, id){ await run(async () => { need(await sb.from('rider_fines').update({ status }).eq('id', fid)); await A.refreshRider(id); }); },
   async reviewShift(sid, status, id){ await run(async () => { need(await sb.from('rider_shifts').update({ review_status:status }).eq('id', sid)); toast(status === 'ok' ? 'Marked OK' : 'Flagged'); await A.refreshRider(id); }); },
   async saveRiderSettings(id){
-    await run(async () => { need(await sb.from('riders').update({ monthly_salary:num($('rs_sal').value), cash_limit:num($('rs_lim').value) }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
+    await run(async () => { need(await sb.from('riders').update({ monthly_salary:num($('rs_sal').value), cash_limit:num($('rs_lim').value), contract_type:$('rs_contract').value }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
   },
   async resetFace(id){
     if (!confirm('Reset this rider\'s face? They must register a new selfie before the next duty.')) return;
@@ -1185,7 +1250,9 @@ const A = {
   async saveZone(id){
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
-      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked };
+      const maxV = $('z_max').value.trim();
+      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
+        base_km:num($('z_base').value), per_km_fee:num($('z_perkm').value), max_km:maxV === '' ? null : num(maxV) };
       need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
     });
@@ -1210,6 +1277,15 @@ const A = {
   },
 
   // ---- Settings ----
+  async saveContracts(){
+    const v = {};
+    for (const k of ['company','freelance']){
+      const hrs = num($('c_' + k + '_hrs').value);
+      if (hrs < 1) return toast('Working hours must be at least 1', true);
+      v[k] = { delivery_pay:num($('c_' + k + '_pay').value), overtime_per_hour:num($('c_' + k + '_ot').value), daily_hours:hrs };
+    }
+    await A.saveSetting('rider_contracts', v);
+  },
   async saveExpiry(){
     const acc = Math.max(5, num($('s_acc').value) || 15), exp = Math.max(1, num($('s_exp').value) || 3);
     await run(async () => {
@@ -1256,16 +1332,37 @@ function viewPublish(){
     <div class="actions"><button class="btn block" id="tokBtn" onclick="A.saveToken()">Connect GitHub</button></div>`;
   return `${backLink()}<h2>Publish updates</h2>
     <p class="muted">Choose a file or paste code, then publish. If the file already exists, the old version is saved in the backups folder first.</p>
-    <label class="f" for="pub_file">File from your phone</label><input id="pub_file" type="file" onchange="A.pickPublishFile(this)">
+    <label class="f" for="pub_file">Files from your phone (you can pick many at once)</label><input id="pub_file" type="file" multiple onchange="A.pickPublishFile(this)">
+    <div class="muted" style="font-size:13px" id="pub_count"></div>
     <label class="f" for="pub_path">Save as (path in the repository)</label>
-    <input id="pub_path" type="text" list="paths" placeholder="customer/index.html" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <datalist id="paths"><option value="admin.html"><option value="customer/index.html"><option value="restaurant/index.html"><option value="rider/index.html"></datalist>
+    <input id="pub_path" type="text" list="paths" placeholder="customer.html" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <datalist id="paths"><option value="admin.html"><option value="customer.html"><option value="restaurant.html"><option value="rider.html"><option value="reset.html"><option value="sw.js"></datalist>
     <label class="f" for="pub_code">Or paste the code</label><textarea id="pub_code" style="min-height:140px;font-family:monospace;font-size:13px" spellcheck="false"></textarea>
     <div class="actions"><button class="btn block" id="pubBtn" onclick="A.publish()">Publish to GitHub</button></div>
     <div id="pubResult"></div>
     <div style="margin-top:24px"><button class="linkbtn" onclick="A.removeToken()">Disconnect GitHub from this phone</button></div>`;
 }
-A.pickPublishFile = function(input){ const f = input.files && input.files[0]; if (f && !$('pub_path').value) $('pub_path').value = f.name; };
+A.pickPublishFile = function(input){
+  const fs = input.files || []; const c = $('pub_count');
+  if (fs.length === 1){ $('pub_path').value = fs[0].name; if (c) c.textContent = ''; }
+  else if (fs.length > 1){ $('pub_path').value = ''; if (c) c.textContent = fs.length + ' files. Each is saved with its own name: ' + Array.from(fs).map(f => f.name).join(', '); }
+};
+A.publishMany = async function(files){
+  const bad = files.filter(f => f.name.includes('..') || /\s/.test(f.name) || f.name.startsWith('.'));
+  if (bad.length) return toast('Rename these files (no spaces): ' + bad.map(f => f.name).join(', '), true);
+  const adm = files.find(f => f.name === 'admin.html');
+  if (adm){ const txt = await adm.text(); if (!txt.includes('createClient(') || !/<\/html>\s*$/i.test(txt.trim())) return toast('admin.html looks wrong or cut off. Publishing stopped.', true); }
+  if (!confirm(`Publish ${files.length} files to the live site?`)) return;
+  const btn = $('pubBtn'); btn.disabled = true; const out = $('pubResult'); const done = [], failed = [];
+  for (let i = 0; i < files.length; i++){
+    const f = files[i]; btn.textContent = `Publishing ${i + 1} of ${files.length}…`;
+    try { await ghPublish(f.name, new Uint8Array(await f.arrayBuffer())); done.push(f.name); }
+    catch (e) { failed.push(f.name + ' (' + (e.message || e) + ')'); }
+  }
+  out.innerHTML = `<div class="note"><b>Published ${done.length} of ${files.length}.</b> Live in 1 to 2 minutes.${done.length ? '<br>' + done.map(esc).join(', ') : ''}${failed.length ? '<br><b style="color:var(--danger)">Failed:</b> ' + failed.map(esc).join(', ') + ' — try these again.' : ''}</div>`;
+  toast(failed.length ? 'Some files failed' : 'Published', !!failed.length);
+  btn.disabled = false; btn.textContent = 'Publish to GitHub';
+};
 A.saveToken = async function(){
   const t = $('gh_tok').value.trim(); if (!t) return toast('Paste your token', true);
   const btn = $('tokBtn'); btn.disabled = true; btn.textContent = 'Checking…';
@@ -1281,6 +1378,8 @@ A.saveToken = async function(){
 };
 A.removeToken = function(){ if (!confirm('Disconnect GitHub from this phone?')) return; try { localStorage.removeItem('gh_token'); } catch (e) {} renderTab(); toast('Disconnected'); };
 A.publish = async function(){
+  const picked = Array.from(($('pub_file') && $('pub_file').files) || []);
+  if (picked.length > 1) return A.publishMany(picked);
   const path = ($('pub_path').value || '').trim().replace(/^\/+/, '');
   if (!path) return toast('Enter the file path', true);
   if (path.includes('..') || /\s/.test(path)) return toast('The path cannot contain spaces or ..', true);
@@ -1508,6 +1607,85 @@ const Chat = (() => {
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
   return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
+// ================= PUSH + INSTALL (same code in all four apps) =================
+const Push = (() => {
+  const VAPID = 'BB7DLfT-2lWO5GdEBRw40xpz0jVcRYmXrjlzn84Z__HZODNrLJueYsar3rEAMUqSOCSVEOHApgJzEDrxLM2z6-E';
+  const L = {
+    en:{ title:'Turn on notifications', text:'Get new orders, messages and updates even when the app is closed.', on:'Turn on', later:'Later',
+         install:'Install app', install_t:'Add to home screen', ios:'On iPhone: tap Share ⬆️ then “Add to Home Screen”, open the app from there, then turn on notifications.',
+         done:'Notifications are on', blocked:'Notifications are blocked. Allow them in your browser settings for this site.', fail:'Could not turn on notifications' },
+    ur:{ title:'نوٹیفکیشن آن کریں', text:'ایپ بند ہو تب بھی نئے آرڈر، میسج اور اپڈیٹس ملیں گے۔', on:'آن کریں', later:'بعد میں',
+         install:'ایپ انسٹال کریں', install_t:'ہوم اسکرین پر لگائیں', ios:'آئی فون پر: Share ⬆️ دبائیں پھر “Add to Home Screen”، وہاں سے ایپ کھولیں، پھر نوٹیفکیشن آن کریں۔',
+         done:'نوٹیفکیشن آن ہو گئے', blocked:'نوٹیفکیشن بند ہیں۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے اجازت دیں۔', fail:'نوٹیفکیشن آن نہیں ہو سکے' }
+  };
+  let cfg = null, deferred = null;
+  const tt = k => (L[(cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en'][k]);
+  const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+  const snoozed = () => { try { return Number(localStorage.getItem('kh_push_later') || 0) > Date.now(); } catch (e) { return false; } };
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(); });
+  window.addEventListener('appinstalled', () => { deferred = null; show(); });
+
+  async function reg(){ return navigator.serviceWorker.register('sw.js'); }
+  async function subscribe(){
+    const r = await reg(); await navigator.serviceWorker.ready;
+    let s = await r.pushManager.getSubscription();
+    if (!s) s = await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64(VAPID) });
+    const j = s.toJSON();
+    const { error } = await cfg.sb.rpc('save_push_subscription', { p_endpoint:j.endpoint, p_p256dh:j.keys.p256dh, p_auth:j.keys.auth, p_app:cfg.app });
+    if (error) throw error;
+  }
+  async function turnOn(){
+    try {
+      const p = await Notification.requestPermission();
+      if (p !== 'granted'){ cfg.toast(tt('blocked'), true); hide(); return; }
+      await subscribe(); cfg.toast(tt('done')); hide();
+    } catch (e) { cfg.toast(tt('fail') + ': ' + (e.message || e), true); }
+  }
+  async function install(){ if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; show(); }
+  function later(){ try { localStorage.setItem('kh_push_later', String(Date.now() + 3 * 864e5)); } catch (e) {} hide(); }
+  function hide(){ const el = document.getElementById('pushCard'); if (el) el.remove(); }
+  function show(){
+    hide();
+    if (!cfg || !cfg.me() || snoozed()) return;
+    const needPush = supported() && Notification.permission === 'default';
+    const iosHint = isIOS() && !standalone();
+    if (!needPush && !deferred && !iosHint) return;
+    const el = document.createElement('div'); el.id = 'pushCard';
+    el.setAttribute('role', 'dialog');
+    el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9000;max-width:460px;margin:0 auto;background:var(--surface,#fff);color:var(--ink,#1E2B25);border:1px solid var(--line,#DDE3DB);border-radius:18px;padding:14px 14px 12px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:15px';
+    const btn = 'border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer';
+    el.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px;line-height:1">🔔</div><div style="flex:1">
+      <b style="font-size:16px">${needPush ? tt('title') : tt('install_t')}</b>
+      <div style="color:var(--muted,#66746C);margin-top:2px">${iosHint ? tt('ios') : tt('text')}</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--green,#1F6F4A);color:#fff;flex:1">${tt('on')}</button>` : ''}
+        ${deferred ? `<button data-a="inst" style="${btn};background:var(--marigold,#F2A900);color:#1E2B25;flex:1">${tt('install')}</button>` : ''}
+        <button data-a="later" style="${btn};background:transparent;color:var(--muted,#66746C)">${tt('later')}</button></div>`;
+    el.addEventListener('click', ev => { const a = ev.target.closest('button') && ev.target.closest('button').dataset.a; if (a === 'on') turnOn(); else if (a === 'inst') install(); else if (a === 'later') later(); });
+    document.body.appendChild(el);
+  }
+  async function init(c){
+    cfg = c;
+    if (!('serviceWorker' in navigator)) return;
+    try { await reg(); } catch (e) { return; }
+    // Already allowed before: refresh the saved subscription quietly for this account
+    if (supported() && Notification.permission === 'granted'){ try { await subscribe(); } catch (e) {} }
+    setTimeout(show, 2500);
+  }
+  async function logout(){
+    try {
+      const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+      if (sub && cfg) await cfg.sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    } catch (e) {}
+    hide();
+  }
+  return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
 })();
 
 (async function boot(){
