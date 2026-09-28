@@ -1,0 +1,26 @@
+{
+ "id": "rider.html",
+ "name": "Wanhar Mart Rider",
+ "short_name": "WM Rider",
+ "description": "Delivery partner app",
+ "start_url": "rider.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#F4F6F1",
+ "theme_color": "#E08A00",
+ "icons": [
+  {
+   "src": "icon-rider-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icon-rider-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
