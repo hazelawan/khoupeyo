@@ -130,6 +130,31 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
 .link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
 .ver{font-size:12px;color:var(--muted);margin-inline-start:6px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px}
+.gcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;text-decoration:none;color:inherit;display:block}
+.gimg{width:100%;aspect-ratio:1/1;border-radius:10px;background:var(--line);overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--muted);margin-bottom:6px}
+.gimg img{width:100%;height:100%;object-fit:cover}
+.gname{font-weight:600;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.gprice{font-weight:800;margin-top:4px}
+.gshop{font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar2{display:flex;gap:8px;margin:2px 0 12px}
+.chip2{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer}
+.chip2.on{background:var(--green);border-color:var(--green);color:#fff}
+.dimg{width:100%;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:var(--line);margin-bottom:10px}
+.dimg img{width:100%;height:100%;object-fit:cover;display:block}
+.dimg .ph{width:100%;height:100%;display:grid;place-items:center;font-size:48px;font-weight:800;color:var(--muted)}
+.shopstrip{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-decoration:none;color:inherit;margin:14px 0}
+.shopstrip .thumb{width:44px;height:44px;border-radius:10px;background:var(--line);overflow:hidden;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.shopstrip .thumb img{width:100%;height:100%;object-fit:cover}
+.addr-item{border-bottom:1px solid var(--line);padding:12px 0}
+.addr-select{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.addr-select input{margin-top:5px;width:20px;height:20px;flex:none}
+.addr-actions2{display:flex;gap:18px;margin-top:8px;margin-inline-start:32px}
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-top,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sheet-head h3{margin:0;font-size:20px}
+.x{background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
 :focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -139,7 +164,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '1.7';
+const APP_VERSION = '1.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -207,7 +232,7 @@ const I18N = {
     need_details:'Please add your name and phone so the restaurant and rider can reach you.',
     ready_by:'Food ready around {time}', your_rider:'Your rider', call_rider:'Call', rate_title:'How was your order?', rate_food:'Food', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the food',
-    delete_confirm:'Delete this address?', edit:'Edit'
+    delete_confirm:'Delete this address?', edit:'Edit', products_tab:'Products', shops_tab:'Shops', visit_shop:'See everything from this shop', related:'You might also like', add_new_address:'Add a new address'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -247,13 +272,14 @@ const I18N = {
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ ریسٹورنٹ اور رائیڈر آپ سے رابطہ کر سکیں۔',
     ready_by:'کھانا تقریباً {time} تک تیار ہوگا', your_rider:'آپ کا رائیڈر', call_rider:'کال', rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'کھانا', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم کھانے کے لیے ستارے دبائیں',
-    delete_confirm:'یہ پتہ حذف کریں؟', edit:'تبدیل کریں'
+    delete_confirm:'یہ پتہ حذف کریں؟', edit:'تبدیل کریں', products_tab:'پروڈکٹس', shops_tab:'دکانیں', visit_shop:'اس دکان کی تمام چیزیں دیکھیں', related:'یہ بھی پسند آ سکتا ہے', add_new_address:'نیا پتہ شامل کریں'
   }
 };
 
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, restaurants:[], curMenu:null, curRest:null,
   addresses:[], selAddr:null, newCoords:null, promo:'', authMode:'login', pending:null,
+  itemsCache:{}, homeView:'products', homeQuery:'',
   cart: ls.get('kh_cart', { rid:null, items:[], note:'' })
 };
 const t = (k, v) => {
@@ -337,7 +363,7 @@ function renderShell(){
   updateCartUI();
 }
 function highlightNav(name){
-  const map = { home:'n_home', r:'n_home', orders:'n_orders', order:'n_orders', account:'n_account' };
+  const map = { home:'n_home', r:'n_home', p:'n_home', orders:'n_orders', order:'n_orders', account:'n_account' };
   ['n_home','n_orders','n_account'].forEach(id => { const el = $(id); if (el) el.classList.toggle('on', map[name] === id); });
 }
 let currentRoute = 'home';
@@ -345,11 +371,23 @@ function updateCartUI(){
   const n = cartCount();
   const c = $('cartN'); if (c){ c.textContent = n; c.style.display = n ? 'grid' : 'none'; }
   const bar = $('cartbar'); if (!bar) return;
-  if (n && (currentRoute === 'home' || currentRoute === 'r')){
+  if (n && (currentRoute === 'home' || currentRoute === 'r' || currentRoute === 'p')){
     bar.style.display = 'flex';
     bar.innerHTML = `<a href="#/cart"><span>${t('view_cart')} (${t('items_n', { n })})</span><span>${money(cartSubtotal())}</span></a>`;
   } else { bar.style.display = 'none'; bar.innerHTML = ''; }
 }
+
+// ---- Bottom sheet ----
+function openSheet(title, html){
+  closeSheet();
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div>${html}</div>`;
+  back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
+  document.body.appendChild(back);
+}
+function closeSheet(){ const s = $('sheet'); if (s) s.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+function getItem(id){ return (state.curMenu && state.curMenu.items.find(x => x.id === id)) || state.itemsCache[id]; }
 
 // ---- Router ----
 let pollTimer = null;
@@ -369,6 +407,7 @@ async function route(soft){
   try {
     if (name === 'home') await showHome();
     else if (name === 'r') await showRestaurant(p[1]);
+    else if (name === 'p') await showProduct(p[1]);
     else if (name === 'cart') await showCart();
     else if (name === 'checkout') await showCheckout();
     else if (name === 'orders') await showOrders();
@@ -400,30 +439,43 @@ function restaurantCard(r){
       <div class="rmeta"><span>${t('delivery')} ${fee}</span><span>${r.prep_time_minutes || 25} min</span></div>
     </div></a>`;
 }
-async function fetchPopularProducts(){
-  const { data, error } = await sb.from('menu_items')
-    .select('id,name,price,photo_url,restaurant_id,restaurants!inner(name,is_active)')
-    .eq('is_available', true).eq('restaurants.is_active', true)
-    .order('created_at', { ascending:false }).limit(12);
-  if (error) throw error; return data;
+function productCard(p){
+  const shop = p.restaurants || p._shop || {};
+  return `<a class="gcard" href="#/p/${p.id}">
+    <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : esc((p.name || '?')[0])}</div>
+    <div class="gname">${esc(p.name)}</div>
+    <div class="gprice">${money(p.price)}</div>
+    ${shop.name ? `<div class="gshop muted">${esc(shop.name)}</div>` : ''}
+  </a>`;
 }
-function productTile(p){
-  return `<a class="ptile" href="#/r/${p.restaurant_id}">
-    <div class="pimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : esc((p.name || '?')[0])}</div>
-    <div class="pname">${esc(p.name)}</div>
-    <div class="pshop muted">${esc(p.restaurants ? p.restaurants.name : '')}</div>
-    <div class="pprice">${money(p.price)}</div></a>`;
+async function loadHomeProducts(){
+  const { data, error } = await sb.from('menu_items')
+    .select('id,name,price,photo_url,description,restaurant_id,is_available,restaurants!inner(id,name,logo_url,is_open,is_active)')
+    .eq('is_available', true).eq('restaurants.is_active', true)
+    .order('created_at', { ascending:false }).limit(60);
+  if (error) throw error;
+  state.homeProducts = data;
+  data.forEach(p => { state.itemsCache[p.id] = p; });
+}
+function homeBodyHtml(){
+  const q = (state.homeQuery || '').trim().toLowerCase();
+  if (state.homeView === 'shops'){
+    const list = state.restaurants.filter(r => !q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
+    return list.length ? list.map(restaurantCard).join('') : `<div class="empty">${t('no_restaurants')}</div>`;
+  }
+  const list = (state.homeProducts || []).filter(p => !q || p.name.toLowerCase().includes(q) || (p.restaurants && p.restaurants.name.toLowerCase().includes(q)));
+  return list.length ? `<div class="grid2">${list.map(productCard).join('')}</div>` : `<div class="empty">${t('no_restaurants')}</div>`;
 }
 async function showHome(){
   await loadRestaurants();
-  let popular = [];
-  try { popular = await fetchPopularProducts(); } catch (e) { logErr(e); }
-  const popularHtml = popular.length ? `<h2 style="margin-top:4px">${t('popular')}</h2><div class="prow">${popular.map(productTile).join('')}</div>` : '';
+  try { await loadHomeProducts(); } catch (e) { logErr(e); state.homeProducts = []; }
   $('view').innerHTML = `
-    ${popularHtml}
-    <input class="search" type="text" id="q" placeholder="${t('search')}" oninput="A.filterList()" autocomplete="off">
-    <div id="rlist"></div>`;
-  A.filterList();
+    <input class="search" type="text" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.filterHome(this.value)" autocomplete="off">
+    <div class="bar2">
+      <button class="chip2 ${state.homeView === 'products' ? 'on' : ''}" onclick="A.setHomeView('products')">${t('products_tab')}</button>
+      <button class="chip2 ${state.homeView === 'shops' ? 'on' : ''}" onclick="A.setHomeView('shops')">${t('shops_tab')}</button>
+    </div>
+    <div id="homeBody">${homeBodyHtml()}</div>`;
 }
 
 // ---- Restaurant page ----
@@ -437,6 +489,7 @@ async function showRestaurant(id){
   ]);
   if (c.error) throw c.error; if (i.error) throw i.error;
   state.curRest = r; state.curMenu = { cats:c.data, items:i.data };
+  i.data.forEach(it => { it._shop = r; state.itemsCache[it.id] = it; });
   const hero = r.logo_url ? `style="background-image:url('${esc(r.logo_url)}')"` : '';
   const cats = c.data.map(cat => {
     const items = i.data.filter(x => x.category_id === cat.id);
@@ -463,13 +516,52 @@ function ctlHtml(i){
 }
 function itemHtml(i){
   return `<div class="item ${i.is_available ? '' : 'off'}">
-    <div class="item-text"><div class="item-name">${esc(i.name)}</div>
+    <a class="item-text" href="#/p/${i.id}" style="text-decoration:none;color:inherit"><div class="item-name">${esc(i.name)}</div>
       ${i.description ? `<div class="item-desc">${esc(i.description)}</div>` : ''}
-      <div class="item-price">${money(i.price)}</div></div>
+      <div class="item-price">${money(i.price)}</div></a>
     <div class="item-media">
       <div class="tile">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : esc((i.name || '?')[0])}</div>
       <div class="ctl" id="ctl-${i.id}">${ctlHtml(i)}</div>
     </div></div>`;
+}
+
+// ---- Product detail page ----
+async function fetchRelated(shopId, excludeId){
+  const { data, error } = await sb.from('menu_items')
+    .select('id,name,price,photo_url,restaurant_id,is_available,restaurants!inner(id,name,logo_url,is_open,is_active)')
+    .eq('restaurant_id', shopId).eq('is_available', true).neq('id', excludeId).limit(8);
+  if (error) throw error;
+  data.forEach(p => { state.itemsCache[p.id] = p; });
+  return data;
+}
+function detailControls(item, shop){
+  if (!item.is_available) return `<span class="soldout">${t('sold_out')}</span>`;
+  if (shop && shop.is_open === false) return `<div class="closed-note">${t('closed_msg')}</div>`;
+  const inCart = state.cart.rid === item.restaurant_id ? state.cart.items.find(c => c.id === item.id) : null;
+  if (!inCart) return `<button class="btn" onclick="A.add('${item.id}')">${t('add')}</button>`;
+  return `<div class="stepper" style="justify-content:center;width:140px"><button onclick="A.chg('${item.id}',-1)" aria-label="-">−</button><b>${inCart.qty}</b><button onclick="A.chg('${item.id}',1)" aria-label="+">+</button></div>`;
+}
+async function showProduct(id){
+  let item = state.itemsCache[id];
+  if (!item || !item.restaurants){
+    const { data, error } = await sb.from('menu_items').select('*, restaurants!inner(id,name,logo_url,is_open,is_active)').eq('id', id).single();
+    if (error) throw error; item = data; state.itemsCache[id] = item;
+  }
+  const shop = item.restaurants || item._shop || {};
+  let rel = [];
+  try { rel = await fetchRelated(shop.id, id); } catch (e) { logErr(e); }
+  $('view').innerHTML = `
+    <div class="dimg">${item.photo_url ? `<img src="${esc(item.photo_url)}" alt="">` : `<div class="ph">${esc((item.name || '?')[0])}</div>`}</div>
+    <h1 style="margin-bottom:2px">${esc(item.name)}</h1>
+    <div class="item-price" style="font-size:20px">${money(item.price)}</div>
+    ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
+    <a class="shopstrip" href="#/r/${shop.id}">
+      <div class="thumb">${shop.logo_url ? `<img src="${esc(shop.logo_url)}" alt="">` : esc((shop.name || '?')[0])}</div>
+      <div style="flex:1"><b>${esc(shop.name || '')}</b><div class="muted" style="font-size:13px">${t('visit_shop')}</div></div>
+      <span class="muted">›</span>
+    </a>
+    <div style="margin:16px 0" id="detailCtl">${detailControls(item, shop)}</div>
+    ${rel.length ? `<h2>${t('related')}</h2><div class="grid2">${rel.map(productCard).join('')}</div>` : ''}`;
 }
 
 // ---- Cart page ----
@@ -523,22 +615,26 @@ async function showCheckout(){
 }
 function addressForm(a){
   a = a || {};
-  return `<div class="box" id="addrForm">
+  return `
     <label class="f" for="ad_label" style="margin-top:0">${t('addr_label')}</label><input id="ad_label" type="text" value="${esc(a.label)}">
     <label class="f" for="ad_full">${t('addr_full')}</label><textarea id="ad_full">${esc(a.full_address)}</textarea>
     <label class="f" for="ad_note">${t('addr_note')}</label><input id="ad_note" type="text" value="${esc(a.note)}">
     <div style="margin-top:12px"><button class="btn ghost" type="button" id="locBtn" onclick="A.useLocation()">${state.newCoords ? t('location_added') : t('use_location')}</button></div>
-    <div style="margin-top:10px"><button class="btn" type="button" onclick="A.saveAddress()">${t('save_address')}</button></div>
-  </div>`;
+    <div style="margin-top:10px"><button class="btn" type="button" id="addrSaveBtn" onclick="A.saveAddress()">${t('save_address')}</button></div>`;
+}
+function addressRow(a, selectable){
+  const inner = `<div><div style="font-weight:700">${esc(a.label || t('address'))}</div><div class="muted">${esc(a.full_address)}${a.note ? ', ' + esc(a.note) : ''}</div></div>`;
+  const selectPart = selectable
+    ? `<div class="addr-select" onclick="A.selectAddr('${a.id}')"><input type="radio" name="addr" ${a.id === state.selAddr ? 'checked' : ''} style="pointer-events:none" tabindex="-1">${inner}</div>`
+    : `<div class="addr-select" style="cursor:default">${inner}</div>`;
+  return `<div class="addr-item">${selectPart}
+    <div class="addr-actions2"><button type="button" class="link" onclick="A.editAddress('${a.id}')">${t('edit')}</button>
+    <button type="button" class="link" style="color:var(--danger)" onclick="A.deleteAddress('${a.id}')">${t('delete')}</button></div></div>`;
 }
 function drawCheckout(){
   const v = $('view'); if (!v) return;
   const sub = cartSubtotal(), fee = cartFee();
-  const list = state.addresses.map(a => `
-    <label class="addr"><input type="radio" name="addr" ${a.id === state.selAddr ? 'checked' : ''} onchange="state.selAddr='${a.id}'">
-      <div><div style="font-weight:700">${esc(a.label || t('address'))}</div><div class="muted">${esc(a.full_address)}${a.note ? ', ' + esc(a.note) : ''}</div></div>
-      <div class="addr-actions"><button type="button" class="link" onclick="event.preventDefault();event.stopPropagation();A.editAddress('${a.id}')">${t('edit')}</button>
-      <button type="button" class="link" style="color:var(--danger)" onclick="event.preventDefault();event.stopPropagation();A.deleteAddress('${a.id}')">${t('delete')}</button></div></label>`).join('');
+  const list = state.addresses.map(a => addressRow(a, true)).join('');
   const pr = state.profile || {};
   const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
   const detailsBox = `<div class="box"><b>${t('your_details')}</b>${needsDetails ? `<div class="muted" style="font-size:14px">${t('need_details')}</div>` : ''}
@@ -547,8 +643,8 @@ function drawCheckout(){
   v.innerHTML = `<h1>${t('checkout')}</h1>
     ${detailsBox}
     <h2 style="margin-top:8px">${t('address')}</h2>
-    ${list ? `<div>${list}</div>` : ''}
-    ${state.addresses.length ? `<button class="link" onclick="A.showAddrForm()">${t('add_address')}</button><div id="addrHolder"></div>` : addressForm()}
+    <div id="addrList">${list || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
+    <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button>
     <h2>${t('payment')}</h2>
     <div class="box"><b>${t('cod')}</b><div class="muted">${t('pay_note')}</div></div>
     <div class="box">
@@ -644,9 +740,7 @@ async function showOrder(id){
 async function showAccount(){
   const p = state.profile || {};
   await loadAddresses();
-  const addrs = state.addresses.map(a => `<div class="line" style="align-items:center">
-    <div><b>${esc(a.label || t('address'))}</b><div class="muted">${esc(a.full_address)}</div></div>
-    <button class="link" onclick="A.deleteAddress('${a.id}')">${t('delete')}</button></div>`).join('');
+  const addrs = state.addresses.map(a => addressRow(a, false)).join('');
   $('view').innerHTML = `<h1>${t('account')}</h1>
     <div class="box">
       <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
@@ -654,7 +748,9 @@ async function showAccount(){
       <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
       <div style="margin-top:14px"><button class="btn" onclick="A.saveProfile()">${t('save')}</button></div>
     </div>
-    ${addrs ? `<h2>${t('saved_addresses')}</h2><div class="box">${addrs}</div>` : ''}
+    <h2>${t('saved_addresses')}</h2>
+    <div class="box"><div id="addrList2">${addrs || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
+    <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button></div>
     <div style="display:grid;gap:10px;margin-top:16px">
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
@@ -709,20 +805,19 @@ const A = {
     replaceHash('#/'); renderShell(); route();
   },
   guestBack(){ state.pending = null; state.authMode = 'login'; replaceHash('#/'); renderShell(); route(); },
-  filterList(){
-    const q = ($('q') ? $('q').value : '').trim().toLowerCase();
-    const list = state.restaurants.filter(r => !q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
-    $('rlist').innerHTML = list.map(restaurantCard).join('') || `<div class="empty">${t('no_restaurants')}</div>`;
-  },
+  setHomeView(v){ state.homeView = v; state.homeQuery = ''; showHome(); },
+  filterHome(v){ state.homeQuery = v; const el = $('homeBody'); if (el) el.innerHTML = homeBodyHtml(); },
   add(id){
-    const it = state.curMenu && state.curMenu.items.find(x => x.id === id); if (!it) return;
+    const it = getItem(id); if (!it) return;
     if (state.cart.rid && state.cart.rid !== it.restaurant_id && state.cart.items.length){
       if (!confirm(t('other_rest_msg'))) return;
       state.cart = { rid:null, items:[], note:'' };
     }
     state.cart.rid = it.restaurant_id;
     state.cart.items.push({ id:it.id, name:it.name, price:Number(it.price), qty:1 });
-    saveCart(); const c = $('ctl-' + id); if (c) c.innerHTML = ctlHtml(it);
+    saveCart();
+    if (currentRoute === 'p'){ const d = $('detailCtl'); if (d) d.innerHTML = detailControls(it, it.restaurants || it._shop); }
+    else { const c = $('ctl-' + id); if (c) c.innerHTML = ctlHtml(it); }
   },
   chg(id, d){
     const c = state.cart.items.find(x => x.id === id); if (!c) return;
@@ -731,14 +826,15 @@ const A = {
     if (!state.cart.items.length){ state.cart.rid = null; state.cart.note = ''; }
     saveCart();
     if (currentRoute === 'cart') drawCart();
-    else { const it = state.curMenu && state.curMenu.items.find(x => x.id === id); const el = $('ctl-' + id); if (it && el) el.innerHTML = ctlHtml(it); }
+    else if (currentRoute === 'p'){ const it = getItem(id); const el = $('detailCtl'); if (it && el) el.innerHTML = detailControls(it, it.restaurants || it._shop); }
+    else { const it = getItem(id); const el = $('ctl-' + id); if (it && el) el.innerHTML = ctlHtml(it); }
   },
   setNote(v){ state.cart.note = v; ls.set('kh_cart', state.cart); },
-  showAddrForm(){ state.editAddr = null; $('addrHolder').innerHTML = addressForm(); },
+  showAddrForm(){ state.editAddr = null; state.newCoords = null; openSheet(t('add_address'), addressForm()); },
   editAddress(id){
     const a = state.addresses.find(x => x.id === id); if (!a) return;
     state.editAddr = id; state.newCoords = null;
-    const h = $('addrHolder'); if (h){ h.innerHTML = addressForm(a); h.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    openSheet(t('edit') + ': ' + (a.label || t('address')), addressForm(a));
   },
   useLocation(){
     if (!navigator.geolocation) return toast(t('location_denied'), true);
@@ -765,15 +861,21 @@ const A = {
       }
       if (error) throw error;
       state.selAddr = data.id; state.newCoords = null; state.editAddr = null;
-      await loadAddresses(); drawCheckout(); toast(t('saved'));
+      closeSheet(); await loadAddresses();
+      if (currentRoute === 'checkout') drawCheckout(); else await showAccount();
+      toast(t('saved'));
     });
+    const b = $('addrSaveBtn'); if (b){ b.disabled = false; b.textContent = t('save_address'); }
   },
+  selectAddr(id){ state.selAddr = id; drawCheckout(); },
   async deleteAddress(id){
     if (!confirm(t('delete_confirm'))) return;
     await run(async () => {
       const { error } = await sb.from('addresses').delete().eq('id', id);
       if (error) { if (error.code === '23503') throw new Error(t('addr_in_use')); throw error; }
-      if (currentRoute === 'checkout'){ await loadAddresses(); drawCheckout(); } else await showAccount();
+      await loadAddresses();
+      if (currentRoute === 'checkout') drawCheckout(); else await showAccount();
+      toast(t('saved'));
     });
   },
   async placeOrder(){
