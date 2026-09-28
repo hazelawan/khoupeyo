@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Wanhar Mart Rider</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB; --soft:#EAF1EC;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E; --blue:#2A6F97;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --soft:#1F3129; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; --blue:#6FB3DA; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.7}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--green)}
+#app{max-width:560px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.15}
+.brand b{color:var(--marigold)}
+.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+.pillbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:14px}
+.duty{display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:9px 16px 9px 12px;font-weight:800;cursor:pointer;color:#fff;background:var(--muted);font-size:15px}
+.duty.on{background:var(--green)}
+.duty i{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.6}
+.duty.on i{opacity:1;box-shadow:0 0 0 4px rgba(255,255,255,.3);animation:pulse 1.6s infinite}
+.duty small{font-weight:600;opacity:.85}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(255,255,255,0)}}
+main{padding:14px 16px 120px}
+h1{font-size:24px;margin:6px 0 12px;letter-spacing:-.01em}
+h2{font-size:18px;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
+.count{background:var(--marigold);color:#1E2B25;font-size:13px;font-weight:800;border-radius:999px;padding:1px 9px}
+.muted{color:var(--muted)}
+.red{color:var(--danger)}
+.empty{padding:34px 10px;text-align:center;color:var(--muted)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:16px;font-weight:700;cursor:pointer;text-align:center;font-size:17px;text-decoration:none}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.btn.gold{background:var(--marigold);color:#1E2B25}
+.btn.small{padding:11px;font-size:15px}
+.btn[disabled]{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text],input[type=password],input[type=email],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
+label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.card.live{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.oid{font-weight:800;font-size:18px}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--green);white-space:nowrap}
+.pill.y{background:#B7791F} .pill.r{background:var(--danger)} .pill.g{background:var(--muted)}
+.step{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--marigold);color:#1E2B25;font-weight:800;display:grid;place-items:center;flex:none}
+.step.done .n{background:var(--green);color:#fff}
+.step.todo{opacity:.5}
+.line{display:flex;justify-content:space-between;gap:12px;padding:4px 0}
+.line.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:800;font-size:18px}
+.cash{background:rgba(242,169,0,.16);border-radius:12px;padding:12px;margin:10px 0;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.cash b{font-size:22px}
+.actions{display:grid;gap:10px;margin-top:12px}
+.note{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.warnbox{background:var(--surface);border:2px solid var(--danger);color:var(--danger);border-radius:12px;padding:12px;margin:0 0 12px;font-weight:700}
+.soundbar{background:var(--marigold);color:#1E2B25;border:0;width:100%;border-radius:12px;padding:12px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-top:6px}
+.meta b{color:var(--ink)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{display:flex;max-width:560px;margin:0 auto}
+.nav button{position:relative;flex:1;background:none;border:0;padding:14px 4px 12px;font-weight:700;font-size:14px;color:var(--muted);border-top:3px solid transparent;cursor:pointer}
+.nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.nav .dot{position:absolute;top:6px;margin-inline-start:4px;min-width:18px;height:18px;border-radius:9px;background:var(--danger);color:#fff;font-size:11px;display:inline-grid;place-items:center;padding:0 4px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.tile b{display:block;font-size:22px}
+.tile span{color:var(--muted);font-size:13px}
+.tile.hi{background:var(--green);border-color:var(--green);color:#fff}
+.tile.hi span{color:rgba(255,255,255,.85)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:6px}
+.bar i.over{background:var(--danger)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
+.row .r{text-align:end;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:60;max-width:90%;font-weight:600;text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+.auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
+.auth .brand{font-size:40px}
+.err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
+.link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
+.ver{font-size:12px;color:var(--muted);font-weight:600}
+/* Slide to confirm */
+.slide{position:relative;height:60px;border-radius:14px;background:var(--green);color:#fff;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none;margin-top:12px}
+.slide.gold{background:var(--marigold);color:#1E2B25}
+.slide .txt{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:17px;padding:0 64px;text-align:center;pointer-events:none}
+.slide .knob{position:absolute;top:5px;left:5px;width:50px;height:50px;border-radius:11px;background:#fff;color:var(--green);display:grid;place-items:center;font-size:24px;font-weight:800;border:0;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.slide.gold .knob{color:#B7791F}
+html[dir=rtl] .slide .knob{left:auto;right:5px}
+/* Full screen overlays */
+.over{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.over .panel{background:var(--surface);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.newjob .panel{border-top:6px solid var(--marigold)}
+.newjob .big{font-size:34px;font-weight:800;letter-spacing:-.02em}
+.timer{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0}
+.timer i{display:block;height:100%;background:var(--marigold);width:100%;transition:width 1s linear}
+.cam{position:relative;width:100%;max-width:340px;aspect-ratio:3/4;margin:10px auto;border-radius:20px;overflow:hidden;background:#000}
+.cam video,.cam img{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam .ring{position:absolute;inset:12% 16% 18%;border:4px dashed rgba(255,255,255,.8);border-radius:50%}
+.cam .ring.ok{border-style:solid;border-color:#3FA774}
+.cam .ring.bad{border-style:solid;border-color:#F08A82}
+.facestate{text-align:center;font-weight:700;min-height:26px}
+.face{width:72px;height:72px;border-radius:50%;background:var(--line);overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:26px;color:var(--muted);flex:none}
+.face img{width:100%;height:100%;object-fit:cover}
+.waitbox{border-radius:12px;padding:12px;margin:10px 0;background:rgba(179,38,30,.1);border:2px solid var(--danger)}
+.waitbox .clock{font-size:30px;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums}
+.waitbox.done{background:rgba(31,111,74,.1);border-color:var(--green)}
+.waitbox.done .clock{color:var(--green)}
+.issuebox{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.card.back{border:2px solid var(--danger)}
+.probs{display:grid;gap:8px}
+.probs button{text-align:start;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-weight:700;cursor:pointer}
+.probs button.on{border:2px solid var(--green);background:var(--soft)}
+.switch{position:relative;display:block;width:50px;height:28px;flex:none}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--green)}
+.switch input:checked + span::after{transform:translateX(22px)}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Version: change this every time the file is updated ----
+const APP_VERSION = '2.1';
+
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-rider-auth' } });
+const FACE_JS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js';
+const FACE_MODELS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/';
+const JOB_SECONDS = 45;
+
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => Number(n || 0);
+const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
+const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+const pad = n => String(n).padStart(2, '0');
+const hm = mins => { mins = Math.max(0, Math.round(mins)); return Math.floor(mins / 60) + 'h ' + pad(mins % 60) + 'm'; };
+function timeAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return '0 min'; if (m < 60) return m + ' min';
+  const h = Math.round(m / 60); return h < 24 ? h + ' h' : new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function logErr(e){ try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); } }
+function normalizePhone(p){
+  let d = String(p || '').replace(/\D/g, '');
+  if (d.startsWith('92') && d.length === 12) d = '0' + d.slice(2);
+  if (d.startsWith('3') && d.length === 10) d = '0' + d;
+  return /^03\d{9}$/.test(d) ? d : null;
+}
+function mapsUrl(lat, lng, text){
+  if (lat && lng) return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(text || '')}`;
+}
+function km(aLat, aLng, bLat, bLng){
+  if (![aLat, aLng, bLat, bLng].every(x => typeof x === 'number')) return null;
+  const R = 6371, r = x => x * Math.PI / 180;
+  const d = Math.sin(r(bLat - aLat) / 2) ** 2 + Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(d));
+}
+const fmtKm = d => d == null ? '' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
+function monthStart(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+// ---- Words: English and Urdu ----
+const I18N = {
+  en: {
+    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
+    have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
+    rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
+    submit:'Send for approval', pending_title:'Waiting for approval',
+    pending_msg:'Your account is with the Wanhar Mart admin. You will see deliveries once it is approved.',
+    blocked_title:'Your account is blocked', blocked_msg:'Please contact the Wanhar Mart office.',
+    check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', rules:'Rules', account:'Account',
+    on_duty:'On duty', off_duty:'Off duty', start_duty:'Start duty', end_duty:'End duty',
+    end_duty_q:'End your duty now? You will stop getting new deliveries.',
+    off_msg:'You are off duty. Start your duty to get deliveries.',
+    my_deliveries:'My deliveries', new_jobs:'Available deliveries', no_jobs:'No deliveries right now. New ones will ring here.',
+    keep_open:'Keep this app open and the screen on while on duty.',
+    accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
+    slide_picked:'Slide when you have the order', slide_delivered:'Slide when delivered and cash collected',
+    give_back:'Give back this delivery', open_maps:'Directions', call:'Call',
+    cash_collect:'Collect cash', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
+    confirm_giveback:'Give back this delivery? Another rider can take it.',
+    today:'Today', deliveries_n:'Deliveries', on_duty_time:'On duty',
+    this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
+    paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand',
+    cash_note:'All cash you collected must be deposited at the Wanhar Mart office. Your pay comes with your salary.',
+    cash_limit:'Limit', over_limit:'You are over your cash limit. Deposit the cash to get new deliveries.',
+    near_limit:'You are close to your cash limit. Deposit cash soon.',
+    deposits:'Cash deposits', payments:'Salary payments', recent:'Recent deliveries', no_recent:'No completed deliveries yet.',
+    my_fines:'My fines this month', no_fines:'No fines this month. Well done!', rules_title:'Rules and fines',
+    rules_note:'Breaking a rule means a fine that is cut from your monthly pay.', rating:'Customer rating',
+    enable_sound:'Tap here to turn on the alert sound', sound:'Alert sound', logout:'Log out', language:'Language',
+    saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
+    bad_phone:'Enter a valid phone number like 0300 1234567', st_rider_assigned:'Go to the shop', st_picked_up:'On the way to the customer',
+    accepted:'Delivery accepted', no_phone:'No phone number', customer:'Customer',
+    face_title:'Register your face', face_intro:'Take a clear selfie once. At the start of every duty your face is matched with this photo.',
+    selfie_title:'Duty selfie', selfie_intro:'Look at the camera. Your face is checked before your duty starts.',
+    take_photo:'Take photo', retake:'Try again', use_photo:'Save my face', start_now:'Start duty', cancel:'Cancel', skip_now:'Skip for now',
+    cam_loading:'Starting camera…', face_loading:'Loading face check…', face_none:'No face found. Face the camera in good light.',
+    face_many:'Only you should be in the photo.', face_match:'Face matched', face_nomatch:'Face did not match. Try again in good light.',
+    face_saved:'Face registered', cam_denied:'Camera is blocked. Allow the camera for this site in your browser settings.',
+    face_ok:'Face registered', face_missing:'Face not registered', register_face:'Register face',
+    duty_started:'Duty started. Good luck!', duty_ended:'Duty ended', getting_loc:'Getting your location…',
+    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready',
+    arrived_btn:'I have arrived at the customer', arrived_at:'Arrived at {t}', report:'Report a problem', report_title:'What is the problem?',
+    note_opt:'More details (optional)', send_report:'Send to Wanhar Mart', reported:'Wanhar Mart and the shop have been informed',
+    waiting_cust:'Waiting for the customer', wait_note:'Call the customer again. When the time ends you can take the order back to the shop.',
+    wait_done:'Waiting time is over', slide_return:'Slide to return the order to the shop', returned_toast:'Order cancelled. Take it back to the shop.',
+    back_title:'Take this order back to the shop', back_note:'The shop will confirm when they receive it.', call_support:'Call Wanhar Mart',
+    problem_open:'Problem reported', k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
+    k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
+    k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
+    k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer'
+  },
+  ur: {
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
+    rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
+    submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
+    pending_msg:'آپ کا اکاؤنٹ Wanhar Mart کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
+    blocked_title:'آپ کا اکاؤنٹ بلاک ہے', blocked_msg:'براہ کرم Wanhar Mart کے دفتر سے رابطہ کریں۔',
+    check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', rules:'اصول', account:'اکاؤنٹ',
+    on_duty:'ڈیوٹی پر', off_duty:'ڈیوٹی بند', start_duty:'ڈیوٹی شروع کریں', end_duty:'ڈیوٹی ختم کریں',
+    end_duty_q:'ڈیوٹی ابھی ختم کریں؟ نئی ڈیلیوریاں آنا بند ہو جائیں گی۔',
+    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔',
+    my_deliveries:'میری ڈیلیوریاں', new_jobs:'دستیاب ڈیلیوریاں', no_jobs:'ابھی کوئی ڈیلیوری نہیں۔ نئی آنے پر یہاں گھنٹی بجے گی۔',
+    keep_open:'ڈیوٹی کے دوران ایپ کھلی اور اسکرین آن رکھیں۔',
+    accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
+    slide_picked:'آرڈر لینے کے بعد سلائیڈ کریں', slide_delivered:'پہنچا کر رقم لینے کے بعد سلائیڈ کریں',
+    give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال',
+    cash_collect:'وصول کریں', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
+    confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
+    today:'آج', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت',
+    this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
+    paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد',
+    cash_note:'وصول شدہ تمام نقد رقم Wanhar Mart کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
+    cash_limit:'حد', over_limit:'آپ کے پاس نقد کی حد پوری ہو گئی ہے۔ نئی ڈیلیوری کے لیے رقم جمع کروائیں۔',
+    near_limit:'نقد رقم حد کے قریب ہے۔ جلد جمع کروائیں۔',
+    deposits:'جمع کروائی گئی رقم', payments:'تنخواہ کی ادائیگیاں', recent:'حالیہ ڈیلیوریاں', no_recent:'ابھی کوئی مکمل ڈیلیوری نہیں۔',
+    my_fines:'اس مہینے کے جرمانے', no_fines:'اس مہینے کوئی جرمانہ نہیں۔ شاباش!', rules_title:'اصول اور جرمانے',
+    rules_note:'اصول توڑنے پر جرمانہ آپ کی ماہانہ رقم سے کٹے گا۔', rating:'گاہکوں کی ریٹنگ',
+    enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
+    saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
+    bad_phone:'درست فون نمبر لکھیں، جیسے 0300 1234567', st_rider_assigned:'دکان جائیں', st_picked_up:'گاہک کی طرف جا رہے ہیں',
+    accepted:'ڈیلیوری قبول ہو گئی', no_phone:'فون نمبر نہیں', customer:'گاہک',
+    face_title:'اپنا چہرہ رجسٹر کریں', face_intro:'ایک بار صاف سیلفی لیں۔ ہر ڈیوٹی کے شروع میں آپ کا چہرہ اس تصویر سے ملایا جائے گا۔',
+    selfie_title:'ڈیوٹی سیلفی', selfie_intro:'کیمرے کی طرف دیکھیں۔ ڈیوٹی شروع ہونے سے پہلے چہرہ چیک ہوگا۔',
+    take_photo:'تصویر لیں', retake:'دوبارہ کوشش', use_photo:'چہرہ محفوظ کریں', start_now:'ڈیوٹی شروع کریں', cancel:'منسوخ', skip_now:'ابھی نہیں',
+    cam_loading:'کیمرہ کھل رہا ہے…', face_loading:'فیس چیک لوڈ ہو رہا ہے…', face_none:'چہرہ نظر نہیں آیا۔ روشنی میں کیمرے کی طرف دیکھیں۔',
+    face_many:'تصویر میں صرف آپ ہوں۔', face_match:'چہرہ مل گیا', face_nomatch:'چہرہ نہیں ملا۔ روشنی میں دوبارہ کوشش کریں۔',
+    face_saved:'چہرہ رجسٹر ہو گیا', cam_denied:'کیمرہ بند ہے۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے کیمرہ کی اجازت دیں۔',
+    face_ok:'چہرہ رجسٹر ہے', face_missing:'چہرہ رجسٹر نہیں', register_face:'چہرہ رجسٹر کریں',
+    duty_started:'ڈیوٹی شروع ہو گئی۔ کامیابی ہو!', duty_ended:'ڈیوٹی ختم ہو گئی', getting_loc:'لوکیشن لی جا رہی ہے…',
+    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار',
+    arrived_btn:'میں گاہک کے پاس پہنچ گیا', arrived_at:'{t} پر پہنچے', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟',
+    note_opt:'مزید تفصیل (اختیاری)', send_report:'Wanhar Mart کو بھیجیں', reported:'Wanhar Mart اور دکان کو اطلاع دے دی گئی',
+    waiting_cust:'گاہک کا انتظار', wait_note:'گاہک کو دوبارہ کال کریں۔ وقت ختم ہونے پر آپ آرڈر دکان واپس لے جا سکتے ہیں۔',
+    wait_done:'انتظار کا وقت ختم', slide_return:'آرڈر دکان واپس لے جانے کے لیے سلائیڈ کریں', returned_toast:'آرڈر منسوخ۔ اسے دکان واپس لے جائیں۔',
+    back_title:'یہ آرڈر دکان واپس لے جائیں', back_note:'دکان وصول کر کے تصدیق کرے گی۔', call_support:'Wanhar Mart کو کال کریں',
+    problem_open:'مسئلہ بتایا گیا', k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
+    k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'دکان پر آرڈر تیار نہیں',
+    k_shop_closed:'دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'حادثہ یا گاڑی کا مسئلہ',
+    k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں'
+  }
+};
+const state = {
+  lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
+  mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
+  sound: ls.get('kh_rd_sound', true), seen:new Set(), skipped:new Set(), pos:null
+};
+const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
+function toast(msg, isErr){
+  const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3400);
+}
+async function run(fn){ try { return await fn(); } catch (e) { logErr(e); toast((e && e.message) || t('error'), true); } }
+function need(res){ if (res.error) throw res.error; return res.data; }
+const onDuty = () => !!(state.rider && state.rider.is_online);
+const requireSelfie = () => state.settings.require_selfie === true;
+const threshold = () => num(state.settings.face_match_threshold ?? 0.5) || 0.5;
+
+// ---- Alert sound, vibration, screen wake ----
+let actx = null;
+function unlockAudio(){ try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', unlockAudio);
+const audioReady = () => !!actx && actx.state === 'running';
+function beep(){
+  if (state.sound && audioReady()){
+    try {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'square'; o.frequency.value = 740; g.gain.value = 0.18; o.connect(g); g.connect(actx.destination); o.start();
+      setTimeout(() => { o.frequency.value = 1100; }, 160); setTimeout(() => { o.frequency.value = 740; }, 320); setTimeout(() => o.stop(), 520);
+    } catch (e) {}
+  }
+  try { if (navigator.vibrate) navigator.vibrate([300, 120, 300, 120, 300]); } catch (e) {}
+}
+let wakeLock = null;
+async function keepAwake(){ try { if ('wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.rider && state.rider.is_approved){ if (onDuty()) keepAwake(); refresh(); } });
+
+// ---- Location ----
+let geoWatch = null, lastSent = 0;
+function startGeo(){
+  if (geoWatch !== null || !navigator.geolocation) return;
+  geoWatch = navigator.geolocation.watchPosition(pos => {
+    state.pos = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+    const now = Date.now(); if (now - lastSent < 30000 || !onDuty()) return; lastSent = now;
+    sb.from('riders').update({ current_lat:state.pos.lat, current_lng:state.pos.lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
+  }, () => {}, { enableHighAccuracy:true, maximumAge:15000, timeout:20000 });
+}
+function stopGeo(){ if (geoWatch !== null){ navigator.geolocation.clearWatch(geoWatch); geoWatch = null; } }
+function getPosOnce(){
+  return new Promise(res => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(p => { state.pos = { lat:p.coords.latitude, lng:p.coords.longitude }; res(state.pos); }, () => res(null), { enableHighAccuracy:true, timeout:8000, maximumAge:60000 });
+  });
+}
+
+// ================= FACE CHECK =================
+let faceLoad = null;
+function loadFace(){
+  if (faceLoad) return faceLoad;
+  faceLoad = new Promise((res, rej) => {
+    const go = async () => {
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODELS);
+        await faceapi.nets.faceLandmark68TinyNet.loadFromUri(FACE_MODELS);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODELS);
+        res();
+      } catch (e) { faceLoad = null; rej(e); }
+    };
+    if (window.faceapi) return go();
+    const s = document.createElement('script'); s.src = FACE_JS; s.onload = go;
+    s.onerror = () => { faceLoad = null; rej(new Error('Could not load the face check. Check your internet.')); };
+    document.head.appendChild(s);
+  });
+  return faceLoad;
+}
+let camStream = null;
+async function startCam(video){
+  camStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:{ ideal:640 }, height:{ ideal:800 } }, audio:false });
+  video.srcObject = camStream; await video.play();
+}
+function stopCam(){ if (camStream){ camStream.getTracks().forEach(tr => tr.stop()); camStream = null; } }
+function snap(video){
+  const c = document.createElement('canvas'); const w = video.videoWidth || 480, h = video.videoHeight || 640;
+  const s = Math.min(1, 720 / Math.max(w, h)); c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext('2d').drawImage(video, 0, 0, c.width, c.height); return c;
+}
+async function analyse(canvas){
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize:416, scoreThreshold:0.5 });
+  const all = await faceapi.detectAllFaces(canvas, opts);
+  if (!all.length) return { err:'face_none' };
+  if (all.length > 1) return { err:'face_many' };
+  const one = await faceapi.detectSingleFace(canvas, opts).withFaceLandmarks(true).withFaceDescriptor();
+  if (!one) return { err:'face_none' };
+  return { descriptor:Array.from(one.descriptor) };
+}
+function toBlob(canvas){ return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('Could not save the photo')), 'image/jpeg', 0.8)); }
+async function uploadSelfie(canvas, kind){
+  const path = `${state.user.id}/${kind}-${Date.now()}.jpg`;
+  need(await sb.storage.from('rider-selfies').upload(path, await toBlob(canvas), { contentType:'image/jpeg' }));
+  return path;
+}
+
+// Opens the camera screen. mode = 'register' or 'duty'
+function openCamera(mode){
+  closeOverlay();
+  const reg = mode === 'register';
+  const el = document.createElement('div'); el.className = 'over'; el.id = 'overlay';
+  el.innerHTML = `<div class="panel" role="dialog" aria-modal="true">
+    <h1 style="margin-top:0">${reg ? t('face_title') : t('selfie_title')}</h1>
+    <p class="muted" style="margin:0">${reg ? t('face_intro') : t('selfie_intro')}</p>
+    <div class="cam"><video id="camv" playsinline muted></video><img id="camimg" alt="" style="display:none"><div class="ring" id="ring"></div></div>
+    <div class="facestate" id="fstate">${t('cam_loading')}</div>
+    <div class="actions">
+      <button class="btn" id="camBtn" disabled onclick="A.capture('${mode}')">${t('take_photo')}</button>
+      ${!reg || requireSelfie() ? '' : `<button class="btn ghost" onclick="A.skipFace()">${t('skip_now')}</button>`}
+      <button class="btn ghost" onclick="closeOverlay()">${t('cancel')}</button>
+    </div></div>`;
+  document.body.appendChild(el);
+  const setState = (msg, cls) => { const f = $('fstate'); if (f){ f.textContent = msg; f.className = 'facestate ' + (cls || ''); } };
+  (async () => {
+    try { await startCam($('camv')); }
+    catch (e) { setState(t('cam_denied'), 'red'); return; }
+    setState(t('face_loading'));
+    try { await loadFace(); setState(''); const b = $('camBtn'); if (b) b.disabled = false; }
+    catch (e) { setState(e.message || t('error'), 'red'); }
+  })();
+}
+function closeOverlay(){ stopCam(); const o = $('overlay'); if (o) o.remove(); }
+
+// ================= SCREENS =================
+function showAuth(msg, ok){
+  const signup = state.authMode === 'signup';
+  $('app').innerHTML = `
+  <div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Rider</p>
+    <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
+    <form onsubmit="A.submitAuth(event)">
+      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
+      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567">` : ''}
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
+      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
+    </form>
+    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+    <div class="ver">v${APP_VERSION}</div>
+  </div>`;
+}
+function showProfileForm(){
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${t('rider_profile')}</h1>
+    <label class="f" for="p_vehicle">${t('vehicle')}</label>
+    <select id="p_vehicle"><option value="motorbike">${t('v_bike')}</option><option value="bicycle">${t('v_bicycle')}</option><option value="car">${t('v_car')}</option></select>
+    <label class="f" for="p_cnic">${t('cnic')}</label><input id="p_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x">
+    <div class="actions"><button class="btn" id="profBtn" onclick="A.submitProfile()">${t('submit')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div></div>`;
+}
+function showPending(){
+  const blocked = state.rider && state.rider.blocked;
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${blocked ? t('blocked_title') : t('pending_title')}</h1>
+    <p class="muted">${blocked ? t('blocked_msg') : t('pending_msg')}</p>
+    <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
+function dutyLabel(){
+  if (!onDuty()) return `<i></i>${t('off_duty')}`;
+  const mins = state.shift ? (Date.now() - new Date(state.shift.started_at)) / 60000 : 0;
+  return `<i></i>${t('on_duty')}${state.shift ? ` <small>${hm(mins)}</small>` : ''}`;
+}
+function renderShell(){
+  $('app').innerHTML = `
+    <header class="top">
+      <div class="brand">Wanhar Mart<b>.</b><small>Rider</small></div>
+      <button class="duty ${onDuty() ? 'on' : ''}" id="dutyBtn" onclick="A.toggleDuty()">${dutyLabel()}</button>
+    </header>
+    <main id="view"></main>
+    <nav class="nav"><div class="nav-in">
+      <button id="t_jobs" onclick="go('jobs')">${t('jobs')}</button>
+      <button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
+      <button id="t_rules" onclick="go('rules')">${t('rules')}</button>
+      <button id="t_acct" onclick="go('acct')">${t('account')}</button>
+    </div></nav>`;
+}
+function updateDutyBtn(){ const b = $('dutyBtn'); if (b){ b.innerHTML = dutyLabel(); b.classList.toggle('on', onDuty()); } }
+setInterval(updateDutyBtn, 30000);
+function markTab(){
+  [['jobs','t_jobs'],['earn','t_earn'],['rules','t_rules'],['acct','t_acct']].forEach(([k, id]) => { const b = $(id); if (b) b.classList.toggle('on', state.tab === k); });
+  const j = $('t_jobs'); if (j){ const n = state.mine.length; j.innerHTML = t('jobs') + (n ? `<span class="dot">${n}</span>` : ''); }
+}
+async function go(tab){
+  state.tab = tab; markTab(); const v = $('view'); if (!v) return;
+  v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  await run(async () => {
+    if (tab === 'jobs') await Promise.all([loadJobs(), loadMoney()]);
+    if (tab === 'earn') await loadMoney();
+    if (tab === 'rules') await loadRules();
+  });
+  renderTab(); window.scrollTo(0, 0);
+}
+function renderTab(){
+  const v = $('view'); if (!v) return;
+  if (state.tab === 'jobs') v.innerHTML = viewJobs();
+  if (state.tab === 'earn') v.innerHTML = viewEarn();
+  if (state.tab === 'rules') v.innerHTML = viewRules();
+  if (state.tab === 'acct') v.innerHTML = viewAcct();
+  markTab(); bindSliders(); if (state.tab === 'acct') showMyFace();
+  document.title = state.available.length && onDuty() ? `(${state.available.length}) Wanhar Mart Rider` : 'Wanhar Mart Rider';
+}
+
+// ================= DATA =================
+async function loadRider(){
+  const { data:prof } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
+  state.profile = prof || {};
+  state.rider = need(await sb.from('riders').select('*').eq('profile_id', state.user.id).maybeSingle());
+  const s = await sb.from('app_settings').select('key,value');
+  state.settings = {}; (s.data || []).forEach(r => { state.settings[r.key] = r.value; });
+}
+async function loadShift(){
+  if (!state.rider || !state.rider.is_approved) return;
+  const since = new Date(); since.setHours(0, 0, 0, 0);
+  const rows = need(await sb.from('rider_shifts').select('id,started_at,ended_at').eq('rider_id', state.rider.id).or(`ended_at.is.null,ended_at.gte.${since.toISOString()}`).order('started_at', { ascending:false }).limit(20));
+  state.shift = rows.find(r => !r.ended_at) || null;
+  state.todayMinutes = rows.reduce((n, r) => n + ((r.ended_at ? new Date(r.ended_at) : new Date()) - Math.max(new Date(r.started_at), since)) / 60000, 0);
+}
+async function loadMine(){
+  state.mine = need(await sb.from('orders')
+    .select('*, restaurant:restaurants(name,address,phone,lat,lng), customer:profiles!customer_id(full_name,phone), order_items(name,quantity,note)')
+    .eq('rider_id', state.rider.id).or('status.in.(rider_assigned,picked_up),return_status.eq.returning').order('created_at'));
+  state.issues = {};
+  const ids = state.mine.map(o => o.id);
+  if (ids.length){
+    const rows = need(await sb.from('order_issues').select('*').in('order_id', ids).order('created_at', { ascending:false }));
+    rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
+  }
+}
+async function loadAvailable(){
+  if (!onDuty()){ state.available = []; return; }
+  state.available = need(await sb.rpc('available_deliveries')) || [];
+  const fresh = state.available.filter(j => !state.seen.has(j.order_id));
+  fresh.forEach(j => state.seen.add(j.order_id));
+  if (fresh.length && state.firstLoadDone && !state.mine.length) showJobPopup(fresh[0]);
+  else if (fresh.length && state.firstLoadDone) beep();
+  state.firstLoadDone = true;
+}
+async function loadJobs(){ await loadMine(); await loadAvailable(); }
+async function loadMoney(){
+  const m = monthStart();
+  const [done, unsettled, fines, pays, hand] = await Promise.all([
+    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,rider_settled,restaurant:restaurants(name)')
+      .eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', m.toISOString()).order('delivered_at', { ascending:false }),
+    sb.from('orders').select('total').eq('rider_id', state.rider.id).eq('status', 'delivered').eq('rider_settled', false),
+    sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', m.toISOString()).order('fined_at', { ascending:false }),
+    sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', state.rider.id).order('created_at', { ascending:false }).limit(12),
+    sb.from('cash_handovers').select('*').eq('rider_id', state.rider.id).order('created_at', { ascending:false }).limit(10)
+  ]);
+  state.done = need(done); state.cash = need(unsettled).reduce((n, o) => n + num(o.total), 0);
+  state.fines = need(fines); state.payouts = need(pays); state.handovers = need(hand);
+  await loadShift();
+}
+async function loadRules(){
+  const [r, f, rv] = await Promise.all([
+    sb.from('fine_rules').select('*').eq('is_active', true).order('amount'),
+    sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', monthStart().toISOString()).order('fined_at', { ascending:false }),
+    sb.from('orders').select('id').eq('rider_id', state.rider.id).eq('status', 'delivered').order('delivered_at', { ascending:false }).limit(200)
+  ]);
+  state.rules = need(r); state.fines = need(f);
+  const ids = (need(rv) || []).map(o => o.id);
+  state.rating = null;
+  if (ids.length){
+    const { data } = await sb.from('reviews').select('rider_rating').in('order_id', ids).not('rider_rating', 'is', null);
+    if (data && data.length) state.rating = { avg:(data.reduce((n, x) => n + x.rider_rating, 0) / data.length).toFixed(1), n:data.length };
+  }
+}
+let refreshing = false;
+async function refresh(){
+  if (refreshing || !state.rider || !state.rider.is_approved) return; refreshing = true;
+  try {
+    await loadJobs();
+    if (state.tab === 'jobs' && !document.querySelector('.slide.dragging')) renderTab(); else markTab();
+  } catch (e) { logErr(e); } finally { refreshing = false; }
+}
+
+// ================= NEW JOB POP-UP =================
+let popTimer = null, popBeep = null;
+function jobDistances(j){
+  const toShop = state.pos ? km(state.pos.lat, state.pos.lng, j.restaurant_lat, j.restaurant_lng) : null;
+  const trip = km(j.restaurant_lat, j.restaurant_lng, j.drop_lat, j.drop_lng);
+  return { toShop, trip };
+}
+function showJobPopup(j){
+  if ($('overlay')) return beep();
+  const d = jobDistances(j);
+  const el = document.createElement('div'); el.className = 'over newjob'; el.id = 'overlay';
+  el.innerHTML = `<div class="panel" role="alertdialog" aria-modal="true">
+    <div class="ch"><span class="pill y">${t('new_order')}</span><span class="muted" id="popLeft">${JOB_SECONDS}s</span></div>
+    <div class="timer"><i id="popBar"></i></div>
+    <div class="line" style="align-items:flex-end"><div><div class="muted">${t('your_pay')}</div><div class="big">${money(j.rider_pay)}</div></div>
+      <div style="text-align:end"><div class="muted">${t('cash_collect')}</div><b style="font-size:20px">${money(j.total)}</b></div></div>
+    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
+    <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
+    <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
+    <div class="two" style="margin-top:14px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}')">${t('skip')}</button><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  let left = JOB_SECONDS; beep();
+  popBeep = setInterval(beep, 3000);
+  requestAnimationFrame(() => { const b = $('popBar'); if (b) b.style.width = '100%'; });
+  popTimer = setInterval(() => {
+    left--; const l = $('popLeft'), b = $('popBar');
+    if (l) l.textContent = left + 's'; if (b) b.style.width = (left / JOB_SECONDS * 100) + '%';
+    if (left <= 0) A.skipJob(j.order_id);
+  }, 1000);
+}
+function closeJobPopup(){ clearInterval(popTimer); clearInterval(popBeep); popTimer = popBeep = null; closeOverlay(); }
+
+// ================= SLIDE TO CONFIRM =================
+function slider(label, action, gold){
+  return `<div class="slide ${gold ? 'gold' : ''}" data-action="${esc(action)}"><div class="txt">${esc(label)}</div><button class="knob" aria-label="${esc(label)}">›</button></div>`;
+}
+function bindSliders(){
+  document.querySelectorAll('.slide').forEach(sl => {
+    if (sl.dataset.bound) return; sl.dataset.bound = '1';
+    const knob = sl.querySelector('.knob'); const rtl = document.documentElement.dir === 'rtl';
+    let startX = 0, dx = 0, drag = false;
+    const max = () => sl.clientWidth - knob.clientWidth - 10;
+    const set = v => { knob.style.transform = `translateX(${rtl ? -v : v}px)`; };
+    knob.addEventListener('pointerdown', e => { drag = true; startX = e.clientX; dx = 0; knob.setPointerCapture(e.pointerId); sl.classList.add('dragging'); knob.style.transition = 'none'; });
+    knob.addEventListener('pointermove', e => { if (!drag) return; dx = (e.clientX - startX) * (rtl ? -1 : 1); dx = Math.max(0, Math.min(max(), dx)); set(dx); });
+    const end = () => {
+      if (!drag) return; drag = false; sl.classList.remove('dragging'); knob.style.transition = 'transform .2s';
+      if (dx >= max() * 0.85){ set(max()); new Function(sl.dataset.action)(); } else set(0);
+    };
+    knob.addEventListener('pointerup', end); knob.addEventListener('pointercancel', end);
+    knob.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (confirm(sl.querySelector('.txt').textContent + '?')) new Function(sl.dataset.action)(); } });
+  });
+}
+
+// ================= DELIVERIES TAB =================
+function waitIssue(o){ return (state.issues[o.id] || []).find(i => i.status === 'open' && i.wait_until); }
+function returnCard(o){
+  const r = o.restaurant || {};
+  return `<div class="card back"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('back_title')}</span></div>
+    <b>${esc(r.name || '')}</b><div class="muted">${esc(r.address || '')}</div>
+    <div class="two" style="margin-top:8px">${r.phone ? `<a class="btn ghost small" href="tel:${esc(r.phone)}">${t('call')}</a>` : '<span></span>'}
+    <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(r.lat, r.lng, (r.name || '') + ' ' + (r.address || ''))}">${t('open_maps')}</a></div>
+    <div class="note">${t('back_note')}</div></div>`;
+}
+function issueBlock(o){
+  const list = (state.issues[o.id] || []).filter(i => i.status === 'open');
+  const w = waitIssue(o); let html = '';
+  if (w){
+    const left = new Date(w.wait_until).getTime() - Date.now();
+    html += `<div class="waitbox ${left <= 0 ? 'done' : ''}" data-until="${esc(w.wait_until)}"><div class="line"><b>${left <= 0 ? t('wait_done') : t('waiting_cust')}</b><span class="clock">${clock(left)}</span></div>
+      <div style="font-size:14px">${t('k_' + w.kind)}</div><div class="muted" style="font-size:13px">${t('wait_note')}</div></div>
+      ${left <= 0 ? slider(t('slide_return'), `A.returnOrder('${o.id}')`) : ''}`;
+  }
+  list.filter(i => !i.wait_until).forEach(i => { html += `<div class="issuebox"><b>${t('problem_open')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}<br><span class="muted">${t('reported')}</span></div>`; });
+  return html;
+}
+function clock(ms){ if (ms <= 0) return '00:00'; const s = Math.ceil(ms / 1000); return pad(Math.floor(s / 60)) + ':' + pad(s % 60); }
+setInterval(() => {
+  document.querySelectorAll('.waitbox[data-until]').forEach(el => {
+    const left = new Date(el.dataset.until).getTime() - Date.now();
+    const c = el.querySelector('.clock'); if (c) c.textContent = clock(left);
+    if (left <= 0 && !el.classList.contains('done')){ el.classList.add('done'); beep(); if (state.tab === 'jobs' && !document.querySelector('.slide.dragging')) renderTab(); }
+  });
+}, 1000);
+function activeCard(o){
+  if (o.return_status === 'returning') return returnCard(o);
+  const r = o.restaurant || {}, c = o.customer || {};
+  const items = (o.order_items || []).map(i => `<div>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('');
+  const picked = o.status === 'picked_up';
+  const dShop = state.pos ? km(state.pos.lat, state.pos.lng, r.lat, r.lng) : null;
+  const dCust = state.pos ? km(state.pos.lat, state.pos.lng, o.address_lat, o.address_lng) : null;
+  const restBlock = `<div class="step ${picked ? 'done' : ''}"><div class="n">${picked ? '✓' : '1'}</div><div style="flex:1">
+      <div class="muted" style="font-size:13px">${t('pick_from')}${!picked && dShop != null ? ' · ' + fmtKm(dShop) : ''}</div><b>${esc(r.name || '')}</b>
+      <div class="muted">${esc(r.address || '')}</div>
+      ${picked ? '' : `<div class="two" style="margin-top:8px">${r.phone ? `<a class="btn ghost small" href="tel:${esc(r.phone)}">${t('call')}</a>` : '<span></span>'}
+      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(r.lat, r.lng, (r.name || '') + ' ' + (r.address || ''))}">${t('open_maps')}</a></div>
+      <div class="muted" style="margin-top:8px;font-size:14px">${t('items')}:</div><div style="font-size:15px">${items}</div>`}</div></div>`;
+  const custBlock = `<div class="step ${picked ? '' : 'todo'}"><div class="n">2</div><div style="flex:1">
+      <div class="muted" style="font-size:13px">${t('deliver_to')}${picked && dCust != null ? ' · ' + fmtKm(dCust) : ''}</div><b>${esc(c.full_name || t('customer'))}</b>
+      <div class="muted">${esc(o.address_text || '')}</div>
+      ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+      ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')}</a>` : `<span class="muted">${t('no_phone')}</span>`}
+      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(o.address_lat, o.address_lng, o.address_text)}">${t('open_maps')}</a></div>` : ''}</div></div>`;
+  const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
+    : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
+  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
+  const action = picked
+    ? arrived + issueBlock(o) + slider(t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
+    : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
+  return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
+    <span class="pill">${t('st_' + o.status)}</span></div>${restBlock}${custBlock}
+    <div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>
+    <div class="line muted"><span>${t('your_pay')}</span><b>${money(o.rider_pay)}</b></div>${action}</div>`;
+}
+function jobCard(j){
+  const d = jobDistances(j);
+  return `<div class="card"><div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
+    <div class="muted">${esc(j.restaurant_address || '')}</div>
+    <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
+    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}<span>${t('cash_collect')} <b>${money(j.total)}</b></span></div>
+    <div class="cash"><span>${t('your_pay')}</span><b>${money(j.rider_pay)}</b></div>
+    <button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>`;
+}
+function cashWarning(){
+  const lim = num(state.rider.cash_limit), cash = num(state.cash);
+  if (!lim) return '';
+  if (cash >= lim) return `<div class="warnbox">${t('over_limit')} (${money(cash)} / ${money(lim)})</div>`;
+  if (cash >= lim * 0.8) return `<div class="note">${t('near_limit')} (${money(cash)} / ${money(lim)})</div>`;
+  return '';
+}
+function viewJobs(){
+  const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const today = state.done.filter(o => new Date(o.delivered_at) >= todayStart);
+  const stats = `<div class="tiles" style="margin-bottom:12px">
+    <div class="tile"><b>${today.length}</b><span>${t('deliveries_n')} · ${t('today')}</span></div>
+    <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div></div>`;
+  if (!onDuty() && !state.mine.length){
+    return `${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
+  }
+  const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
+  const list = state.available.filter(j => !state.skipped.has(j.order_id));
+  const jobs = onDuty() ? (list.length ? `<h2>${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
+    : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
+  return sound + cashWarning() + mine + (state.mine.length ? '' : stats) + jobs;
+}
+
+// ================= EARNINGS TAB =================
+function viewEarn(){
+  const r = state.rider; const sum = (list, f) => list.reduce((n, o) => n + num(f(o)), 0);
+  const deliveryPay = sum(state.done, o => o.rider_pay);
+  const activeFines = state.fines.filter(f => f.status === 'active');
+  const fines = sum(activeFines, f => f.amount);
+  const monthPay = num(r.monthly_salary) + deliveryPay - fines;
+  const ms = ymd(monthStart());
+  const paid = sum(state.payouts.filter(p => p.period_start === ms), p => p.amount);
+  const lim = num(r.cash_limit), cash = num(state.cash);
+  const pct = lim ? Math.min(100, cash / lim * 100) : 0;
+  const rows = state.done.slice(0, 25).map(o => `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}</div></div>
+    <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`).join('');
+  const dep = state.handovers.map(h => `<div class="row"><div><b>${money(h.amount)}</b><div class="muted" style="font-size:13px">${h.orders_count} ${t('deliveries_n')}</div></div><div class="r muted" style="font-size:13px">${when(h.created_at)}</div></div>`).join('');
+  const pay = state.payouts.map(p => `<div class="row"><div><b>${money(p.amount)}</b><div class="muted" style="font-size:13px">${esc(p.note || '')}</div></div><div class="r muted" style="font-size:13px">${when(p.created_at)}</div></div>`).join('');
+  const monthName = new Date().toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { month:'long', year:'numeric' });
+  return `<h1>${t('earnings')}</h1>
+    <div class="tiles">
+      <div class="tile hi"><b>${money(monthPay)}</b><span>${t('month_pay')}</span></div>
+      <div class="tile hi"><b>${money(Math.max(0, monthPay - paid))}</b><span>${t('to_pay')}</span></div>
+      <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
+      <div class="tile"><b>${hm(state.todayMinutes)}</b><span>${t('on_duty_time')} · ${t('today')}</span></div>
+    </div>
+    <h2>${esc(monthName)}</h2>
+    <div class="card">
+      <div class="line"><span class="muted">${t('salary')}</span><span>${money(r.monthly_salary)}</span></div>
+      <div class="line"><span class="muted">${t('delivery_pay')} (${state.done.length})</span><span>${money(deliveryPay)}</span></div>
+      <div class="line"><span class="muted">${t('fines')} (${activeFines.length})</span><span class="red">−${money(fines)}</span></div>
+      <div class="line total"><span>${t('month_pay')}</span><span>${money(monthPay)}</span></div>
+      <div class="line"><span class="muted">${t('paid')}</span><span>${money(paid)}</span></div>
+    </div>
+    <h2>${t('cash_in_hand')}</h2>
+    <div class="card">
+      <div class="line"><b style="font-size:24px" class="${lim && cash >= lim ? 'red' : ''}">${money(cash)}</b>${lim ? `<span class="muted">${t('cash_limit')} ${money(lim)}</span>` : ''}</div>
+      ${lim ? `<div class="bar"><i class="${cash >= lim ? 'over' : ''}" style="width:${pct}%"></i></div>` : ''}
+      <div class="muted" style="font-size:13px">${t('cash_note')}</div>
+    </div>
+    <h2>${t('recent')}</h2>${rows || `<div class="empty">${t('no_recent')}</div>`}
+    ${dep ? `<h2>${t('deposits')}</h2>${dep}` : ''}
+    ${pay ? `<h2>${t('payments')}</h2>${pay}` : ''}`;
+}
+
+// ================= RULES TAB =================
+function viewRules(){
+  const fines = state.fines.map(f => `<div class="row"><div><b>${esc(f.reason)}</b>${f.status === 'waived' ? ' <span class="pill g">✓</span>' : ''}<div class="muted" style="font-size:13px">${when(f.fined_at)}</div></div>
+    <div class="r ${f.status === 'waived' ? 'muted' : 'red'}" style="${f.status === 'waived' ? 'text-decoration:line-through' : ''}"><b>−${money(f.amount)}</b></div></div>`).join('');
+  const rules = state.rules.map(r => `<div class="row"><div>${esc(r.title)}</div><div class="r red"><b>${money(r.amount)}</b></div></div>`).join('');
+  return `<h1>${t('rules')}</h1>
+    ${state.rating ? `<div class="tiles" style="margin-bottom:12px"><div class="tile hi"><b>★ ${state.rating.avg}</b><span>${t('rating')} (${state.rating.n})</span></div><div class="tile"><b>${state.fines.filter(f => f.status === 'active').length}</b><span>${t('fines')} · ${t('this_month')}</span></div></div>` : ''}
+    <h2 style="margin-top:0">${t('my_fines')}</h2>${fines || `<div class="card muted">${t('no_fines')}</div>`}
+    <h2>${t('rules_title')}</h2><p class="muted" style="margin-top:0">${t('rules_note')}</p>${rules}`;
+}
+
+// ================= ACCOUNT TAB =================
+function viewAcct(){
+  const p = state.profile || {}, r = state.rider; const reg = !!r.face_descriptor;
+  return `<h1>${t('account')}</h1>
+    <div class="card" style="display:flex;gap:14px;align-items:center">
+      <div class="face" id="myFace">${esc((p.full_name || '?')[0])}</div>
+      <div><b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div><div class="muted" style="font-size:14px">${esc(state.user.email)}</div>
+      <div class="muted" style="font-size:14px">${t('vehicle')}: ${esc(r.vehicle || '')}</div>
+      <div style="margin-top:4px"><span class="pill ${reg ? '' : 'y'}">${reg ? t('face_ok') : t('face_missing')}</span></div></div>
+    </div>
+    ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
+      <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
+    ${state.settings.support_phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(state.settings.support_phone)}">${t('call_support')}</a>` : ''}
+    <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+    <button class="btn warn" onclick="A.logout()">${t('logout')}</button></div>
+    <p class="ver" style="margin-top:14px">Wanhar Mart Rider v${APP_VERSION}</p>`;
+}
+async function showMyFace(){
+  if (!state.rider || !state.rider.face_photo_path) return;
+  const { data } = await sb.storage.from('rider-selfies').createSignedUrl(state.rider.face_photo_path, 3600);
+  const el = $('myFace'); if (el && data && data.signedUrl) el.innerHTML = `<img src="${data.signedUrl}" alt="">`;
+}
+
+// ================= ACTIONS =================
+let pollTimer = null, channel = null;
+const A = {
+  toggleLang(onAuth){
+    state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
+    if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
+    renderShell(); markTab(); renderTab();
+  },
+  switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  async submitAuth(e){
+    e.preventDefault(); unlockAudio();
+    const signup = state.authMode === 'signup';
+    const email = $('a_email').value.trim(), pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    if (!email || !pw){ msg.textContent = t('enter_all'); return; }
+    if (pw.length < 6){ msg.textContent = t('short_pw'); return; }
+    let name = '', phone = '';
+    if (signup){
+      name = $('a_name').value.trim(); phone = normalizePhone($('a_phone').value);
+      if (!name){ msg.textContent = t('enter_all'); return; }
+      if (!phone){ msg.textContent = t('bad_phone'); return; }
+    }
+    const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
+    try {
+      if (signup){
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        if (error) throw error;
+        if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
+        await afterLogin(data.user);
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+        if (error) throw error; await afterLogin(data.user);
+      }
+    } catch (err) {
+      logErr(err);
+      const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
+      const el = $('authMsg'); if (el) el.textContent = m;
+      const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
+    }
+  },
+  async submitProfile(){
+    const btn = $('profBtn'); btn.disabled = true;
+    await run(async () => {
+      need(await sb.from('riders').insert({ profile_id:state.user.id, vehicle:$('p_vehicle').value, cnic:$('p_cnic').value.trim() || null }));
+      await loadRider(); await route();
+    });
+    const b = $('profBtn'); if (b) b.disabled = false;
+  },
+  async recheck(){ await run(async () => { await loadRider(); await route(); }); },
+  async logout(){
+    if (onDuty()){ try { await sb.rpc('end_shift'); } catch (e) {} }
+    await sb.auth.signOut(); stopGeo(); closeJobPopup();
+    if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if (channel){ sb.removeChannel(channel); channel = null; }
+    state.user = null; state.rider = null; state.profile = null; state.mine = []; state.available = []; state.authMode = 'login'; showAuth();
+  },
+
+  // ---- Duty ----
+  async toggleDuty(){
+    unlockAudio();
+    if (onDuty()){
+      if (!confirm(t('end_duty_q'))) return;
+      return run(async () => {
+        need(await sb.rpc('end_shift'));
+        state.rider.is_online = false; state.shift = null; stopGeo(); updateDutyBtn(); toast(t('duty_ended')); await go('jobs');
+      });
+    }
+    await run(loadRider);
+    if (!state.rider.face_descriptor) return openCamera('register');
+    openCamera('duty');
+  },
+  skipFace(){ closeOverlay(); A.beginShift(null, null, null); },
+  async capture(mode){
+    const v = $('camv'), btn = $('camBtn'), fs = $('fstate'), ring = $('ring');
+    if (!v || !btn) return;
+    if (btn.dataset.retake){ delete btn.dataset.retake; v.style.display = ''; $('camimg').style.display = 'none'; ring.className = 'ring'; fs.textContent = ''; btn.textContent = t('take_photo'); return; }
+    btn.disabled = true; fs.className = 'facestate'; fs.textContent = t('loading');
+    try {
+      const canvas = snap(v);
+      $('camimg').src = canvas.toDataURL('image/jpeg', 0.7); $('camimg').style.display = ''; v.style.display = 'none';
+      const res = await analyse(canvas);
+      const retake = msg => { ring.className = 'ring bad'; fs.className = 'facestate red'; fs.textContent = msg; btn.dataset.retake = '1'; btn.textContent = t('retake'); btn.disabled = false; };
+      if (res.err) return retake(t(res.err));
+      if (mode === 'register'){
+        const path = await uploadSelfie(canvas, 'face');
+        need(await sb.from('riders').update({ face_descriptor:res.descriptor, face_photo_path:path }).eq('id', state.rider.id));
+        state.rider.face_descriptor = res.descriptor; state.rider.face_photo_path = path;
+        ring.className = 'ring ok'; fs.className = 'facestate'; fs.style.color = 'var(--green)'; fs.textContent = t('face_saved');
+        toast(t('face_saved'));
+        setTimeout(() => { closeOverlay(); if (state.tab === 'acct') renderTab(); else openCamera('duty'); }, 900);
+        return;
+      }
+      const dist = faceapi.euclideanDistance(res.descriptor, state.rider.face_descriptor);
+      const ok = dist <= threshold();
+      if (!ok && requireSelfie()) return retake(t('face_nomatch'));
+      ring.className = 'ring ' + (ok ? 'ok' : 'bad'); fs.style.color = ok ? 'var(--green)' : ''; fs.textContent = ok ? t('face_match') : t('face_nomatch');
+      const path = await uploadSelfie(canvas, 'shift');
+      await A.beginShift(path, Math.round(dist * 1000) / 1000, ok);
+    } catch (e) {
+      logErr(e); fs.className = 'facestate red'; fs.textContent = (e && e.message) || t('error');
+      btn.dataset.retake = '1'; btn.textContent = t('retake'); btn.disabled = false;
+    }
+  },
+  async beginShift(path, score, ok){
+    const fs = $('fstate'); if (fs) fs.textContent = t('getting_loc');
+    const pos = await getPosOnce();
+    await run(async () => {
+      need(await sb.rpc('start_shift', { p_selfie_path:path, p_face_score:score, p_face_ok:ok, p_lat:pos ? pos.lat : null, p_lng:pos ? pos.lng : null }));
+      closeOverlay();
+      state.rider.is_online = true; await loadShift(); updateDutyBtn(); startGeo(); keepAwake();
+      state.firstLoadDone = false; state.seen = new Set(); state.skipped = new Set();
+      toast(t('duty_started')); await go('jobs');
+    });
+    const b = $('camBtn'); if (b){ b.disabled = false; }
+  },
+
+  enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
+  setSound(v){ state.sound = v; ls.set('kh_rd_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
+
+  // ---- Problems ----
+  async arrived(id){
+    await run(async () => { need(await sb.rpc('rider_arrived', { p_order_id:id })); await loadJobs(); renderTab(); toast(t('saved')); });
+  },
+  reportForm(id){
+    const o = state.mine.find(x => x.id === id); if (!o) return;
+    const kinds = o.status === 'picked_up'
+      ? ['customer_unreachable','customer_absent','customer_refused_pay','wrong_address','order_damaged','accident','rider_delay','other']
+      : ['shop_delay','shop_closed','accident','rider_delay','other'];
+    state.pickKind = null;
+    const sup = state.settings.support_phone;
+    closeOverlay();
+    const el = document.createElement('div'); el.className = 'over'; el.id = 'overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeOverlay(); });
+    el.innerHTML = `<div class="panel" role="dialog" aria-modal="true">
+      <div class="ch"><h1 style="margin:0">${t('report_title')}</h1><button class="pillbtn" onclick="closeOverlay()">✕</button></div>
+      ${o.status === 'picked_up' && o.customer && o.customer.phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(o.customer.phone)}">${t('call_customer')} ${esc(o.customer.phone)}</a>` : ''}
+      <div class="probs" id="probs">${kinds.map(k => `<button onclick="A.pickKind('${k}', this)">${t('k_' + k)}</button>`).join('')}</div>
+      <label class="f" for="pnote">${t('note_opt')}</label><textarea id="pnote" rows="2"></textarea>
+      <div class="actions"><button class="btn" onclick="A.sendReport('${id}')">${t('send_report')}</button>
+      ${sup ? `<a class="btn ghost" href="tel:${esc(sup)}">${t('call_support')}</a>` : ''}</div></div>`;
+    document.body.appendChild(el);
+  },
+  pickKind(k, btn){ state.pickKind = k; document.querySelectorAll('#probs button').forEach(b => b.classList.toggle('on', b === btn)); },
+  async sendReport(id){
+    if (!state.pickKind) return toast(t('pick_problem'), true);
+    await run(async () => {
+      need(await sb.rpc('report_issue', { p_order_id:id, p_kind:state.pickKind, p_note:($('pnote').value || '').trim() || null }));
+      closeOverlay(); await loadJobs(); renderTab(); toast(t('reported'));
+    });
+  },
+  async returnOrder(id){
+    await run(async () => { need(await sb.rpc('rider_return_order', { p_order_id:id })); await loadJobs(); renderTab(); toast(t('returned_toast')); });
+    renderTab();
+  },
+
+  // ---- Deliveries ----
+  skipJob(id){ state.skipped.add(id); closeJobPopup(); if (state.tab === 'jobs') renderTab(); },
+  async acceptJob(id){
+    closeJobPopup();
+    await run(async () => {
+      const { error } = await sb.rpc('accept_delivery', { p_order_id:id });
+      await loadJobs(); await loadMoney(); if (state.tab !== 'jobs') state.tab = 'jobs'; renderTab();
+      if (error) throw error;
+      toast(t('accepted')); window.scrollTo(0, 0);
+    });
+  },
+  async markPicked(id){
+    await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'picked_up' })); await loadJobs(); renderTab(); toast(t('saved')); });
+    renderTab();
+  },
+  async markDelivered(id){
+    await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'delivered' })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
+    renderTab();
+  },
+  async giveBack(id){
+    if (!confirm(t('confirm_giveback'))) return;
+    await run(async () => { need(await sb.rpc('release_delivery', { p_order_id:id })); state.skipped.add(id); await loadJobs(); renderTab(); toast(t('saved')); });
+  }
+};
+
+// ================= START =================
+async function route(){
+  if (!state.rider) return showProfileForm();
+  if (!state.rider.is_approved) return showPending();
+  await startApp();
+}
+async function startApp(){
+  renderShell();
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('rider-orders').on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:'rider_id=eq.' + state.rider.id }, () => refresh())
+      .on('postgres_changes', { event:'*', schema:'public', table:'order_issues', filter:'rider_id=eq.' + state.rider.id }, () => refresh()).subscribe();
+  } catch (e) { console.warn('Live updates are off', e); }
+  if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refresh(); }, 8000);
+  if (onDuty()){ startGeo(); keepAwake(); }
+  getPosOnce();
+  await run(loadShift); updateDutyBtn();
+  await go('jobs');
+}
+async function afterLogin(user){ state.user = user; await loadRider(); await route(); }
+(async function boot(){
+  applyLang();
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user); else showAuth();
+  } catch (e) { logErr(e); showAuth(t('error')); }
+})();
+</script>
+</body>
+</html>
