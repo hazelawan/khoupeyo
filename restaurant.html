@@ -116,6 +116,8 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .tile.hi span{color:rgba(255,255,255,.85)}
 .stars{color:var(--marigold);letter-spacing:1px}
 .review{padding:10px 0;border-bottom:1px solid var(--line)}
+.issuebox{background:rgba(179,38,30,.1);border:1px solid var(--danger);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.card.back{border:2px solid var(--danger)}
 :focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -125,7 +127,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.0';
+const APP_VERSION = '2.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -194,7 +196,15 @@ const I18N = {
     not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your shop:', check_again:'Check again',
     confirm_email:'Account created. Check your email to confirm it, then log in.',
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
-    commission_rate:'Commission', close_q:'Close the shop? Customers will not be able to order.'
+    commission_rate:'Commission', close_q:'Close the shop? Customers will not be able to order.',
+    coming_back:'Coming back to your shop', coming_back_note:'Delivery failed. The rider is bringing this order back.',
+    received_back:'I received the order back', received_q:'Did you receive this order back from the rider?',
+    problem:'Problem', new_problem:'New problem reported', report:'Report a problem', report_title:'What is the problem?', send_report:'Send to Wanhar Mart',
+    note_opt:'More details (optional)', pick_problem:'Choose a problem', reported:'Wanhar Mart has been informed', waiting_until:'Rider waits until {t}',
+    k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
+    k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
+    k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
+    k_rider_delay:'Rider will be late', k_other:'Other problem'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -232,11 +242,19 @@ const I18N = {
     not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
     confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
-    commission_rate:'کمیشن', close_q:'دکان بند کریں؟ گاہک آرڈر نہیں کر سکیں گے۔'
+    commission_rate:'کمیشن', close_q:'دکان بند کریں؟ گاہک آرڈر نہیں کر سکیں گے۔',
+    coming_back:'دکان واپس آ رہے ہیں', coming_back_note:'ڈیلیوری نہیں ہو سکی۔ رائیڈر یہ آرڈر واپس لا رہا ہے۔',
+    received_back:'آرڈر واپس مل گیا', received_q:'کیا رائیڈر سے یہ آرڈر واپس مل گیا؟',
+    problem:'مسئلہ', new_problem:'نیا مسئلہ رپورٹ ہوا', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟', send_report:'Wanhar Mart کو بھیجیں',
+    note_opt:'مزید تفصیل (اختیاری)', pick_problem:'مسئلہ چنیں', reported:'Wanhar Mart کو اطلاع دے دی گئی', waiting_until:'رائیڈر {t} تک انتظار کرے گا',
+    k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
+    k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
+    k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ'
   }
 };
 const state = {
-  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], acceptedAt:{}, cats:[], items:[], tab:'orders',
+  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, acceptedAt:{}, cats:[], items:[], tab:'orders',
   sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, productFilter:'all', productQ:'', alerted:new Set()
 };
 const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -369,6 +387,12 @@ async function loadOrders(){
   await Promise.all(data.filter(o => ['rider_assigned', 'picked_up'].includes(o.status)).map(async o => {
     const r = await sb.rpc('order_rider_info', { p_order_id:o.id }); o.rider = (r.data && r.data[0]) || null;
   }));
+  state.issues = {};
+  const recent = data.filter(o => !['delivered','rejected'].includes(o.status) && (o.status !== 'cancelled' || o.return_status === 'returning')).map(o => o.id);
+  if (recent.length){
+    const rows = need(await sb.from('order_issues').select('*').in('order_id', recent).in('status', ['open','returning']).order('created_at', { ascending:false }));
+    rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
+  }
   state.orders = data;
   const fresh = data.filter(o => o.status === 'placed' && !state.alerted.has(o.id));
   fresh.forEach(o => state.alerted.add(o.id));
@@ -401,12 +425,14 @@ function orderCard(o){
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
+  if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
     ${itemsHtml(o)}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
     ${countdown(o)}
+    ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}${i.wait_until && i.status === 'open' ? `<br><span class="muted">${t('waiting_until', { t:new Date(i.wait_until).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</span>` : ''}</div>`).join('')}
     <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}</div>
     <div class="line" style="font-weight:800"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
     <div class="actions">${actions}</div></div>`;
@@ -421,12 +447,17 @@ function viewOrders(){
   const fresh = by(o => o.status === 'placed');
   const kitchen = by(o => ['accepted','preparing'].includes(o.status));
   const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status));
-  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status)).slice(0, 30);
+  const back = by(o => o.return_status === 'returning');
+  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').slice(0, 30);
   const sect = (title, list) => list.length ? `<h2>${title} <span class="count">${list.length}</span></h2>${list.map(orderCard).join('')}` : '';
   const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const closed = r.is_open ? '' : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
-  const live = fresh.length || kitchen.length || ready.length;
-  return `${sound}${closed}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+  const live = fresh.length || kitchen.length || ready.length || back.length;
+  const backHtml = back.length ? `<h2>${t('coming_back')} <span class="count">${back.length}</span></h2>${back.map(o => `<div class="card back">
+      <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('coming_back')}</span></div>
+      ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>${o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : ''}
+      <button class="btn" onclick="A.receivedBack('${o.id}')">${t('received_back')}</button></div>`).join('')}` : '';
+  return `${sound}${closed}${backHtml}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
 }
@@ -687,6 +718,23 @@ const A = {
     await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status })); await loadOrders(); renderTab(); toast(t('saved')); });
   },
 
+  async receivedBack(id){
+    if (!confirm(t('received_q'))) return;
+    await run(async () => { need(await sb.rpc('confirm_return', { p_order_id:id })); await loadOrders(); renderTab(); toast(t('saved')); });
+  },
+  reportForm(id){
+    state.pickKind = null;
+    const kinds = ['k_rider_delay','k_order_damaged','k_other'].map(k => k.slice(2));
+    openSheet(t('report_title'), `<div class="actions" id="probs">${kinds.map(k => `<button class="btn ghost" onclick="A.pickKind('${k}', this)">${t('k_' + k)}</button>`).join('')}</div>
+      <label class="f" for="pnote">${t('note_opt')}</label><textarea id="pnote"></textarea>
+      <div class="actions"><button class="btn" onclick="A.sendReport('${id}')">${t('send_report')}</button></div>`);
+  },
+  pickKind(k, btn){ state.pickKind = k; document.querySelectorAll('#probs button').forEach(b => { b.className = 'btn ' + (b === btn ? '' : 'ghost'); }); },
+  async sendReport(id){
+    if (!state.pickKind) return toast(t('pick_problem'), true);
+    await run(async () => { need(await sb.rpc('report_issue', { p_order_id:id, p_kind:state.pickKind, p_note:($('pnote').value || '').trim() || null })); closeSheet(); await loadOrders(); renderTab(); toast(t('reported')); });
+  },
+
   // ---- Shop ----
   async toggleOpen(v){
     if (!v && !confirm(t('close_q'))){ renderTab(); return; }
@@ -759,6 +807,8 @@ function subscribeOrders(){
     channel = sb.channel('rest-orders').on('postgres_changes',
       { event:'*', schema:'public', table:'orders', filter:'restaurant_id=eq.' + state.restaurant.id },
       async payload => { if (payload.eventType === 'INSERT'){ unlockAudio(); beep(); } await refreshOrders(); }
+    ).on('postgres_changes', { event:'INSERT', schema:'public', table:'order_issues', filter:'restaurant_id=eq.' + state.restaurant.id },
+      async payload => { unlockAudio(); beep(); toast(t('new_problem') + ': ' + t('k_' + (payload.new && payload.new.kind)), true); await refreshOrders(); }
     ).subscribe();
   } catch (e) { console.warn('Live updates are off', e); }
   if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refreshOrders(); }, 15000);
