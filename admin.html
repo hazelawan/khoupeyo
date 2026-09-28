@@ -145,7 +145,7 @@ textarea{min-height:70px;resize:vertical}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '2.8';
+const APP_VERSION = '3.0';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -158,7 +158,9 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','settings','publish'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish'];
+const can = p => (state.perms || []).includes('owner') || (state.perms || []).includes(p);
+const TAB_PERM = { orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'owner' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -262,6 +264,7 @@ async function afterLogin(user){
   const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
   if (error || !data || data.role !== 'admin'){ await sb.auth.signOut(); showLogin('This account is not an admin.'); return; }
   state.userId = user.id;
+  try { const { data:pm } = await sb.rpc('my_perms'); state.perms = pm || []; } catch (e) { state.perms = ['owner']; }
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
   Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'admin', me:() => state.userId, lang:() => 'en', toast:(m, err) => toast(m, err) });
@@ -278,6 +281,7 @@ async function loadRiders(){
 async function loadSettings(){
   const rows = need(await sb.from('app_settings').select('*'));
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
+  state.tierEdit = null;
 }
 let channel;
 function subscribeOrders(){
@@ -306,11 +310,12 @@ function showApp(){
 }
 function renderNav(){
   const d = state.dash || {};
-  const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting) + num(d.issues_open)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]];
+  const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting) + num(d.issues_open)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]].filter(([k]) => !TAB_PERM[k] || can(TAB_PERM[k]));
   const cur = MORE_TABS.includes(state.tab) ? 'more' : state.tab;
   $('nav').innerHTML = tabs.map(([k, l, n]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${l}${n ? `<span class="dot">${n}</span>` : ''}</button>`).join('');
 }
 async function go(tab){
+  if (TAB_PERM[tab] && !can(TAB_PERM[tab])) tab = 'home';
   state.tab = tab; renderNav();
   const m = $('main'); if (!m) return;
   m.innerHTML = '<div class="empty">Loading…</div>';
@@ -326,13 +331,17 @@ async function go(tab){
     if (tab === 'zones') await loadZones();
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
+    if (tab === 'targets') await loadTargets();
+    if (tab === 'staff') await loadStaff();
+    if (tab === 'customers' && can('owner')) { const { data } = await sb.rpc('admin_deletion_requests'); state.delReq = data || []; }
+    if (tab === 'reports' && !state.repMonth) state.repMonth = state.riderMonth || ymd(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   });
   renderTab(); window.scrollTo(0, 0);
 }
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, banners:viewBanners, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
+              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
   m.innerHTML = v ? v() : '';
   renderNav();
 }
@@ -405,7 +414,7 @@ async function loadIssues(){
 async function loadOrders(){
   await loadIssues();
   state.orders = need(await sb.from('orders')
-    .select('*, restaurant:restaurants(name,phone), customer:profiles!customer_id(full_name,phone), rider:riders(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
+    .select('*, restaurant:restaurants(name,phone), customer:profiles!customer_id(full_name,phone), rider:riders!rider_id(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
     .order('created_at', { ascending:false }).limit(300));
 }
 const ORDER_FILTERS = [
@@ -626,17 +635,20 @@ function itemForm(i){
 
 // ================= RIDERS =================
 async function loadRiderMonth(){
-  const [rows] = await Promise.all([sb.rpc('admin_rider_month', { p_month:state.riderMonth }), state.settings && state.settings.rider_contracts ? null : loadSettings()]);
+  const [rows, a, b, c] = await Promise.all([sb.rpc('admin_rider_month', { p_month:state.riderMonth }), sb.rpc('rider_leaderboard', { p_period:'today' }), sb.rpc('rider_leaderboard', { p_period:'month' }), sb.rpc('rider_leaderboard', { p_period:'last_month' }), state.settings && state.settings.rider_contracts ? null : loadSettings()]);
   state.riderRows = need(rows) || [];
+  state.lb = { today:a.data || [], month:b.data || [], last_month:c.data || [] };
 }
-const CONTRACT_DEFAULT = { company:{ delivery_pay:40, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:150, daily_hours:8 } };
+const CONTRACT_DEFAULT = { company:{ delivery_pay:0, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:0, daily_hours:8 } };
+const t12 = v => { if (!v) return ''; const [h, m] = String(v).slice(0, 5).split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); };
+const timingText = r => r.shift_start && r.shift_end ? `${t12(r.shift_start)} – ${t12(r.shift_end)}${r.break_start ? ', break ' + t12(r.break_start) : ''} (${num(r.break_minutes)} min)` : 'No duty time set';
 function contractOf(r){
   const all = (state.settings && state.settings.rider_contracts) || CONTRACT_DEFAULT;
   const k = r && r.contract_type === 'company' ? 'company' : 'freelance';
   return Object.assign({}, CONTRACT_DEFAULT[k], all[k] || {});
 }
-const riderNet = r => num(r.monthly_salary) + num(r.delivery_pay) + num(r.overtime_pay) - num(r.fines);
-const CONTRACT = { company:'Company bike', freelance:'Own bike' };
+const riderNet = r => num(r.monthly_salary) + num(r.delivery_pay) + num(r.overtime_pay) + num(r.bonus) - num(r.fines);
+const CONTRACT = { company:'Company bike · salary', freelance:'Own bike · per delivery' };
 const contractPill = r => `<span class="pill ${r.contract_type === 'company' ? 'b' : 'y'}">${CONTRACT[r.contract_type] || CONTRACT.freelance}</span>`;
 function viewRiders(){
   const rows = state.riderRows;
@@ -660,6 +672,7 @@ function viewRiders(){
         ${num(r.flagged_shifts) ? `<span class="pill r">${r.flagged_shifts} selfie issue</span>` : ''}
         ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
       <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}</div>
+      <div class="row-sub">🕘 ${esc(timingText(r))}${r.on_break ? ' · <b style="color:#B45309">☕ On break</b>' : ''}${num(r.late_days) ? ` · <b class="red">late ${r.late_days} days</b>` : ''}</div>
       <div class="mini">
         <div><b>${r.deliveries}</b><span>Deliveries</span></div>
         <div><b>${hours(r.online_minutes)}</b><span>On duty${num(r.overtime_minutes) ? ` · <b style="display:inline;font-size:inherit;color:var(--green)">+${hours(r.overtime_minutes)} OT</b>` : ''}</span></div>
@@ -670,7 +683,13 @@ function viewRiders(){
       </div></div>`;
   };
   const chips = [['all','All'],['online','On duty'],['cash','Holding cash'],['unpaid','Pay due'],['flag','Selfie issues']].map(([k, l]) => `<button class="chip ${fl === k ? 'on' : ''}" onclick="A.riderFilter('${k}')">${l}</button>`).join('');
+  const lb = state.lb || { today:[], month:[], last_month:[] }; const aw = (state.settings && state.settings.rider_awards) || {};
+  const medal = n => n === 1 ? '🥇' : n === 2 ? '🥈' : '🥉';
+  const podium = (list, title, prize) => `<div class="card" style="flex:1;min-width:150px;border:2px solid var(--marigold)"><b>🏆 ${title}</b>${num(prize) ? `<div class="muted" style="font-size:13px">Prize ${money(prize)}</div>` : ''}
+    ${list.slice(0, 3).map(x => `<div class="kv"><span>${medal(x.rank)} ${esc(x.name || '')}</span><span>${x.deliveries}</span></div>`).join('') || '<div class="muted" style="font-size:14px">No deliveries yet</div>'}</div>`;
   return `<h2>Riders</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">${podium(lb.today, 'Rider of the day', aw.day_prize)}${podium(lb.month, 'Rider of the month', aw.month_prize)}</div>
+    ${lb.last_month[0] ? `<div class="muted" style="font-size:14px;margin-bottom:10px">👑 Last month's winner: <b>${esc(lb.last_month[0].name)}</b> (${lb.last_month[0].deliveries} deliveries)</div>` : ''}
     <select onchange="A.pickMonth(this.value)" aria-label="Month" style="margin-bottom:12px">${months}</select>
     <div class="tiles" style="margin-bottom:12px">
       <div class="tile hi"><b>${money(tot(r => num(r.cash_in_hand)))}</b><span>Cash with riders now</span></div>
@@ -687,15 +706,20 @@ function viewRiders(){
 // ================= MORE =================
 function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
-  return `<h2>More</h2><div class="list">
-    <button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>
-    ${item('customers', 'Customers', 'See every customer, their orders, block or unblock')}
-    ${item('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
-    ${item('banners', 'Home banners', 'Big pictures at the top of the customer app')}
-    ${item('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
-    ${item('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
-    ${item('settings', 'Settings', 'Selfie check, waiting time, auto cancel, support phone')}
-    ${item('publish', 'Publish updates', 'Upload new app files to GitHub')}
+  const it = (tab, title, sub) => can(TAB_PERM[tab]) ? item(tab, title, sub) : '';
+  return `<h2>More</h2>${can('owner') ? '' : `<div class="note">You are staff. You can use: ${esc((state.perms || []).join(', '))}.</div>`}<div class="list">
+    ${can('chat') ? `<button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>` : ''}
+    ${it('reports', '📊 Reports', 'Download monthly reports, shop statements and rider pay slips (Excel or PDF)')}
+    ${it('customers', 'Customers', 'See every customer, their orders, block or unblock')}
+    ${it('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
+    ${it('banners', 'Home banners', 'Big pictures at the top of the customer app')}
+    ${it('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
+    ${it('targets', '🎯 Rider targets and bonus', 'Example: 15 deliveries today = Rs 200 bonus')}
+    ${it('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
+    ${it('staff', '👥 Staff', 'Helpers who can use this panel with limited access')}
+    ${it('settings', 'Settings', 'Auto-dispatch, selfie check, waiting time, contracts, support')}
+    ${it('publish', 'Publish updates', 'Upload new app files to GitHub')}
+    <a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button>
   </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
@@ -709,7 +733,10 @@ function viewCustomers(){
       <div class="row-title">${esc(c.full_name || 'No name')}${c.is_blocked ? '<span class="pill r">Blocked</span>' : ''}</div>
       <div class="row-sub">${esc(c.phone || 'No phone')} · ${c.orders} orders${c.last_order ? ' · last ' + timeAgo(c.last_order) : ''}</div></div>
       <div class="row-side">${money(c.spent)}<small>spent</small></div></button>`).join('');
-  return `${backLink()}<h2>Customers (${state.customers.length})</h2>
+  const dr = (state.delReq || []).map(x => `<div class="card" style="border-color:var(--danger)"><div class="row-title">${esc(x.full_name || 'No name')} <span class="pill r">${esc(x.role)}</span></div>
+      <div class="row-sub">${esc(x.phone || '')} · asked ${when(x.requested_at)}${x.note ? ' · “' + esc(x.note) + '”' : ''}</div>
+      <div class="bar" style="margin-top:8px"><button class="btn warn small" onclick="A.deleteAccount('${x.id}', ${esc(JSON.stringify(x.full_name || ''))})">Delete account</button></div></div>`).join('');
+  return `${backLink()}${dr ? `<h2>🗑️ Account deletion requests (${state.delReq.length})</h2><div class="muted" style="font-size:14px;margin-bottom:6px">Please finish within 7 days (Play Store rule).</div>${dr}` : ''}<h2>Customers (${state.customers.length})</h2>
     <input type="search" placeholder="Search name or phone" value="${esc(state.customerQ)}" oninput="A.customerSearch(this.value)" style="margin-bottom:10px">
     <div class="list" id="custList">${rows || '<div class="empty">No customers yet.</div>'}</div>`;
 }
@@ -733,6 +760,52 @@ function viewPromos(){
     <div class="bar"><button class="btn" onclick="A.editPromo()">Add promo code</button><button class="btn ghost" onclick="A.editPromo(null, 'first')">First order offer</button><button class="btn ghost" onclick="A.editPromo(null, 'free')">Free delivery</button></div>
     <div class="list">${rows || '<div class="empty">No promo codes yet.</div>'}</div>
     ${prow ? `<details style="margin-top:14px"><summary><b>Invite-a-friend codes (${personal.length})</b></summary><div class="list" style="margin-top:8px">${prow}</div></details>` : ''}`;
+}
+
+// ---- Rider targets ----
+async function loadTargets(){
+  const [t, b] = await Promise.all([sb.from('rider_targets').select('*').order('created_at'), sb.from('rider_bonuses').select('amount,title,created_at,rider:riders(profile:profiles(full_name))').order('created_at', { ascending:false }).limit(30)]);
+  state.targets = need(t); state.recentBonus = b.data || [];
+}
+function viewTargets(){
+  const per = { day:'every day', week:'every week', month:'every month' };
+  const rows = state.targets.map(x => `<button class="row" onclick="A.editTarget('${x.id}')"><div class="row-main"><div class="row-title">${esc(x.title)} ${x.is_active ? '<span class="pill g">On</span>' : '<span class="pill">Off</span>'}</div>
+      <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)}${x.contract ? ' · ' + (x.contract === 'company' ? 'company riders' : 'own-bike riders') : ' · all riders'}</div></div></button>`).join('');
+  const bon = state.recentBonus.map(b => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(b.rider?.profile?.full_name || 'Rider')}</div><div class="row-sub">${esc(b.title || '')} · ${when(b.created_at)}</div></div><div class="row-side">${money(b.amount)}</div></div>`).join('');
+  return `${backLink()}<h2>Rider targets and bonus</h2>
+    <div class="muted" style="margin:-6px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay automatically and they get a notification. Riders see their progress in the app.</div>
+    <div class="bar"><button class="btn" onclick="A.editTarget()">Add target</button></div>
+    <div class="list">${rows || '<div class="empty">No targets yet.</div>'}</div>
+    <h3>Latest bonuses earned</h3><div class="list">${bon || '<div class="empty">None yet.</div>'}</div>`;
+}
+
+// ---- Reports ----
+function viewReports(){
+  const now = new Date(); const opts = [];
+  for (let i = 0; i < 12; i++){ const d = new Date(now.getFullYear(), now.getMonth() - i, 1); opts.push(`<option value="${ymd(d)}" ${ymd(d) === state.repMonth ? 'selected' : ''}>${monthLabel(ymd(d))}</option>`); }
+  const btn = (fn, label, sub) => `<button class="row" onclick="${fn}"><div class="row-main"><div class="row-title">${label}</div><div class="row-sub">${sub}</div></div><span class="muted">⬇️</span></button>`;
+  return `${backLink()}<h2>📊 Reports</h2>
+    <select onchange="state.repMonth=this.value" aria-label="Month" style="margin-bottom:12px">${opts.join('')}</select>
+    <div class="list">
+      ${btn("A.report('summary')", 'Month summary (PDF)', 'Sales, commission, delivery fees, rider pay, discounts and profit')}
+      ${btn("A.report('orders')", 'All orders (Excel)', 'Every order of the month with customer, shop, rider and money')}
+      ${btn("A.report('shops')", 'Shop statements (Excel)', 'Sales, commission and amount to pay each shop')}
+      ${btn("A.report('riders')", 'Rider pay sheet (Excel)', 'Salary, delivery pay, overtime, bonus, fines, paid and due for each rider')}
+    </div>
+    <p class="muted" style="font-size:13px">A single shop statement is in Shops → shop. A single rider pay slip is in Riders → rider.</p>`;
+}
+
+// ---- Staff ----
+const PERM_LABEL = { orders:'Orders, problems and customers', chat:'Messages and support chat', shops:'Shops and products', riders:'Riders, fines and targets', money:'Payments, cash and reports', settings:'Settings, promo codes, banners, zones' };
+async function loadStaff(){ state.staff = need(await sb.rpc('admin_staff_list')) || []; }
+function viewStaff(){
+  const rows = state.staff.map(x => `<div class="card"><div class="row-title">${esc(x.full_name || x.email)} ${x.is_owner ? '<span class="pill g">Owner</span>' : '<span class="pill b">Staff</span>'}</div>
+    <div class="row-sub">${esc(x.email || '')}${x.phone ? ' · ' + esc(x.phone) : ''}</div>
+    ${x.is_owner ? '<div class="muted" style="font-size:14px">Full access</div>' : `<div class="muted" style="font-size:14px">${(x.perms || []).map(p => esc(PERM_LABEL[p] || p)).join(' · ')}</div>
+    <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.staffForm(${esc(JSON.stringify(x.email))}, ${esc(JSON.stringify(x.perms || []))})">Change</button><button class="btn warn small" onclick="A.removeStaff('${x.id}')">Remove</button></div>`}</div>`).join('');
+  return `${backLink()}<h2>👥 Staff</h2>
+    <div class="muted" style="margin:-6px 0 10px;font-size:14px">Staff sign in to this Admin panel with their own email. They only see and change what you allow. Only you (owner) can add staff, publish updates and delete accounts.</div>
+    <div class="bar"><button class="btn" onclick="A.staffForm()">Add staff</button></div>${rows}`;
 }
 
 // ---- Banners ----
@@ -784,6 +857,32 @@ function viewRules(){
 }
 
 // ---- Settings ----
+// ---- Pay tiers per contract ----
+function tierList(k){
+  if (!state.tierEdit) state.tierEdit = {};
+  if (!state.tierEdit[k]){
+    const c = contractOf({ contract_type:k });
+    state.tierEdit[k] = (Array.isArray(c.tiers) && c.tiers.length ? c.tiers : [{ from:1, pay:num(c.delivery_pay) }]).map(x => ({ from:num(x.from) || 1, pay:num(x.pay) }));
+  }
+  return state.tierEdit[k];
+}
+function tierEditor(k){
+  const list = tierList(k).slice().sort((a, b) => a.from - b.from);
+  state.tierEdit[k] = list;
+  const rows = list.map((x, i) => {
+    const to = list[i + 1] ? list[i + 1].from - 1 : null;
+    return `<div style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px">
+      <span class="muted" style="font-size:13px">From #</span>
+      <input type="number" min="1" value="${x.from}" ${i === 0 ? 'disabled' : ''} onchange="A.tierSet('${k}',${i},'from',this.value)" aria-label="From delivery number">
+      <span class="muted" style="font-size:13px">Rs</span>
+      <input type="number" min="0" value="${x.pay}" onchange="A.tierSet('${k}',${i},'pay',this.value)" aria-label="Pay per delivery">
+      ${i === 0 ? '<span style="width:28px"></span>' : `<button type="button" class="linkbtn" style="color:var(--danger)" onclick="A.tierDel('${k}',${i})">✕</button>`}</div>
+      <div class="muted" style="font-size:12px">Delivery ${x.from}${to ? ' to ' + to : ' and more'} in a month: ${money(x.pay)} each</div>`;
+  }).join('');
+  return `<div id="tiers_${k}" style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"><b style="font-size:14px">Pay per delivery by monthly count</b>${rows}
+    <button type="button" class="linkbtn" style="margin-top:6px" onclick="A.tierAdd('${k}')">+ Add a level</button></div>`;
+}
+function redrawTiers(k){ const el = $('tiers_' + k); if (el) el.outerHTML = tierEditor(k); }
 function viewSettings(){
   const s = state.settings; const req = s.require_selfie === true; const th = num(s.face_match_threshold ?? 0.5);
   return `${backLink()}<h2>Settings</h2>
@@ -813,6 +912,14 @@ function viewSettings(){
       <div class="actions"><button class="btn ghost block" onclick="A.saveExpiry()">Save</button></div>
     </div>
     <div class="card">
+      <b>🛵 Auto-dispatch (nearest rider)</b>
+      <div class="muted" style="font-size:14px">When an order is ready, it is offered only to the nearest free rider first. If they do not accept in time or tap Decline, it goes to the next nearest. If nobody takes it, it is shown to all riders. Riders need location on.</div>
+      <label class="check"><input id="dp_on" type="checkbox" ${s.dispatch_auto === true ? 'checked' : ''}> Auto-dispatch is on</label>
+      <div class="two"><div><label class="f" for="dp_sec">Seconds to accept</label><input id="dp_sec" type="number" min="15" max="180" value="${num(s.dispatch_seconds ?? 40)}"></div>
+        <div><label class="f" for="dp_km">Farthest rider (km)</label><input id="dp_km" type="number" min="1" max="50" value="${num(s.dispatch_km ?? 15)}"></div></div>
+      <div class="actions"><button class="btn ghost block" onclick="A.saveDispatch()">Save auto-dispatch</button></div>
+    </div>
+    <div class="card">
       <b>Invite a friend</b>
       <div class="muted" style="font-size:14px">Every customer gets a code. A new customer who uses it gets a discount on the first order. When that first order is delivered, the inviter gets a reward code.</div>
       ${(() => { const r = Object.assign({ on:true, friend_discount:100, referrer_reward:100, min_order:500, days:60 }, s.referral || {}); return `
@@ -825,21 +932,37 @@ function viewSettings(){
     </div>
     <div class="card">
       <b>Rider contracts</b>
-      <div class="muted" style="font-size:14px">Two kinds of riders. Set each rider's contract in Riders → rider → Rider settings. Pay per delivery is added on top of the monthly salary. Duty beyond the daily hours is overtime.</div>
-      ${['company','freelance'].map(k => { const c = contractOf({ contract_type:k }); return `
-      <h3 style="margin:14px 0 4px">${k === 'company' ? '🏍️ Company bike + petrol' : '🛵 Own bike + petrol (freelance)'}</h3>
+      <div class="muted" style="font-size:14px">Set each rider's contract, salary and duty time in Riders → rider → Rider settings.</div>
+      ${(() => { const c = contractOf({ contract_type:'company' }), f = contractOf({ contract_type:'freelance' }); return `
+      <h3 style="margin:14px 0 4px">🏍️ Company bike + petrol · fixed salary</h3>
+      <div class="muted" style="font-size:13px">Paid a fixed monthly salary (set per rider). Work beyond their duty time is overtime. You can also pay extra per delivery after a number of deliveries (tiers below).</div>
+      ${tierEditor('company')}
       <div class="two">
-        <div><label class="f" for="c_${k}_pay">Pay per delivery (Rs)</label><input id="c_${k}_pay" type="number" min="0" value="${num(c.delivery_pay)}"></div>
-        <div><label class="f" for="c_${k}_ot">Overtime per hour (Rs)</label><input id="c_${k}_ot" type="number" min="0" value="${num(c.overtime_per_hour)}"></div>
+        <div><label class="f" for="c_company_ot">Overtime per hour (Rs)</label><input id="c_company_ot" type="number" min="0" value="${num(c.overtime_per_hour)}"></div>
+        <div><label class="f" for="c_company_hrs">Hours per day if no duty time</label><input id="c_company_hrs" type="number" min="1" max="16" step="0.5" value="${num(c.daily_hours)}"></div>
       </div>
-      <label class="f" for="c_${k}_hrs">Working hours per day</label><input id="c_${k}_hrs" type="number" min="1" max="16" step="0.5" value="${num(c.daily_hours)}">`; }).join('')}
+      <h3 style="margin:14px 0 4px">🛵 Own bike + petrol · per delivery</h3>
+      <div class="muted" style="font-size:13px">No salary. Earns per delivery. The more deliveries in the month, the higher the pay (tiers).</div>
+      ${tierEditor('freelance')}`; })()}
+      <label class="f" for="s_grace">Late after (minutes past duty start)</label><input id="s_grace" type="number" min="0" max="120" value="${num(s.late_grace_minutes ?? 10)}">
       <div class="actions"><button class="btn ghost block" onclick="A.saveContracts()">Save contracts</button></div>
+    </div>
+    <div class="card">
+      <b>🏆 Rider of the day and month</b>
+      <div class="muted" style="font-size:14px">The rider with the most deliveries wins (ties go to the better rating). Riders see the ranking in their app. Set a prize to show them (0 = no prize). You pay the prize yourself from the rider's page.</div>
+      <div class="two"><div><label class="f" for="aw_day">Day prize (Rs)</label><input id="aw_day" type="number" min="0" value="${num((s.rider_awards || {}).day_prize)}"></div>
+        <div><label class="f" for="aw_month">Month prize (Rs)</label><input id="aw_month" type="number" min="0" value="${num((s.rider_awards || {}).month_prize)}"></div></div>
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('rider_awards', { day_prize:num($('aw_day').value), month_prize:num($('aw_month').value) })">Save prizes</button></div>
     </div>
     <div class="card">
       <label class="f" for="s_sup" style="margin-top:0"><b>Support phone number</b></label>
       <div class="muted" style="font-size:14px">Riders see a "Call Wanhar Mart" button with this number.</div>
       <input id="s_sup" type="text" inputmode="tel" value="${esc(s.support_phone || '')}" placeholder="03001234567" style="margin-top:8px">
       <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('support_phone', $('s_sup').value.trim())">Save</button></div>
+      <label class="f" for="s_mail"><b>Support email</b></label>
+      <div class="muted" style="font-size:14px">Shown on the Privacy Policy and Terms page. Play Store needs a contact email.</div>
+      <input id="s_mail" type="email" autocapitalize="off" value="${esc(s.support_email || '')}" placeholder="support@example.com" style="margin-top:8px">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('support_email', $('s_mail').value.trim())">Save email</button></div>
     </div>`;
 }
 
@@ -948,7 +1071,8 @@ const A = {
       <div class="kv total"><span>Unpaid to shop (all time)</span><span>${money(s.unpaid)}</span></div>
       ${s.last_paid ? `<div class="muted" style="font-size:13px">Last paid ${when(s.last_paid)}</div>` : ''}
       <div class="actions">
-        ${num(s.unpaid) ? `<button class="btn block" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
+        ${num(s.unpaid) && can('money') ? `<button class="btn block" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
+        <div class="two"><button class="btn ghost" onclick="A.shopStatement('${id}','pdf')">🧾 Statement PDF</button><button class="btn ghost" onclick="A.shopStatement('${id}','xlsx')">⬇️ Excel</button></div>
         <button class="btn ghost block" onclick="A.shopProducts('${id}')">Manage products</button>
         <button class="btn ghost block" onclick="A.editRestaurant('${id}')">Edit shop details</button>
       </div>
@@ -1128,16 +1252,20 @@ const A = {
         </div></div>
 
         <h3>${monthLabel(state.riderMonth)} pay</h3>
-        <div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>
-        <div class="kv"><span class="muted">Delivery pay (${r.deliveries} deliveries)</span><span>${money(r.delivery_pay)}</span></div>
-        <div class="kv"><span class="muted">Overtime (${hours(r.overtime_minutes)})</span><span>${money(r.overtime_pay)}</span></div>
+        ${r.contract_type === 'company' ? `<div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>` : ''}
+        <div class="kv"><span class="muted">Delivery pay + tips (${r.deliveries} deliveries)</span><span>${money(r.delivery_pay)}</span></div>
+        ${r.contract_type === 'company' ? `<div class="kv"><span class="muted">Overtime (${hours(r.overtime_minutes)})</span><span>${money(r.overtime_pay)}</span></div>` : ''}
+        ${num(r.bonus) ? `<div class="kv"><span class="muted">🎯 Bonus (${r.bonus_count})</span><span>${money(r.bonus)}</span></div>` : ''}
         <div class="kv"><span class="muted">Fines (${r.fines_count})</span><span class="neg">−${money(r.fines)}</span></div>
         <div class="kv total"><span>Month pay</span><span>${money(net)}</span></div>
         <div class="kv"><span class="muted">Already paid</span><span>${money(r.paid)}</span></div>
         <div class="kv"><b>Still to pay</b><b>${money(Math.max(0, due))}</b></div>
         <div class="kv"><span class="muted">On duty</span><span>${hours(r.online_minutes)} in ${r.shifts} shifts, ${num(r.days_worked)} days</span></div>
-        <div class="muted" style="font-size:13px">Duty over ${contractOf(r).daily_hours} hours in a day counts as overtime, paid ${money(contractOf(r).overtime_per_hour)} per hour.</div>
-        <div class="actions">${due > 0 ? `<button class="btn block" onclick="A.payRider('${id}', ${Math.round(due)})">Pay ${money(due)}</button>` : ''}</div>
+        <div class="kv"><span class="muted">Duty time</span><span>${esc(timingText(r))}</span></div>
+        <div class="kv"><span class="muted">Breaks used</span><span>${hours(r.break_used_minutes)}${num(r.break_over_minutes) ? ` <b class="red">(${hours(r.break_over_minutes)} over)</b>` : ''}</span></div>
+        <div class="kv"><span class="muted">Late starts</span><span class="${num(r.late_days) ? 'red' : ''}">${num(r.late_days)} days${num(r.late_minutes) ? ', ' + hours(r.late_minutes) + ' total' : ''}</span></div>
+        ${r.contract_type === 'company' ? `<div class="muted" style="font-size:13px">Work over ${hours(r.daily_minutes)} in a day (duty time minus break) counts as overtime, paid ${money(contractOf(r).overtime_per_hour)} per hour.</div>` : '<div class="muted" style="font-size:13px">Own-bike riders are paid per delivery only. No salary and no overtime.</div>'}
+        <div class="actions">${due > 0 && can('money') ? `<button class="btn block" onclick="A.payRider('${id}', ${Math.round(due)})">Pay ${money(due)}</button>` : ''}<button class="btn ghost block" onclick="A.riderSlip('${id}')">🧾 Pay slip (PDF)</button></div>
 
         <h3>Cash</h3>
         <div class="kv total"><span>Cash in hand</span><span class="${over ? 'red' : ''}">${money(r.cash_in_hand)}</span></div>
@@ -1153,14 +1281,22 @@ const A = {
 
         <h3>Rider settings</h3>
         <label class="f" for="rs_contract">Contract</label>
-        <select id="rs_contract">
-          <option value="company" ${r.contract_type === 'company' ? 'selected' : ''}>Company bike and petrol (${money(contractOf({ contract_type:'company' }).delivery_pay)} per delivery)</option>
-          <option value="freelance" ${r.contract_type !== 'company' ? 'selected' : ''}>Own bike and petrol, freelance (${money(contractOf({ contract_type:'freelance' }).delivery_pay)} per delivery)</option>
+        <select id="rs_contract" onchange="$('rs_salbox').style.display = this.value === 'company' ? 'block' : 'none'">
+          <option value="company" ${r.contract_type === 'company' ? 'selected' : ''}>Company bike and petrol · fixed monthly salary</option>
+          <option value="freelance" ${r.contract_type !== 'company' ? 'selected' : ''}>Own bike and petrol · paid per delivery</option>
         </select>
+        <div id="rs_salbox" style="display:${r.contract_type === 'company' ? 'block' : 'none'}"><label class="f" for="rs_sal">Monthly salary (Rs)</label><input id="rs_sal" type="number" min="0" value="${num(r.monthly_salary)}"></div>
+        <label class="f" for="rs_lim">Cash limit (Rs, 0 = none)</label><input id="rs_lim" type="number" min="0" value="${num(r.cash_limit)}">
+        <h3 style="margin-top:14px">Duty time</h3>
         <div class="two">
-          <div><label class="f" for="rs_sal">Monthly salary (Rs)</label><input id="rs_sal" type="number" min="0" value="${num(r.monthly_salary)}"></div>
-          <div><label class="f" for="rs_lim">Cash limit (Rs, 0 = none)</label><input id="rs_lim" type="number" min="0" value="${num(r.cash_limit)}"></div>
+          <div><label class="f" for="rs_start">Duty starts</label><input id="rs_start" type="time" value="${r.shift_start ? String(r.shift_start).slice(0, 5) : ''}"></div>
+          <div><label class="f" for="rs_end">Duty ends</label><input id="rs_end" type="time" value="${r.shift_end ? String(r.shift_end).slice(0, 5) : ''}"></div>
         </div>
+        <div class="two">
+          <div><label class="f" for="rs_bstart">Break at</label><input id="rs_bstart" type="time" value="${r.break_start ? String(r.break_start).slice(0, 5) : ''}"></div>
+          <div><label class="f" for="rs_bmin">Break length (min)</label><input id="rs_bmin" type="number" min="0" max="180" step="5" value="${r.break_minutes ?? 60}"></div>
+        </div>
+        <div class="muted" style="font-size:13px">Leave duty times empty for no fixed timing. Starting duty more than ${num(state.settings.late_grace_minutes ?? 10)} minutes late is marked late.</div>
         <div class="actions"><button class="btn ghost block" onclick="A.saveRiderSettings('${id}')">Save settings</button></div>
 
         <h3>Cash handovers</h3><div class="list">${handRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
@@ -1222,7 +1358,11 @@ const A = {
   async toggleFine(fid, status, id){ await run(async () => { need(await sb.from('rider_fines').update({ status }).eq('id', fid)); await A.refreshRider(id); }); },
   async reviewShift(sid, status, id){ await run(async () => { need(await sb.from('rider_shifts').update({ review_status:status }).eq('id', sid)); toast(status === 'ok' ? 'Marked OK' : 'Flagged'); await A.refreshRider(id); }); },
   async saveRiderSettings(id){
-    await run(async () => { need(await sb.from('riders').update({ monthly_salary:num($('rs_sal').value), cash_limit:num($('rs_lim').value), contract_type:$('rs_contract').value }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
+    await run(async () => { const st = $('rs_start').value, en = $('rs_end').value;
+      if (!!st !== !!en) throw new Error('Set both duty start and end, or leave both empty');
+      const ct = $('rs_contract').value;
+      need(await sb.from('riders').update({ monthly_salary:ct === 'company' ? num($('rs_sal').value) : 0, cash_limit:num($('rs_lim').value), contract_type:ct,
+        shift_start:st || null, shift_end:en || null, break_start:$('rs_bstart').value || null, break_minutes:Math.max(0, Math.round(num($('rs_bmin').value))) }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
   },
   async resetFace(id){
     if (!confirm('Reset this rider\'s face? They must register a new selfie before the next duty.')) return;
@@ -1297,6 +1437,115 @@ const A = {
   },
   async deletePromo(id){ if (!confirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
 
+  // ---- Targets ----
+  editTarget(id){
+    const x = (state.targets || []).find(y => y.id === id) || { title:'', period:'day', deliveries:15, amount:200, contract:null, is_active:true };
+    openSheet(id ? 'Edit target' : 'Add target', `
+      <label class="f" for="tg_title">Title riders see</label><input id="tg_title" type="text" value="${esc(x.title)}" placeholder="15 deliveries today">
+      <div class="two"><div><label class="f" for="tg_n">Deliveries</label><input id="tg_n" type="number" min="1" value="${x.deliveries}"></div>
+        <div><label class="f" for="tg_amt">Bonus (Rs)</label><input id="tg_amt" type="number" min="0" value="${num(x.amount)}"></div></div>
+      <label class="f" for="tg_per">Every</label><select id="tg_per"><option value="day" ${x.period === 'day' ? 'selected' : ''}>Day</option><option value="week" ${x.period === 'week' ? 'selected' : ''}>Week (Monday to Sunday)</option><option value="month" ${x.period === 'month' ? 'selected' : ''}>Month</option></select>
+      <label class="f" for="tg_ct">For</label><select id="tg_ct"><option value="">All riders</option><option value="company" ${x.contract === 'company' ? 'selected' : ''}>Company bike riders</option><option value="freelance" ${x.contract === 'freelance' ? 'selected' : ''}>Own bike riders</option></select>
+      <label class="check"><input id="tg_on" type="checkbox" ${x.is_active ? 'checked' : ''}> Target is on</label>
+      <div class="actions"><button class="btn block" onclick="A.saveTarget('${id || ''}')">Save target</button>${id ? `<button class="btn warn block" onclick="A.deleteTarget('${id}')">Delete</button>` : ''}</div>`);
+  },
+  async saveTarget(id){
+    const title = $('tg_title').value.trim(); const n = Math.round(num($('tg_n').value));
+    if (!title || n < 1) return toast('Write a title and number of deliveries', true);
+    await run(async () => {
+      const row = { title, deliveries:n, amount:num($('tg_amt').value), period:$('tg_per').value, contract:$('tg_ct').value || null, is_active:$('tg_on').checked };
+      need(await (id ? sb.from('rider_targets').update(row).eq('id', id) : sb.from('rider_targets').insert(row)));
+      await loadTargets(); closeSheet(); renderTab(); toast('Target saved');
+    });
+  },
+  async deleteTarget(id){ if (!confirm('Delete this target? Bonuses already earned stay.')) return; await run(async () => { need(await sb.from('rider_targets').delete().eq('id', id)); await loadTargets(); closeSheet(); renderTab(); }); },
+
+  // ---- Staff ----
+  staffForm(email, perms){
+    perms = perms || ['orders', 'chat'];
+    openSheet(email ? 'Change staff access' : 'Add staff', `
+      <div class="note">The person must first create an account (for example in the Customer app) with this email.</div>
+      <label class="f" for="st_email">Email</label><input id="st_email" type="email" autocapitalize="off" value="${esc(email || '')}" ${email ? 'readonly' : ''}>
+      <label class="f">What can they use?</label>
+      ${Object.entries(PERM_LABEL).map(([k, l]) => `<label class="check"><input type="checkbox" class="st_p" value="${k}" ${perms.includes(k) ? 'checked' : ''}> ${esc(l)}</label>`).join('')}
+      <div class="actions"><button class="btn block" onclick="A.saveStaff()">Save</button></div>`);
+  },
+  async saveStaff(){
+    const email = $('st_email').value.trim(); const perms = [...document.querySelectorAll('.st_p:checked')].map(x => x.value);
+    if (!email) return toast('Enter the email', true); if (!perms.length) return toast('Choose at least one', true);
+    await run(async () => { need(await sb.rpc('admin_set_staff', { p_email:email, p_perms:perms })); await loadStaff(); closeSheet(); renderTab(); toast('Staff saved. They can now sign in to the Admin panel.'); });
+  },
+  async removeStaff(id){ if (!confirm('Remove this staff member? They will no longer open the Admin panel.')) return; await run(async () => { need(await sb.rpc('admin_remove_staff', { p_user:id })); await loadStaff(); renderTab(); toast('Removed'); }); },
+
+  // ---- Account deletion ----
+  async deleteAccount(id, name){
+    if (!confirm(`Delete ${name || 'this account'}? Name, phone, email, addresses and face data are removed and login is blocked. Orders stay without the name. This cannot be undone.`)) return;
+    await run(async () => { need(await sb.rpc('admin_delete_account', { p_user:id })); toast('Account deleted'); go('customers'); });
+  },
+
+  // ---- Reports ----
+  async report(kind){
+    const m = state.repMonth; const f = new Date(m + 'T00:00:00'); const t = new Date(f.getFullYear(), f.getMonth() + 1, 1);
+    const label = monthLabel(m); const tag = m.slice(0, 7);
+    const d = x => x ? new Date(x).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    await run(async () => {
+      if (kind === 'summary'){
+        const x = need(await sb.rpc('admin_dashboard', { p_from:f.toISOString(), p_to:t.toISOString() })) || {}; const n = k => num(x[k]);
+        const riders = need(await sb.rpc('admin_rider_month', { p_month:m })) || [];
+        const riderCost = riders.reduce((s, r) => s + riderNet(r), 0);
+        Report.pdf({ title:'Month summary', subtitle:label, blocks:[
+          { heading:'Orders', rows:[['Delivered orders', n('delivered')], ['Cancelled or rejected', n('cancelled')], ['Customers', n('customers')]] },
+          { heading:'Money', rows:[['Customers paid in total', money(n('gmv'))], ['Product sales', money(n('food_sales'))], ['Commission from shops', money(n('commission'))], ['Delivery fees paid by customers', money(n('delivery_fees'))], ['Discounts given', '−' + money(n('discounts'))], ['Riders pay this month (salary, delivery, overtime, bonus − fines)', '−' + money(riderCost)], ['Estimated profit', money(n('commission') + n('delivery_fees') - n('discounts') - riderCost), true]] }],
+          note:'Tips are paid fully to riders and are included in rider pay. Estimated profit does not include other costs like fuel, rent or salaries of staff.' });
+        return;
+      }
+      if (kind === 'orders'){
+        const rows = need(await sb.from('orders').select('id,created_at,delivered_at,status,subtotal,delivery_fee,discount,tip,total,promo_code,commission_amount,restaurant_earning,rider_pay,address_text,scheduled_for,restaurant:restaurants(name),customer:profiles!customer_id(full_name,phone),rider:riders!rider_id(profile:profiles(full_name))').gte('created_at', f.toISOString()).lt('created_at', t.toISOString()).order('created_at').limit(10000));
+        const out = [['Order', 'Date', 'Status', 'Shop', 'Customer', 'Phone', 'Rider', 'Address', 'Items total', 'Delivery fee', 'Discount', 'Promo', 'Tip', 'Total', 'Commission', 'Shop gets', 'Rider pay', 'Delivered at', 'Scheduled for']];
+        rows.forEach(o => out.push(['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), o.status, o.restaurant?.name || '', o.customer?.full_name || '', o.customer?.phone || '', o.rider?.profile?.full_name || '', o.address_text || '',
+          num(o.subtotal), num(o.delivery_fee), num(o.discount), o.promo_code || '', num(o.tip), num(o.total), num(o.commission_amount), num(o.restaurant_earning), num(o.rider_pay), d(o.delivered_at), d(o.scheduled_for)]));
+        return Report.excel('Wanhar-Mart-orders-' + tag, [{ name:'Orders ' + tag, rows:out }]);
+      }
+      if (kind === 'shops'){
+        const rep = need(await sb.rpc('admin_shop_report', { p_from:f.toISOString(), p_to:t.toISOString() })) || [];
+        const out = [['Shop', 'Orders', 'Delivered', 'Cancelled', 'Sales', 'Commission', 'Shop earning', 'Unpaid to shop (all time)', 'Rating']];
+        rep.forEach(r => out.push([r.name || (state.restaurants.find(x => x.id === r.restaurant_id) || {}).name || '', num(r.orders), num(r.delivered), num(r.cancelled), num(r.food_sales), num(r.commission), num(r.shop_earning), num(r.unpaid), r.rating || '']));
+        return Report.excel('Wanhar-Mart-shops-' + tag, [{ name:'Shops ' + tag, rows:out }]);
+      }
+      if (kind === 'riders'){
+        const rs = need(await sb.rpc('admin_rider_month', { p_month:m })) || [];
+        const out = [['Rider', 'Phone', 'Contract', 'Deliveries', 'Salary', 'Delivery pay + tips', 'Overtime (h)', 'Overtime pay', 'Bonus', 'Fines', 'Month pay', 'Paid', 'Due', 'Duty hours', 'Days worked', 'Late days', 'Cash in hand now']];
+        rs.filter(r => r.is_approved).forEach(r => { const net = riderNet(r); out.push([r.full_name || '', r.phone || '', r.contract_type === 'company' ? 'Company bike (salary)' : 'Own bike (per delivery)', num(r.deliveries), num(r.monthly_salary), num(r.delivery_pay), +(num(r.overtime_minutes) / 60).toFixed(1), num(r.overtime_pay), num(r.bonus), num(r.fines), net, num(r.paid), Math.max(0, net - num(r.paid)), +(num(r.online_minutes) / 60).toFixed(1), num(r.days_worked), num(r.late_days), num(r.cash_in_hand)]); });
+        return Report.excel('Wanhar-Mart-riders-' + tag, [{ name:'Riders ' + tag, rows:out }]);
+      }
+    });
+  },
+  riderSlip(id){
+    const r = state.riderRows.find(x => x.rider_id === id); if (!r) return;
+    const net = riderNet(r); const company = r.contract_type === 'company';
+    Report.pdf({ title:'Pay slip · ' + (r.full_name || 'Rider'), subtitle:monthLabel(state.riderMonth) + ' · ' + (company ? 'Company bike, fixed salary' : 'Own bike, paid per delivery'), blocks:[
+      { heading:'Rider', rows:[['Name', r.full_name || ''], ['Phone', r.phone || ''], ['CNIC', r.cnic || ''], ['Deliveries', num(r.deliveries)], ['Duty', hours(r.online_minutes) + ' in ' + num(r.days_worked) + ' days'], ['Late days', num(r.late_days)]] },
+      { heading:'Pay', rows:[...(company ? [['Monthly salary', money(r.monthly_salary)]] : []), ['Delivery pay + tips', money(r.delivery_pay)], ...(company ? [['Overtime (' + hours(r.overtime_minutes) + ')', money(r.overtime_pay)]] : []), ['Bonus', money(r.bonus)], ['Fines', '−' + money(r.fines)], ['Month pay', money(net), true], ['Already paid', money(r.paid)], ['Still to pay', money(Math.max(0, net - num(r.paid))), true]] }],
+      note:'Cash in hand (not yet deposited): ' + money(r.cash_in_hand) });
+  },
+  async shopStatement(id, kind){
+    const r = state.restaurants.find(x => x.id === id); const [f, t] = range(state.period); const label = (PERIODS.find(p => p[0] === state.period) || [])[1];
+    await run(async () => {
+      const rows = need(await sb.from('orders').select('id,created_at,status,subtotal,commission_amount,restaurant_earning,order_items(name,quantity)').eq('restaurant_id', id).gte('created_at', f.toISOString()).lt('created_at', t.toISOString()).order('created_at').limit(5000));
+      const del = rows.filter(o => o.status === 'delivered'); const sum = k => del.reduce((n, o) => n + num(o[k]), 0);
+      const items = o => (o.order_items || []).map(i => i.quantity + '× ' + i.name).join(', ');
+      const d = x => new Date(x).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      if (kind === 'xlsx'){
+        const out = [['Order', 'Date', 'Status', 'Items', 'Sales', 'Commission', 'Shop earning']];
+        rows.forEach(o => out.push(['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), o.status, items(o), num(o.subtotal), num(o.commission_amount), num(o.restaurant_earning)]));
+        out.push([]); out.push(['Total delivered', '', '', '', sum('subtotal'), sum('commission_amount'), sum('restaurant_earning')]);
+        return Report.excel('Statement-' + (r.name || 'shop').replace(/[^a-z0-9]+/gi, '-') + '-' + state.period, [{ name:'Statement', rows:out }]);
+      }
+      Report.pdf({ title:'Shop statement · ' + r.name, subtitle:label + ' · Commission ' + num(r.commission_percent) + '%', blocks:[{ heading:'Summary', rows:[['Orders', rows.length], ['Delivered', del.length], ['Sales', money(sum('subtotal'))], ['Commission', '−' + money(sum('commission_amount'))], ['Shop earning', money(sum('restaurant_earning')), true]] }],
+        table:{ heading:'Orders', head:['#', 'Date', 'Status', 'Items', 'Sales', 'Commission', 'Earning'], numFrom:4, rows:rows.map(o => ['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), o.status, items(o), money(o.subtotal), money(o.commission_amount), money(o.restaurant_earning)]) } });
+    });
+  },
+
   // ---- Banners ----
   editBanner(id){
     const b = (state.banners || []).find(x => x.id === id) || { title:'', bg_color:'#1F6F4A', action_type:'none', is_active:true, sort_order:(state.banners || []).length };
@@ -1370,15 +1619,23 @@ const A = {
   },
 
   // ---- Settings ----
+  async saveDispatch(){
+    const rows = [{ key:'dispatch_auto', value:$('dp_on').checked }, { key:'dispatch_seconds', value:Math.min(180, Math.max(15, num($('dp_sec').value))) }, { key:'dispatch_km', value:Math.max(1, num($('dp_km').value)) }].map(x => Object.assign(x, { updated_at:new Date().toISOString() }));
+    await run(async () => { need(await sb.from('app_settings').upsert(rows)); await loadSettings(); renderTab(); toast('Saved'); });
+  },
   async saveContracts(){
-    const v = {};
-    for (const k of ['company','freelance']){
-      const hrs = num($('c_' + k + '_hrs').value);
-      if (hrs < 1) return toast('Working hours must be at least 1', true);
-      v[k] = { delivery_pay:num($('c_' + k + '_pay').value), overtime_per_hour:num($('c_' + k + '_ot').value), daily_hours:hrs };
-    }
+    const hrs = num($('c_company_hrs').value); if (hrs < 1) return toast('Hours per day must be at least 1', true);
+    const clean = k => { const seen = new Set(); return tierList(k).map(x => ({ from:Math.max(1, Math.round(num(x.from))), pay:Math.max(0, num(x.pay)) })).sort((a, b) => a.from - b.from).filter(x => !seen.has(x.from) && seen.add(x.from)); };
+    const ct = clean('company'), ft = clean('freelance'); ct[0].from = 1; ft[0].from = 1;
+    if (!ft.some(x => x.pay > 0)) return toast('Own-bike riders need a pay per delivery', true);
+    const v = { company:{ delivery_pay:ct[0].pay, overtime_per_hour:num($('c_company_ot').value), daily_hours:hrs, tiers:ct }, freelance:{ delivery_pay:ft[0].pay, overtime_per_hour:0, daily_hours:8, tiers:ft } };
+    state.tierEdit = null;
+    await run(async () => { need(await sb.from('app_settings').upsert({ key:'late_grace_minutes', value:Math.max(0, num($('s_grace').value)), updated_at:new Date().toISOString() })); });
     await A.saveSetting('rider_contracts', v);
   },
+  tierSet(k, i, f, v){ const l = tierList(k); if (!l[i]) return; l[i][f] = num(v); if (f === 'from') redrawTiers(k); },
+  tierAdd(k){ const l = tierList(k); const last = l[l.length - 1] || { from:1, pay:0 }; l.push({ from:last.from + 100, pay:last.pay + 10 }); redrawTiers(k); },
+  tierDel(k, i){ const l = tierList(k); if (i > 0) l.splice(i, 1); redrawTiers(k); },
   async saveExpiry(){
     const acc = Math.max(5, num($('s_acc').value) || 15), exp = Math.max(1, num($('s_exp').value) || 3);
     await run(async () => {
@@ -1864,6 +2121,54 @@ const OE = (() => {
     removed = { groups:[], options:[] };
   }
   return { init, html, load, save, addGroup, delGroup, addO, delO, set, setO, preset };
+})();
+
+// ================= REPORTS: Excel and PDF (Shop app and Admin) =================
+const Report = (() => {
+  let xlsxP = null;
+  function loadXlsx(){
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (!xlsxP) xlsxP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = () => res(window.XLSX); s.onerror = () => { xlsxP = null; rej(new Error('xlsx')); }; document.head.appendChild(s); });
+    return xlsxP;
+  }
+  function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+  // sheets: [{ name, rows:[[header...], [cells...]] }]
+  async function excel(file, sheets){
+    try {
+      const X = await loadXlsx(); const wb = X.utils.book_new();
+      sheets.forEach(sh => { const ws = X.utils.aoa_to_sheet(sh.rows); ws['!cols'] = (sh.rows[0] || []).map((_, i) => ({ wch:Math.min(40, Math.max(10, ...sh.rows.map(r => String(r[i] ?? '').length + 2))) })); X.utils.book_append_sheet(wb, ws, sh.name.slice(0, 31)); });
+      X.writeFile(wb, file + '.xlsx');
+    } catch (e) {
+      // Fallback: CSV opens in Excel too
+      const sh = sheets[0]; const csv = sh.rows.map(r => r.map(c => { const v = String(c ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')).join('\n');
+      download(new Blob(['﻿' + csv], { type:'text/csv;charset=utf-8' }), file + '.csv');
+    }
+  }
+  const esc2 = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  // Printable page: title, subtitle, blocks of { heading, rows:[[label, value]] } and optional table { head:[], rows:[[]] }
+  function pdf(o){
+    const old = document.getElementById('rptWrap'); if (old) old.remove();
+    const w = document.createElement('div'); w.id = 'rptWrap';
+    w.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.5);overflow:auto;padding:16px';
+    const kv = rows => rows.map(([a, b, bold]) => `<tr${bold ? ' style="font-weight:800;border-top:2px solid #111"' : ''}><td>${esc2(a)}</td><td style="text-align:right">${esc2(b)}</td></tr>`).join('');
+    const tbl = t => `<table class="rt"><thead><tr>${t.head.map(h => `<th>${esc2(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map((c, i) => `<td${i >= (t.numFrom ?? 99) ? ' style="text-align:right"' : ''}>${esc2(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    w.innerHTML = `<style>
+      #rptWrap .pg{max-width:800px;margin:0 auto;background:#fff;color:#111;border-radius:12px;padding:24px;font:14px/1.5 system-ui,sans-serif}
+      #rptWrap h1{margin:0;font-size:22px} #rptWrap h2{font-size:16px;margin:18px 0 6px}
+      #rptWrap table{width:100%;border-collapse:collapse} #rptWrap td,#rptWrap th{padding:5px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
+      #rptWrap .rt{font-size:12px} #rptWrap .rt th{background:#f0f3ee}
+      #rptWrap .nb{max-width:800px;margin:12px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      @media print{body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
+    </style>
+    <div class="pg"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h1>${esc2(o.title)}</h1><div style="color:#555">${esc2(o.subtitle || '')}</div></div>
+      <div style="text-align:right"><b style="font-size:18px">Wanhar Mart<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
+      ${(o.blocks || []).map(b => `<h2>${esc2(b.heading)}</h2><table>${kv(b.rows)}</table>`).join('')}
+      ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2>${tbl(o.table)}` : ''}
+      ${o.note ? `<p style="color:#555;font-size:12px;margin-top:16px">${esc2(o.note)}</p>` : ''}</div>
+    <div class="nb"><button class="btn" onclick="window.print()">${esc2(o.printLabel || 'Print or save as PDF')}</button><button class="btn ghost" style="background:#fff" onclick="document.getElementById('rptWrap').remove()">${esc2(o.closeLabel || 'Close')}</button></div>`;
+    document.body.appendChild(w);
+  }
+  return { excel, pdf };
 })();
 
 (async function boot(){
