@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Wanhar Mart Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB; --soft:#EAF1EC;
+  --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E; --blue:#2A6F97;
+  --s-placed:#B7791F; --s-accepted:#2A6F97; --s-preparing:#C4571A; --s-ready:#0F766E;
+  --s-rider_assigned:#6B4FA0; --s-picked_up:#6B4FA0; --s-delivered:#1F6F4A; --s-cancelled:#B3261E; --s-rejected:#B3261E;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#111A16; --surface:#1A2620; --ink:#E7EFE9; --muted:#93A59A; --line:#2B3A32; --soft:#1F3129; --green:#3FA774; --green-dark:#2F8F60; --danger:#F08A82; --blue:#6FB3DA; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.7}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--green)}
+#app{max-width:680px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.15;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand small{display:block;font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0}
+.pillbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:14px}
+.openbtn{display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:9px 16px 9px 12px;font-weight:800;cursor:pointer;color:#fff;background:var(--muted);flex:none}
+.openbtn.on{background:var(--green)}
+.openbtn i{width:10px;height:10px;border-radius:50%;background:#fff;opacity:.6}
+.openbtn.on i{opacity:1}
+main{padding:14px 16px 120px}
+h1{font-size:24px;margin:6px 0 12px;letter-spacing:-.01em}
+h2{font-size:18px;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
+.count{background:var(--marigold);color:#1E2B25;font-size:13px;font-weight:800;border-radius:999px;padding:1px 9px}
+.muted{color:var(--muted)}
+.red{color:var(--danger)}
+.empty{padding:34px 10px;text-align:center;color:var(--muted)}
+.btn{display:block;width:100%;background:var(--green);color:#fff;border:0;border-radius:12px;padding:15px 16px;font-weight:700;cursor:pointer;text-align:center;font-size:17px;text-decoration:none}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.btn.warn{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.btn.small{padding:10px 14px;font-size:15px;width:auto;display:inline-block}
+.btn[disabled]{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=text],input[type=password],input[type=email],input[type=tel],input[type=number],input[type=time],input[type=search],textarea,select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.card.new{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
+.card.late{border:2px solid var(--danger)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.oid{font-weight:800;font-size:18px}
+.pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--muted);white-space:nowrap}
+.pill.y{background:#B7791F} .pill.g{background:var(--green)} .pill.r{background:var(--danger)}
+.line{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+.line.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:800;font-size:18px}
+.items{font-size:17px;margin:8px 0}
+.items div{padding:3px 0}
+.items b{display:inline-block;min-width:34px;color:var(--green)}
+.cust{margin:6px 0;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:15px}
+.countdown{display:flex;justify-content:space-between;align-items:center;background:var(--soft);border-radius:10px;padding:8px 12px;margin:8px 0;font-weight:700}
+.countdown.late{background:rgba(179,38,30,.12);color:var(--danger)}
+.actions{display:grid;gap:10px;margin-top:12px}
+.note{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.soundbar{background:var(--marigold);color:#1E2B25;border:0;width:100%;border-radius:12px;padding:12px;font-weight:800;margin-bottom:12px;cursor:pointer}
+.closedbar{background:var(--surface);border:2px solid var(--danger);color:var(--danger);border-radius:12px;padding:12px;margin-bottom:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{display:flex;max-width:680px;margin:0 auto}
+.nav button{position:relative;flex:1;background:none;border:0;padding:14px 4px 12px;font-weight:700;font-size:14px;color:var(--muted);border-top:3px solid transparent;cursor:pointer}
+.nav button.on{color:var(--green);border-top-color:var(--marigold)}
+.nav .dot{min-width:18px;height:18px;border-radius:9px;background:var(--danger);color:#fff;font-size:11px;display:inline-grid;place-items:center;padding:0 4px;margin-inline-start:4px;vertical-align:2px}
+.row{display:flex;gap:12px;align-items:center;width:100%;text-align:start;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 2px;color:inherit}
+.row-main{flex:1;min-width:0;cursor:pointer;background:none;border:0;text-align:start;padding:0;color:inherit}
+.thumb{width:54px;height:54px;border-radius:12px;background:var(--line);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.switch{position:relative;display:block;width:50px;height:28px;flex:none;margin:0 auto 3px}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;inset:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.switch input:checked + span{background:var(--green)}
+.switch input:checked + span::after{transform:translateX(22px)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:8px 0 12px;-webkit-overflow-scrolling:touch}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;cursor:pointer;font-weight:700}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.cat{display:flex;justify-content:space-between;align-items:center;margin:20px 0 4px}
+.cat h3{margin:0;font-size:18px}
+.strike{text-decoration:line-through;color:var(--muted);font-size:13px;margin-inline-start:6px}
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:680px;max-height:94%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet.alert{border-top:6px solid var(--marigold)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sheet-head h3{margin:0;font-size:20px}
+.x{background:none;border:0;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+.preview{width:100%;max-height:170px;object-fit:cover;border-radius:10px;margin-top:8px}
+.check{display:flex;align-items:center;gap:10px;margin:14px 0 4px}
+.check input{width:22px;height:22px}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:60;max-width:90%;font-weight:600;text-align:center}
+.toast.err{background:var(--danger);color:#fff}
+.auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
+.auth .brand{font-size:40px;white-space:normal}
+.auth .brand b{color:var(--marigold)}
+.err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
+.link{background:none;border:0;color:var(--green);text-decoration:underline;cursor:pointer;padding:12px 0;font-weight:600}
+.ver{font-size:12px;color:var(--muted);font-weight:600}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.tile b{display:block;font-size:22px}
+.tile span{color:var(--muted);font-size:13px}
+.tile.hi{background:var(--green);border-color:var(--green);color:#fff}
+.tile.hi span{color:rgba(255,255,255,.85)}
+.stars{color:var(--marigold);letter-spacing:1px}
+.review{padding:10px 0;border-bottom:1px solid var(--line)}
+.issuebox{background:rgba(179,38,30,.1);border:1px solid var(--danger);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
+.card.back{border:2px solid var(--danger)}
+:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ---- Version: change this every time the file is updated ----
+const APP_VERSION = '2.5';
+
+// ---- Connection (these two values are safe to be public) ----
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
+const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-restaurant-auth' } });
+
+const ls = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => Number(n || 0);
+const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
+const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+const hhmm = v => v ? String(v).slice(0, 5) : '';
+function timeAgo(ts){
+  const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return '0 min'; if (m < 60) return m + ' min';
+  const h = Math.round(m / 60); return h < 24 ? h + ' h' : new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+function logErr(e){ try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); } }
+function range(p){
+  const now = new Date(); const s = new Date(now); s.setHours(0, 0, 0, 0);
+  if (p === '7d'){ const f = new Date(s); f.setDate(f.getDate() - 6); return f; }
+  if (p === 'month') return new Date(now.getFullYear(), now.getMonth(), 1);
+  if (p === '30d'){ const f = new Date(s); f.setDate(f.getDate() - 29); return f; }
+  return s;
+}
+
+// ---- Words: English and Urdu ----
+const I18N = {
+  en: {
+    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
+    have_account:'Already have an account? Log in', no_account:'New here? Create an account',
+    orders:'Orders', products:'Products', earnings:'Earnings', shop:'Shop',
+    new_orders:'New orders', in_kitchen:'Preparing', ready_pickup:'Ready for pickup', past:'Past orders',
+    no_orders:'No orders right now. New orders will ring here.', keep_open:'Keep this app open and the screen on to hear new orders.',
+    accept:'Accept order', reject:'Reject', start_prep:'Start preparing', mark_ready:'Order is ready',
+    prep_q:'Ready in how many minutes?', min:'min', reject_q:'Why are you rejecting this order?',
+    r1:'Item not available', r2:'Too busy right now', r3:'Closing soon', r4:'Other reason',
+    waiting_rider:'Waiting for a rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider',
+    st_placed:'New', st_accepted:'Accepted', st_preparing:'Preparing', st_ready:'Ready', st_rider_assigned:'Rider coming',
+    st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
+    order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider',
+    ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
+    open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
+    closed_bar:'Your shop is closed. Customers cannot order.', open_it:'Open shop',
+    today:'Today', d7:'7 days', month:'This month', d30:'30 days',
+    orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
+    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart',
+    to_receive_note:'Your earning from delivered orders that Wanhar Mart has not paid yet.',
+    payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
+    reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
+    add_product:'Add product', add_section:'Add section', edit_section:'Edit section', section:'Section', section_name:'Section name',
+    product_name:'Product name', description:'Description', price:'Selling price (Rs)', compare:'Price before discount (optional)',
+    photo:'Photo', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
+    remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Wanhar Mart admin approves them.',
+    no_sections:'Add a section first, for example Burgers.', menu_empty:'No products yet. Add a section, then add your products.',
+    search:'Search products', all:'All', out_filter:'Out of stock', pending_filter:'Waiting approval',
+    shop_details:'Shop details', address:'Address', opens:'Opens at', closes:'Closes at', logo:'Logo or photo',
+    prep_default:'Usual preparing time (minutes)', sound:'Alert sound', logout:'Log out', language:'Language',
+    enable_sound:'Tap here to turn on the alert sound',
+    saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    not_linked:'Your account is not linked to a shop yet',
+    not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your shop:', check_again:'Check again',
+    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
+    commission_rate:'Commission', close_q:'Close the shop? Customers will not be able to order.',
+    coming_back:'Coming back to your shop', coming_back_note:'Delivery failed. The rider is bringing this order back.',
+    received_back:'I received the order back', received_q:'Did you receive this order back from the rider?',
+    problem:'Problem', new_problem:'New problem reported', report:'Report a problem', report_title:'What is the problem?', send_report:'Send to Wanhar Mart',
+    note_opt:'More details (optional)', pick_problem:'Choose a problem', reported:'Wanhar Mart has been informed', waiting_until:'Rider waits until {t}',
+    k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
+    k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
+    k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
+    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat'
+  },
+  ur: {
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
+    orders:'آرڈرز', products:'پروڈکٹس', earnings:'کمائی', shop:'دکان',
+    new_orders:'نئے آرڈرز', in_kitchen:'تیار ہو رہے ہیں', ready_pickup:'اٹھانے کے لیے تیار', past:'پرانے آرڈرز',
+    no_orders:'ابھی کوئی آرڈر نہیں۔ نیا آرڈر آنے پر یہاں گھنٹی بجے گی۔', keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
+    accept:'آرڈر قبول کریں', reject:'مسترد کریں', start_prep:'تیاری شروع کریں', mark_ready:'آرڈر تیار ہے',
+    prep_q:'کتنے منٹ میں تیار ہوگا؟', min:'منٹ', reject_q:'آرڈر مسترد کرنے کی وجہ کیا ہے؟',
+    r1:'آئٹم دستیاب نہیں', r2:'ابھی بہت رش ہے', r3:'دکان بند ہونے والی ہے', r4:'کوئی اور وجہ',
+    waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا',
+    st_placed:'نیا', st_accepted:'قبول', st_preparing:'تیاری میں', st_ready:'تیار', st_rider_assigned:'رائیڈر آ رہا ہے',
+    st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
+    order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر',
+    ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
+    open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
+    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', open_it:'دکان کھولیں',
+    today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
+    orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
+    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے',
+    to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Wanhar Mart نے ابھی ادا نہیں کی۔',
+    payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
+    reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
+    add_product:'پروڈکٹ شامل کریں', add_section:'سیکشن شامل کریں', edit_section:'سیکشن تبدیل کریں', section:'سیکشن', section_name:'سیکشن کا نام',
+    product_name:'پروڈکٹ کا نام', description:'تفصیل', price:'قیمت (Rs)', compare:'رعایت سے پہلے کی قیمت (اختیاری)',
+    photo:'تصویر', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
+    remove_q:'یہ پروڈکٹ دکان سے ہٹا دیں؟', pending:'ایڈمن کی منظوری کا انتظار', pending_note:'نئی پروڈکٹس Wanhar Mart ایڈمن کی منظوری کے بعد گاہکوں کو نظر آئیں گی۔',
+    no_sections:'پہلے ایک سیکشن بنائیں، جیسے برگر۔', menu_empty:'ابھی کوئی پروڈکٹ نہیں۔ سیکشن بنائیں، پھر پروڈکٹس شامل کریں۔',
+    search:'پروڈکٹ تلاش کریں', all:'سب', out_filter:'ختم', pending_filter:'منظوری باقی',
+    shop_details:'دکان کی معلومات', address:'پتہ', opens:'کھلنے کا وقت', closes:'بند ہونے کا وقت', logo:'لوگو یا تصویر',
+    prep_default:'عام تیاری کا وقت (منٹ)', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
+    enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں',
+    saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    not_linked:'آپ کا اکاؤنٹ ابھی کسی دکان سے نہیں جڑا',
+    not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
+    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
+    commission_rate:'کمیشن', close_q:'دکان بند کریں؟ گاہک آرڈر نہیں کر سکیں گے۔',
+    coming_back:'دکان واپس آ رہے ہیں', coming_back_note:'ڈیلیوری نہیں ہو سکی۔ رائیڈر یہ آرڈر واپس لا رہا ہے۔',
+    received_back:'آرڈر واپس مل گیا', received_q:'کیا رائیڈر سے یہ آرڈر واپس مل گیا؟',
+    problem:'مسئلہ', new_problem:'نیا مسئلہ رپورٹ ہوا', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟', send_report:'Wanhar Mart کو بھیجیں',
+    note_opt:'مزید تفصیل (اختیاری)', pick_problem:'مسئلہ چنیں', reported:'Wanhar Mart کو اطلاع دے دی گئی', waiting_until:'رائیڈر {t} تک انتظار کرے گا',
+    k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
+    k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
+    k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا'
+  }
+};
+const state = {
+  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
+  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, productFilter:'all', productQ:'', alerted:new Set()
+};
+const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
+function toast(msg, isErr){
+  const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3400);
+}
+async function run(fn){ try { return await fn(); } catch (e) { logErr(e); toast((e && e.message) || t('error'), true); } }
+function need(res){ if (res.error) throw res.error; return res.data; }
+
+// ---- Bottom sheet ----
+function openSheet(title, html, cls){
+  closeSheet();
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet ${cls || ''}" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="Close" onclick="closeSheet()">&times;</button></div>${html}</div>`;
+  back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
+  document.body.appendChild(back);
+}
+function closeSheet(){ const s = $('sheet'); if (s) s.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+// ---- Alert sound, vibration, screen wake ----
+let actx = null;
+function unlockAudio(){ try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+document.addEventListener('pointerdown', unlockAudio);
+const audioReady = () => !!actx && actx.state === 'running';
+function beep(){
+  if (state.sound && audioReady()){
+    try {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'square'; o.frequency.value = 880; g.gain.value = 0.18; o.connect(g); g.connect(actx.destination); o.start();
+      setTimeout(() => { o.frequency.value = 1175; }, 160); setTimeout(() => { o.frequency.value = 880; }, 320); setTimeout(() => o.stop(), 520);
+    } catch (e) {}
+  }
+  try { if (navigator.vibrate) navigator.vibrate([300, 120, 300]); } catch (e) {}
+}
+const newOrders = () => state.orders.filter(o => o.status === 'placed');
+let alertTimer = null;
+function startAlertLoop(){ if (!alertTimer) alertTimer = setInterval(() => { if (newOrders().length) beep(); }, 4000); }
+let wakeLock = null;
+async function keepAwake(){ try { if ('wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.restaurant){ keepAwake(); refreshOrders(); } });
+function updateTitle(){ const n = newOrders().length; document.title = n ? `(${n}) ${t('new_order')} Wanhar Mart` : 'Wanhar Mart Shop'; }
+
+// ================= AUTH =================
+function showAuth(msg, ok){
+  const signup = state.authMode === 'signup';
+  $('app').innerHTML = `
+  <div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Shop</p>
+    <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
+    <form onsubmit="A.submitAuth(event)">
+      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
+      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel">` : ''}
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
+      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
+    </form>
+    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+    <div class="ver">v${APP_VERSION}</div>
+  </div>`;
+}
+function showUnlinked(){
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">${t('not_linked')}</h1>
+    <p class="muted">${t('not_linked_msg')}</p>
+    <div class="card" style="font-weight:800;word-break:break-all">${esc(state.user.email)}</div>
+    <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+    <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
+
+// ================= SHELL =================
+function renderShell(){
+  const r = state.restaurant;
+  $('app').innerHTML = `
+    <header class="top">
+      <div class="brand">${esc(r.name)}<small>Wanhar Mart Shop</small></div>
+      <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button></div>
+    </header>
+    <main id="view"></main>
+    <nav class="nav"><div class="nav-in">
+      <button id="t_orders" onclick="go('orders')">${t('orders')}</button>
+      <button id="t_menu" onclick="go('menu')">${t('products')}</button>
+      <button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
+      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>
+    </div></nav>`;
+}
+function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
+function markTab(){
+  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k); });
+  const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = t('orders') + (n ? `<span class="dot">${n}</span>` : ''); }
+}
+async function go(tab){
+  state.tab = tab; markTab();
+  const v = $('view'); if (!v) return;
+  v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  await run(async () => {
+    if (tab === 'orders') await loadOrders();
+    if (tab === 'menu') await loadMenu();
+    if (tab === 'earn') await loadEarn();
+    if (tab === 'shop') await loadReviews();
+  });
+  renderTab(); window.scrollTo(0, 0);
+}
+function renderTab(){
+  const v = $('view'); if (!v) return;
+  if (state.tab === 'orders') v.innerHTML = viewOrders();
+  if (state.tab === 'menu') v.innerHTML = viewMenu();
+  if (state.tab === 'earn') v.innerHTML = viewEarn();
+  if (state.tab === 'shop') v.innerHTML = viewShop();
+  markTab(); updateTitle();
+}
+
+// ================= ORDERS =================
+async function loadOrders(){
+  const data = need(await sb.from('orders')
+    .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
+    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(120));
+  const active = data.filter(o => ['accepted','preparing'].includes(o.status)).map(o => o.id);
+  if (active.length){
+    const logs = need(await sb.from('order_status_log').select('order_id,changed_at').in('order_id', active).eq('status', 'accepted'));
+    logs.forEach(l => { state.acceptedAt[l.order_id] = l.changed_at; });
+  }
+  await Promise.all(data.filter(o => ['rider_assigned', 'picked_up'].includes(o.status)).map(async o => {
+    const r = await sb.rpc('order_rider_info', { p_order_id:o.id }); o.rider = (r.data && r.data[0]) || null;
+  }));
+  state.issues = {};
+  const recent = data.filter(o => !['delivered','rejected'].includes(o.status) && (o.status !== 'cancelled' || o.return_status === 'returning')).map(o => o.id);
+  if (recent.length){
+    const rows = need(await sb.from('order_issues').select('*').in('order_id', recent).in('status', ['open','returning']).order('created_at', { ascending:false }));
+    rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
+    const newIss = rows.filter(i => !state.seenIssues.has(i.id));
+    newIss.forEach(i => state.seenIssues.add(i.id));
+    if (newIss.length && state.loadedOnce){ beep(); toast(t('new_problem') + ': ' + t('k_' + newIss[0].kind), true); }
+  }
+  state.orders = data;
+  const fresh = data.filter(o => o.status === 'placed' && !state.alerted.has(o.id));
+  fresh.forEach(o => state.alerted.add(o.id));
+  if (fresh.length && state.loadedOnce && !$('sheet')) showNewOrder(fresh[0]);
+  state.loadedOnce = true;
+  updateTitle(); markTab();
+}
+let refreshing = false;
+async function refreshOrders(){
+  if (refreshing || !state.restaurant) return; refreshing = true;
+  try { await loadOrders(); if (state.tab === 'orders') renderTab(); } catch (e) { logErr(e); } finally { refreshing = false; }
+}
+setInterval(() => { if (state.tab === 'orders' && document.querySelector('.countdown')) renderTab(); }, 30000);
+function itemsHtml(o){ return `<div class="items">${(o.order_items || []).map(i => `<div><b>${i.quantity}×</b> ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('')}</div>`; }
+function countdown(o){
+  if (!['accepted','preparing'].includes(o.status) || !o.prep_minutes) return '';
+  const acc = state.acceptedAt[o.id]; if (!acc) return '';
+  const left = Math.round((new Date(acc).getTime() + o.prep_minutes * 60000 - Date.now()) / 60000);
+  return left >= 0 ? `<div class="countdown"><span>${t('ready_in')}</span><span>${left} ${t('min')}</span></div>`
+                   : `<div class="countdown late"><span>${t('late_by')}</span><span>${-left} ${t('min')}</span></div>`;
+}
+function isLate(o){ const acc = state.acceptedAt[o.id]; return acc && o.prep_minutes && ['accepted','preparing'].includes(o.status) && Date.now() > new Date(acc).getTime() + o.prep_minutes * 60000; }
+function orderCard(o){
+  const cust = o.customer || {};
+  const riderLine = o.rider ? `<div class="muted" style="margin-top:8px">${t('rider_label')}: <b>${esc(o.rider.full_name || '')}</b> ${o.rider.phone ? `<a href="tel:${esc(o.rider.phone)}">${esc(o.rider.phone)}</a>` : ''}</div>` : '';
+  let actions = '';
+  if (o.status === 'placed') actions = `<div class="two"><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button></div>`;
+  else if (o.status === 'accepted') actions = `<div class="two"><button class="btn ghost" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
+  else if (o.status === 'preparing') actions = `<button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button>`;
+  else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
+  else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
+  else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
+  const cid = JSON.stringify(o.id);
+  actions += `<div style="display:grid;grid-template-columns:${o.rider_id ? '1fr 1fr 1fr' : '1fr 1fr'};gap:8px;margin-top:10px">
+    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "cs", null)'>💬 ${t('customer')}</button>
+    ${o.rider_id ? `<button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "rs", null)'>💬 ${t('rider_label')}</button>` : ''}
+    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "sup_s", null)'>💬 ${t('help_word')}</button></div>`;
+  if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
+  return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
+    <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
+      <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
+    ${itemsHtml(o)}
+    ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+    ${countdown(o)}
+    ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}${i.wait_until && i.status === 'open' ? `<br><span class="muted">${t('waiting_until', { t:new Date(i.wait_until).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</span>` : ''}</div>`).join('')}
+    <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>` : `<span class="muted">${t('no_phone')}</span>`}</div>
+    <div class="line" style="font-weight:800"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
+    <div class="actions">${actions}</div></div>`;
+}
+function pastRow(o){
+  return `<div class="row"><div class="row-main" style="cursor:default"><b>#${esc(o.id.slice(-4).toUpperCase())}</b> <span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span>
+    <div class="muted" style="font-size:13px">${when(o.created_at)} · ${(o.order_items || []).reduce((n, i) => n + i.quantity, 0)} ${t('products').toLowerCase()}</div></div><b>${money(o.subtotal)}</b></div>`;
+}
+function viewOrders(){
+  const r = state.restaurant;
+  const by = fn => state.orders.filter(fn);
+  const fresh = by(o => o.status === 'placed');
+  const kitchen = by(o => ['accepted','preparing'].includes(o.status));
+  const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status));
+  const back = by(o => o.return_status === 'returning');
+  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').slice(0, 30);
+  const sect = (title, list) => list.length ? `<h2>${title} <span class="count">${list.length}</span></h2>${list.map(orderCard).join('')}` : '';
+  const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
+  const closed = r.is_open ? '' : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
+  const live = fresh.length || kitchen.length || ready.length || back.length;
+  const backHtml = back.length ? `<h2>${t('coming_back')} <span class="count">${back.length}</span></h2>${back.map(o => `<div class="card back">
+      <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('coming_back')}</span></div>
+      ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>
+      ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}</div>`).join('') || (o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : '')}
+      <button class="btn" onclick="A.receivedBack('${o.id}')">${t('received_back')}</button></div>`).join('')}` : '';
+  return `${sound}${closed}${backHtml}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+    ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
+    ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
+}
+function showNewOrder(o){
+  beep();
+  const opts = prepOptions();
+  openSheet(t('new_order'), `
+    <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><b style="font-size:20px">${money(o.subtotal)}</b></div>
+    ${itemsHtml(o)}
+    ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+    <div class="muted">${t('prep_q')}</div>
+    <div class="chips" id="prepChips">${opts.map(m => `<button class="chip ${m === state.prep ? 'on' : ''}" onclick="A.pickPrep(${m})">${m} ${t('min')}</button>`).join('')}</div>
+    <div class="two"><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button><button class="btn" onclick="A.doAccept('${o.id}')">${t('accept')}</button></div>`, 'alert');
+}
+function prepOptions(){
+  state.prep = state.restaurant.prep_time_minutes || 20;
+  const opts = [10, 15, 20, 30, 45, 60]; if (!opts.includes(state.prep)) opts.push(state.prep);
+  return opts.sort((a, b) => a - b);
+}
+
+// ================= PRODUCTS =================
+async function loadMenu(){
+  const id = state.restaurant.id;
+  const [c, i] = await Promise.all([
+    sb.from('menu_categories').select('*').eq('restaurant_id', id).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id', id).order('sort_order').order('name')
+  ]);
+  state.cats = need(c); state.items = need(i);
+}
+function itemRow(i){
+  return `<div class="row">
+    <div class="thumb">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : esc((i.name || '?')[0])}</div>
+    <button class="row-main" onclick="A.editItem('${i.id}')"><div style="font-weight:700">${esc(i.name)}</div>
+      <div>${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}</div>
+      ${i.is_approved === false ? `<span class="pill y">${t('pending')}</span>` : ''}</button>
+    <div style="text-align:center;flex:none"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="${t('in_stock')}"><span></span></label><small class="muted">${i.is_available ? t('in_stock') : t('out_stock')}</small></div>
+  </div>`;
+}
+function viewMenu(){
+  const q = state.productQ.trim().toLowerCase(); const f = state.productFilter;
+  const list = state.items.filter(i => (!q || (i.name || '').toLowerCase().includes(q)) && (f === 'all' || (f === 'out' && !i.is_available) || (f === 'pending' && i.is_approved === false)));
+  const pending = state.items.filter(i => i.is_approved === false).length, out = state.items.filter(i => !i.is_available).length;
+  const chips = [['all', t('all')], ['out', t('out_filter') + (out ? ' ' + out : '')], ['pending', t('pending_filter') + (pending ? ' ' + pending : '')]]
+    .map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" onclick="A.productFilter('${k}')">${l}</button>`).join('');
+  let body;
+  if (q || f !== 'all') body = list.map(itemRow).join('') || `<div class="empty">—</div>`;
+  else {
+    body = state.cats.map(c => {
+      const items = list.filter(i => i.category_id === c.id);
+      return `<div class="cat"><h3>${esc(c.name)}</h3><button class="link" style="padding:4px 0" onclick="A.editCategory('${c.id}')">${t('edit_section')}</button></div>${items.map(itemRow).join('')}`;
+    }).join('');
+    const loose = list.filter(i => !state.cats.some(c => c.id === i.category_id));
+    if (loose.length) body += loose.map(itemRow).join('');
+    if (!state.cats.length && !list.length) body = `<div class="empty">${t('menu_empty')}</div>`;
+  }
+  return `<h1>${t('products')}</h1>
+    <input type="search" id="pq" placeholder="${t('search')}" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)">
+    <div class="chips">${chips}</div>
+    <div class="two"><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${t('add_product')}</button></div>
+    ${pending ? `<div class="note" style="margin-top:12px">${t('pending_note')}</div>` : ''}
+    <div id="menuBody">${body}</div>`;
+}
+function itemForm(i){
+  i = i || { is_available:true };
+  const catOpts = state.cats.map(c => `<option value="${c.id}" ${i.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+  return `
+    ${i.id && i.is_approved === false ? `<div class="note">${t('pending')}</div>` : ''}
+    <label class="f" for="i_name" style="margin-top:0">${t('product_name')}</label><input id="i_name" type="text" value="${esc(i.name)}">
+    <label class="f" for="i_desc">${t('description')}</label><textarea id="i_desc">${esc(i.description)}</textarea>
+    <div class="two">
+      <div><label class="f" for="i_price">${t('price')}</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
+      <div><label class="f" for="i_cmp">${t('compare')}</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}"></div>
+    </div>
+    <label class="f" for="i_cat">${t('section')}</label><select id="i_cat">${catOpts}</select>
+    <label class="f" for="i_photo">${t('photo')}</label>
+    <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
+    <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> ${t('in_stock')}</label>
+    ${i.id ? '' : `<div class="muted" style="font-size:14px">${t('pending_note')}</div>`}
+    <div class="actions"><button class="btn" id="saveBtn" onclick="A.saveItem('${i.id || ''}')">${t('save')}</button>
+    ${i.id ? `<button class="btn warn" onclick="A.deleteItem('${i.id}')">${t('remove')}</button>` : ''}</div>`;
+}
+
+// ================= EARNINGS =================
+async function loadEarn(){
+  const from = range(state.period); const id = state.restaurant.id;
+  const [o, un, pay] = await Promise.all([
+    sb.from('orders').select('id,status,subtotal,commission_amount,restaurant_earning,created_at,order_items(name,quantity,price)').eq('restaurant_id', id).gte('created_at', from.toISOString()).limit(3000),
+    sb.from('orders').select('restaurant_earning').eq('restaurant_id', id).eq('status', 'delivered').eq('restaurant_settled', false),
+    sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20)
+  ]);
+  const orders = need(o); const del = orders.filter(x => x.status === 'delivered');
+  const sum = (l, f) => l.reduce((n, x) => n + num(f(x)), 0);
+  const by = {};
+  del.forEach(x => (x.order_items || []).forEach(i => { const p = by[i.name] || (by[i.name] = { qty:0, rev:0 }); p.qty += i.quantity; p.rev += num(i.price) * i.quantity; }));
+  state.earn = {
+    orders:orders.length, delivered:del.length, cancelled:orders.filter(x => ['cancelled','rejected'].includes(x.status)).length,
+    sales:sum(del, x => x.subtotal), commission:sum(del, x => x.commission_amount), earning:sum(del, x => x.restaurant_earning),
+    unpaid:sum(need(un), x => x.restaurant_earning), payouts:need(pay),
+    top:Object.entries(by).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty).slice(0, 8)
+  };
+}
+function viewEarn(){
+  const e = state.earn || {};
+  const chips = [['today', t('today')], ['7d', t('d7')], ['month', t('month')], ['30d', t('d30')]].map(([k, l]) => `<button class="chip ${state.period === k ? 'on' : ''}" onclick="A.setPeriod('${k}')">${l}</button>`).join('');
+  const top = (e.top || []).map(p => `<div class="row"><div class="row-main" style="cursor:default"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${p.qty} ×</div></div><b>${money(p.rev)}</b></div>`).join('');
+  const pays = (e.payouts || []).map(p => `<div class="row"><div class="row-main" style="cursor:default"><b>${money(p.amount)}</b><div class="muted" style="font-size:13px">${esc(p.note || '')}</div></div><span class="muted" style="font-size:13px">${when(p.created_at)}</span></div>`).join('');
+  return `<h1>${t('earnings')}</h1>
+    <div class="card" style="background:var(--green);border-color:var(--green);color:#fff">
+      <div style="opacity:.85">${t('to_receive')}</div><div style="font-size:30px;font-weight:800">${money(e.unpaid)}</div>
+      <div style="opacity:.85;font-size:13px">${t('to_receive_note')}</div></div>
+    <div class="chips">${chips}</div>
+    <div class="tiles">
+      <div class="tile"><b>${num(e.orders)}</b><span>${t('orders_n')}</span></div>
+      <div class="tile"><b>${num(e.delivered)}</b><span>${t('delivered_n')}</span></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="line"><span class="muted">${t('sales')}</span><span>${money(e.sales)}</span></div>
+      <div class="line"><span class="muted">${t('commission')} (${num(state.restaurant.commission_percent)}%)</span><span class="red">−${money(e.commission)}</span></div>
+      <div class="line total"><span>${t('your_earning')}</span><span>${money(e.earning)}</span></div>
+      <div class="line"><span class="muted">${t('cancelled_n')}</span><span>${num(e.cancelled)}</span></div>
+    </div>
+    <h2>${t('top_items')}</h2>${top || `<div class="empty">${t('no_sales')}</div>`}
+    <h2>${t('payments')}</h2>${pays || `<div class="empty">${t('no_payments')}</div>`}`;
+}
+
+// ================= SHOP =================
+async function loadReviews(){
+  state.reviews = need(await sb.from('reviews').select('restaurant_rating,comment,created_at').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
+}
+function viewShop(){
+  const r = state.restaurant; const rv = state.reviews || [];
+  const avg = rv.length ? (rv.reduce((n, x) => n + num(x.restaurant_rating), 0) / rv.length).toFixed(1) : null;
+  const revs = rv.slice(0, 15).map(x => `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${x.comment ? `<div>${esc(x.comment)}</div>` : ''}</div>`).join('');
+  return `<h1>${t('shop')}</h1>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? t('is_open_msg') : t('is_closed_msg')}</div></div>
+      <label class="switch" style="margin:0"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen(this.checked)" aria-label="${t('open_now')}"><span></span></label>
+    </div>
+    <div class="tiles" style="margin-bottom:12px">
+      <div class="tile hi"><b>${avg ? '★ ' + avg : '—'}</b><span>${t('rating')} (${rv.length})</span></div>
+      <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
+    </div>
+    <h2>${t('shop_details')}</h2>
+    <div class="card">
+      <label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
+      <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
+      <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
+      <div class="two">
+        <div><label class="f" for="s_open">${t('opens')}</label><input id="s_open" type="time" value="${hhmm(r.open_time)}"></div>
+        <div><label class="f" for="s_close">${t('closes')}</label><input id="s_close" type="time" value="${hhmm(r.close_time)}"></div>
+      </div>
+      <label class="f" for="s_prep">${t('prep_default')}</label><input id="s_prep" type="number" min="5" step="5" value="${r.prep_time_minutes || 25}">
+      <label class="f" for="s_logo">${t('logo')}</label><input id="s_logo" type="file" accept="image/*" onchange="previewFile(this,'s_prev')">
+      <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
+      <div class="actions"><button class="btn" id="shopSave" onclick="A.saveShop()">${t('save')}</button></div>
+    </div>
+    <h2>${t('reviews')}</h2>${revs || `<div class="empty">${t('no_reviews')}</div>`}
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b>${t('sound')}</b>
+      <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label></div>
+    <div class="actions">
+      <button class="btn ghost" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
+      <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+      <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
+    </div>
+    <p class="ver" style="margin-top:14px">Wanhar Mart Shop v${APP_VERSION}</p>`;
+}
+
+// ---- Photos ----
+function resizeImage(file, max){
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error('Could not read this image')), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => rej(new Error('Could not read this image')); img.src = url;
+  });
+}
+async function uploadImage(file, folder){
+  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}.jpg`;
+  need(await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' }));
+  return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
+}
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
+
+// ================= ACTIONS =================
+const A = {
+  toggleLang(onAuth){
+    state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
+    if (onAuth || !state.restaurant) showAuth(); else { renderShell(); renderTab(); }
+  },
+  switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  async submitAuth(e){
+    e.preventDefault(); unlockAudio();
+    const signup = state.authMode === 'signup';
+    const email = $('a_email').value.trim(), pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    if (!email || !pw){ msg.textContent = t('enter_all'); return; }
+    if (pw.length < 6){ msg.textContent = t('short_pw'); return; }
+    let name = '', phone = '';
+    if (signup){ name = $('a_name').value.trim(); phone = $('a_phone').value.trim(); if (!name || !phone){ msg.textContent = t('enter_all'); return; } }
+    const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
+    try {
+      if (signup){
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        if (error) throw error;
+        if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
+        await afterLogin(data.user);
+      } else {
+        const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
+        if (error) throw error; await afterLogin(data.user);
+      }
+    } catch (err) {
+      logErr(err);
+      const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
+      const el = $('authMsg'); if (el) el.textContent = m;
+      const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
+    }
+  },
+  async logout(){
+    Chat.stop(); Chat.close(); await sb.auth.signOut();
+    if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
+    if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if (channel){ sb.removeChannel(channel); channel = null; }
+    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Wanhar Mart Shop'; showAuth();
+  },
+  async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else toast(t('not_linked'), true); }); },
+  enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
+  setSound(v){ state.sound = v; ls.set('kh_r_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
+  setPeriod(p){ state.period = p; go('earn'); },
+
+  // ---- Orders ----
+  openAccept(id){
+    const o = state.orders.find(x => x.id === id); if (o) return showNewOrder(o);
+  },
+  pickPrep(m){ state.prep = m; document.querySelectorAll('#prepChips .chip').forEach(c => c.classList.toggle('on', parseInt(c.textContent, 10) === m)); },
+  async doAccept(id){
+    await run(async () => {
+      need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'accepted', p_prep_minutes:state.prep }));
+      state.acceptedAt[id] = new Date().toISOString();
+      closeSheet(); await loadOrders(); renderTab(); toast(t('saved'));
+      const next = newOrders()[0]; if (next) showNewOrder(next);
+    });
+  },
+  openReject(id){
+    openSheet(t('reject'), `<div class="muted">${t('reject_q')}</div>
+      <div class="actions">${['r1','r2','r3','r4'].map(k => `<button class="btn warn" onclick="A.doReject('${id}','${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doReject(id, key){
+    await run(async () => {
+      need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'rejected', p_reason:I18N.en[key] }));
+      closeSheet(); await loadOrders(); renderTab(); toast(t('saved'));
+    });
+  },
+  async setStatus(id, status){
+    await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status })); await loadOrders(); renderTab(); toast(t('saved')); });
+  },
+
+  async receivedBack(id){
+    if (!confirm(t('received_q'))) return;
+    await run(async () => { need(await sb.rpc('confirm_return', { p_order_id:id })); await loadOrders(); renderTab(); toast(t('saved')); });
+  },
+  reportForm(id){
+    state.pickKind = null;
+    const kinds = ['k_rider_delay','k_order_damaged','k_other'].map(k => k.slice(2));
+    openSheet(t('report_title'), `<div class="actions" id="probs">${kinds.map(k => `<button class="btn ghost" onclick="A.pickKind('${k}', this)">${t('k_' + k)}</button>`).join('')}</div>
+      <label class="f" for="pnote">${t('note_opt')}</label><textarea id="pnote"></textarea>
+      <div class="actions"><button class="btn" onclick="A.sendReport('${id}')">${t('send_report')}</button></div>`);
+  },
+  pickKind(k, btn){ state.pickKind = k; document.querySelectorAll('#probs button').forEach(b => { b.className = 'btn ' + (b === btn ? '' : 'ghost'); }); },
+  async sendReport(id){
+    if (!state.pickKind) return toast(t('pick_problem'), true);
+    await run(async () => { need(await sb.rpc('report_issue', { p_order_id:id, p_kind:state.pickKind, p_note:($('pnote').value || '').trim() || null })); closeSheet(); await loadOrders(); renderTab(); toast(t('reported')); });
+  },
+
+  // ---- Shop ----
+  async toggleOpen(v){
+    if (!v && !confirm(t('close_q'))){ renderTab(); return; }
+    await run(async () => {
+      need(await sb.from('restaurants').update({ is_open:v }).eq('id', state.restaurant.id));
+      state.restaurant.is_open = v; updateOpenBtn(); renderTab(); toast(t('saved'));
+    });
+  },
+  async saveShop(){
+    const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
+    const btn = $('shopSave'); btn.disabled = true; btn.textContent = t('loading');
+    await run(async () => {
+      const row = { description:$('s_desc').value.trim() || null, address:$('s_addr').value.trim() || null, phone:$('s_phone').value.trim() || null,
+        open_time:$('s_open').value || null, close_time:$('s_close').value || null, prep_time_minutes:prep };
+      const f = $('s_logo').files[0]; if (f) row.logo_url = await uploadImage(f, 'restaurants');
+      need(await sb.from('restaurants').update(row).eq('id', state.restaurant.id));
+      Object.assign(state.restaurant, row); toast(t('saved'));
+    });
+    const b = $('shopSave'); if (b){ b.disabled = false; b.textContent = t('save'); }
+  },
+
+  // ---- Products ----
+  productFilter(f){ state.productFilter = f; renderTab(); },
+  productSearch(v){ state.productQ = v; renderTab(); const inp = $('pq'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
+  async toggleItem(id, v){ await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('id', id)); await loadMenu(); renderTab(); }); },
+  editCategory(id){
+    const c = state.cats.find(x => x.id === id);
+    openSheet(c ? t('edit_section') : t('add_section'), `
+      <label class="f" for="c_name" style="margin-top:0">${t('section_name')}</label><input id="c_name" type="text" value="${esc(c ? c.name : '')}" placeholder="Burgers">
+      <div class="actions"><button class="btn" onclick="A.saveCategory('${id || ''}')">${t('save')}</button></div>`);
+  },
+  async saveCategory(id){
+    const name = $('c_name').value.trim(); if (!name) return toast(t('enter_all'), true);
+    await run(async () => {
+      need(await (id ? sb.from('menu_categories').update({ name }).eq('id', id)
+        : sb.from('menu_categories').insert({ name, restaurant_id:state.restaurant.id, sort_order:state.cats.length + 1 })));
+      await loadMenu(); closeSheet(); renderTab(); toast(t('saved'));
+    });
+  },
+  editItem(id){
+    if (!state.cats.length) return toast(t('no_sections'), true);
+    const i = state.items.find(x => x.id === id);
+    openSheet(i ? i.name : t('add_product'), itemForm(i));
+  },
+  async saveItem(id){
+    const name = $('i_name').value.trim(), price = $('i_price').value, cmp = $('i_cmp').value;
+    if (!name || price === '' || num(price) < 0 || !$('i_cat').value) return toast(t('enter_all'), true);
+    const btn = $('saveBtn'); btn.disabled = true; btn.textContent = t('loading');
+    await run(async () => {
+      const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
+        category_id:$('i_cat').value, is_available:$('i_avail').checked };
+      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
+      if (id) need(await sb.from('menu_items').update(row).eq('id', id));
+      else need(await sb.from('menu_items').insert(Object.assign(row, { restaurant_id:state.restaurant.id, sort_order:state.items.length + 1 })));
+      await loadMenu(); closeSheet(); renderTab(); toast(t('saved'));
+    });
+    const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = t('save'); }
+  },
+  async deleteItem(id){
+    if (!confirm(t('remove_q'))) return;
+    await run(async () => { need(await sb.from('menu_items').delete().eq('id', id)); await loadMenu(); closeSheet(); renderTab(); toast(t('saved')); });
+  }
+};
+
+// ================= LIVE =================
+let channel = null, pollTimer = null;
+function subscribeOrders(){
+  try {
+    if (channel) sb.removeChannel(channel);
+    channel = sb.channel('rest-orders').on('postgres_changes',
+      { event:'*', schema:'public', table:'orders', filter:'restaurant_id=eq.' + state.restaurant.id },
+      async payload => { if (payload.eventType === 'INSERT'){ unlockAudio(); beep(); } await refreshOrders(); }
+    ).on('postgres_changes', { event:'INSERT', schema:'public', table:'order_issues', filter:'restaurant_id=eq.' + state.restaurant.id },
+      async () => { unlockAudio(); await refreshOrders(); }
+    ).subscribe();
+  } catch (e) { console.warn('Live updates are off', e); }
+  if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refreshOrders(); }, 15000);
+}
+
+// ================= START =================
+async function loadRestaurant(){
+  const data = need(await sb.from('restaurants').select('*').eq('owner_id', state.user.id).order('created_at').limit(1));
+  state.restaurant = data[0] || null;
+}
+async function startApp(){
+  renderShell(); subscribeOrders(); startAlertLoop(); keepAwake();
+  Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'shop', ding:() => beep(), toast:(m, err) => toast(m, err) });
+  await go('orders');
+}
+async function afterLogin(user){
+  state.user = user; await loadRestaurant();
+  if (!state.restaurant) return showUnlinked();
+  await startApp();
+}
+// ================= CHAT (same code in all four apps) =================
+const Chat = (() => {
+  const L = {
+    en: {
+      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
+      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
+      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
+      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
+      'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
+      'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
+      q_customer_cr:['Please call me','I am coming down','Please leave it at the door','Where are you now?'],
+      q_customer_cs:['How long will my order take?','Please make it less spicy','Please add extra sauce','Please pack it well'],
+      q_customer_sup:['My order is late','I have a problem with my order','Wrong or missing items','I want to cancel my order','Please call me'],
+      q_rider_cr:['I am on my way','I have arrived, please come outside','I cannot find your address, please call me','Please keep the cash ready'],
+      q_rider_rs:['I am at the shop, is the order ready?','I will reach in 5 minutes','Please pack the order properly','I am waiting outside'],
+      q_rider_sup:['Customer is not answering','I need help with an order','My vehicle has a problem','Question about my pay','Please call me'],
+      q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
+      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please hurry, the food is getting cold'],
+      q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
+      q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_rs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_sup:['Hello, how can we help you?','We are looking into it','Thank you for waiting','Please call us'],
+      q_admin:['We are looking into it','Thank you for waiting','Please call us'],
+      ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
+      sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
+    },
+    ur: {
+      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
+      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
+      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
+      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
+      sup:'سپورٹ',
+      q_customer_cr:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ ابھی کہاں ہیں؟'],
+      q_customer_cs:['میرا آرڈر کتنی دیر میں تیار ہوگا؟','مرچ کم رکھیں','ساس زیادہ ڈال دیں','اچھی طرح پیک کریں'],
+      q_customer_sup:['میرا آرڈر لیٹ ہے','میرے آرڈر میں مسئلہ ہے','غلط یا کم چیزیں آئیں','میں آرڈر منسوخ کرنا چاہتا ہوں','مجھے کال کریں'],
+      q_rider_cr:['میں راستے میں ہوں','میں پہنچ گیا ہوں، براہ کرم باہر آئیں','آپ کا پتہ نہیں مل رہا، مجھے کال کریں','براہ کرم نقد رقم تیار رکھیں'],
+      q_rider_rs:['میں دکان پر ہوں، آرڈر تیار ہے؟','میں 5 منٹ میں پہنچ رہا ہوں','آرڈر اچھی طرح پیک کریں','میں باہر انتظار کر رہا ہوں'],
+      q_rider_sup:['گاہک فون نہیں اٹھا رہا','ایک آرڈر میں مدد چاہیے','میری گاڑی میں مسئلہ ہے','میری اجرت کے بارے میں سوال','مجھے کال کریں'],
+      q_shop_cs:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','معذرت، ایک چیز دستیاب نہیں','10 منٹ مزید لگیں گے'],
+      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، کھانا ٹھنڈا ہو رہا ہے'],
+      q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
+      q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
+      ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
+      sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
+    }
+  };
+  let cfg = null, cur = null, chan = null, seenIds = new Set(), unread = {};
+  const lang = () => (cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en';
+  const tr = k => (L[lang()][k] !== undefined ? L[lang()][k] : L.en[k] !== undefined ? L.en[k] : k);
+  const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const me = () => cfg && cfg.me && cfg.me();
+  const keyOf = m => (m.order_id || '') + '|' + m.thread + '|' + (m.user_id || '');
+  const seenTs = k => { try { return localStorage.getItem('wm_chat_' + k) || ''; } catch (x) { return ''; } };
+  const setSeen = (k, ts) => { try { if (ts > seenTs(k)) localStorage.setItem('wm_chat_' + k, ts); } catch (x) {} };
+  const hm = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+  function label(thread, orderId, name){
+    const base = thread === 'sup' ? (cfg.role === 'admin' ? tr('sup') + (name ? ': ' + name : '') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    return base + (orderId ? ' · #' + String(orderId).slice(-4).toUpperCase() : '');
+  }
+  if (!document.getElementById('chatCss')){
+    const st = document.createElement('style'); st.id = 'chatCss';
+    st.textContent = `.cbtn{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;flex:none;font-size:19px}
+.cbtn .cn{position:absolute;top:-4px;inset-inline-end:-4px;background:#B3261E;color:#fff;font-size:11px;font-weight:800;min-width:19px;height:19px;border-radius:10px;display:none;place-items:center;padding:0 4px}
+.chatwrap{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.chatbox{background:var(--paper);width:100%;max-width:640px;height:92%;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.chathead{display:flex;align-items:center;gap:10px;padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line)}
+.chathead b{flex:1;font-size:18px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chathead button{background:none;border:0;font-size:26px;cursor:pointer;color:var(--muted);padding:2px 8px}
+.chatlist{flex:1;overflow:auto;padding:12px}
+.chatrow{display:flex;gap:12px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer;color:inherit}
+.chatrow .av{width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.chatrow .tx{flex:1;min-width:0}.chatrow .tx div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatrow .ub{background:#B3261E;color:#fff;border-radius:10px;font-size:12px;font-weight:800;padding:1px 8px}
+.msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.bub{max-width:80%;padding:8px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);align-self:flex-start;word-wrap:break-word;white-space:pre-wrap}
+.sysmsg{align-self:center;max-width:90%;text-align:center;background:rgba(242,169,0,.18);border-radius:12px;padding:8px 12px;font-size:14px;font-weight:700}
+.sysmsg small{display:block;font-weight:400;opacity:.7;font-size:11px}
+.askbtn{border:1px solid #B3261E !important;color:#B3261E !important;background:transparent;border-radius:999px;font-size:13px !important;font-weight:800;padding:6px 10px !important;white-space:nowrap}
+.bub.mine{align-self:flex-end;background:var(--green);color:#fff;border-color:var(--green)}
+.bub small{display:block;font-size:11px;opacity:.7;margin-top:2px}
+.bub .who{font-size:12px;font-weight:800;color:var(--green);display:block}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0}
+.quick button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:inherit}
+.chatin{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.chatin textarea{flex:1;min-height:44px;max-height:120px;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--paper);color:var(--ink)}
+.chatin button{border:0;background:var(--green);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
+    document.head.appendChild(st);
+  }
+  function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
+  function paintBadge(){
+    const n = Object.values(unread).reduce((a, b) => a + b, 0);
+    document.querySelectorAll('#chatN').forEach(el => { el.textContent = n; el.style.display = n ? 'grid' : 'none'; });
+    if (cfg && cfg.onUnread) cfg.onUnread(n);
+  }
+  function init(c){
+    cfg = c; stop();
+    chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
+    refresh();
+  }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  async function refresh(){
+    if (!me()) return;
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
+    unread = {};
+    (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    paintBadge();
+  }
+  function onMsg(m){
+    if (!m || seenIds.has(m.id)) return; seenIds.add(m.id);
+    const k = keyOf(m);
+    if (cur && cur.k === k){ if (!cur.msgs.some(x => x.id === m.id)) cur.msgs.push(m); draw(); setSeen(k, m.created_at); return; }
+    if (m.sender_id !== me()){
+      unread[k] = (unread[k] || 0) + 1; paintBadge();
+      if (cfg.ding) cfg.ding();
+      if (cfg.toast) cfg.toast('💬 ' + tr('new_msg') + ': ' + fmt(m).slice(0, 70));
+      if ($('inboxList')) inbox();
+    }
+  }
+  function shell(title, inner, extra){
+    close();
+    const w = document.createElement('div'); w.className = 'chatwrap'; w.id = 'chatWrap';
+    w.addEventListener('click', ev => { if (ev.target === w) close(); });
+    w.innerHTML = `<div class="chatbox" role="dialog" aria-modal="true"><div class="chathead"><b>${e(title)}</b>${extra || ''}<button onclick="Chat.close()" aria-label="Close">&times;</button></div>${inner}</div>`;
+    document.body.appendChild(w);
+  }
+  function close(){ cur = null; const w = document.getElementById('chatWrap'); if (w) w.remove(); }
+  async function inbox(){
+    const since = new Date(Date.now() - 14 * 864e5).toISOString();
+    const { data } = await sb.from('messages').select('*').gte('created_at', since).order('created_at', { ascending:false }).limit(cfg.role === 'admin' ? 800 : 300);
+    const groups = {};
+    (data || []).forEach(m => { const k = keyOf(m); if (!groups[k]) groups[k] = { k, last:m, order_id:m.order_id, thread:m.thread, user_id:m.user_id }; });
+    let names = {};
+    const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
+    if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    const rows = Object.values(groups).map(g => {
+      const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
+      return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
+        <span class="av">${g.thread.startsWith('sup') ? '★' : e(title[0])}</span>
+        <span class="tx"><div><b>${e(title)}</b></div><div class="muted" style="font-size:14px">${g.last.sender_id === me() && g.last.sender_role !== 'system' ? e(tr('you')) + ': ' : ''}${e(fmt(g.last))}</div><div class="muted" style="font-size:12px">${hm(g.last.created_at)}</div></span>
+        ${n ? `<span class="ub">${n}</span>` : ''}</button>`;
+    }).join('');
+    const sup = cfg.role === 'admin' ? '' : `<button class="chatrow" onclick='Chat.open(null, "sup", ${e(JSON.stringify(me()))}, ${e(JSON.stringify(tr('support')))})'><span class="av">★</span><span class="tx"><div><b>${e(tr('support'))}</b></div><div class="muted" style="font-size:14px">${e(tr('support_sub'))}</div></span></button>`;
+    if (document.getElementById('inboxList')) document.getElementById('inboxList').innerHTML = sup + (rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`);
+    else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
+  }
+  async function open(orderId, thread, userId, title){
+    const k = (orderId || '') + '|' + thread + '|' + (userId || '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
+    const quick = (L[lang()][qk] || L.en[qk] || []);
+    shell(title || label(thread, orderId), `<div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
+      ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
+      <div class="chatin"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+    cur = { orderId, thread, userId, k, msgs:[] };
+    let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
+    q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
+    if (!orderId) q = q.eq('user_id', userId);
+    const { data } = await q;
+    if (!cur || cur.k !== k) return;
+    cur.msgs = data || []; cur.msgs.forEach(m => seenIds.add(m.id));
+    draw();
+    if (cur.msgs.length) setSeen(k, cur.msgs[cur.msgs.length - 1].created_at);
+    delete unread[k]; paintBadge();
+  }
+  function fmt(m){
+    if (m.sender_role !== 'system') return String(m.body);
+    const parts = String(m.body).split('|');
+    if (parts[0] === 'join_request') return tr('sys_req').replace('{w}', tr(parts[1] || '')) + (parts.slice(2).join('|') ? ': ' + parts.slice(2).join('|') : '');
+    if (parts[0] === 'joined') return tr('sys_joined');
+    return String(m.body);
+  }
+  async function askJoin(){
+    if (!cur || !cur.orderId) return;
+    const reason = prompt(tr('ask_reason'), ''); if (reason === null) return;
+    const { error } = await sb.rpc('request_support', { p_order_id:cur.orderId, p_thread:cur.thread, p_reason:reason });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); return; }
+    if (cfg.toast) cfg.toast(tr('ask_sent'));
+    const k = cur.k; let q = sb.from('messages').select('*').eq('thread', cur.thread).eq('order_id', cur.orderId).order('created_at').limit(300);
+    const { data } = await q; if (cur && cur.k === k){ cur.msgs = data || []; cur.msgs.forEach(x => seenIds.add(x.id)); draw(); }
+  }
+  function draw(){
+    const box = document.getElementById('msgs'); if (!box || !cur) return;
+    box.innerHTML = cur.msgs.map(m => {
+      if (m.sender_role === 'system') return `<div class="sysmsg">🛟 ${e(fmt(m))}<small>${hm(m.created_at)}</small></div>`;
+      const mine = m.sender_id === me();
+      return `<div class="bub ${mine ? 'mine' : ''}">${mine ? '' : `<span class="who">${e(tr(m.sender_role))}</span>`}${e(m.body)}<small>${hm(m.created_at)}</small></div>`;
+    }).join('') || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`;
+    box.scrollTop = box.scrollHeight;
+  }
+  async function send(text){
+    if (!cur) return;
+    const ta = document.getElementById('chatText');
+    const body = (text || (ta && ta.value) || '').trim(); if (!body) return;
+    if (ta && !text) ta.value = '';
+    const { data:id, error } = await sb.rpc('send_message', { p_order_id:cur.orderId, p_thread:cur.thread, p_body:body, p_user_id:cur.userId });
+    if (error){ if (cfg.toast) cfg.toast(error.message, true); if (ta && !text) ta.value = body; return; }
+    const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
+    seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
+(async function boot(){
+  applyLang();
+  try {
+    const { data:{ session } } = await sb.auth.getSession();
+    if (session) await afterLogin(session.user); else showAuth();
+  } catch (e) { logErr(e); showAuth(t('error')); }
+})();
+</script>
+</body>
+</html>
