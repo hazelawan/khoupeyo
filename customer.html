@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
 <title>Wanhar Mart</title>
+<link rel="manifest" href="manifest-customer.json">
+<link rel="apple-touch-icon" href="icon-customer-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -178,6 +183,11 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .banner2{border-radius:12px;padding:12px;margin:12px 0;font-weight:700}
 .waitwarn{background:rgba(179,38,30,.1);border:2px solid var(--danger);border-radius:14px;padding:14px;margin:12px 0}
 .waitwarn .clock{font-size:30px;font-weight:800;color:var(--danger);font-variant-numeric:tabular-nums}
+.tagchips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.tagchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 13px;font-weight:600;font-size:14px;cursor:pointer;color:inherit}
+.tagchip.on{background:var(--green);border-color:var(--green);color:#fff}
+.fbpart{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.fbpart .stars button{font-size:38px}
 .alertpop .ico{width:64px;height:64px;border-radius:50%;background:rgba(179,38,30,.12);color:var(--danger);display:grid;place-items:center;font-size:32px;margin:0 auto 10px}
 .alertpop .ico.ok{background:rgba(242,169,0,.2);color:#B7791F}
 .alertpop p{text-align:center;font-size:18px;font-weight:700;margin:0 0 6px}
@@ -214,7 +224,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.7';
+const APP_VERSION = '2.9';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -241,7 +251,7 @@ const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.
 const I18N = {
   en: {
     login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password',
-    have_account:'Already have an account? Log in', no_account:'New here? Create an account',
+    forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
     search:'Search products and shops', open:'Open', closed:'Closed', delivery:'Delivery', min_order:'Min order',
     add:'Add', cart_tab:'Cart', add_to_cart:'Add to cart', sold_out:'Out of stock', view_cart:'View cart', cart:'Your cart',
     cart_empty:'Your cart is empty. Find something you like and add it here.',
@@ -251,7 +261,7 @@ const I18N = {
     address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
     addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location',
     location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
-    pay_note:'Pay cash to the rider when your order arrives.', place_order:'Place order',
+    pay_note:'Pay cash to the rider when your order arrives.', add_loc_hint:'Tap Edit on your address, then tap “Use my location” and save.', place_order:'Place order',
     home:'Home', shops:'Shops', orders:'Orders', account:'Account',
     no_orders:'No orders yet. Your first order will show up here.',
     st_placed:'Order placed', st_accepted:'Accepted', st_preparing:'Being prepared', st_ready:'Ready',
@@ -264,7 +274,7 @@ const I18N = {
     logout:'Log out', language:'Language', saved_addresses:'Saved addresses', delete:'Delete', save:'Save',
     loading:'Loading…', retry:'Try again', error:'Something went wrong. Please try again.',
     other_rest_msg:'Your cart has items from another shop. Clear it and add this item?',
-    min_order_msg:'Add {n} more to reach the minimum order', closed_msg:'This shop is closed right now.',
+    min_order_msg:'Add {n} more to reach the minimum order', closed_msg:'This shop is closed right now.', opens_at:'Opens at {t}.', hours:'Timings',
     order_placed:'Order placed. The shop will confirm shortly.',
     confirm_email:'Account created. Check your email to confirm it, then log in.',
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields',
@@ -294,11 +304,19 @@ const I18N = {
     m_shop_delay:'Your order is taking a little longer at the shop.', m_shop_closed:'There is a problem at the shop. Wanhar Mart will contact you.',
     m_order_damaged:'There is a problem with your order. Wanhar Mart will contact you.', m_accident:'Your rider had a problem on the way. Wanhar Mart will contact you.',
     m_rider_delay:'Your rider is running a little late.', m_other:'There is a problem with your order. Wanhar Mart will contact you.',
-    m_arrived:'Your rider has arrived. Please come to the door.', m_failed:'Your order could not be delivered and was cancelled.'
+    m_arrived:'Your rider has arrived. Please come to the door.', m_failed:'Your order could not be delivered and was cancelled.',
+    recv_title:'Your order has been delivered! 🎉', recv_q:'Did you receive your order?', recv_yes:'Yes, I received it', recv_no:'No, I did not receive it', later:'Later',
+    recv_no_q:'What happened? (for example: rider never came)', recv_no_done:'Wanhar Mart has been informed and will contact you.',
+    disputed:'You told us you did not receive this order. Wanhar Mart is checking it.', fb_title:'How was your order?', rate_order:'Rate your order',
+    fb_shop:'How was the food from {s}?', fb_rider:'How was your rider?', fb_thanks:'Thank you! Your feedback helps us improve.', fb_need:'Please tap the stars',
+    tag_Tasty:'Tasty', tag_Fresh:'Fresh', 'tag_Hot food':'Hot food', 'tag_Good packing':'Good packing', 'tag_Good portion':'Good portion', 'tag_Value for money':'Value for money',
+    'tag_Cold food':'Cold food', 'tag_Bad taste':'Bad taste', 'tag_Missing items':'Missing items', 'tag_Poor packing':'Poor packing', 'tag_Small portion':'Small portion',
+    'tag_On time':'On time', tag_Polite:'Polite', 'tag_Careful with food':'Careful with food', 'tag_Followed instructions':'Followed instructions', 'tag_Fast delivery':'Fast delivery',
+    tag_Late:'Late', tag_Rude:'Rude', 'tag_Did not call':'Did not call', 'tag_Food spilled':'Food spilled', 'tag_Asked for extra money':'Asked for extra money'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
-    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
+    forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
     search:'پروڈکٹس اور دکانیں تلاش کریں', open:'کھلا ہے', closed:'بند ہے', delivery:'ڈیلیوری', min_order:'کم از کم آرڈر',
     add:'شامل کریں', cart_tab:'کارٹ', add_to_cart:'کارٹ میں ڈالیں', sold_out:'ختم ہو گیا', view_cart:'کارٹ دیکھیں', cart:'آپ کا کارٹ',
     cart_empty:'آپ کا کارٹ خالی ہے۔ کوئی پسندیدہ چیز تلاش کر کے یہاں شامل کریں۔',
@@ -308,7 +326,7 @@ const I18N = {
     address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
     addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں',
     location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
-    pay_note:'آرڈر پہنچنے پر رائیڈر کو نقد ادا کریں۔', place_order:'آرڈر کریں',
+    pay_note:'آرڈر پہنچنے پر رائیڈر کو نقد ادا کریں۔', add_loc_hint:'اپنے پتے پر ”ترمیم“ دبائیں، پھر ”میری لوکیشن“ دبا کر محفوظ کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', shops:'دکانیں', orders:'آرڈرز', account:'اکاؤنٹ',
     no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔',
     st_placed:'آرڈر بھیج دیا گیا', st_accepted:'قبول ہو گیا', st_preparing:'تیار ہو رہا ہے', st_ready:'تیار ہے',
@@ -321,7 +339,7 @@ const I18N = {
     logout:'لاگ آؤٹ', language:'زبان', saved_addresses:'محفوظ پتے', delete:'حذف کریں', save:'محفوظ کریں',
     loading:'لوڈ ہو رہا ہے…', retry:'دوبارہ کوشش کریں', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔',
     other_rest_msg:'آپ کے کارٹ میں دوسری دکان کی چیزیں ہیں۔ انہیں ہٹا کر یہ شامل کریں؟',
-    min_order_msg:'کم از کم آرڈر کے لیے {n} مزید شامل کریں', closed_msg:'یہ دکان ابھی بند ہے۔',
+    min_order_msg:'کم از کم آرڈر کے لیے {n} مزید شامل کریں', closed_msg:'یہ دکان ابھی بند ہے۔', opens_at:'{t} پر کھلے گی۔', hours:'اوقات',
     order_placed:'آرڈر بھیج دیا گیا۔ دکان جلد تصدیق کرے گی۔',
     confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں',
@@ -351,7 +369,15 @@ const I18N = {
     m_shop_delay:'دکان پر آپ کا آرڈر تیار ہونے میں تھوڑا وقت لگ رہا ہے۔', m_shop_closed:'دکان پر مسئلہ ہے۔ Wanhar Mart آپ سے رابطہ کرے گا۔',
     m_order_damaged:'آپ کے آرڈر میں مسئلہ ہے۔ Wanhar Mart آپ سے رابطہ کرے گا۔', m_accident:'رائیڈر کو راستے میں مسئلہ ہو گیا۔ Wanhar Mart آپ سے رابطہ کرے گا۔',
     m_rider_delay:'آپ کا رائیڈر تھوڑی دیر سے پہنچے گا۔', m_other:'آپ کے آرڈر میں مسئلہ ہے۔ Wanhar Mart آپ سے رابطہ کرے گا۔',
-    m_arrived:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', m_failed:'آپ کا آرڈر نہیں پہنچ سکا اور منسوخ ہو گیا۔'
+    m_arrived:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', m_failed:'آپ کا آرڈر نہیں پہنچ سکا اور منسوخ ہو گیا۔',
+    recv_title:'آپ کا آرڈر پہنچ گیا! 🎉', recv_q:'کیا آپ کو آرڈر مل گیا؟', recv_yes:'جی ہاں، مل گیا', recv_no:'نہیں، نہیں ملا', later:'بعد میں',
+    recv_no_q:'کیا ہوا؟ (مثلاً: رائیڈر آیا ہی نہیں)', recv_no_done:'Wanhar Mart کو اطلاع دے دی گئی، وہ آپ سے رابطہ کرے گا۔',
+    disputed:'آپ نے بتایا کہ یہ آرڈر نہیں ملا۔ Wanhar Mart اسے چیک کر رہا ہے۔', fb_title:'آپ کا آرڈر کیسا رہا؟', rate_order:'آرڈر کی ریٹنگ دیں',
+    fb_shop:'{s} کا کھانا کیسا تھا؟', fb_rider:'رائیڈر کیسا تھا؟', fb_thanks:'شکریہ! آپ کی رائے ہمیں بہتر بناتی ہے۔', fb_need:'براہ کرم ستارے دبائیں',
+    tag_Tasty:'مزیدار', tag_Fresh:'تازہ', 'tag_Hot food':'گرم کھانا', 'tag_Good packing':'اچھی پیکنگ', 'tag_Good portion':'اچھی مقدار', 'tag_Value for money':'قیمت کے مطابق',
+    'tag_Cold food':'ٹھنڈا کھانا', 'tag_Bad taste':'ذائقہ اچھا نہیں', 'tag_Missing items':'چیزیں کم تھیں', 'tag_Poor packing':'پیکنگ خراب', 'tag_Small portion':'مقدار کم',
+    'tag_On time':'وقت پر', tag_Polite:'بااخلاق', 'tag_Careful with food':'کھانے کا خیال رکھا', 'tag_Followed instructions':'ہدایت پر عمل کیا', 'tag_Fast delivery':'تیز ڈیلیوری',
+    tag_Late:'دیر سے آیا', tag_Rude:'بدتمیز', 'tag_Did not call':'کال نہیں کی', 'tag_Food spilled':'کھانا گرا ہوا', 'tag_Asked for extra money':'زیادہ پیسے مانگے'
   }
 };
 
@@ -408,6 +434,7 @@ function showAuth(msg, ok){
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
+    ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button><br>
     <button class="link" onclick="A.guestBack()">${t('browse_guest')}</button>
     <div class="ver">v${APP_VERSION}</div>
@@ -507,10 +534,32 @@ async function route(soft){
 window.addEventListener('hashchange', () => { closeSheet(); route(); });
 
 // ================= DATA =================
+// Shop timings (Pakistan time). Same rule as the server: no time or same time = open all day.
+function pkNow(){ try { return new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Karachi', hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date()).replace(/^24/, '00'); } catch (e) { return new Date().toTimeString().slice(0, 5); } }
+function withinHours(r){
+  const o = (r.open_time || '').slice(0, 5), c = (r.close_time || '').slice(0, 5), n = pkNow();
+  if (!o || !c || o === c) return true;
+  return o < c ? (n >= o && n < c) : (n >= o || n < c);
+}
+function fmtTime(hm){
+  if (!hm) return ''; const [h, m] = hm.slice(0, 5).split(':').map(Number);
+  return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM');
+}
+function closedText(r){
+  if (r && r.manual_open !== false && r.open_time && !withinHours(r)) return t('closed_msg') + ' ' + t('opens_at').replace('{t}', fmtTime(r.open_time));
+  return t('closed_msg');
+}
 async function loadRestaurants(){
-  state.restaurants = need(await sb.from('restaurants')
-    .select('id,zone_id,name,description,logo_url,address,phone,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order)')
-    .eq('is_active', true).order('is_open', { ascending:false }).order('name'));
+  const list = need(await sb.from('restaurants')
+    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order,base_km,per_km_fee,max_km)')
+    .eq('is_active', true).order('name'));
+  list.forEach(r => { r.manual_open = r.is_open; r.is_open = !!r.is_open && withinHours(r); });
+  list.sort((a, b) => (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0));
+  state.restaurants = list;
+}
+function syncShopOpen(p){
+  const sh = p && p.restaurants; if (!sh) return;
+  const r = state.restaurants.find(x => x.id === sh.id); if (r) sh.is_open = r.is_open;
 }
 async function loadProducts(){
   const [items, stats] = await Promise.all([
@@ -519,7 +568,7 @@ async function loadProducts(){
     sb.rpc('public_stats')
   ]);
   state.products = need(items);
-  state.products.forEach(p => { state.itemsCache[p.id] = p; });
+  state.products.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; });
   if (!stats.error && stats.data) state.stats = stats.data;
 }
 async function ensureData(){
@@ -637,9 +686,9 @@ async function showRestaurant(id){
     <div class="hero-info">
       <h1>${esc(r.name)}</h1>
       <div class="muted">${esc(r.description || '')}</div>
-      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
+      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span>${r.open_time && r.close_time && r.open_time !== r.close_time ? `<span>🕒 ${fmtTime(r.open_time)} – ${fmtTime(r.close_time)}</span>` : ''}</div>
     </div>
-    ${r.is_open ? '' : `<div class="closed-note">${t('closed_msg')}</div>`}
+    ${r.is_open ? '' : `<div class="closed-note">${esc(closedText(r))}</div>`}
     <input type="search" id="sq" placeholder="${t('search_shop')}" oninput="A.shopSearch(this.value)" style="margin-top:12px">
     ${tabs.length > 1 ? `<div class="cattabs">${tabs.map(cat => `<button class="chip2" onclick="document.getElementById('cat-${cat.id}').scrollIntoView({behavior:'smooth'})">${esc(cat.name)}</button>`).join('')}</div>` : ''}
     <div id="menuBody">${menuBody()}</div>`;
@@ -679,9 +728,10 @@ async function showProduct(id){
     state.itemsCache[id] = item;
   }
   if (!state.restaurants.length) await loadRestaurants();
+  syncShopOpen(item);
   const shop = item.restaurants || item._shop || {}; const full = state.restaurants.find(r => r.id === shop.id) || shop;
   let rel = [];
-  try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
+  try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
   const off = pctOff(item); const s = sold(item.id); const rt = shopRating(shop.id);
   state.qty = 1;
   const canBuy = item.is_available && full.is_open !== false;
@@ -693,7 +743,7 @@ async function showProduct(id){
     ${s ? `<div class="muted">${t('sold_n', { n:s })}</div>` : ''}
     ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
     ${item.is_available ? '' : `<div class="closed-note">${t('sold_out')}</div>`}
-    ${full.is_open === false ? `<div class="closed-note">${t('closed_msg')}</div>` : ''}
+    ${full.is_open === false ? `<div class="closed-note">${esc(closedText(full))}</div>` : ''}
     <a class="shopstrip" href="#/r/${shop.id}">
       <div class="thumb">${shop.logo_url ? `<img src="${esc(shop.logo_url)}" alt="">` : esc((shop.name || '?')[0])}</div>
       <div style="flex:1"><b>${esc(shop.name || '')}</b><div class="muted" style="font-size:13px">${rt ? `<span class="star">★ ${rt.avg}</span> · ` : ''}${t('visit_shop')}</div></div>
@@ -738,7 +788,7 @@ function drawCart(){
       ${disc ? `<div class="line disc"><span>${t('discount')}</span><span>−${money(disc)}</span></div>` : ''}
       <div class="line total"><span>${t('total')}</span><span>${money(sub + fee - disc)}</span></div>
     </div>
-    ${r && !r.is_open ? `<div class="closed-note">${t('closed_msg')}</div>` : ''}
+    ${r && !r.is_open ? `<div class="closed-note">${esc(closedText(r))}</div>` : ''}
     <button class="btn" ${short || (r && !r.is_open) ? 'disabled' : ''} onclick="nav('/checkout')">${t('proceed')}</button>`;
 }
 
@@ -770,9 +820,26 @@ function addressRow(a, selectable){
     <div class="addr-actions2"><button type="button" class="link" onclick="A.editAddress('${a.id}')">${t('edit')}</button>
     <button type="button" class="link" style="color:var(--danger)" onclick="A.deleteAddress('${a.id}')">${t('delete')}</button></div></div>`;
 }
+// Delivery fee by distance (asks the server; same price the order will use)
+async function loadQuote(){
+  const key = state.cart.rid + '|' + state.selAddr;
+  if (!state.cart.rid || !state.selAddr || (state.quote && state.quote.key === key)) return;
+  state.quote = { key, loading:true };
+  try {
+    const { data, error } = await sb.rpc('quote_delivery', { p_restaurant_id:state.cart.rid, p_address_id:state.selAddr });
+    if (error) throw error;
+    const q = Array.isArray(data) ? data[0] : data;
+    state.quote = { key, ok:!!(q && q.ok), fee:num(q && q.fee), km:q && q.km != null ? Number(q.km) : null, msg:(q && q.message) || '' };
+  } catch (e) { logErr(e); state.quote = { key, ok:true, fee:cartFee(), km:null, msg:'' }; }
+  if (currentRoute === 'checkout') drawCheckout();
+}
 function drawCheckout(){
   const v = $('view'); if (!v) return;
-  const sub = cartSubtotal(), fee = cartFee(), disc = cartDiscount();
+  const qKey = state.cart.rid + '|' + state.selAddr;
+  const q = state.quote && state.quote.key === qKey ? state.quote : null;
+  if (state.selAddr && !q) setTimeout(loadQuote, 0);
+  const sub = cartSubtotal(), fee = q && !q.loading && q.ok ? q.fee : cartFee(), disc = cartDiscount();
+  const blocked = !!(q && !q.loading && !q.ok);
   const list = state.addresses.map(a => addressRow(a, true)).join('');
   const pr = state.profile || {};
   const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
@@ -787,11 +854,12 @@ function drawCheckout(){
     <div class="box"><b>${t('cod')}</b><div class="muted">${t('pay_note')}</div></div>
     <div class="box">
       <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
-      <div class="line"><span>${t('delivery_fee')}</span><span>${money(fee)}</span></div>
+      <div class="line"><span>${t('delivery_fee')}${q && q.ok && q.km != null ? ` <span class="muted" style="font-size:13px">(${q.km.toFixed(1)} km)</span>` : ''}</span><span>${q && q.loading ? '…' : money(fee)}</span></div>
       ${disc ? `<div class="line disc"><span>${t('discount')} (${esc(state.promo.trim().toUpperCase())})</span><span>−${money(disc)}</span></div>` : ''}
       <div class="line total"><span>${t('total')}</span><span>${money(sub + fee - disc)}</span></div>
     </div>
-    <button class="btn" id="placeBtn" onclick="A.placeOrder()">${t('place_order')} · ${money(sub + fee - disc)}</button>`;
+    ${blocked ? `<div class="closed-note">${esc(q.msg)}${/location/i.test(q.msg) ? `<div style="font-weight:400;margin-top:6px">${t('add_loc_hint')}</div>` : ''}</div>` : ''}
+    <button class="btn" id="placeBtn" ${blocked || (q && q.loading) ? 'disabled' : ''} onclick="A.placeOrder()">${t('place_order')} · ${money(sub + fee - disc)}</button>`;
 }
 
 // ================= ORDERS =================
@@ -820,14 +888,33 @@ function trackerHtml(o){
   }).join('') + `</ol>`;
 }
 function starsHtml(kind, val){ return [1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= val ? 'on' : ''}" onclick="A.setStar('${kind}',${n})" aria-label="${n}">★</button>`).join(''); }
+const SHOP_TAGS = { good:['Tasty','Fresh','Hot food','Good packing','Good portion','Value for money'], bad:['Cold food','Bad taste','Missing items','Poor packing','Small portion'] };
+const RIDER_TAGS = { good:['On time','Polite','Careful with food','Followed instructions','Fast delivery'], bad:['Late','Rude','Did not call','Food spilled','Asked for extra money'] };
 function ratingHtml(o, review){
-  if (review) return `<div class="box"><b>${t('rate_thanks')}</b><div style="font-size:24px;color:var(--marigold)">${'★'.repeat(review.restaurant_rating || 0)}</div></div>`;
-  state.rate = { r:0, d:0 };
-  return `<div class="box"><b>${t('rate_title')}</b>
-    <div class="line" style="align-items:center"><span>${t('rate_food')}</span><span class="stars" id="stars-r">${starsHtml('r', 0)}</span></div>
-    ${o.rider_id ? `<div class="line" style="align-items:center"><span>${t('rate_rider')}</span><span class="stars" id="stars-d">${starsHtml('d', 0)}</span></div>` : ''}
-    <label class="f" for="rate_c">${t('rate_comment')}</label><input id="rate_c" type="text">
-    <div style="margin-top:12px"><button class="btn" onclick="A.sendRating('${o.id}')">${t('rate_send')}</button></div></div>`;
+  const id = esc(o.id);
+  if (o.customer_disputed) return `<div class="waitwarn"><b>${t('disputed')}</b><button class="btn ghost" style="margin-top:10px" onclick='Chat.open(${JSON.stringify(o.id)}, "sup_c", null)'>💬 ${t('chat_support')}</button></div>`;
+  if (!o.customer_received_at) return `<div class="box" style="text-align:center"><b style="font-size:18px">${t('recv_q')}</b>
+    <div style="display:grid;gap:10px;margin-top:12px"><button class="btn" onclick="A.recvYes('${id}')">${t('recv_yes')}</button><button class="btn warn" onclick="A.recvNo('${id}')">${t('recv_no')}</button></div></div>`;
+  if (review) return `<div class="box"><b>${t('rate_thanks')}</b><div style="font-size:24px;color:var(--marigold)">${'★'.repeat(review.restaurant_rating || 0)}</div>
+    <div class="muted" style="font-size:14px">${[...(review.shop_tags || []), ...(review.rider_tags || [])].map(x => t('tag_' + x)).join(' · ')}</div></div>`;
+  return `<button class="btn gold" style="margin-top:12px" onclick="A.feedback('${id}')">⭐ ${t('rate_order')}</button>`;
+}
+function tagsHtml(kind){
+  const stars = state.rate[kind]; if (!stars) return '';
+  const list = (kind === 'r' ? SHOP_TAGS : RIDER_TAGS)[stars >= 4 ? 'good' : 'bad'];
+  return list.map(x => `<button type="button" class="tagchip ${state.tags[kind].has(x) ? 'on' : ''}" onclick="A.tag('${kind}', ${esc(JSON.stringify(x))})">${esc(t('tag_' + x))}</button>`).join('');
+}
+function showRecvPopup(o){
+  if ($('recvSheet') || $('fbSheet') || $('alertSheet')) return false;
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'recvSheet';
+  back.innerHTML = `<div class="sheet alertpop" role="alertdialog" aria-modal="true"><div class="ico ok">🛵</div>
+    <p style="font-size:22px">${t('recv_title')}</p><div class="muted" style="text-align:center">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</div>
+    <p style="margin-top:14px">${t('recv_q')}</p>
+    <div style="display:grid;gap:10px;margin-top:10px"><button class="btn" onclick="A.recvYes('${esc(o.id)}')">${t('recv_yes')}</button>
+    <button class="btn warn" onclick="A.recvNo('${esc(o.id)}')">${t('recv_no')}</button>
+    <button class="btn ghost" onclick="A.recvLater('${esc(o.id)}')">${t('later')}</button></div></div>`;
+  document.body.appendChild(back); ring(); sysNotify(t('recv_title'));
+  return true;
 }
 async function showOrder(id){
   const o = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone), order_items(menu_item_id,name,quantity,price)').eq('id', id).single());
@@ -922,6 +1009,15 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth) showAuth(); else { renderShell(); route(); }
   },
+  async forgotPw(){
+    const email = ($('a_email') && $('a_email').value.trim()) || '';
+    const msg = $('authMsg');
+    if (!email){ msg.style.color = ''; msg.textContent = t('enter_email_first'); $('a_email').focus(); return; }
+    msg.textContent = t('loading');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:new URL('reset.html?app=customer', location.href).href });
+    if (error){ msg.style.color = ''; msg.textContent = error.message; return; }
+    msg.style.color = 'var(--green)'; msg.textContent = t('reset_sent');
+  },
   switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
   async submitAuth(e){
     e.preventDefault();
@@ -956,7 +1052,7 @@ const A = {
     }
   },
   async logout(){
-    Chat.stop(); Chat.close(); await sb.auth.signOut(); stopPoll();
+    await Push.logout(); Chat.stop(); Chat.close(); await sb.auth.signOut(); stopPoll();
     if (channel){ sb.removeChannel(channel); channel = null; }
     state.user = null; state.profile = null; state.addresses = []; state.authMode = 'login';
     replaceHash('#/'); renderShell(); route();
@@ -1046,7 +1142,7 @@ const A = {
         data = need(await sb.from('addresses').insert({ customer_id:state.user.id, label:$('ad_label').value.trim() || null, full_address:full, note:$('ad_note').value.trim() || null,
           lat:state.newCoords ? state.newCoords.lat : null, lng:state.newCoords ? state.newCoords.lng : null }).select().single());
       }
-      state.selAddr = data.id; state.newCoords = null; state.editAddr = null;
+      state.selAddr = data.id; state.newCoords = null; state.editAddr = null; state.quote = null;
       closeSheet(); await loadAddresses();
       if (currentRoute === 'checkout') drawCheckout(); else await showAccount();
       toast(t('saved'));
@@ -1083,14 +1179,54 @@ const A = {
     });
     const b = $('placeBtn'); if (b){ b.disabled = false; drawCheckout(); }
   },
-  setStar(kind, n){ state.rate[kind] = n; const el = $('stars-' + kind); if (el) el.innerHTML = starsHtml(kind, n); },
+  setStar(kind, n){
+    const flip = (state.rate[kind] >= 4) !== (n >= 4); state.rate[kind] = n;
+    if (flip && state.tags) state.tags[kind] = new Set();
+    const el = $('stars-' + kind); if (el) el.innerHTML = starsHtml(kind, n);
+    const tg = $('tags-' + kind); if (tg) tg.innerHTML = tagsHtml(kind);
+  },
+  tag(kind, x){ const s = state.tags[kind]; if (s.has(x)) s.delete(x); else s.add(x); const tg = $('tags-' + kind); if (tg) tg.innerHTML = tagsHtml(kind); },
+  recvLater(id){ markSeen('recv-' + id); const el = $('recvSheet'); if (el) el.remove(); },
+  async recvYes(id){
+    await run(async () => {
+      need(await sb.rpc('confirm_received', { p_order_id:id, p_received:true }));
+      markSeen('recv-' + id); const el = $('recvSheet'); if (el) el.remove();
+      await A.feedback(id);
+      if (currentRoute === 'order') route(true);
+    });
+  },
+  async recvNo(id){
+    const note = prompt(t('recv_no_q'), ''); if (note === null) return;
+    await run(async () => {
+      need(await sb.rpc('confirm_received', { p_order_id:id, p_received:false, p_note:note || null }));
+      markSeen('recv-' + id); const el = $('recvSheet'); if (el) el.remove();
+      toast(t('recv_no_done')); if (currentRoute === 'order') route(true);
+    });
+  },
+  async feedback(id){
+    const o = need(await sb.from('orders').select('id,restaurant_id,rider_id,restaurant:restaurants(name)').eq('id', id).single());
+    const ex = await sb.from('reviews').select('id').eq('order_id', id).maybeSingle();
+    if (ex.data) return toast(t('rate_thanks'));
+    state.curOrder = Object.assign({}, state.curOrder && state.curOrder.id === id ? state.curOrder : {}, o);
+    state.rate = { r:0, d:0 }; state.tags = { r:new Set(), d:new Set() };
+    const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'fbSheet';
+    back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${t('fb_title')}</h3><button class="x" aria-label="Close" onclick="document.getElementById('fbSheet').remove()">&times;</button></div>
+      <div class="fbpart" style="border:0;margin:0;padding:0"><b>${esc(t('fb_shop').replace('{s}', o.restaurant ? o.restaurant.name : ''))}</b>
+        <div class="stars" id="stars-r" style="text-align:center">${starsHtml('r', 0)}</div><div class="tagchips" id="tags-r"></div></div>
+      ${o.rider_id ? `<div class="fbpart"><b>${t('fb_rider')}</b><div class="stars" id="stars-d" style="text-align:center">${starsHtml('d', 0)}</div><div class="tagchips" id="tags-d"></div></div>` : ''}
+      <div class="fbpart"><label class="f" for="rate_c" style="margin-top:0">${t('rate_comment')}</label><textarea id="rate_c" rows="2"></textarea></div>
+      <button class="btn" style="margin-top:14px" onclick="A.sendRating('${esc(o.id)}')">${t('rate_send')}</button></div>`;
+    document.body.appendChild(back);
+  },
   async sendRating(id){
-    if (!state.rate || state.rate.r < 1) return toast(t('rate_need'), true);
+    if (!state.rate || state.rate.r < 1 || (state.curOrder.rider_id && state.rate.d < 1)) return toast(t('fb_need'), true);
     const o = state.curOrder;
     await run(async () => {
       need(await sb.from('reviews').insert({ order_id:id, customer_id:state.user.id, restaurant_id:o.restaurant_id,
-        restaurant_rating:state.rate.r, rider_rating:state.rate.d || null, comment:($('rate_c').value || '').trim() || null }));
-      toast(t('saved')); await route(true);
+        restaurant_rating:state.rate.r, rider_rating:state.rate.d || null, comment:($('rate_c').value || '').trim() || null,
+        shop_tags:Array.from(state.tags ? state.tags.r : []), rider_tags:Array.from(state.tags ? state.tags.d : []) }));
+      const el = $('fbSheet'); if (el) el.remove();
+      toast(t('fb_thanks')); if (currentRoute === 'order') await route(true);
     });
   },
   async cancelOrder(id){
@@ -1127,9 +1263,9 @@ function ring(){
   try { if (actx && actx.state === 'running'){ const o = actx.createOscillator(), g = actx.createGain(); o.type = 'square'; o.frequency.value = 880; g.gain.value = 0.15; o.connect(g); g.connect(actx.destination); o.start(); setTimeout(() => { o.frequency.value = 660; }, 200); setTimeout(() => { o.frequency.value = 880; }, 400); setTimeout(() => o.stop(), 650); } } catch (e) {}
   try { if (navigator.vibrate) navigator.vibrate([400, 150, 400, 150, 400]); } catch (e) {}
 }
-function askNotify(){ try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} }
+function askNotify(){ try { if ('Notification' in window && Notification.permission === 'default') Push.turnOn(); } catch (e) {} }
 function sysNotify(msg){
-  try { if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible') new Notification('Wanhar Mart', { body:msg, tag:'wm-order' }); } catch (e) {}
+  try { if (!Push.enabled() && 'Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible') new Notification('Wanhar Mart', { body:msg, tag:'wm-order' }); } catch (e) {}
 }
 const seenAlerts = new Set(ls.get('kh_seen_alerts', []));
 function markSeen(k){ seenAlerts.add(k); ls.set('kh_seen_alerts', Array.from(seenAlerts).slice(-200)); }
@@ -1157,13 +1293,15 @@ async function checkAlerts(){
   if (!state.user || checking) return; checking = true;
   try {
     const since = new Date(Date.now() - 3 * 3600e3).toISOString();
-    const { data:ords } = await sb.from('orders').select('id,status,arrived_at,failed_delivery,created_at')
+    const { data:ords } = await sb.from('orders').select('id,status,arrived_at,failed_delivery,created_at,delivered_at,customer_received_at,customer_disputed,restaurant:restaurants(name)')
       .eq('customer_id', state.user.id).gte('created_at', since).order('created_at', { ascending:false }).limit(20);
     const list = ords || []; if (!list.length) return;
     list.forEach(o => {
       if (o.status === 'picked_up' && o.arrived_at) pushAlert('arr-' + o.id, t('m_arrived'), o.id, true);
       if (o.failed_delivery) pushAlert('fail-' + o.id, t('m_failed'), o.id);
     });
+    const del = list.find(o => o.status === 'delivered' && !o.customer_received_at && !o.customer_disputed && !seenAlerts.has('recv-' + o.id));
+    if (del) showRecvPopup(del);
     const live = list.filter(o => !FINAL.includes(o.status)).map(o => o.id);
     if (live.length){
       const { data:iss } = await sb.from('order_issues').select('id,order_id,kind,reported_by').in('order_id', live).eq('status', 'open');
@@ -1196,6 +1334,7 @@ async function afterLogin(user){
   state.profile = data || {};
   subscribeOrders();
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'customer', ding:() => ring(), toast:(m, err) => toast(m, err) });
+  Push.init({ sb, app:'customer', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   const target = state.pending; state.pending = null;
   renderShell();
   if (target && target !== '#') replaceHash(target);
@@ -1407,6 +1546,85 @@ const Chat = (() => {
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
   return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
+// ================= PUSH + INSTALL (same code in all four apps) =================
+const Push = (() => {
+  const VAPID = 'BB7DLfT-2lWO5GdEBRw40xpz0jVcRYmXrjlzn84Z__HZODNrLJueYsar3rEAMUqSOCSVEOHApgJzEDrxLM2z6-E';
+  const L = {
+    en:{ title:'Turn on notifications', text:'Get new orders, messages and updates even when the app is closed.', on:'Turn on', later:'Later',
+         install:'Install app', install_t:'Add to home screen', ios:'On iPhone: tap Share ⬆️ then “Add to Home Screen”, open the app from there, then turn on notifications.',
+         done:'Notifications are on', blocked:'Notifications are blocked. Allow them in your browser settings for this site.', fail:'Could not turn on notifications' },
+    ur:{ title:'نوٹیفکیشن آن کریں', text:'ایپ بند ہو تب بھی نئے آرڈر، میسج اور اپڈیٹس ملیں گے۔', on:'آن کریں', later:'بعد میں',
+         install:'ایپ انسٹال کریں', install_t:'ہوم اسکرین پر لگائیں', ios:'آئی فون پر: Share ⬆️ دبائیں پھر “Add to Home Screen”، وہاں سے ایپ کھولیں، پھر نوٹیفکیشن آن کریں۔',
+         done:'نوٹیفکیشن آن ہو گئے', blocked:'نوٹیفکیشن بند ہیں۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے اجازت دیں۔', fail:'نوٹیفکیشن آن نہیں ہو سکے' }
+  };
+  let cfg = null, deferred = null;
+  const tt = k => (L[(cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en'][k]);
+  const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+  const snoozed = () => { try { return Number(localStorage.getItem('kh_push_later') || 0) > Date.now(); } catch (e) { return false; } };
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(); });
+  window.addEventListener('appinstalled', () => { deferred = null; show(); });
+
+  async function reg(){ return navigator.serviceWorker.register('sw.js'); }
+  async function subscribe(){
+    const r = await reg(); await navigator.serviceWorker.ready;
+    let s = await r.pushManager.getSubscription();
+    if (!s) s = await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64(VAPID) });
+    const j = s.toJSON();
+    const { error } = await cfg.sb.rpc('save_push_subscription', { p_endpoint:j.endpoint, p_p256dh:j.keys.p256dh, p_auth:j.keys.auth, p_app:cfg.app });
+    if (error) throw error;
+  }
+  async function turnOn(){
+    try {
+      const p = await Notification.requestPermission();
+      if (p !== 'granted'){ cfg.toast(tt('blocked'), true); hide(); return; }
+      await subscribe(); cfg.toast(tt('done')); hide();
+    } catch (e) { cfg.toast(tt('fail') + ': ' + (e.message || e), true); }
+  }
+  async function install(){ if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; show(); }
+  function later(){ try { localStorage.setItem('kh_push_later', String(Date.now() + 3 * 864e5)); } catch (e) {} hide(); }
+  function hide(){ const el = document.getElementById('pushCard'); if (el) el.remove(); }
+  function show(){
+    hide();
+    if (!cfg || !cfg.me() || snoozed()) return;
+    const needPush = supported() && Notification.permission === 'default';
+    const iosHint = isIOS() && !standalone();
+    if (!needPush && !deferred && !iosHint) return;
+    const el = document.createElement('div'); el.id = 'pushCard';
+    el.setAttribute('role', 'dialog');
+    el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9000;max-width:460px;margin:0 auto;background:var(--surface,#fff);color:var(--ink,#1E2B25);border:1px solid var(--line,#DDE3DB);border-radius:18px;padding:14px 14px 12px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:15px';
+    const btn = 'border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer';
+    el.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px;line-height:1">🔔</div><div style="flex:1">
+      <b style="font-size:16px">${needPush ? tt('title') : tt('install_t')}</b>
+      <div style="color:var(--muted,#66746C);margin-top:2px">${iosHint ? tt('ios') : tt('text')}</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--green,#1F6F4A);color:#fff;flex:1">${tt('on')}</button>` : ''}
+        ${deferred ? `<button data-a="inst" style="${btn};background:var(--marigold,#F2A900);color:#1E2B25;flex:1">${tt('install')}</button>` : ''}
+        <button data-a="later" style="${btn};background:transparent;color:var(--muted,#66746C)">${tt('later')}</button></div>`;
+    el.addEventListener('click', ev => { const a = ev.target.closest('button') && ev.target.closest('button').dataset.a; if (a === 'on') turnOn(); else if (a === 'inst') install(); else if (a === 'later') later(); });
+    document.body.appendChild(el);
+  }
+  async function init(c){
+    cfg = c;
+    if (!('serviceWorker' in navigator)) return;
+    try { await reg(); } catch (e) { return; }
+    // Already allowed before: refresh the saved subscription quietly for this account
+    if (supported() && Notification.permission === 'granted'){ try { await subscribe(); } catch (e) {} }
+    setTimeout(show, 2500);
+  }
+  async function logout(){
+    try {
+      const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+      if (sub && cfg) await cfg.sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    } catch (e) {}
+    hide();
+  }
+  return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
 })();
 
 (async function boot(){
