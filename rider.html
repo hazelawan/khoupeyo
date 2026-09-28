@@ -146,7 +146,7 @@ html[dir=rtl] .slide .knob{left:auto;right:5px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -213,7 +213,7 @@ const I18N = {
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call',
     cash_collect:'Collect cash', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
-    today:'Today', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol', c_freelance:'Own bike + petrol (freelance)', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
+    today:'Today', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol', c_freelance:'Own bike + petrol (freelance)', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
     paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand',
     cash_note:'All cash you collected must be deposited at the Wanhar Mart office. Your pay comes with your salary.',
@@ -266,7 +266,7 @@ const I18N = {
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال',
     cash_collect:'وصول کریں', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
-    today:'آج', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول', c_freelance:'اپنی بائیک + پیٹرول (فری لانس)', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
+    today:'آج', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول', c_freelance:'اپنی بائیک + پیٹرول (فری لانس)', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
     paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد',
     cash_note:'وصول شدہ تمام نقد رقم Wanhar Mart کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
@@ -715,7 +715,7 @@ function activeCard(o){
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
     <span class="pill">${t('st_' + o.status)}</span></div>${restBlock}${custBlock}
     <div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>
-    <div class="line muted"><span>${t('your_pay')}</span><b>${money(o.rider_pay)}</b></div>${action}${chatRow(o)}</div>`;
+    <div class="line muted"><span>${t('your_pay')}</span><b>${money(o.rider_pay)}</b></div>${num(o.tip) ? `<div class="line" style="color:var(--green);font-weight:700"><span>💚 ${t('tip_incl')}</span><b>${money(o.tip)}</b></div>` : ''}${action}${chatRow(o)}</div>`;
 }
 function jobCard(j){
   const d = jobDistances(j);
@@ -1085,7 +1085,7 @@ const Chat = (() => {
       q_rider_rs:['I am at the shop, is the order ready?','I will reach in 5 minutes','Please pack the order properly','I am waiting outside'],
       q_rider_sup:['Customer is not answering','I need help with an order','My vehicle has a problem','Question about my pay','Please call me'],
       q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
-      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please hurry, the food is getting cold'],
+      q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please come soon, I am waiting'],
       q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
       q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
       q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
@@ -1109,7 +1109,7 @@ const Chat = (() => {
       q_rider_rs:['میں دکان پر ہوں، آرڈر تیار ہے؟','میں 5 منٹ میں پہنچ رہا ہوں','آرڈر اچھی طرح پیک کریں','میں باہر انتظار کر رہا ہوں'],
       q_rider_sup:['گاہک فون نہیں اٹھا رہا','ایک آرڈر میں مدد چاہیے','میری گاڑی میں مسئلہ ہے','میری اجرت کے بارے میں سوال','مجھے کال کریں'],
       q_shop_cs:['آپ کا آرڈر تیار ہو رہا ہے','آپ کا آرڈر تیار ہے','معذرت، ایک چیز دستیاب نہیں','10 منٹ مزید لگیں گے'],
-      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، کھانا ٹھنڈا ہو رہا ہے'],
+      q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، میں انتظار کر رہا ہوں'],
       q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
       q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
       ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
