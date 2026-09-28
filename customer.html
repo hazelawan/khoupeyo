@@ -275,7 +275,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.0';
+const APP_VERSION = '3.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -556,6 +556,7 @@ function showAuth(msg, ok){
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
+    ${signup ? Legal.agree(state.lang) : ''}
     ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button><br>
     <button class="link" onclick="A.guestBack()">${t('browse_guest')}</button>
@@ -1261,6 +1262,7 @@ async function showAccount(){
     <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button></div>
     <div style="display:grid;gap:10px;margin-top:16px">
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+      ${Legal.links(state.lang)}
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
     <div class="ver" style="margin-top:14px">Wanhar Mart v${APP_VERSION}</div>`;
@@ -1727,6 +1729,7 @@ async function afterLogin(user){
   state.profile = data || {};
   subscribeOrders();
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'customer', ding:() => ring(), toast:(m, err) => toast(m, err) });
+  Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'customer', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   const target = state.pending; state.pending = null;
   renderShell();
@@ -2018,6 +2021,38 @@ const Push = (() => {
     hide();
   }
   return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
+})();
+
+// ================= LEGAL + DELETE ACCOUNT (Customer, Rider, Shop) =================
+const Legal = (() => {
+  const L = {
+    en:{ agree:'By creating an account you agree to our {t} and {p}.', terms:'Terms', privacy:'Privacy Policy', links:'Privacy Policy and Terms',
+         del:'Delete my account', del_q:'Delete your account? We will remove your personal data. Your past orders stay in our records without your name. This cannot be undone.',
+         del_reason:'Why are you leaving? (optional)', del_done:'Request sent. Wanhar Mart will delete your account within 7 days.' },
+    ur:{ agree:'اکاؤنٹ بنا کر آپ ہماری {t} اور {p} سے اتفاق کرتے ہیں۔', terms:'شرائط', privacy:'پرائیویسی پالیسی', links:'پرائیویسی پالیسی اور شرائط',
+         del:'میرا اکاؤنٹ ختم کریں', del_q:'اکاؤنٹ ختم کریں؟ آپ کی ذاتی معلومات مٹا دی جائیں گی۔ پرانے آرڈر آپ کے نام کے بغیر ریکارڈ میں رہیں گے۔ یہ واپس نہیں ہو سکتا۔',
+         del_reason:'آپ کیوں جا رہے ہیں؟ (اختیاری)', del_done:'درخواست بھیج دی گئی۔ Wanhar Mart سات دن میں اکاؤنٹ ختم کر دے گا۔' }
+  };
+  const tt = (lang, k) => L[lang === 'ur' ? 'ur' : 'en'][k];
+  const url = (lang, part) => 'legal.html?lang=' + (lang === 'ur' ? 'ur' : 'en') + '#' + part;
+  function agree(lang){
+    return `<div class="muted" style="font-size:13px;margin-top:10px;text-align:center">${tt(lang, 'agree').replace('{t}', `<a href="${url(lang, 'terms')}" target="_blank" rel="noopener">${tt(lang, 'terms')}</a>`).replace('{p}', `<a href="${url(lang, 'privacy')}" target="_blank" rel="noopener">${tt(lang, 'privacy')}</a>`)}</div>`;
+  }
+  function links(lang){
+    return `<a class="btn ghost" style="margin-bottom:10px;display:block;text-align:center;text-decoration:none" href="${url(lang, 'privacy')}" target="_blank" rel="noopener">📄 ${tt(lang, 'links')}</a>
+      <button class="btn ghost" style="margin-bottom:10px;color:var(--danger);border-color:var(--danger)" onclick="Legal.del()">🗑️ ${tt(lang, 'del')}</button>`;
+  }
+  let cfg = null;
+  function init(c){ cfg = c; }
+  async function del(){
+    const lang = cfg.lang();
+    if (!confirm(tt(lang, 'del_q'))) return;
+    const why = prompt(tt(lang, 'del_reason'), ''); if (why === null) return;
+    const { error } = await cfg.sb.rpc('request_account_deletion', { p_note:why || null });
+    if (error) return cfg.toast(error.message, true);
+    cfg.toast(tt(lang, 'del_done'));
+  }
+  return { init, agree, links, del };
 })();
 
 (async function boot(){
