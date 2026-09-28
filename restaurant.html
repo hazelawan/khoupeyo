@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
 <title>Wanhar Mart Shop</title>
+<link rel="manifest" href="manifest-shop.json">
+<link rel="apple-touch-icon" href="icon-shop-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -127,7 +132,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -144,6 +149,10 @@ const num = n => Number(n || 0);
 const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
 const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 const hhmm = v => v ? String(v).slice(0, 5) : '';
+function pkNow(){ try { return new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Karachi', hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date()).replace(/^24/, '00'); } catch (e) { return new Date().toTimeString().slice(0, 5); } }
+function withinHours(r){ const o = hhmm(r.open_time), c = hhmm(r.close_time), n = pkNow(); if (!o || !c || o === c) return true; return o < c ? (n >= o && n < c) : (n >= o || n < c); }
+function time12(v){ const x = hhmm(v); if (!x) return ''; const [h, m] = x.split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); }
+function hoursText(r){ return t('outside_hours').replace(/\{o\}/g, time12(r.open_time)).replace(/\{c\}/g, time12(r.close_time)); }
 function timeAgo(ts){
   const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
   if (m < 1) return '0 min'; if (m < 60) return m + ' min';
@@ -162,7 +171,7 @@ function range(p){
 const I18N = {
   en: {
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
-    have_account:'Already have an account? Log in', no_account:'New here? Create an account',
+    forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
     orders:'Orders', products:'Products', earnings:'Earnings', shop:'Shop',
     new_orders:'New orders', in_kitchen:'Preparing', ready_pickup:'Ready for pickup', past:'Past orders',
     no_orders:'No orders right now. New orders will ring here.', keep_open:'Keep this app open and the screen on to hear new orders.',
@@ -175,7 +184,7 @@ const I18N = {
     order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider',
     ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
     open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
-    closed_bar:'Your shop is closed. Customers cannot order.', open_it:'Open shop',
+    closed_bar:'Your shop is closed. Customers cannot order.', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
     commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart',
@@ -208,7 +217,7 @@ const I18N = {
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
-    have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
+    forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
     orders:'آرڈرز', products:'پروڈکٹس', earnings:'کمائی', shop:'دکان',
     new_orders:'نئے آرڈرز', in_kitchen:'تیار ہو رہے ہیں', ready_pickup:'اٹھانے کے لیے تیار', past:'پرانے آرڈرز',
     no_orders:'ابھی کوئی آرڈر نہیں۔ نیا آرڈر آنے پر یہاں گھنٹی بجے گی۔', keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
@@ -221,7 +230,7 @@ const I18N = {
     order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر',
     ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
     open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
-    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', open_it:'دکان کھولیں',
+    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے',
@@ -317,6 +326,7 @@ function showAuth(msg, ok){
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
+    ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
     <div class="ver">v${APP_VERSION}</div>
   </div>`;
@@ -459,7 +469,7 @@ function viewOrders(){
   const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').slice(0, 30);
   const sect = (title, list) => list.length ? `<h2>${title} <span class="count">${list.length}</span></h2>${list.map(orderCard).join('')}` : '';
   const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
-  const closed = r.is_open ? '' : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
+  const closed = r.is_open ? (withinHours(r) ? '' : `<div class="closedbar"><span>${esc(hoursText(r))}</span></div>`) : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
   const live = fresh.length || kitchen.length || ready.length || back.length;
   const backHtml = back.length ? `<h2>${t('coming_back')} <span class="count">${back.length}</span></h2>${back.map(o => `<div class="card back">
       <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('coming_back')}</span></div>
@@ -595,15 +605,15 @@ function viewEarn(){
 
 // ================= SHOP =================
 async function loadReviews(){
-  state.reviews = need(await sb.from('reviews').select('restaurant_rating,comment,created_at').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
+  state.reviews = need(await sb.from('reviews').select('restaurant_rating,comment,created_at,shop_tags').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
 }
 function viewShop(){
   const r = state.restaurant; const rv = state.reviews || [];
   const avg = rv.length ? (rv.reduce((n, x) => n + num(x.restaurant_rating), 0) / rv.length).toFixed(1) : null;
-  const revs = rv.slice(0, 15).map(x => `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${x.comment ? `<div>${esc(x.comment)}</div>` : ''}</div>`).join('');
+  const revs = rv.slice(0, 15).map(x => `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${(x.shop_tags || []).length ? `<div class="muted" style="font-size:13px">${esc(x.shop_tags.join(' · '))}</div>` : ''}${x.comment ? `<div>${esc(x.comment)}</div>` : ''}</div>`).join('');
   return `<h1>${t('shop')}</h1>
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-      <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? t('is_open_msg') : t('is_closed_msg')}</div></div>
+      <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? (withinHours(r) ? t('is_open_msg') : esc(hoursText(r))) : t('is_closed_msg')}</div></div>
       <label class="switch" style="margin:0"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen(this.checked)" aria-label="${t('open_now')}"><span></span></label>
     </div>
     <div class="tiles" style="margin-bottom:12px">
@@ -619,6 +629,9 @@ function viewShop(){
         <div><label class="f" for="s_open">${t('opens')}</label><input id="s_open" type="time" value="${hhmm(r.open_time)}"></div>
         <div><label class="f" for="s_close">${t('closes')}</label><input id="s_close" type="time" value="${hhmm(r.close_time)}"></div>
       </div>
+      <label class="f">${t('shop_loc')}</label>
+      <div class="muted" style="font-size:14px">${r.lat != null && r.lng != null ? `✅ ${t('loc_set')} <a href="https://maps.google.com/?q=${r.lat},${r.lng}" target="_blank" rel="noopener">${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}</a>` : `⚠️ ${t('loc_missing')}`}</div>
+      <button class="btn ghost" type="button" id="locBtn" style="margin-top:8px" onclick="A.setShopLoc()">${t('set_loc')}</button>
       <label class="f" for="s_prep">${t('prep_default')}</label><input id="s_prep" type="number" min="5" step="5" value="${r.prep_time_minutes || 25}">
       <label class="f" for="s_logo">${t('logo')}</label><input id="s_logo" type="file" accept="image/*" onchange="previewFile(this,'s_prev')">
       <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
@@ -661,6 +674,15 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.restaurant) showAuth(); else { renderShell(); renderTab(); }
   },
+  async forgotPw(){
+    const email = ($('a_email') && $('a_email').value.trim()) || '';
+    const msg = $('authMsg');
+    if (!email){ msg.style.color = ''; msg.textContent = t('enter_email_first'); $('a_email').focus(); return; }
+    msg.textContent = t('loading');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:new URL('reset.html?app=shop', location.href).href });
+    if (error){ msg.style.color = ''; msg.textContent = error.message; return; }
+    msg.style.color = 'var(--green)'; msg.textContent = t('reset_sent');
+  },
   switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
   async submitAuth(e){
     e.preventDefault(); unlockAudio();
@@ -690,7 +712,7 @@ const A = {
     }
   },
   async logout(){
-    Chat.stop(); Chat.close(); await sb.auth.signOut();
+    await Push.logout(); Chat.stop(); Chat.close(); await sb.auth.signOut();
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
@@ -752,6 +774,18 @@ const A = {
       need(await sb.from('restaurants').update({ is_open:v }).eq('id', state.restaurant.id));
       state.restaurant.is_open = v; updateOpenBtn(); renderTab(); toast(t('saved'));
     });
+  },
+  setShopLoc(){
+    if (!navigator.geolocation) return toast(t('loc_denied'), true);
+    const b = $('locBtn'); if (b){ b.disabled = true; b.textContent = t('loading'); }
+    navigator.geolocation.getCurrentPosition(async pos => {
+      await run(async () => {
+        const row = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+        need(await sb.from('restaurants').update(row).eq('id', state.restaurant.id));
+        Object.assign(state.restaurant, row); toast(t('loc_saved')); renderTab();
+      });
+      const x = $('locBtn'); if (x){ x.disabled = false; x.textContent = t('set_loc'); }
+    }, () => { const x = $('locBtn'); if (x){ x.disabled = false; x.textContent = t('set_loc'); } toast(t('loc_denied'), true); }, { enableHighAccuracy:true, timeout:15000 });
   },
   async saveShop(){
     const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
@@ -832,6 +866,7 @@ async function loadRestaurant(){
 async function startApp(){
   renderShell(); subscribeOrders(); startAlertLoop(); keepAwake();
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'shop', ding:() => beep(), toast:(m, err) => toast(m, err) });
+  Push.init({ sb, app:'shop', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   await go('orders');
 }
 async function afterLogin(user){
@@ -1044,6 +1079,85 @@ const Chat = (() => {
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
   return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+})();
+
+// ================= PUSH + INSTALL (same code in all four apps) =================
+const Push = (() => {
+  const VAPID = 'BB7DLfT-2lWO5GdEBRw40xpz0jVcRYmXrjlzn84Z__HZODNrLJueYsar3rEAMUqSOCSVEOHApgJzEDrxLM2z6-E';
+  const L = {
+    en:{ title:'Turn on notifications', text:'Get new orders, messages and updates even when the app is closed.', on:'Turn on', later:'Later',
+         install:'Install app', install_t:'Add to home screen', ios:'On iPhone: tap Share ⬆️ then “Add to Home Screen”, open the app from there, then turn on notifications.',
+         done:'Notifications are on', blocked:'Notifications are blocked. Allow them in your browser settings for this site.', fail:'Could not turn on notifications' },
+    ur:{ title:'نوٹیفکیشن آن کریں', text:'ایپ بند ہو تب بھی نئے آرڈر، میسج اور اپڈیٹس ملیں گے۔', on:'آن کریں', later:'بعد میں',
+         install:'ایپ انسٹال کریں', install_t:'ہوم اسکرین پر لگائیں', ios:'آئی فون پر: Share ⬆️ دبائیں پھر “Add to Home Screen”، وہاں سے ایپ کھولیں، پھر نوٹیفکیشن آن کریں۔',
+         done:'نوٹیفکیشن آن ہو گئے', blocked:'نوٹیفکیشن بند ہیں۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے اجازت دیں۔', fail:'نوٹیفکیشن آن نہیں ہو سکے' }
+  };
+  let cfg = null, deferred = null;
+  const tt = k => (L[(cfg && cfg.lang && cfg.lang()) === 'ur' ? 'ur' : 'en'][k]);
+  const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const standalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const b64 = s => { const p = '='.repeat((4 - s.length % 4) % 4); const r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...r].map(c => c.charCodeAt(0))); };
+  const snoozed = () => { try { return Number(localStorage.getItem('kh_push_later') || 0) > Date.now(); } catch (e) { return false; } };
+
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(); });
+  window.addEventListener('appinstalled', () => { deferred = null; show(); });
+
+  async function reg(){ return navigator.serviceWorker.register('sw.js'); }
+  async function subscribe(){
+    const r = await reg(); await navigator.serviceWorker.ready;
+    let s = await r.pushManager.getSubscription();
+    if (!s) s = await r.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64(VAPID) });
+    const j = s.toJSON();
+    const { error } = await cfg.sb.rpc('save_push_subscription', { p_endpoint:j.endpoint, p_p256dh:j.keys.p256dh, p_auth:j.keys.auth, p_app:cfg.app });
+    if (error) throw error;
+  }
+  async function turnOn(){
+    try {
+      const p = await Notification.requestPermission();
+      if (p !== 'granted'){ cfg.toast(tt('blocked'), true); hide(); return; }
+      await subscribe(); cfg.toast(tt('done')); hide();
+    } catch (e) { cfg.toast(tt('fail') + ': ' + (e.message || e), true); }
+  }
+  async function install(){ if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; show(); }
+  function later(){ try { localStorage.setItem('kh_push_later', String(Date.now() + 3 * 864e5)); } catch (e) {} hide(); }
+  function hide(){ const el = document.getElementById('pushCard'); if (el) el.remove(); }
+  function show(){
+    hide();
+    if (!cfg || !cfg.me() || snoozed()) return;
+    const needPush = supported() && Notification.permission === 'default';
+    const iosHint = isIOS() && !standalone();
+    if (!needPush && !deferred && !iosHint) return;
+    const el = document.createElement('div'); el.id = 'pushCard';
+    el.setAttribute('role', 'dialog');
+    el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:9000;max-width:460px;margin:0 auto;background:var(--surface,#fff);color:var(--ink,#1E2B25);border:1px solid var(--line,#DDE3DB);border-radius:18px;padding:14px 14px 12px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:15px';
+    const btn = 'border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer';
+    el.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start"><div style="font-size:26px;line-height:1">🔔</div><div style="flex:1">
+      <b style="font-size:16px">${needPush ? tt('title') : tt('install_t')}</b>
+      <div style="color:var(--muted,#66746C);margin-top:2px">${iosHint ? tt('ios') : tt('text')}</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--green,#1F6F4A);color:#fff;flex:1">${tt('on')}</button>` : ''}
+        ${deferred ? `<button data-a="inst" style="${btn};background:var(--marigold,#F2A900);color:#1E2B25;flex:1">${tt('install')}</button>` : ''}
+        <button data-a="later" style="${btn};background:transparent;color:var(--muted,#66746C)">${tt('later')}</button></div>`;
+    el.addEventListener('click', ev => { const a = ev.target.closest('button') && ev.target.closest('button').dataset.a; if (a === 'on') turnOn(); else if (a === 'inst') install(); else if (a === 'later') later(); });
+    document.body.appendChild(el);
+  }
+  async function init(c){
+    cfg = c;
+    if (!('serviceWorker' in navigator)) return;
+    try { await reg(); } catch (e) { return; }
+    // Already allowed before: refresh the saved subscription quietly for this account
+    if (supported() && Notification.permission === 'granted'){ try { await subscribe(); } catch (e) {} }
+    setTimeout(show, 2500);
+  }
+  async function logout(){
+    try {
+      const r = await navigator.serviceWorker.getRegistration(); const sub = r && await r.pushManager.getSubscription();
+      if (sub && cfg) await cfg.sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+    } catch (e) {}
+    hide();
+  }
+  return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
 })();
 
 (async function boot(){
