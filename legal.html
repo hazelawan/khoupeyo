@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Wanhar Mart · Privacy Policy and Terms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--paper:#F4F6F1;--surface:#FFFFFF;--ink:#1E2B25;--muted:#66746C;--line:#DDE3DB;--green:#1F6F4A;--marigold:#F2A900;color-scheme:light dark}
+@media (prefers-color-scheme: dark){:root{--paper:#111A16;--surface:#1A2620;--ink:#E7EFE9;--muted:#93A59A;--line:#2B3A32;--green:#3FA774}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;font-size:16px}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:2}
+.wrap{max-width:760px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px 48px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:var(--paper);padding:10px 0;z-index:2;border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:22px;font-family:"Bricolage Grotesque",sans-serif}
+.brand b{color:var(--marigold)}
+.lang{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer}
+.tabs{display:flex;gap:8px;margin:14px 0}
+.tabs a{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 18px 8px;margin:14px 0;scroll-margin-top:70px}
+h1{font-size:26px;margin:0 0 4px;color:var(--green)}
+h2{font-size:18px;margin:18px 0 4px}
+p,li{margin:6px 0}
+ul{padding-inline-start:22px;margin:4px 0}
+.muted{color:var(--muted);font-size:14px}
+a{color:var(--green)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Wanhar Mart<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
+  <div id="page"></div>
+</div>
+<script>
+const UPDATED = '29 September 2026';
+const C = {
+en:{ lang:'اردو', tabP:'Privacy Policy', tabT:'Terms of Service', updated:'Last updated', contactNone:'Use “Wanhar Mart help” chat inside any of our apps.',
+privacy:`<h1>Privacy Policy</h1><p class="muted">{updated}</p>
+<p>Wanhar Mart (“we”, “us”) runs a local delivery service in Kallar Kahar, District Chakwal, Punjab, Pakistan. We have four apps: the Customer app, the Shop app, the Rider app and the Admin panel. This policy explains what information we collect, why, and your choices.</p>
+<h2>1. Information we collect</h2>
+<ul>
+<li><b>Account:</b> name, phone number, email address and password (the password is stored in encrypted form by our login provider; we cannot see it).</li>
+<li><b>Customers:</b> delivery addresses, the map location you choose or share, orders, reviews, chat messages, invite codes and promo codes used.</li>
+<li><b>Shops:</b> shop name, address, location, phone, opening times, products, photos, orders and earnings.</li>
+<li><b>Riders:</b> vehicle, CNIC number, duty times, live location <u>only while on duty</u>, deliveries, cash collected, pay, fines, bonuses, and a selfie taken when starting duty. To check it is really you, the app turns your registered face photo into a set of numbers (a face template) and compares it with the duty selfie on your phone. The face template and selfies are stored privately and are seen only by you and Wanhar Mart admins.</li>
+<li><b>Device:</b> notification token (to send order alerts), app language and basic error logs.</li>
+</ul>
+<h2>2. How we use it</h2>
+<ul>
+<li>To take, prepare, deliver and track orders, and to calculate delivery fees by distance.</li>
+<li>To let customers, shops, riders and our support team talk about an order.</li>
+<li>To pay shops and riders, record cash handovers, duty hours, overtime, fines and bonuses.</li>
+<li>To send notifications about orders, messages, offers and account safety.</li>
+<li>To prevent fraud and misuse, and to solve complaints.</li>
+</ul>
+<h2>3. Who can see your information</h2>
+<ul>
+<li><b>The shop</b> sees your name, phone, order and note. <b>The rider</b> sees your name, phone, delivery address and location for that order. <b>Customers</b> see the rider’s name, phone and live location while their order is on the way.</li>
+<li><b>Other riders</b> see only your first name and initial on the “Rider of the day” list.</li>
+<li><b>Service providers</b> that run our apps: Supabase (database, login and file storage), GitHub Pages (website hosting), OpenStreetMap and its address service (maps and finding your address), BigDataCloud (backup address lookup), and Google, Apple or Mozilla push services (notifications).</li>
+<li><b>The law:</b> we share information with authorities only when Pakistani law requires it.</li>
+</ul>
+<p>We do not sell your personal information.</p>
+<h2>4. Location</h2>
+<p>Customers share location only when they tap “Use my location” or place a pin. Riders share location only while on duty, so customers and Wanhar Mart can follow the delivery and send nearby orders. You can turn location permission off in your phone settings, but some features will not work.</p>
+<h2>5. How long we keep it</h2>
+<p>We keep account information while your account is open. Order, payment and pay records are kept for up to 5 years for accounting and disputes. Duty selfies are kept only as long as needed to check duty and settle disputes. When your account is deleted, your name, phone, email, addresses, face template and notification tokens are removed; past orders stay in our records without your name.</p>
+<h2>6. Security</h2>
+<p>Data is sent over encrypted connections (HTTPS). Access is limited by account type, and each user can only see what their role needs. No system is 100% safe, so please keep your password private.</p>
+<h2>7. Your choices and rights</h2>
+<ul>
+<li>You can see and edit your name, phone and addresses in the app.</li>
+<li>You can turn notifications off at any time.</li>
+<li><b>Delete your account:</b> open Account and tap “Delete my account”, or message “Wanhar Mart help”. We complete requests within 7 days.</li>
+</ul>
+<h2>8. Children</h2>
+<p>Our apps are not meant for children under 13. Riders and shop owners must be 18 or older.</p>
+<h2>9. Changes</h2>
+<p>We may update this policy. We will change the date at the top and tell you in the app if the change is important.</p>
+<h2>10. Contact</h2>
+<p>{contact}</p>`,
+terms:`<h1>Terms of Service</h1><p class="muted">{updated}</p>
+<p>By creating an account or using Wanhar Mart you agree to these terms. If you do not agree, please do not use our apps.</p>
+<h2>1. The service</h2>
+<p>Wanhar Mart connects customers with local shops and delivery riders in and around Kallar Kahar. Shops sell the products; riders deliver them; Wanhar Mart runs the apps, support and payments between shops and riders.</p>
+<h2>2. Accounts</h2>
+<ul><li>Give true information and keep your password safe. You are responsible for activity on your account.</li>
+<li>We may block accounts that break these terms, give false information, abuse riders, shops or staff, or misuse promo codes.</li></ul>
+<h2>3. Orders and prices</h2>
+<ul><li>Prices, product options, delivery fee, discounts and tip are shown before you place an order. The delivery fee can depend on distance.</li>
+<li>A shop may refuse an order (for example if an item has run out). Orders not accepted in time are cancelled automatically.</li>
+<li>Scheduled orders are delivered as close to the chosen time as possible.</li></ul>
+<h2>4. Payment</h2>
+<p>Payment is cash on delivery unless another method is shown in the app. Please have the exact amount ready. Tips go fully to the rider.</p>
+<h2>5. Delivery</h2>
+<ul><li>Please be available at the address and answer the rider’s call. If you do not respond, the rider will wait for the time shown in the app and may then return the order to the shop.</li>
+<li>Returned orders may not be refunded and repeated no-shows can lead to blocking.</li>
+<li>Confirm “Received” only when you have your order. If something is wrong, tap “I did not receive it” or contact support right away.</li></ul>
+<h2>6. Cancellations and refunds</h2>
+<p>You can cancel an order before the shop accepts it. After that, please contact support. If an item is missing, wrong or damaged, report it within 24 hours; after checking, we may replace it, refund the amount or give a promo credit.</p>
+<h2>7. Promo codes and invites</h2>
+<p>Codes have conditions such as minimum order, expiry and number of uses. Codes have no cash value. We may cancel codes that are misused, including invite codes used with fake accounts.</p>
+<h2>8. Shops</h2>
+<p>Shops must keep products, prices, photos and opening times correct, prepare orders on time and follow food safety and trade laws. Wanhar Mart deducts the agreed commission from shop earnings and pays shops on the agreed schedule.</p>
+<h2>9. Riders</h2>
+<p>Riders must hold a valid driving licence, follow traffic laws, start duty with their own selfie, treat customers politely and hand over all cash collected. Pay, salary, overtime, per-delivery rates, bonuses and fines follow the rider’s contract and the rules shown in the Rider app. Fines may be cut from pay for rule breaking.</p>
+<h2>10. Not allowed</h2>
+<p>Illegal items, fraud, fake orders, harassment, copying or attacking our apps, or using someone else’s account.</p>
+<h2>11. Responsibility</h2>
+<p>We try to keep the apps working and deliveries on time, but delays can happen because of weather, traffic or shop issues. As far as the law allows, Wanhar Mart is not liable for indirect losses. Nothing in these terms removes rights you have under Pakistani consumer law.</p>
+<h2>12. Law</h2>
+<p>These terms follow the laws of Pakistan. Disputes will first be settled through our support; if needed, the courts of Punjab, Pakistan will decide.</p>
+<h2>13. Changes</h2>
+<p>We may change these terms. Continuing to use the apps after a change means you accept it.</p>
+<h2>14. Contact</h2>
+<p>{contact}</p>` },
+ur:{ lang:'English', tabP:'پرائیویسی پالیسی', tabT:'شرائط و ضوابط', updated:'آخری تبدیلی', contactNone:'ہماری کسی بھی ایپ میں ”Wanhar Mart ہیلپ“ چیٹ استعمال کریں۔',
+privacy:`<h1>پرائیویسی پالیسی</h1><p class="muted">{updated}</p>
+<p>Wanhar Mart (”ہم“) کلر کہار، ضلع چکوال، پنجاب، پاکستان میں مقامی ڈیلیوری سروس چلاتا ہے۔ ہماری چار ایپس ہیں: کسٹمر ایپ، دکان ایپ، رائیڈر ایپ اور ایڈمن پینل۔ یہ پالیسی بتاتی ہے کہ ہم کون سی معلومات لیتے ہیں، کیوں لیتے ہیں اور آپ کے اختیارات کیا ہیں۔</p>
+<h2>1. ہم کون سی معلومات لیتے ہیں</h2>
+<ul>
+<li><b>اکاؤنٹ:</b> نام، فون نمبر، ای میل اور پاس ورڈ (پاس ورڈ خفیہ شکل میں محفوظ ہوتا ہے، ہم اسے نہیں دیکھ سکتے)۔</li>
+<li><b>گاہک:</b> ڈیلیوری کے پتے، نقشے پر لگائی گئی لوکیشن، آرڈر، ریویو، چیٹ، اور استعمال کیے گئے کوڈ۔</li>
+<li><b>دکانیں:</b> دکان کا نام، پتہ، لوکیشن، فون، اوقات، پروڈکٹس، تصاویر، آرڈر اور کمائی۔</li>
+<li><b>رائیڈر:</b> گاڑی، شناختی کارڈ نمبر، ڈیوٹی کے اوقات، <u>صرف ڈیوٹی کے دوران</u> لائیو لوکیشن، ڈیلیوریاں، جمع کیا گیا کیش، اجرت، جرمانے، بونس، اور ڈیوٹی شروع کرتے وقت سیلفی۔ یہ یقینی بنانے کے لیے کہ آپ ہی ہیں، ایپ آپ کی رجسٹرڈ تصویر کو نمبروں کے ایک خاکے (فیس ٹیمپلیٹ) میں بدل کر فون پر ہی سیلفی سے ملاتی ہے۔ یہ خاکہ اور سیلفیاں نجی رکھی جاتی ہیں اور صرف آپ اور Wanhar Mart کے ایڈمن دیکھ سکتے ہیں۔</li>
+<li><b>فون:</b> نوٹیفکیشن کا ٹوکن، ایپ کی زبان اور بنیادی خرابی کی معلومات۔</li>
+</ul>
+<h2>2. ہم اسے کیسے استعمال کرتے ہیں</h2>
+<ul>
+<li>آرڈر لینے، تیار کرنے، پہنچانے، ٹریک کرنے اور فاصلے کے حساب سے فیس لگانے کے لیے۔</li>
+<li>گاہک، دکان، رائیڈر اور ہماری سپورٹ ٹیم کی آپس میں بات کے لیے۔</li>
+<li>دکانوں اور رائیڈرز کی ادائیگی، کیش، ڈیوٹی کے گھنٹے، اوور ٹائم، جرمانے اور بونس کے حساب کے لیے۔</li>
+<li>آرڈر، میسج، آفرز اور اکاؤنٹ کی حفاظت کے نوٹیفکیشن بھیجنے کے لیے۔</li>
+<li>دھوکہ روکنے اور شکایات حل کرنے کے لیے۔</li>
+</ul>
+<h2>3. آپ کی معلومات کون دیکھ سکتا ہے</h2>
+<ul>
+<li><b>دکان</b> آپ کا نام، فون، آرڈر اور ہدایت دیکھتی ہے۔ <b>رائیڈر</b> اس آرڈر کے لیے آپ کا نام، فون، پتہ اور لوکیشن دیکھتا ہے۔ <b>گاہک</b> آرڈر راستے میں ہو تو رائیڈر کا نام، فون اور لائیو لوکیشن دیکھتا ہے۔</li>
+<li><b>دوسرے رائیڈر</b> ”آج کا بہترین رائیڈر“ کی لسٹ میں صرف آپ کا پہلا نام دیکھتے ہیں۔</li>
+<li><b>سروس دینے والی کمپنیاں:</b> Supabase (ڈیٹا بیس، لاگ اِن، فائلیں)، GitHub Pages (ویب سائٹ)، OpenStreetMap (نقشہ اور پتہ ڈھونڈنا)، BigDataCloud (متبادل پتہ سروس)، اور Google، Apple یا Mozilla (نوٹیفکیشن)۔</li>
+<li><b>قانون:</b> صرف پاکستانی قانون کے تقاضے پر حکام کو معلومات دی جاتی ہیں۔</li>
+</ul>
+<p>ہم آپ کی ذاتی معلومات فروخت نہیں کرتے۔</p>
+<h2>4. لوکیشن</h2>
+<p>گاہک صرف ”میری لوکیشن“ دبانے یا پن لگانے پر لوکیشن دیتے ہیں۔ رائیڈر صرف ڈیوٹی کے دوران لوکیشن دیتے ہیں تاکہ ڈیلیوری ٹریک ہو سکے اور قریب کے آرڈر مل سکیں۔ آپ فون کی سیٹنگ سے لوکیشن بند کر سکتے ہیں، لیکن کچھ سہولتیں کام نہیں کریں گی۔</p>
+<h2>5. معلومات کب تک رکھی جاتی ہیں</h2>
+<p>اکاؤنٹ کھلا رہنے تک اکاؤنٹ کی معلومات رکھی جاتی ہیں۔ آرڈر، ادائیگی اور اجرت کا ریکارڈ حساب اور تنازعات کے لیے 5 سال تک رکھا جاتا ہے۔ ڈیوٹی کی سیلفیاں صرف اتنی دیر رکھی جاتی ہیں جتنی ڈیوٹی کی جانچ اور تنازعات کے لیے ضروری ہو۔ اکاؤنٹ ختم ہونے پر نام، فون، ای میل، پتے، فیس ٹیمپلیٹ اور نوٹیفکیشن ٹوکن مٹا دیے جاتے ہیں؛ پرانے آرڈر آپ کے نام کے بغیر ریکارڈ میں رہتے ہیں۔</p>
+<h2>6. حفاظت</h2>
+<p>معلومات محفوظ کنکشن (HTTPS) سے بھیجی جاتی ہیں اور ہر شخص صرف اتنا دیکھ سکتا ہے جتنا اس کے کام کے لیے ضروری ہے۔ کوئی بھی نظام سو فیصد محفوظ نہیں، اس لیے اپنا پاس ورڈ کسی کو نہ بتائیں۔</p>
+<h2>7. آپ کے اختیارات</h2>
+<ul>
+<li>آپ ایپ میں اپنا نام، فون اور پتے دیکھ اور بدل سکتے ہیں۔</li>
+<li>نوٹیفکیشن کسی بھی وقت بند کر سکتے ہیں۔</li>
+<li><b>اکاؤنٹ ختم کرنا:</b> اکاؤنٹ میں ”میرا اکاؤنٹ ختم کریں“ دبائیں یا ”Wanhar Mart ہیلپ“ کو میسج کریں۔ ہم سات دن میں یہ کام مکمل کرتے ہیں۔</li>
+</ul>
+<h2>8. بچے</h2>
+<p>ہماری ایپس 13 سال سے کم عمر بچوں کے لیے نہیں۔ رائیڈر اور دکان کے مالک کی عمر کم از کم 18 سال ہونی چاہیے۔</p>
+<h2>9. تبدیلیاں</h2>
+<p>ہم یہ پالیسی بدل سکتے ہیں۔ اوپر تاریخ بدل دی جائے گی اور اہم تبدیلی پر ایپ میں بتایا جائے گا۔</p>
+<h2>10. رابطہ</h2>
+<p>{contact}</p>`,
+terms:`<h1>شرائط و ضوابط</h1><p class="muted">{updated}</p>
+<p>اکاؤنٹ بنا کر یا Wanhar Mart استعمال کر کے آپ ان شرائط سے اتفاق کرتے ہیں۔ اگر آپ متفق نہیں تو ہماری ایپس استعمال نہ کریں۔</p>
+<h2>1. سروس</h2>
+<p>Wanhar Mart کلر کہار اور آس پاس کے گاہکوں کو مقامی دکانوں اور ڈیلیوری رائیڈرز سے جوڑتا ہے۔ دکانیں چیزیں بیچتی ہیں، رائیڈر پہنچاتے ہیں، اور Wanhar Mart ایپس، سپورٹ اور دکانوں اور رائیڈرز کی ادائیگی کا انتظام کرتا ہے۔</p>
+<h2>2. اکاؤنٹ</h2>
+<ul><li>درست معلومات دیں اور پاس ورڈ محفوظ رکھیں۔ اپنے اکاؤنٹ کی ہر سرگرمی کے آپ ذمہ دار ہیں۔</li>
+<li>شرائط توڑنے، غلط معلومات دینے، رائیڈر، دکان یا عملے سے بدسلوکی، یا کوڈ کے غلط استعمال پر اکاؤنٹ بند کیا جا سکتا ہے۔</li></ul>
+<h2>3. آرڈر اور قیمتیں</h2>
+<ul><li>قیمت، آپشن، ڈیلیوری فیس، رعایت اور ٹپ آرڈر سے پہلے دکھائی جاتی ہے۔ ڈیلیوری فیس فاصلے پر منحصر ہو سکتی ہے۔</li>
+<li>دکان آرڈر رد کر سکتی ہے (مثلاً چیز ختم ہو گئی ہو)۔ وقت پر قبول نہ ہونے والے آرڈر خود منسوخ ہو جاتے ہیں۔</li>
+<li>مقررہ وقت کے آرڈر چنے گئے وقت کے قریب پہنچائے جاتے ہیں۔</li></ul>
+<h2>4. ادائیگی</h2>
+<p>جب تک ایپ میں کوئی اور طریقہ نہ دکھے، ادائیگی ڈیلیوری پر نقد ہے۔ ٹپ پوری کی پوری رائیڈر کو ملتی ہے۔</p>
+<h2>5. ڈیلیوری</h2>
+<ul><li>پتے پر موجود رہیں اور رائیڈر کی کال اٹھائیں۔ جواب نہ دینے پر رائیڈر ایپ میں دکھائے گئے وقت تک انتظار کرے گا اور پھر آرڈر دکان پر واپس لے جا سکتا ہے۔</li>
+<li>واپس ہونے والے آرڈر کی رقم واپس نہیں ہو سکتی، اور بار بار ایسا ہونے پر اکاؤنٹ بند ہو سکتا ہے۔</li>
+<li>آرڈر ملنے پر ہی ”مل گیا“ دبائیں۔ کوئی مسئلہ ہو تو فوراً ”نہیں ملا“ دبائیں یا سپورٹ سے رابطہ کریں۔</li></ul>
+<h2>6. منسوخی اور رقم کی واپسی</h2>
+<p>دکان کے قبول کرنے سے پہلے آرڈر منسوخ کر سکتے ہیں، بعد میں سپورٹ سے رابطہ کریں۔ کوئی چیز کم، غلط یا خراب ہو تو 24 گھنٹے میں بتائیں؛ جانچ کے بعد ہم چیز بدل سکتے ہیں، رقم واپس کر سکتے ہیں یا کوڈ دے سکتے ہیں۔</p>
+<h2>7. پرومو کوڈ اور دعوت</h2>
+<p>کوڈز کی شرائط ہوتی ہیں جیسے کم از کم آرڈر، آخری تاریخ اور استعمال کی حد۔ کوڈ کی کوئی نقد قیمت نہیں۔ جعلی اکاؤنٹس کے ذریعے استعمال سمیت غلط استعمال پر کوڈ منسوخ کیے جا سکتے ہیں۔</p>
+<h2>8. دکانیں</h2>
+<p>دکانیں پروڈکٹس، قیمتیں، تصاویر اور اوقات درست رکھیں، آرڈر وقت پر تیار کریں اور کاروبار اور صفائی کے قوانین پر عمل کریں۔ Wanhar Mart طے شدہ کمیشن کاٹ کر طے شدہ وقت پر ادائیگی کرتا ہے۔</p>
+<h2>9. رائیڈر</h2>
+<p>رائیڈر کے پاس درست ڈرائیونگ لائسنس ہو، ٹریفک قوانین پر عمل کرے، ڈیوٹی اپنی سیلفی سے شروع کرے، گاہکوں سے اچھا برتاؤ کرے اور جمع کیا گیا سارا کیش جمع کرائے۔ تنخواہ، اوور ٹائم، فی ڈیلیوری اجرت، بونس اور جرمانے رائیڈر کے کنٹریکٹ اور رائیڈر ایپ میں دیے گئے اصولوں کے مطابق ہوں گے۔ اصول توڑنے پر جرمانہ اجرت سے کاٹا جا سکتا ہے۔</p>
+<h2>10. منع ہے</h2>
+<p>غیر قانونی چیزیں، دھوکہ، جعلی آرڈر، ہراساں کرنا، ایپس کی نقل یا ان پر حملہ، یا کسی اور کا اکاؤنٹ استعمال کرنا۔</p>
+<h2>11. ذمہ داری</h2>
+<p>ہم ایپس چلتی رکھنے اور ڈیلیوری وقت پر کرنے کی کوشش کرتے ہیں، لیکن موسم، ٹریفک یا دکان کی وجہ سے دیر ہو سکتی ہے۔ قانون کی حد تک Wanhar Mart بالواسطہ نقصان کا ذمہ دار نہیں۔ یہ شرائط پاکستانی صارف قانون کے تحت آپ کے حقوق ختم نہیں کرتیں۔</p>
+<h2>12. قانون</h2>
+<p>یہ شرائط پاکستان کے قوانین کے تابع ہیں۔ تنازعہ پہلے ہماری سپورٹ کے ذریعے حل کیا جائے گا؛ ضرورت ہو تو پنجاب، پاکستان کی عدالتیں فیصلہ کریں گی۔</p>
+<h2>13. تبدیلیاں</h2>
+<p>ہم یہ شرائط بدل سکتے ہیں۔ تبدیلی کے بعد ایپس استعمال کرنا تبدیلی قبول کرنا ہے۔</p>
+<h2>14. رابطہ</h2>
+<p>{contact}</p>` }
+};
+const params = new URLSearchParams(location.search);
+let lang = params.get('lang') === 'ur' ? 'ur' : 'en';
+try { if (!params.get('lang')) lang = JSON.parse(localStorage.getItem('kh_lang')) === 'ur' ? 'ur' : 'en'; } catch (e) {}
+let contact = { phone:'', email:'' };
+const e = s => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+function contactHtml(){
+  const t = C[lang]; const parts = ['Wanhar Mart, Kallar Kahar, District Chakwal, Punjab, Pakistan.'];
+  if (contact.email) parts.push(`Email: <a href="mailto:${e(contact.email)}">${e(contact.email)}</a>`);
+  if (contact.phone) parts.push(`${lang === 'ur' ? 'فون' : 'Phone'}: <a href="tel:${e(contact.phone)}">${e(contact.phone)}</a>`);
+  parts.push(t.contactNone);
+  return parts.join('<br>');
+}
+function render(){
+  const t = C[lang];
+  document.documentElement.lang = lang; document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = t.lang;
+  const fill = h => h.replace('{updated}', t.updated + ': ' + UPDATED).replace('{contact}', contactHtml());
+  document.getElementById('page').innerHTML = `<div class="tabs"><a href="#privacy">${t.tabP}</a><a href="#terms">${t.tabT}</a></div>
+    <section class="card" id="privacy">${fill(t.privacy)}</section><section class="card" id="terms">${fill(t.terms)}</section>`;
+  if (location.hash){ const el = document.querySelector(location.hash); if (el) setTimeout(() => el.scrollIntoView(), 50); }
+}
+function toggleLang(){ lang = lang === 'ur' ? 'en' : 'ur'; render(); }
+render();
+try {
+  const sb = supabase.createClient('https://ijhvlbfuyracfyfefwze.supabase.co', 'sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp', { auth:{ persistSession:false } });
+  sb.rpc('public_contact').then(({ data }) => { const c = data && data[0]; if (c){ contact = { phone:c.phone || '', email:c.email || '' }; render(); } });
+} catch (err) {}
+</script>
+</body>
+</html>
