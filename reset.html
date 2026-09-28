@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Wanhar Mart · New password</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F6F1;--surface:#FFFFFF;--ink:#1E2B25;--muted:#66746C;--line:#DDE3DB;--green:#1F6F4A;--green-dark:#175539;--marigold:#F2A900;--danger:#B3261E;color-scheme:light dark}
+@media (prefers-color-scheme: dark){:root{--paper:#111A16;--surface:#1A2620;--ink:#E7EFE9;--muted:#93A59A;--line:#2B3A32;--green:#3FA774;--green-dark:#2F8F60;--danger:#F08A82}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.8}
+.wrap{max-width:480px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 18px 32px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.brand{font-weight:800;font-size:26px;letter-spacing:-.02em;font-family:"Bricolage Grotesque",sans-serif}
+.brand b{color:var(--marigold)}
+.lang{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer}
+.hero{position:relative;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#1F6F4A 0%,#0F766E 55%,#F2A900 140%);height:210px;display:grid;place-items:center}
+.hero .bag{width:120px;height:120px;border-radius:30px;background:rgba(255,255,255,.95);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.25);transform:rotate(-8deg)}
+.hero .bag svg{width:70px;height:70px}
+.hero .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.18)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:26px 22px;margin-top:14px;text-align:center}
+.icon{width:74px;height:74px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:38px;background:rgba(31,111,74,.12);color:var(--green)}
+.icon.bad{background:rgba(179,38,30,.12);color:var(--danger)}
+h1{margin:0 0 10px;font-size:32px;letter-spacing:-.02em;color:var(--green)}
+h1.bad{color:var(--danger)}
+p{margin:0 0 6px;font-size:18px}
+.muted{color:var(--muted);font-size:15px}
+.btns{display:grid;gap:10px;margin-top:20px}
+.btn{display:block;text-decoration:none;text-align:center;border-radius:14px;padding:16px;font-weight:800;font-size:17px;background:var(--green);color:#fff}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.steps{text-align:start;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:15px}
+.steps li::before{content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;background:var(--marigold);color:#1E2B25;font-weight:800;display:grid;place-items:center;font-size:13px}
+.foot{text-align:center;color:var(--muted);font-size:13px;margin-top:18px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.icon{animation:pop .5s ease-out both}
+@media (prefers-reduced-motion:reduce){.icon{animation:none}}
+.f{display:block;text-align:start;font-weight:600;margin:14px 0 6px;font-size:15px}
+input{width:100%;font:inherit;font-size:17px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+button.btn{width:100%;border:0;cursor:pointer;font-family:inherit}
+button.btn:disabled{opacity:.6}
+.err{color:var(--danger);font-weight:600;min-height:22px;margin-top:10px}
+.show{background:none;border:0;color:var(--green);font:inherit;font-weight:600;cursor:pointer;padding:6px 0;float:inline-end}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Wanhar Mart<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
+  <div class="card" id="card"></div>
+  <div class="foot">Wanhar Mart · Kallar Kahar</div>
+</div>
+<script>
+const T = {
+  en:{ title:'Set a new password', p:'Choose a new password for your account.', pw:'New password', pw2:'Type it again', save:'Save new password', saving:'Saving…', show:'Show',
+       short:'Password must be at least 6 characters', nomatch:'The two passwords are not the same', wait:'Checking your link…',
+       ok_t:'Password changed 🎉', ok_p:'Your new password is saved. Log in with your email and new password.',
+       bad_t:'Link expired', bad_p:'This reset link has expired or was already used. Open the app, tap “Forgot password?” and get a new link.',
+       open_customer:'Open Wanhar Mart', open_rider:'Open Rider app', open_shop:'Open Shop app', open_admin:'Open Admin panel', lang:'اردو' },
+  ur:{ title:'نیا پاس ورڈ بنائیں', p:'اپنے اکاؤنٹ کے لیے نیا پاس ورڈ چنیں۔', pw:'نیا پاس ورڈ', pw2:'دوبارہ لکھیں', save:'نیا پاس ورڈ محفوظ کریں', saving:'محفوظ ہو رہا ہے…', show:'دکھائیں',
+       short:'پاس ورڈ کم از کم 6 حروف کا ہو', nomatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', wait:'لنک چیک ہو رہا ہے…',
+       ok_t:'پاس ورڈ بدل گیا 🎉', ok_p:'نیا پاس ورڈ محفوظ ہو گیا۔ اپنی ای میل اور نئے پاس ورڈ سے لاگ اِن کریں۔',
+       bad_t:'لنک کی مدت ختم', bad_p:'یہ لنک پرانا ہو گیا ہے یا استعمال ہو چکا ہے۔ ایپ کھولیں، “پاس ورڈ بھول گئے؟” دبائیں اور نیا لنک لیں۔',
+       open_customer:'Wanhar Mart کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', open_admin:'ایڈمن پینل کھولیں', lang:'English' }
+};
+const APPS = { customer:'customer.html', rider:'rider.html', shop:'restaurant.html', admin:'admin.html' };
+const sb = supabase.createClient('https://ijhvlbfuyracfyfefwze.supabase.co', 'sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp', { auth:{ storageKey:'khoupeyo-reset-auth', persistSession:false } });
+let lang = 'en';
+try { lang = JSON.parse(localStorage.getItem('kh_lang')) || 'en'; } catch (e) { try { lang = localStorage.getItem('kh_lang') === 'ur' ? 'ur' : 'en'; } catch (e2) {} }
+if (lang !== 'ur') lang = 'en';
+const params = new URLSearchParams(location.search);
+const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+const app = APPS[params.get('app')] ? params.get('app') : 'customer';
+let mode = (hash.get('error') || hash.get('error_code') || params.get('error')) ? 'bad' : 'wait';
+let errMsg = '';
+const $ = id => document.getElementById(id);
+function render(){
+  const t = T[lang];
+  document.documentElement.lang = lang; document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr';
+  $('langBtn').textContent = t.lang;
+  const openBtn = `<div class="btns"><a class="btn" href="${APPS[app]}">${t['open_' + app]}</a></div>`;
+  if (mode === 'wait'){ $('card').innerHTML = `<div class="icon">🔑</div><p class="muted">${t.wait}</p>`; return; }
+  if (mode === 'bad'){ $('card').innerHTML = `<div class="icon bad">!</div><h1 class="bad">${t.bad_t}</h1><p class="muted">${t.bad_p}</p>${openBtn}`; return; }
+  if (mode === 'done'){ $('card').innerHTML = `<div class="icon">✓</div><h1>${t.ok_t}</h1><p class="muted">${t.ok_p}</p>${openBtn}`; return; }
+  $('card').innerHTML = `<div class="icon">🔑</div><h1>${t.title}</h1><p class="muted">${t.p}</p>
+    <form onsubmit="save(event)" style="text-align:start">
+      <label class="f" for="pw">${t.pw} <button type="button" class="show" onclick="togglePw()">${t.show}</button></label>
+      <input id="pw" type="password" autocomplete="new-password" minlength="6" required>
+      <label class="f" for="pw2">${t.pw2}</label>
+      <input id="pw2" type="password" autocomplete="new-password" minlength="6" required>
+      <div class="err" id="err">${errMsg}</div>
+      <div class="btns" style="margin-top:8px"><button class="btn" id="saveBtn" type="submit">${t.save}</button></div>
+    </form>`;
+}
+function togglePw(){ ['pw','pw2'].forEach(id => { const el = $(id); el.type = el.type === 'password' ? 'text' : 'password'; }); }
+async function save(e){
+  e.preventDefault(); const t = T[lang];
+  const pw = $('pw').value, pw2 = $('pw2').value;
+  if (pw.length < 6){ $('err').textContent = t.short; return; }
+  if (pw !== pw2){ $('err').textContent = t.nomatch; return; }
+  const b = $('saveBtn'); b.disabled = true; b.textContent = t.saving;
+  const { error } = await sb.auth.updateUser({ password:pw });
+  if (error){ errMsg = error.message; b.disabled = false; b.textContent = t.save; $('err').textContent = error.message; return; }
+  await sb.auth.signOut().catch(() => {});
+  mode = 'done'; render();
+}
+function toggleLang(){ lang = lang === 'ur' ? 'en' : 'ur'; try { localStorage.setItem('kh_lang', JSON.stringify(lang)); } catch (e) {} render(); }
+render();
+if (mode !== 'bad'){
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (session && mode === 'wait'){ mode = 'form'; render(); try { history.replaceState(null, '', location.pathname + '?app=' + app); } catch (e) {} }
+  });
+  sb.auth.getSession().then(({ data }) => { if (data.session && mode === 'wait'){ mode = 'form'; render(); } });
+  setTimeout(() => { if (mode === 'wait'){ mode = 'bad'; render(); } }, 8000);
+}
+</script>
+</body>
+</html>
