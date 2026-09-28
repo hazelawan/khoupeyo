@@ -214,7 +214,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -939,7 +939,7 @@ const A = {
     const btn = $('authBtn'); btn.disabled = true; btn.textContent = t('loading');
     try {
       if (signup){
-        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name } } });
+        const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name }, emailRedirectTo:new URL('verified.html?app=customer', location.href).href } });
         if (error) throw error;
         if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
         await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
