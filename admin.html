@@ -266,7 +266,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.6';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -405,7 +405,7 @@ async function loadRiders(){
 async function loadSettings(){
   const rows = need(await sb.from('app_settings').select('*'));
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
-  state.tierEdit = null;
+  state.tierEdit = null; state.wtEdit = null;
 }
 let channel;
 function subscribeOrders(){
@@ -750,6 +750,10 @@ function itemForm(i){
     <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> In stock</label>
     <label class="check"><input id="i_appr" type="checkbox" ${i.is_approved ? 'checked' : ''}> Approved (customers can see it)</label>
     <label class="check"><input id="i_feat" type="checkbox" ${i.is_featured ? 'checked' : ''}> Featured on the home screen</label>
+    <label class="f" for="i_kg">Weight of one item (kg)</label><input id="i_kg" type="number" min="0" step="0.1" value="${i.weight_kg || ''}" placeholder="0">
+    <label class="f" for="i_heavy">Extra delivery charge for this item (Rs, heavy or large items like a flour bag, cooler, gas cylinder)</label>
+    <input id="i_heavy" type="number" min="0" value="${num(i.heavy_fee)}" placeholder="0">
+    <div class="muted" style="font-size:13px">Added to the delivery fee for each one ordered. 0 = normal item.</div>
     ${OE.html()}
     <div class="actions">
       <button class="btn block" id="saveBtn" onclick="A.saveItem('${i.id || ''}','${i.restaurant_id || state.menuRestaurant}')">Save product</button>
@@ -947,12 +951,21 @@ function viewBanners(){
 function viewZones(){
   const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
       <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
-      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
+      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${num(z.bulk_fee) && num(z.bulk_items) ? `, +${money(z.bulk_fee)}/item after ${num(z.bulk_items)} items` : ''}${Array.isArray(z.weight_tiers) ? `, own weight charges (${z.weight_tiers.length})` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
   return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
 }
+function zoneWeightEditor(){
+  const l = state.zwt || [];
+  return (l.map((x, i) => `<div style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px">
+      <span class="muted" style="font-size:13px">Above</span><input type="number" min="0" step="0.5" value="${x.above}" onchange="state.zwt[${i}].above=num(this.value)" aria-label="kg">
+      <span class="muted" style="font-size:13px">kg → Rs</span><input type="number" min="0" value="${x.fee}" onchange="state.zwt[${i}].fee=num(this.value)" aria-label="Extra charge">
+      <button type="button" class="linkbtn" style="color:var(--danger)" onclick="state.zwt.splice(${i},1);$('zwtBox').innerHTML=zoneWeightEditor()">✕</button></div>`).join('') || '<div class="muted" style="margin-top:6px">No levels. Add one, or leave it empty for no weight charge in this zone.</div>')
+    + `<button type="button" class="linkbtn" style="margin-top:6px" onclick="const l=state.zwt, p=l[l.length-1]; l.push({ above:p ? p.above + 10 : 10, fee:p ? p.fee + 50 : 50 }); $('zwtBox').innerHTML=zoneWeightEditor()">+ Add a level</button>`;
+}
 function zoneForm(z){
   z = z || { delivery_fee:100, min_order:0, rider_pay:60, is_active:true };
+  state.zwt = (Array.isArray(z.weight_tiers) ? z.weight_tiers : (Array.isArray(state.settings && state.settings.weight_tiers) ? state.settings.weight_tiers : [])).map(x => ({ above:num(x.above), fee:num(x.fee) }));
   return `<label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
     <label class="f" for="z_city">City</label><input id="z_city" type="text" value="${esc(z.city)}">
     <div class="two">
@@ -965,6 +978,15 @@ function zoneForm(z){
       <div><label class="f" for="z_perkm">Extra per km (Rs)</label><input id="z_perkm" type="number" min="0" value="${z.per_km_fee ?? 0}"></div>
     </div>
     <label class="f" for="z_max">Farthest delivery (km, empty = no limit)</label><input id="z_max" type="number" min="0" step="0.5" value="${z.max_km ?? ''}">
+    <div class="note" style="margin-top:14px"><b>Big orders.</b> Charge more when a customer orders many items. Example: first 5 items included, then Rs 10 for each extra item, at most Rs 100. Leave 0 to turn off.</div>
+    <div class="two">
+      <div><label class="f" for="z_bitems">Items included</label><input id="z_bitems" type="number" min="0" value="${z.bulk_items ?? 0}"></div>
+      <div><label class="f" for="z_bfee">Rs per extra item</label><input id="z_bfee" type="number" min="0" value="${z.bulk_fee ?? 0}"></div>
+    </div>
+    <label class="f" for="z_bmax">Most extra for a big order (Rs, empty = no limit)</label><input id="z_bmax" type="number" min="0" value="${z.bulk_max ?? ''}">
+    <div class="note" style="margin-top:14px"><b>⚖️ Weight charges for this zone.</b> Leave off to use the general weight charges from Settings.</div>
+    <label class="check"><input id="z_wown" type="checkbox" ${Array.isArray(z.weight_tiers) ? 'checked' : ''} onchange="$('zwtBox').style.display = this.checked ? 'block' : 'none'"> This zone has its own weight charges</label>
+    <div id="zwtBox" style="display:${Array.isArray(z.weight_tiers) ? 'block' : 'none'}">${zoneWeightEditor()}</div>
     <label class="f" for="z_pay">Rider pay per delivery (Rs, only if the rider has no contract pay)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
     <label class="check"><input id="z_active" type="checkbox" ${z.is_active ? 'checked' : ''}> Zone is open for orders</label>
     <div class="actions"><button class="btn block" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
@@ -981,6 +1003,17 @@ function viewRules(){
 }
 
 // ---- Settings ----
+// ---- Weight charges ----
+function weightList(){ if (!state.wtEdit) state.wtEdit = (Array.isArray(state.settings.weight_tiers) ? state.settings.weight_tiers : []).map(x => ({ above:num(x.above), fee:num(x.fee) })).sort((a, b) => a.above - b.above); return state.wtEdit; }
+function weightEditor(){
+  const l = weightList();
+  return (l.map((x, i) => `<div style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px">
+      <span class="muted" style="font-size:13px">Above</span><input type="number" min="0" step="0.5" value="${x.above}" onchange="A.wtSet(${i},'above',this.value)" aria-label="kg">
+      <span class="muted" style="font-size:13px">kg → Rs</span><input type="number" min="0" value="${x.fee}" onchange="A.wtSet(${i},'fee',this.value)" aria-label="Extra charge">
+      <button type="button" class="linkbtn" style="color:var(--danger)" onclick="A.wtDel(${i})">✕</button></div>`).join('') || '<div class="muted" style="margin-top:8px">No weight charges. Add a level to turn it on.</div>')
+    + `<button type="button" class="linkbtn" style="margin-top:8px" onclick="A.wtAdd()">+ Add a level</button>`;
+}
+
 // ---- Pay tiers per contract ----
 function tierList(k){
   if (!state.tierEdit) state.tierEdit = {};
@@ -1034,6 +1067,18 @@ function viewSettings(){
         <div><label class="f" for="s_exp">Order expires after (hours)</label><input id="s_exp" type="number" min="1" max="48" step="0.5" value="${num(s.order_expiry_hours ?? 3)}"></div>
       </div>
       <div class="actions"><button class="btn ghost block" onclick="A.saveExpiry()">Save</button></div>
+    </div>
+    <div class="card">
+      <b>⚖️ Delivery charge by weight (general)</b>
+      <div class="muted" style="font-size:14px">Used by every zone that does not have its own weight charges (Delivery zones → zone). Set the weight of products (Products → product, or the shop sets it). When the whole order is heavier than a level, the extra charge is added to the delivery fee. Example: above 10 kg + Rs 50, above 20 kg + Rs 100.</div>
+      <div id="wtBox">${weightEditor()}</div>
+      <div class="actions"><button class="btn ghost block" onclick="A.saveWeight()">Save weight charges</button></div>
+    </div>
+    <div class="card">
+      <b>📦 Big and heavy orders: rider share</b>
+      <div class="muted" style="font-size:14px">Customers pay extra delivery for big orders and heavy items (set in Delivery zones and Products). Choose how much of that extra goes to the rider. 100 = all to the rider, 0 = all to Wanhar Mart.</div>
+      <label class="f" for="rx_share">Rider gets (%)</label><input id="rx_share" type="number" min="0" max="100" value="${num(s.rider_extra_share ?? 100)}">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('rider_extra_share', Math.min(100, Math.max(0, num($('rx_share').value))))">Save</button></div>
     </div>
     <div class="card">
       <b>🛵 Auto-dispatch (nearest rider)</b>
@@ -1126,7 +1171,8 @@ const A = {
       ${o.customer_note ? `<div class="note"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
       ${items}
       <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
-      <div class="kv"><span class="muted">Delivery</span><span>${money(o.delivery_fee)}</span></div>
+      ${num(o.weight_kg) ? `<div class="kv"><span class="muted">⚖️ Order weight</span><span>${Math.round(num(o.weight_kg) * 100) / 100} kg${num(o.weight_fee) ? ' · +' + money(o.weight_fee) : ''}</span></div>` : ''}
+      <div class="kv"><span class="muted">Delivery${num(o.bulk_fee) || num(o.heavy_fee) ? ` (incl. ${num(o.bulk_fee) ? 'big order ' + money(o.bulk_fee) : ''}${num(o.bulk_fee) && num(o.heavy_fee) ? ', ' : ''}${num(o.heavy_fee) ? 'heavy items ' + money(o.heavy_fee) : ''})` : ''}</span><span>${money(o.delivery_fee)}</span></div>
       ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
       ${num(o.tip) ? `<div class="kv"><span class="muted">Rider tip (goes to rider)</span><span>${money(o.tip)}</span></div>` : ''}
       <div class="kv total"><span>Cash on delivery</span><span>${money(o.total)}</span></div>
@@ -1293,7 +1339,7 @@ const A = {
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
     await run(async () => {
       const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
-        category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop };
+        category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop, heavy_fee:Math.max(0, num($('i_heavy').value)), weight_kg:Math.max(0, num($('i_kg').value)) };
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
       let itemId = id;
       if (id) need(await sb.from('menu_items').update(row).eq('id', id));
@@ -1712,13 +1758,15 @@ const A = {
   async deleteBanner(id){ if (!confirm('Delete this banner?')) return; await run(async () => { need(await sb.from('banners').delete().eq('id', id)); await loadBanners(); closeSheet(); renderTab(); }); },
 
   // ---- Zones ----
-  editZone(id){ const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
+  async editZone(id){ if (!state.settings || !('weight_tiers' in state.settings)) await run(loadSettings); const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
   async saveZone(id){
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
       const maxV = $('z_max').value.trim();
       const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
-        base_km:num($('z_base').value), per_km_fee:num($('z_perkm').value), max_km:maxV === '' ? null : num(maxV) };
+        base_km:num($('z_base').value), per_km_fee:num($('z_perkm').value), max_km:maxV === '' ? null : num(maxV),
+        bulk_items:Math.max(0, Math.round(num($('z_bitems').value))), bulk_fee:num($('z_bfee').value), bulk_max:$('z_bmax').value.trim() === '' ? null : num($('z_bmax').value),
+        weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null };
       need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
     });
@@ -1757,6 +1805,10 @@ const A = {
     await run(async () => { need(await sb.from('app_settings').upsert({ key:'late_grace_minutes', value:Math.max(0, num($('s_grace').value)), updated_at:new Date().toISOString() })); });
     await A.saveSetting('rider_contracts', v);
   },
+  wtSet(i, f, v){ const l = weightList(); if (l[i]) l[i][f] = num(v); },
+  wtAdd(){ const l = weightList(); const last = l[l.length - 1]; l.push({ above:last ? last.above + 10 : 10, fee:last ? last.fee + 50 : 50 }); $('wtBox').innerHTML = weightEditor(); },
+  wtDel(i){ weightList().splice(i, 1); $('wtBox').innerHTML = weightEditor(); },
+  async saveWeight(){ const l = weightList().filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above); state.wtEdit = null; await A.saveSetting('weight_tiers', l); },
   tierSet(k, i, f, v){ const l = tierList(k); if (!l[i]) return; l[i][f] = num(v); if (f === 'from') redrawTiers(k); },
   tierAdd(k){ const l = tierList(k); const last = l[l.length - 1] || { from:1, pay:0 }; l.push({ from:last.from + 100, pay:last.pay + 10 }); redrawTiers(k); },
   tierDel(k, i){ const l = tierList(k); if (i > 0) l.splice(i, 1); redrawTiers(k); },
@@ -2165,12 +2217,12 @@ const Push = (() => {
 // ================= PRODUCT OPTIONS EDITOR (Shop app and Admin) =================
 const OE = (() => {
   const L = {
-    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. The price you add is on top of the product price.',
+    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. + Rs is added to the price. + kg is added to the weight (for delivery charges).',
          add:'+ Add option group', group:'Group name', group_ph:'Size', required:'Customer must choose', choose:'How many can they pick?', one:'Only 1', upto:'Up to {n}',
          choice:'Choice', choice_ph:'Large', price:'+ Rs', add_choice:'+ Add choice', remove_group:'Remove group', off:'Off', presets:'Quick add:',
          p_size:'Size', p_small:'Small', p_medium:'Medium', p_large:'Large', p_color:'Colour', p_black:'Black', p_white:'White', p_weight:'Weight', p_half:'Half kg', p_one:'1 kg', p_extras:'Extras', p_gift:'Gift wrap',
          need_name:'Write a name for every option group', need_choice:'Every option group needs at least one choice', loading:'Loading options…' },
-    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ جو قیمت لکھیں گے وہ پروڈکٹ کی قیمت کے اوپر لگے گی۔',
+    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ + روپے قیمت میں جڑیں گے، + kg وزن میں (ڈیلیوری چارج کے لیے)۔',
          add:'+ آپشن گروپ شامل کریں', group:'گروپ کا نام', group_ph:'سائز', required:'گاہک کو لازمی چننا ہے', choose:'کتنے چن سکتے ہیں؟', one:'صرف 1', upto:'زیادہ سے زیادہ {n}',
          choice:'چوائس', choice_ph:'بڑا', price:'+ روپے', add_choice:'+ چوائس شامل کریں', remove_group:'گروپ ہٹائیں', off:'بند', presets:'جلدی شامل کریں:',
          p_size:'سائز', p_small:'چھوٹا', p_medium:'درمیانہ', p_large:'بڑا', p_color:'رنگ', p_black:'کالا', p_white:'سفید', p_weight:'وزن', p_half:'آدھا کلو', p_one:'1 کلو', p_extras:'اضافی', p_gift:'گفٹ پیکنگ',
@@ -2185,9 +2237,9 @@ const OE = (() => {
   async function load(id){
     itemId = id || null; groups = []; removed = { groups:[], options:[] };
     if (id){
-      const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order)').eq('menu_item_id', id).order('sort_order').order('created_at');
+      const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg)').eq('menu_item_id', id).order('sort_order').order('created_at');
       if (error) throw error;
-      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, on:o.is_available !== false })) }));
+      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, w:Number(o.weight_kg) || 0, on:o.is_available !== false })) }));
     }
     draw();
   }
@@ -2199,9 +2251,10 @@ const OE = (() => {
           <button type="button" class="linkbtn" style="color:var(--danger);flex:none" onclick="OE.delGroup(${gi})">✕</button></div>
         <label class="check" style="margin-top:8px"><input type="checkbox" ${g.min ? 'checked' : ''} onchange="OE.set(${gi},'min',this.checked ? 1 : 0)"> ${tt('required')}</label>
         <label class="f">${tt('choose')}</label><select onchange="OE.set(${gi},'max',Number(this.value))">${maxOpts.map(n => `<option value="${n}" ${g.max === n ? 'selected' : ''}>${n === 1 ? tt('one') : tt('upto', { n })}</option>`).join('')}</select>
-        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 90px auto auto;gap:6px;align-items:center;margin-top:8px">
+        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 72px 62px auto auto;gap:5px;align-items:center;margin-top:8px">
             <input type="text" value="${e(o.name)}" placeholder="${tt('choice_ph')}" aria-label="${tt('choice')}" oninput="OE.setO(${gi},${oi},'name',this.value)">
             <input type="number" min="0" inputmode="decimal" value="${o.price || ''}" placeholder="${tt('price')}" aria-label="${tt('price')}" oninput="OE.setO(${gi},${oi},'price',Number(this.value)||0)">
+            <input type="number" min="0" step="0.1" inputmode="decimal" value="${o.w || ''}" placeholder="+kg" aria-label="kg" oninput="OE.setO(${gi},${oi},'w',Number(this.value)||0)">
             <label style="font-size:12px;display:flex;align-items:center;gap:3px;white-space:nowrap" title="${tt('off')}"><input type="checkbox" ${o.on ? '' : 'checked'} onchange="OE.setO(${gi},${oi},'on',!this.checked)">${tt('off')}</label>
             <button type="button" class="linkbtn" style="color:var(--danger)" onclick="OE.delO(${gi},${oi})">✕</button></div>`).join('')}
         <button type="button" class="linkbtn" style="margin-top:6px" onclick="OE.addO(${gi})">${tt('add_choice')}</button></div>`).join('')
@@ -2212,12 +2265,12 @@ const OE = (() => {
            <button type="button" class="linkbtn" onclick="OE.preset('weight')">${tt('p_weight')}</button>
            <button type="button" class="linkbtn" onclick="OE.preset('extras')">${tt('p_extras')}</button></div>`;
   }
-  const opt = (name, price) => ({ id:uid(), name, price:price || 0, on:true });
+  const opt = (name, price, w) => ({ id:uid(), name, price:price || 0, w:w || 0, on:true });
   function addGroup(){ groups.push({ id:uid(), name:'', min:0, max:1, options:[opt('', 0)] }); draw(); }
   function preset(k){
     if (k === 'size') groups.push({ id:uid(), name:tt('p_size'), min:1, max:1, options:[opt(tt('p_small'), 0), opt(tt('p_medium'), 0), opt(tt('p_large'), 0)] });
     if (k === 'color') groups.push({ id:uid(), name:tt('p_color'), min:1, max:1, options:[opt(tt('p_black'), 0), opt(tt('p_white'), 0)] });
-    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0), opt(tt('p_one'), 0)] });
+    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0, 0.5), opt(tt('p_one'), 0, 1)] });
     if (k === 'extras') groups.push({ id:uid(), name:tt('p_extras'), min:0, max:3, options:[opt(tt('p_gift'), 0)] });
     draw();
   }
@@ -2240,7 +2293,7 @@ const OE = (() => {
     if (removed.options.length) need(await sbc.from('menu_options').delete().in('id', removed.options));
     if (!groups.length) return;
     need(await sbc.from('menu_option_groups').upsert(groups.map((g, i) => ({ id:g.id, menu_item_id:id, name:g.name, min_select:Math.min(g.min, g.max), max_select:g.max, sort_order:i }))));
-    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), is_available:o.on, sort_order:i })));
+    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), weight_kg:Math.max(0, Number(o.w) || 0), is_available:o.on, sort_order:i })));
     if (rows.length) need(await sbc.from('menu_options').upsert(rows));
     removed = { groups:[], options:[] };
   }
