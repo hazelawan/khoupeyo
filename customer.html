@@ -267,6 +267,185 @@ html[dir=rtl] .heart{right:auto;left:12px}
   #receiptWrap .rbtns{display:none}
   #receiptWrap .rc{border-radius:0;max-width:none;box-shadow:none}
 }
+/* ===== Wanhar Mart design system v2 (shared by all apps) ===== */
+:root{
+  --paper:#F2F5F1; --surface:#FFFFFF; --ink:#13201A; --muted:#64736A; --line:#E2E8E1; --soft:#E8F3EC; --field:#F3F6F2;
+  --green:#0E7A4D; --green-dark:#0A5E3B; --green-2:#17A56B; --marigold:#FFB302; --danger:#D63B2F; --deal:#E2472F;
+  --r-sm:12px; --r:16px; --r-lg:22px;
+  --sh-1:0 1px 2px rgba(19,40,28,.06),0 1px 1px rgba(19,40,28,.03);
+  --sh-2:0 8px 22px rgba(19,40,28,.08),0 2px 6px rgba(19,40,28,.05);
+  --sh-3:0 18px 44px rgba(19,40,28,.20),0 4px 12px rgba(19,40,28,.08);
+  --grad:linear-gradient(135deg,#0B6B44 0%,#11905B 55%,#19A86E 100%);
+  --grad-gold:linear-gradient(135deg,#FFC23A,#FFA400);
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#0C1511; --surface:#16211B; --ink:#E8F0EA; --muted:#93A59A; --line:#243229; --soft:#18291F; --field:#1C2922;
+    --green:#34B27A; --green-dark:#23915F; --green-2:#46C489; --danger:#FF8A7E; --deal:#FF8A70;
+    --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 8px 22px rgba(0,0,0,.35); --sh-3:0 18px 44px rgba(0,0,0,.55);
+    --grad:linear-gradient(135deg,#0B4F33 0%,#0F6E46 60%,#138556 100%); }
+}
+body{background:var(--paper);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:rgba(23,165,107,.25)}
+h1{font-weight:800;letter-spacing:-.025em}
+h2{font-weight:800;letter-spacing:-.015em}
+h3{font-weight:800}
+/* Buttons */
+.btn{background:var(--grad);border-radius:14px;box-shadow:0 6px 16px rgba(14,122,77,.25);transition:transform .12s var(--ease),box-shadow .2s,filter .2s;letter-spacing:.005em}
+.btn:active{transform:scale(.98);filter:brightness(.95);background:var(--grad)}
+.btn.ghost{background:var(--soft);color:var(--green);border:1.5px solid transparent;box-shadow:none}
+.btn.ghost:active{background:var(--soft)}
+.btn.warn{background:rgba(214,59,47,.08);color:var(--danger);border:1.5px solid transparent;box-shadow:none}
+.btn.gold{background:var(--grad-gold);color:#241a00;box-shadow:0 6px 16px rgba(255,170,0,.28)}
+.btn[disabled]{opacity:.45;box-shadow:none;filter:grayscale(.3)}
+/* Fields */
+input[type=text],input[type=password],input[type=email],input[type=tel],input[type=number],input[type=time],input[type=date],input[type=datetime-local],input[type=search],select,textarea{
+  background:var(--surface);border:1.5px solid var(--line);border-radius:14px;transition:border-color .15s,box-shadow .15s,background .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green);background:var(--surface);box-shadow:0 0 0 4px rgba(23,165,107,.15)}
+label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
+/* Surfaces */
+.card,.box{border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh-1);background:var(--surface)}
+.pill{border-radius:999px;font-weight:700;letter-spacing:.01em}
+.muted{color:var(--muted)}
+.empty{color:var(--muted)}
+/* Sheets and popups */
+.sheet-back{background:rgba(8,20,14,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:wmFade .2s ease both}
+.sheet{border-radius:28px 28px 0 0;box-shadow:var(--sh-3);animation:wmUp .32s var(--ease) both;position:relative;padding-top:22px!important}
+.sheet::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:44px;height:5px;border-radius:9px;background:var(--line)}
+.sheet-head h3{font-size:20px;letter-spacing:-.01em}
+.x{border-radius:50%!important;background:var(--field)!important;width:36px;height:36px;display:grid;place-items:center;border:0!important}
+.toast{border-radius:16px!important;box-shadow:var(--sh-3)!important;font-weight:700;animation:wmToast .35s var(--ease) both;backdrop-filter:blur(6px)}
+@keyframes wmFade{from{opacity:0}to{opacity:1}}
+@keyframes wmUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes wmToast{from{transform:translate(-50%,16px) scale(.96);opacity:0}}
+@keyframes wmPop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+/* Loading skeleton */
+.skel{background:linear-gradient(90deg,var(--line) 25%,var(--field) 37%,var(--line) 63%);background-size:400% 100%;animation:wmShim 1.3s ease infinite;border-radius:14px}
+@keyframes wmShim{0%{background-position:100% 50%}100%{background-position:0 50%}}
+/* Switch */
+.switch span{transition:background .2s}
+/* Scrollbars */
+*::-webkit-scrollbar{height:0;width:6px}
+*::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Floating bottom navigation */
+.nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+  border:1px solid var(--line)!important;border-radius:24px;box-shadow:var(--sh-3);padding:4px!important;
+  background:rgba(255,255,255,.9);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px)}
+@media (prefers-color-scheme: dark){ .nav{background:rgba(22,33,27,.9)} }
+.nav a,.nav button{border-top:0!important;border-radius:18px;transition:background .2s,color .2s}
+.nav a.on,.nav button.on{background:var(--soft);color:var(--green)!important}
+main{padding-bottom:140px!important}
+/* ===== Customer app look ===== */
+.top{background:var(--grad);padding:12px 16px 16px;border-radius:0 0 26px 26px;box-shadow:0 10px 30px rgba(11,107,68,.25)}
+.top .brand{font-size:22px}
+.pillbtn{border:0;background:rgba(255,255,255,.16);backdrop-filter:blur(4px)}
+.addrchip{display:flex;align-items:center;gap:8px;margin-top:8px;background:none;border:0;color:#fff;padding:0;cursor:pointer;text-align:start;max-width:100%}
+.addrchip .pin{width:34px;height:34px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none;font-size:17px}
+.addrchip small{display:block;font-size:12px;opacity:.8;font-weight:600}
+.addrchip b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
+.hello{color:#fff;margin-top:10px}
+.hello b{display:block;font-size:22px;line-height:1.2;letter-spacing:-.02em}
+.hello span{opacity:.85;font-size:14px}
+.searchbox{margin-top:12px}
+.searchbox input{border-radius:16px!important;padding:14px 14px 14px 44px!important;background:var(--surface)!important;box-shadow:0 6px 18px rgba(0,0,0,.12);border:0!important}
+html[dir=rtl] .searchbox input{padding:14px 44px 14px 14px!important}
+.searchbox svg{left:14px}
+main{padding-top:16px}
+h2{font-size:19px;margin:24px 0 12px}
+h2 a,h2 button{background:var(--soft)!important;padding:6px 12px!important;border-radius:999px;font-size:13px!important}
+/* categories */
+.cats{gap:12px;padding:2px 2px 8px}
+.catchip{width:72px}
+.catchip .ic{width:64px;height:64px;border-radius:50%;border:0;box-shadow:var(--sh-1);font-size:26px}
+.cats .catchip:nth-child(6n+1) .ic{background:#FFF1D6;color:#B06A00}
+.cats .catchip:nth-child(6n+2) .ic{background:#E3F4EA;color:#0E7A4D}
+.cats .catchip:nth-child(6n+3) .ic{background:#FDE4E1;color:#C2372A}
+.cats .catchip:nth-child(6n+4) .ic{background:#E4EEFD;color:#2257B8}
+.cats .catchip:nth-child(6n+5) .ic{background:#F2E6FB;color:#7A3DB8}
+.cats .catchip:nth-child(6n+6) .ic{background:#E1F5F6;color:#0E7280}
+.catchip span{font-size:12px;font-weight:700}
+/* banners */
+.banner{background:var(--grad);border-radius:22px;padding:22px 20px;box-shadow:var(--sh-2);position:relative;min-height:120px}
+.banner::after{content:"🛍️";position:absolute;right:-6px;bottom:-14px;font-size:92px;opacity:.18;transform:rotate(-12deg)}
+html[dir=rtl] .banner::after{right:auto;left:-6px}
+.bslide{border-radius:22px;min-height:150px;box-shadow:var(--sh-2)}
+.bdots i{width:7px;height:7px;transition:width .25s}
+.bdots i.on{width:20px;border-radius:9px}
+/* product cards */
+.gcard{border:0;border-radius:20px;box-shadow:var(--sh-2);padding:8px 8px 12px;transition:transform .15s var(--ease)}
+.gcard:active{transform:scale(.98)}
+.gimg{border-radius:15px;background:var(--field)}
+.gname{font-weight:700;margin-top:2px}
+.gprice{font-size:16px}
+.off{border-radius:999px;padding:3px 9px;top:8px;left:8px;box-shadow:0 3px 8px rgba(226,71,47,.35)}
+.qadd{background:var(--grad);width:36px;height:36px;box-shadow:0 6px 14px rgba(14,122,77,.35);bottom:10px;right:10px}
+.heart{box-shadow:var(--sh-1);top:14px;right:14px}
+.hscroll{gap:14px;padding:4px 2px 12px;margin:0 -2px}
+.hscroll .gcard{width:156px}
+/* shops */
+.shopcard{width:148px;background:var(--surface);border-radius:20px;box-shadow:var(--sh-2);padding:8px 8px 10px}
+.shopcard .logo{width:100%;height:92px;border-radius:15px}
+.rcard{background:var(--surface);border:0;border-radius:22px;box-shadow:var(--sh-2);padding:10px;margin-bottom:12px;gap:12px}
+.rimg{width:92px;height:92px;border-radius:16px}
+.rname{font-size:17px}
+.badge{border-radius:999px;padding:3px 10px}
+.chip2{border:0;background:var(--surface);box-shadow:var(--sh-1);font-weight:700}
+.chip2.on{background:var(--ink);color:var(--paper)}
+/* shop page */
+.hero{border-radius:24px;box-shadow:var(--sh-2)}
+.hero-img{height:190px}
+.hero-info{border:0;border-radius:0 0 24px 24px}
+.cattabs{top:0;background:linear-gradient(var(--paper) 70%,transparent)}
+.item{background:var(--surface);border:0;border-radius:18px;box-shadow:var(--sh-1);padding:12px;margin:10px 0}
+.tile{border-radius:14px}
+.add{background:var(--grad)!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 5px 12px rgba(14,122,77,.3)}
+.stepper{background:var(--soft);border-radius:999px}
+.stepper button{color:var(--green)!important;font-weight:800;background:transparent}
+.stepper b{color:var(--ink)}
+.stepper button{border-radius:50%}
+/* product page */
+.dimg{border-radius:26px;box-shadow:var(--sh-2);overflow:hidden}
+.shopstrip{background:var(--surface);border:0;border-radius:18px;box-shadow:var(--sh-1)}
+.buybar{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:0;box-shadow:0 -10px 30px rgba(0,0,0,.08)}
+@media (prefers-color-scheme: dark){.buybar{background:rgba(22,33,27,.92)}}
+/* cart and checkout */
+.cartbar{bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+.cartbar a{background:var(--grad)!important;border-radius:18px!important;box-shadow:0 12px 26px rgba(14,122,77,.35)!important}
+.cartrow{padding:12px 0}
+.cartrow .thumb{border-radius:14px}
+.line.total{font-size:19px}
+.promo input{border-radius:14px}
+.seg button{border-radius:14px;border:1.5px solid var(--line)}
+.seg button.on{background:var(--grad);border-color:transparent}
+.addr-item{border-radius:16px}
+/* orders */
+.orow{background:var(--surface);border:0;border-radius:20px;box-shadow:var(--sh-1);padding:12px;margin-bottom:10px}
+.statushero{background:var(--grad);border-radius:24px;padding:20px;box-shadow:var(--sh-2);position:relative;overflow:hidden}
+.statushero::after{content:"🛵";position:absolute;right:10px;bottom:-8px;font-size:80px;opacity:.2}
+html[dir=rtl] .statushero::after{right:auto;left:10px}
+.track li.now i{box-shadow:0 0 0 6px rgba(255,179,2,.25)}
+.menu-row{background:var(--surface);border:0!important;border-radius:16px;box-shadow:var(--sh-1);padding:15px 14px!important;margin-bottom:8px}
+.offer{border-radius:18px;box-shadow:var(--sh-1)}
+.refcard{border-radius:24px;box-shadow:var(--sh-2);background:var(--grad)}
+/* nav icons */
+.nav a{padding:8px 2px 7px!important}
+.nav a svg{width:23px;height:23px}
+.nav a.on svg{stroke-width:2.4}
+.nav .cnt{box-shadow:0 0 0 2px var(--surface)}
+/* auth */
+.auth{padding-top:24px}
+.auth .brand{font-size:34px}
+/* skeleton */
+.skhome .sk1{height:130px;margin-bottom:18px;border-radius:22px}
+.skhome .skrow{display:flex;gap:12px;margin-bottom:18px}
+.skhome .skrow i{width:64px;height:64px;border-radius:50%;flex:none}
+.skhome .skgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.skhome .skgrid i{height:210px;border-radius:20px}
+#pushCard{bottom:calc(96px + env(safe-area-inset-bottom))!important}
+.top.mini .hello,.top.mini .addrchip{display:none!important}
+.top.mini{border-radius:0 0 20px 20px;padding-bottom:12px}
+.top.mini .searchbox{margin-top:8px}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
@@ -275,7 +454,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.1';
+const APP_VERSION = '3.2';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -325,6 +504,7 @@ const I18N = {
     when_t:'Delivery time', asap:'As soon as possible', schedule:'Schedule', sched_day:'Day', sched_time:'Time', sched_none:'No times left. Choose another day.', sched_for:'Scheduled for {d}',
     closed_sched:'This shop is closed now. You can schedule your order for later.', today_l:'Today', tomorrow_l:'Tomorrow',
     receipt:'🧾 Receipt', receipt_t:'Receipt', print_pdf:'Print or save as PDF', close:'Close', order_word:'Order', date_word:'Date', paid_cash:'Cash on delivery', thank_you:'Thank you for ordering with Wanhar Mart!', customer_word:'Customer',
+    deliver_to_l:'Deliver to', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', hello_q:'What do you need today?',
     pay_note:'Pay cash to the rider when your order arrives.', add_loc_hint:'Tap Edit on your address, then tap “Use my location” and save.', place_order:'Place order',
     home:'Home', shops:'Shops', orders:'Orders', account:'Account',
     no_orders:'No orders yet. Your first order will show up here.',
@@ -404,6 +584,7 @@ const I18N = {
     when_t:'ڈیلیوری کا وقت', asap:'جتنی جلدی ہو سکے', schedule:'وقت مقرر کریں', sched_day:'دن', sched_time:'وقت', sched_none:'اس دن کوئی وقت باقی نہیں۔ دوسرا دن چنیں۔', sched_for:'{d} کے لیے',
     closed_sched:'یہ دکان ابھی بند ہے۔ آپ بعد کے وقت کے لیے آرڈر کر سکتے ہیں۔', today_l:'آج', tomorrow_l:'کل',
     receipt:'🧾 رسید', receipt_t:'رسید', print_pdf:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', order_word:'آرڈر', date_word:'تاریخ', paid_cash:'ڈیلیوری پر نقد', thank_you:'Wanhar Mart سے آرڈر کرنے کا شکریہ!', customer_word:'گاہک',
+    deliver_to_l:'یہاں پہنچائیں', gm:'صبح بخیر', ga:'السلام علیکم', ge:'شام بخیر', hello_q:'آج آپ کو کیا چاہیے؟',
     pay_note:'آرڈر پہنچنے پر رائیڈر کو نقد ادا کریں۔', add_loc_hint:'اپنے پتے پر ”ترمیم“ دبائیں، پھر ”میری لوکیشن“ دبا کر محفوظ کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', shops:'دکانیں', orders:'آرڈرز', account:'اکاؤنٹ',
     no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔',
@@ -580,6 +761,8 @@ function renderShell(){
         <a class="brand" href="#/">Wanhar Mart<b>.</b></a>
         <div class="actions-top">${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
       </div>
+      ${state.user ? `<button class="addrchip" id="addrChip" onclick="A.pickAddr()">${addrChipHtml()}</button>` : ''}
+      <div class="hello" id="hello">${helloHtml()}</div>
       <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" autocomplete="off"></div>
     </header>
     <main id="view"></main>
@@ -593,10 +776,29 @@ function renderShell(){
     </div></nav>`;
   updateCartUI();
 }
+function addrChipHtml(){
+  const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
+  return `<span class="pin">📍</span><span style="min-width:0"><small>${t('deliver_to_l')} ▾</small><b>${esc(a ? (a.label || a.full_address) : t('add_address'))}</b></span>`;
+}
+function helloHtml(){
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Karachi', hour:'numeric', hour12:false }).format(new Date()));
+  const g = h < 12 ? t('gm') : h < 17 ? t('ga') : t('ge');
+  const n = state.profile && state.profile.full_name ? state.profile.full_name.split(' ')[0] : '';
+  return `<span>${g}${n ? ', ' + esc(n) : ''} 👋</span><b>${t('hello_q')}</b>`;
+}
+let miniTop = false;
+window.addEventListener('scroll', () => { const y = window.scrollY; const m = miniTop ? y > 8 : y > 150; if (m !== miniTop){ miniTop = m; const tp = $('topbar'); if (tp) tp.classList.toggle('mini', m); } }, { passive:true });
+function refreshChip(){ const c = $('addrChip'); if (c) c.innerHTML = addrChipHtml(); const h = $('hello'); if (h) h.innerHTML = helloHtml(); }
+function skeleton(name){
+  if (name === 'home' || name === 'c' || name === 'shops') return `<div class="skhome"><div class="skel sk1"></div><div class="skrow"><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i></div><div class="skgrid"><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i></div></div>`;
+  return `<div class="skhome"><div class="skel" style="height:90px;border-radius:22px;margin-bottom:14px"></div><div class="skel" style="height:64px;margin-bottom:10px"></div><div class="skel" style="height:64px;margin-bottom:10px"></div><div class="skel" style="height:64px"></div></div>`;
+}
 function highlightNav(name){
   const map = { home:'n_home', c:'n_home', p:'n_home', shops:'n_shops', r:'n_shops', cart:'n_cart', checkout:'n_cart', orders:'n_orders', order:'n_orders', account:'n_account', saved:'n_account', offers:'n_account' };
   ['n_home','n_shops','n_cart','n_orders','n_account'].forEach(id => { const el = $(id); if (el) el.classList.toggle('on', map[name] === id); });
   const sbx = $('searchbox'); if (sbx) sbx.style.display = ['home','c','shops'].includes(name) ? '' : 'none';
+  const hl = $('hello'); if (hl) hl.style.display = name === 'home' ? '' : 'none';
+  const ac = $('addrChip'); if (ac) ac.style.display = ['home','shops','c','r','cart'].includes(name) ? '' : 'none';
 }
 let currentRoute = 'home';
 function updateCartUI(){
@@ -634,7 +836,7 @@ async function route(soft){
   if (!$('view')) renderShell();
   currentRoute = name; highlightNav(name); updateCartUI();
   const v = $('view'); if (!v) return;
-  if (!soft) v.innerHTML = `<div class="empty">${t('loading')}</div>`;
+  if (!soft) v.innerHTML = skeleton(name);
   try {
     if (name === 'home') await showHome();
     else if (name === 'shops') await showShops();
@@ -914,7 +1116,7 @@ function offerValue(o){
 function drawCart(){
   const v = $('view'); if (!v) return;
   if (!state.cart.items.length){
-    v.innerHTML = `<h1>${t('cart')}</h1><div class="empty">${t('cart_empty')}<br><br><a class="btn inline" href="#/">${t('home')}</a></div>`; return;
+    v.innerHTML = `<h1>${t('cart')}</h1><div class="empty"><div style="font-size:72px;line-height:1;margin-bottom:10px">🛒</div>${t('cart_empty')}<br><br><a class="btn inline" href="#/">${t('home')}</a></div>`; return;
   }
   const r = cartRestaurant(); const sub = cartSubtotal(); const fee = cartFee(); const min = cartMin(); const disc = cartDiscount(fee);
   const short = min && sub < min;
@@ -949,7 +1151,9 @@ function drawCart(){
 // ================= CHECKOUT =================
 async function loadAddresses(){
   state.addresses = need(await sb.from('addresses').select('*').eq('customer_id', state.user.id).order('created_at', { ascending:false }));
+  if (!state.selAddr) state.selAddr = ls.get('kh_addr', null);
   if (!state.addresses.find(a => a.id === state.selAddr)) state.selAddr = state.addresses[0] ? state.addresses[0].id : null;
+  setTimeout(refreshChip, 0);
 }
 async function showCheckout(){
   if (!state.cart.items.length) return nav('/cart');
@@ -1099,7 +1303,7 @@ async function showOrders(){
     <div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:52px;height:52px;font-size:20px">${o.restaurant && o.restaurant.logo_url ? `<img src="${esc(o.restaurant.logo_url)}" alt="">` : esc(((o.restaurant && o.restaurant.name) || '?')[0])}</div>
     <div style="min-width:0"><div style="font-weight:700">${esc(o.restaurant ? o.restaurant.name : '')}</div><small class="muted">${when(o.created_at)} · ${t('items_n', { n:(o.order_items || []).reduce((n, i) => n + i.quantity, 0) })}</small>${o.scheduled_for && !FINAL.includes(o.status) ? `<div><span class="schedpill">🗓️ ${esc(schedLabel(o.scheduled_for))}</span></div>` : ''}</div></div>
     <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a>`).join('');
-  $('view').innerHTML = `<h1>${t('history')}</h1>${rows || `<div class="empty">${t('no_orders')}</div>`}`;
+  $('view').innerHTML = `<h1>${t('history')}</h1>${rows || `<div class="empty"><div style="font-size:72px;line-height:1;margin-bottom:10px">📦</div>${t('no_orders')}</div>`}`;
 }
 const TRACK = ['placed','accepted','preparing','ready','picked_up','delivered'];
 function trackerHtml(o){
@@ -1538,7 +1742,12 @@ const A = {
       toast(t('saved'));
     });
   },
-  selectAddr(id){ state.selAddr = id; drawCheckout(); },
+  selectAddr(id){ state.selAddr = id; ls.set('kh_addr', id); refreshChip(); drawCheckout(); },
+  pickAddr(){
+    const list = (state.addresses || []).map(a => `<button class="menu-row" style="width:100%" onclick="A.chooseAddr('${a.id}')"><span style="text-align:start"><b>${a.id === state.selAddr ? '✅ ' : '📍 '}${esc(a.label || t('address'))}</b><div class="muted" style="font-size:13px;font-weight:400">${esc(a.full_address)}</div></span><span class="muted">›</span></button>`).join('');
+    openSheet(t('deliver_to_l'), `${list || `<div class="muted" style="margin-bottom:10px">${t('pick_address')}</div>`}<button class="btn" style="margin-top:8px" onclick="A.showAddrForm()">+ ${t('add_address')}</button>`);
+  },
+  chooseAddr(id){ state.selAddr = id; ls.set('kh_addr', id); state.quote = null; closeSheet(); refreshChip(); if (currentRoute === 'checkout') drawCheckout(); toast('📍 ' + ((state.addresses.find(a => a.id === id) || {}).label || t('saved'))); },
   async deleteAddress(id){
     if (!confirm(t('delete_confirm'))) return;
     await run(async () => {
@@ -1728,6 +1937,7 @@ async function afterLogin(user){
   const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
   state.profile = data || {};
   subscribeOrders();
+  loadAddresses().then(refreshChip, () => {});
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'customer', ding:() => ring(), toast:(m, err) => toast(m, err) });
   Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'customer', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
