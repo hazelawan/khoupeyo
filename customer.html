@@ -454,7 +454,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.3';
+const APP_VERSION = '3.6';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -505,6 +505,7 @@ const I18N = {
     closed_sched:'This shop is closed now. You can schedule your order for later.', today_l:'Today', tomorrow_l:'Tomorrow',
     receipt:'🧾 Receipt', receipt_t:'Receipt', print_pdf:'Print or save as PDF', close:'Close', order_word:'Order', date_word:'Date', paid_cash:'Cash on delivery', thank_you:'Thank you for ordering with Wanhar Mart!', customer_word:'Customer',
     deliver_to_l:'Deliver to', gm:'Good morning', ga:'Good afternoon', ge:'Good evening', hello_q:'What do you need today?',
+    bulk_line:'Big order ({n} items)', heavy_line:'Heavy or large items', weight_line:'Weight {k}',
     pay_note:'Pay cash to the rider when your order arrives.', add_loc_hint:'Tap Edit on your address, then tap “Use my location” and save.', place_order:'Place order',
     home:'Home', shops:'Shops', orders:'Orders', account:'Account',
     no_orders:'No orders yet. Your first order will show up here.',
@@ -585,6 +586,7 @@ const I18N = {
     closed_sched:'یہ دکان ابھی بند ہے۔ آپ بعد کے وقت کے لیے آرڈر کر سکتے ہیں۔', today_l:'آج', tomorrow_l:'کل',
     receipt:'🧾 رسید', receipt_t:'رسید', print_pdf:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', order_word:'آرڈر', date_word:'تاریخ', paid_cash:'ڈیلیوری پر نقد', thank_you:'Wanhar Mart سے آرڈر کرنے کا شکریہ!', customer_word:'گاہک',
     deliver_to_l:'یہاں پہنچائیں', gm:'صبح بخیر', ga:'السلام علیکم', ge:'شام بخیر', hello_q:'آج آپ کو کیا چاہیے؟',
+    bulk_line:'بڑا آرڈر ({n} چیزیں)', heavy_line:'بھاری یا بڑی چیزیں', weight_line:'وزن {k}',
     pay_note:'آرڈر پہنچنے پر رائیڈر کو نقد ادا کریں۔', add_loc_hint:'اپنے پتے پر ”ترمیم“ دبائیں، پھر ”میری لوکیشن“ دبا کر محفوظ کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', shops:'دکانیں', orders:'آرڈرز', account:'اکاؤنٹ',
     no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔',
@@ -667,7 +669,21 @@ const cartCount = () => state.cart.items.reduce((n, i) => n + i.qty, 0);
 const cartSubtotal = () => state.cart.items.reduce((n, i) => n + i.price * i.qty, 0);
 function saveCart(){ state.promoRes = null; ls.set('kh_cart', state.cart); updateCartUI(); }
 function cartRestaurant(){ return state.restaurants.find(r => r.id === state.cart.rid); }
-function cartFee(){ const r = cartRestaurant(); return num(r && r.zone ? r.zone.delivery_fee : 0); }
+function cartExtras(){
+  const r = cartRestaurant(); const z = (r && r.zone) || {};
+  const items = state.cart.items.reduce((n, i) => n + i.qty, 0);
+  const heavy = state.cart.items.reduce((n, i) => n + num(i.heavy != null ? i.heavy : (state.itemsCache[i.id] || {}).heavy_fee) * i.qty, 0);
+  let bulk = num(z.bulk_items) > 0 && num(z.bulk_fee) > 0 ? Math.max(0, items - num(z.bulk_items)) * num(z.bulk_fee) : 0;
+  if (z.bulk_max != null && bulk > num(z.bulk_max)) bulk = num(z.bulk_max);
+  const kg = Math.round(state.cart.items.reduce((n, i) => n + num(i.w != null ? i.w : (state.itemsCache[i.id] || {}).weight_kg) * i.qty, 0) * 100) / 100;
+  return { items, bulk, heavy, kg, wfee:weightFee(kg, Array.isArray(z.weight_tiers) ? z.weight_tiers : null) };
+}
+function weightFee(kg, tiers){ let fee = 0, best = -1; (tiers || state.weightTiers || []).forEach(t => { const a = num(t.above); if (kg > a && a > best){ best = a; fee = num(t.fee); } }); return fee; }
+const kgText = kg => (Math.round(num(kg) * 100) / 100) + ' kg';
+function cartFee(){ const r = cartRestaurant(); const x = cartExtras(); return num(r && r.zone ? r.zone.delivery_fee : 0) + x.bulk + x.heavy + x.wfee; }
+function extraLines(bulk, heavy, items, kg, wfee){
+  return `${num(wfee) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ⚖️ ${t('weight_line').replace('{k}', kgText(kg))}</span><span class="muted">${money(wfee)}</span></div>` : ''}${num(bulk) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ${t('bulk_line').replace('{n}', items)}</span><span class="muted">${money(bulk)}</span></div>` : ''}${num(heavy) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ${t('heavy_line')}</span><span class="muted">${money(heavy)}</span></div>` : ''}`;
+}
 function cartMin(){ const r = cartRestaurant(); return num(r && r.zone ? r.zone.min_order : 0); }
 const cartDiscount = fee => !(state.promoRes && state.promoRes.ok) ? 0 : (state.promoRes.free_delivery ? num(fee == null ? cartFee() : fee) : num(state.promoRes.discount));
 const hasOpts = id => state.optItems.has(id);
@@ -675,7 +691,7 @@ const cartQtyOf = id => state.cart.items.filter(c => c.id === id).reduce((n, c) 
 async function loadOptItems(){ try { const { data } = await sb.from('menu_option_groups').select('menu_item_id'); (data || []).forEach(g => state.optItems.add(g.menu_item_id)); } catch (e) {} }
 async function loadOptions(id){
   if (state.optCache[id]) return state.optCache[id];
-  const g = need(await sb.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order)').eq('menu_item_id', id).order('sort_order').order('created_at'));
+  const g = need(await sb.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg)').eq('menu_item_id', id).order('sort_order').order('created_at'));
   g.forEach(x => { x.menu_options = (x.menu_options || []).sort((a, b) => a.sort_order - b.sort_order || num(a.price) - num(b.price)); });
   state.optCache[id] = g; if (g.length) state.optItems.add(id);
   return g;
@@ -877,7 +893,7 @@ function closedText(r){
 }
 async function loadRestaurants(){
   const list = need(await sb.from('restaurants')
-    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order,base_km,per_km_fee,max_km)')
+    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers)')
     .eq('is_active', true).order('name'));
   list.forEach(r => { r.manual_open = r.is_open; r.is_open = !!r.is_open && withinHours(r); });
   list.sort((a, b) => (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0));
@@ -889,12 +905,13 @@ function syncShopOpen(p){
 }
 async function loadProducts(){
   const [items, stats] = await Promise.all([
-    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,restaurant_id,category_id,is_available,is_featured,created_at,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active)')
+    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active)')
       .eq('is_available', true).eq('restaurants.is_active', true).order('created_at', { ascending:false }).limit(400),
     sb.rpc('public_stats')
   ]);
   state.products = need(items);
   state.products.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; });
+  sb.from('app_settings').select('value').eq('key', 'weight_tiers').maybeSingle().then(({ data }) => { state.weightTiers = (data && Array.isArray(data.value)) ? data.value : []; }, () => {});
   await Promise.all([loadOptItems(), sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false }).then(({ data }) => { state.banners = data || []; }, () => {})]);
   if (!stats.error && stats.data) state.stats = stats.data;
 }
@@ -1056,7 +1073,7 @@ function itemHtml(i){
   return `<div class="item ${i.is_available ? '' : 'off-stock'}">
     <a class="item-text" href="#/p/${i.id}"><div class="item-name">${esc(i.name)}</div>
       ${i.description ? `<div class="item-desc">${esc(i.description)}</div>` : ''}
-      <div class="item-price">${money(i.price)}${off ? `<span class="strike">${money(i.compare_price)}</span> <span class="save">-${off}%</span>` : ''}</div>${hasOpts(i.id) ? `<div class="custom">${t('customizable')}</div>` : ''}</a>
+      <div class="item-price">${money(i.price)}${off ? `<span class="strike">${money(i.compare_price)}</span> <span class="save">-${off}%</span>` : ''}</div>${num(i.weight_kg) ? `<div class="muted" style="font-size:12px">⚖️ ${kgText(i.weight_kg)}</div>` : ''}${hasOpts(i.id) ? `<div class="custom">${t('customizable')}</div>` : ''}</a>
     <div class="item-media">
       <div class="tile">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : esc((i.name || '?')[0])}</div>
       <div class="ctl" id="ctl-${i.id}">${ctlHtml(i)}</div>
@@ -1074,7 +1091,7 @@ async function showProduct(id){
   syncShopOpen(item);
   const shop = item.restaurants || item._shop || {}; const full = state.restaurants.find(r => r.id === shop.id) || shop;
   let rel = [];
-  try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
+  try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,heavy_fee,weight_kg,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
   const off = pctOff(item); const s = sold(item.id); const rt = shopRating(shop.id);
   state.qty = 1;
   const canBuy = item.is_available && full.is_active !== false;
@@ -1086,6 +1103,7 @@ async function showProduct(id){
     <h1 style="margin:6px 0 4px">${esc(item.name)}</h1>
     ${s ? `<div class="muted">${t('sold_n', { n:s })}</div>` : ''}
     ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
+    ${num(item.weight_kg) ? `<div class="muted" style="font-size:14px">⚖️ ${kgText(item.weight_kg)}</div>` : ''}
     ${hasOpts(item.id) ? `<div class="custom" style="font-size:14px">${t('customizable')}: ${esc((state.optCache[item.id] || []).map(g => g.name).join(', '))}</div>` : ''}
     ${item.is_available ? '' : `<div class="closed-note">${t('sold_out')}</div>`}
     ${full.is_open === false ? `<div class="closed-note">${esc(closedText(full))}</div>` : ''}
@@ -1141,6 +1159,7 @@ function drawCart(){
     <div class="box">
       <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
       <div class="line"><span>${t('delivery_fee')}</span><span>${money(fee)}</span></div>
+      ${(() => { const x = cartExtras(); return extraLines(x.bulk, x.heavy, x.items, x.kg, x.wfee); })()}
       ${disc ? `<div class="line disc"><span>${t('discount')}</span><span>−${money(disc)}</span></div>` : ''}
       <div class="line total"><span>${t('total')}</span><span>${money(sub + fee - disc)}</span></div>
     </div>
@@ -1228,21 +1247,22 @@ function addressRow(a, selectable){
     <button type="button" class="link" style="color:var(--danger)" onclick="A.deleteAddress('${a.id}')">${t('delete')}</button></div></div>`;
 }
 // Delivery fee by distance (asks the server; same price the order will use)
+const quoteKey = () => state.cart.rid + '|' + state.selAddr + '|' + state.cart.items.map(i => i.key + ':' + i.qty).join(',');
 async function loadQuote(){
-  const key = state.cart.rid + '|' + state.selAddr;
+  const key = quoteKey();
   if (!state.cart.rid || !state.selAddr || (state.quote && state.quote.key === key)) return;
   state.quote = { key, loading:true };
   try {
-    const { data, error } = await sb.rpc('quote_delivery', { p_restaurant_id:state.cart.rid, p_address_id:state.selAddr });
+    const { data, error } = await sb.rpc('quote_cart', { p_restaurant_id:state.cart.rid, p_address_id:state.selAddr, p_items:state.cart.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })) });
     if (error) throw error;
     const q = Array.isArray(data) ? data[0] : data;
-    state.quote = { key, ok:!!(q && q.ok), fee:num(q && q.fee), km:q && q.km != null ? Number(q.km) : null, msg:(q && q.message) || '' };
+    state.quote = { key, ok:!!(q && q.ok), fee:num(q && q.fee), km:q && q.km != null ? Number(q.km) : null, msg:(q && q.message) || '', bulk:num(q && q.bulk_fee), heavy:num(q && q.heavy_fee), items:num(q && q.items), kg:num(q && q.weight_kg), wfee:num(q && q.weight_fee) };
   } catch (e) { logErr(e); state.quote = { key, ok:true, fee:cartFee(), km:null, msg:'' }; }
   if (currentRoute === 'checkout') drawCheckout();
 }
 function drawCheckout(){
   const v = $('view'); if (!v) return;
-  const qKey = state.cart.rid + '|' + state.selAddr;
+  const qKey = quoteKey();
   const q = state.quote && state.quote.key === qKey ? state.quote : null;
   if (state.selAddr && !q) setTimeout(loadQuote, 0);
   const sub = cartSubtotal(), fee = q && !q.loading && q.ok ? q.fee : cartFee(), disc = cartDiscount(fee);
@@ -1282,6 +1302,7 @@ function drawCheckout(){
     <div class="box">
       <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
       <div class="line"><span>${t('delivery_fee')}${q && q.ok && q.km != null ? ` <span class="muted" style="font-size:13px">(${q.km.toFixed(1)} km)</span>` : ''}</span><span>${q && q.loading ? '…' : money(fee)}</span></div>
+      ${q && q.ok && !q.loading ? extraLines(q.bulk, q.heavy, q.items, q.kg, q.wfee) : ''}
       ${disc ? `<div class="line disc"><span>${t('discount')} (${esc(state.promo.trim().toUpperCase())})</span><span>−${money(disc)}</span></div>` : ''}
       ${tip ? `<div class="line"><span>${t('tip')}</span><span>${money(tip)}</span></div>` : ''}
       <div class="line total"><span>${t('total')}</span><span>${money(sub + fee - disc + tip)}</span></div>
@@ -1383,6 +1404,7 @@ async function showOrder(id){
     <div class="box"><b>${t('order_items')}</b>${items}
       <div class="line"><span class="muted">${t('subtotal')}</span><span>${money(o.subtotal)}</span></div>
       <div class="line"><span class="muted">${t('delivery_fee')}</span><span>${money(o.delivery_fee)}</span></div>
+      ${extraLines(o.bulk_fee, o.heavy_fee, (o.order_items || []).reduce((n, i) => n + i.quantity, 0), o.weight_kg, o.weight_fee)}
       ${num(o.discount) ? `<div class="line disc"><span>${t('discount')} ${esc(o.promo_code || '')}</span><span>−${money(o.discount)}</span></div>` : ''}
       ${num(o.tip) ? `<div class="line"><span class="muted">${t('tip')}</span><span>${money(o.tip)}</span></div>` : ''}
       <div class="line total"><span>${t('total')}</span><span>${money(o.total)}</span></div>
@@ -1482,7 +1504,7 @@ function drawOptions(){
     const rule = g.min_select >= 1 ? (single ? t('opt_pick1') : (g.min_select === g.max_select ? t('opt_pickn', { n:g.min_select }) : t('opt_upto', { n:g.max_select }))) : (single ? t('opt_pick1') : t('opt_upto', { n:g.max_select }));
     return `<div class="optgrp"><h4>${esc(g.name)} <small class="${g.min_select ? 'req' : ''}">${g.min_select ? t('opt_required') : t('opt_optional')} · ${rule}</small></h4>
       ${g.menu_options.map(o => { const on = sel.includes(o.id); if (on) extra += num(o.price);
-        return `<label class="optrow ${o.is_available ? '' : 'na'}"><input type="${single ? 'radio' : 'checkbox'}" name="g${g.id}" ${on ? 'checked' : ''} onclick="event.preventDefault();A.optPick('${g.id}','${o.id}')"><span>${esc(o.name)}</span><b>${num(o.price) ? '+' + money(o.price) : ''}</b></label>`; }).join('')}</div>`;
+        return `<label class="optrow ${o.is_available ? '' : 'na'}"><input type="${single ? 'radio' : 'checkbox'}" name="g${g.id}" ${on ? 'checked' : ''} onclick="event.preventDefault();A.optPick('${g.id}','${o.id}')"><span>${esc(o.name)}${num(o.weight_kg) ? ` <span class="muted" style="font-size:12px">· ${kgText(o.weight_kg)}</span>` : ''}</span><b>${num(o.price) ? '+' + money(o.price) : ''}</b></label>`; }).join('')}</div>`;
   }).join('');
   const unit = num(it.price) + extra;
   el.innerHTML = `${it.description ? `<p class="muted" style="margin-top:0">${esc(it.description)}</p>` : ''}${html}
@@ -1615,7 +1637,7 @@ const A = {
     const key = it.id + (ids.length ? '|' + ids.join(',') : '');
     const ex = state.cart.items.find(c => c.key === key);
     if (ex) ex.qty += qty;
-    else state.cart.items.push({ key, id:it.id, name:it.name, price:num(it.price) + (opt ? opt.extra : 0), qty, opts:ids, optText:opt ? opt.text : '' });
+    else state.cart.items.push({ key, id:it.id, name:it.name, price:num(it.price) + (opt ? opt.extra : 0), qty, opts:ids, optText:opt ? opt.text : '', heavy:num(it.heavy_fee), w:num(it.weight_kg) + (opt ? num(opt.w) : 0) });
     saveCart(); return true;
   },
   async add(id){
@@ -1667,7 +1689,7 @@ const A = {
     for (const g of groups){ if ((s.sel[g.id] || []).length < g.min_select) return toast(t('opt_need', { g:g.name }), true); }
     const chosen = []; groups.forEach(g => (s.sel[g.id] || []).forEach(oid => { const o = g.menu_options.find(x => x.id === oid); if (o) chosen.push(o); }));
     const extra = chosen.reduce((n, o) => n + num(o.price), 0);
-    if (A.addToCart(it, s.qty, { ids:chosen.map(o => o.id), extra, text:chosen.map(o => o.name).join(', ') })){
+    if (A.addToCart(it, s.qty, { ids:chosen.map(o => o.id), extra, text:chosen.map(o => o.name).join(', '), w:chosen.reduce((n, o) => n + num(o.weight_kg), 0) })){
       closeSheet(); toast(`${it.name} × ${s.qty} ✓`);
       const el = $('ctl-' + s.id); if (el) el.innerHTML = ctlHtml(it);
       state.qty = 1; const q = $('qtyN'); if (q) q.textContent = 1;
