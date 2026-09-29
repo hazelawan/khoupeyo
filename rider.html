@@ -260,6 +260,33 @@ h2{font-size:18px}
 .kv{padding:9px 0}
 .selfie{border-radius:18px;box-shadow:var(--sh-1)}
 .review{border-radius:16px}
+
+/* sheet, chips, attendance */
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:620px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px}
+.sheet-head h3{margin:0;font-size:20px}
+.x{background:none;border:0;font-size:30px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 6px}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+.chip.on{background:var(--green);border-color:var(--green);color:#fff}
+input[type=date],input[type=number]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px;color:var(--ink)}
+.susp{text-align:center;border:2px solid var(--danger);border-radius:18px;padding:16px;margin:0 0 12px;background:rgba(214,59,47,.06)}
+.susp b{display:block;font-size:19px;color:var(--danger)}
+.susp .big{font-size:32px;font-weight:800;margin:6px 0;color:var(--danger);font-variant-numeric:tabular-nums}
+.due{display:flex;justify-content:space-between;align-items:center;gap:8px;border-radius:12px;padding:10px 12px;margin:10px 0;font-weight:700;background:rgba(31,111,74,.1);color:var(--green)}
+.due.warn{background:rgba(242,169,0,.15);color:#8a5a00}
+.due.late{background:rgba(214,59,47,.1);color:var(--danger)}
+.attgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0}
+.attgrid div{background:var(--paper);border-radius:12px;padding:10px 4px;text-align:center}
+.attgrid b{display:block;font-size:22px}
+.attgrid span{font-size:12px;color:var(--muted);font-weight:700}
+.st{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.st.present{background:rgba(31,111,74,.14);color:var(--green)} .st.late{background:rgba(242,169,0,.18);color:#8a5a00}
+.st.leave,.st.half_leave{background:rgba(34,87,184,.12);color:#2257B8} .st.absent,.st.suspended{background:rgba(214,59,47,.12);color:var(--danger)}
+.st.not_yet,.st.no_duty,.st.pending{background:var(--paper);color:var(--muted)} .st.approved{background:rgba(31,111,74,.14);color:var(--green)} .st.rejected,.st.cancelled{background:rgba(214,59,47,.12);color:var(--danger)}
+.lrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lrow:last-child{border-bottom:0}
 </style>
 </head>
 <body>
@@ -267,7 +294,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.4';
+const APP_VERSION = '3.5';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -367,7 +394,18 @@ const I18N = {
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
     k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
     k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
-    shop_word:'Shop', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat'
+    shop_word:'Shop', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat',
+    tab_duty:'Duty', susp_title:'Your rider ID is paused', susp_back:'Active again at {t}', susp_note:'You cannot take deliveries now. Duty time does not count while paused.', susp_left:'left',
+    deliver_by:'Deliver by {t}', due_left:'{m} min left', due_late:'Late by {m} min', cust_expects:'Customer expects the order by {t}',
+    att_title:'Attendance and leave', my_timing:'My duty timing', timing_none:'Wanhar Mart has not set your duty time yet.', timing_from:'From {a}', timing_range:'{a} to {b}', timing_change:'Coming change',
+    s_present:'Present', s_late:'Late', s_leave:'Leave', s_half_leave:'Half leave', s_absent:'Absent', s_suspended:'Paused', s_not_yet:'Not started yet', s_no_duty:'No duty',
+    att_month:'This month', worked:'Worked', ask_leave:'Ask for leave', my_leaves:'My leave requests', no_leaves:'No leave requests yet.',
+    lk_half:'Half day', lk_full:'Full day', lk_emergency:'Emergency', half_first:'First half', half_second:'Second half', leave_date:'From date', leave_days:'How many days?', leave_reason:'Reason',
+    leave_which:'Which half?', leave_send:'Send to Wanhar Mart', leave_sent:'Leave request sent. You will get a message when Wanhar Mart decides.', leave_note:'Ask early. Wanhar Mart must approve before your leave. For a sudden problem choose Emergency.',
+    lv_pending:'Waiting', lv_approved:'Approved', lv_rejected:'Not approved', lv_cancelled:'Cancelled', cancel_req:'Cancel request', cancel_leave_q:'Cancel this leave request?', days_word:'days', day_word:'day',
+    my_complaints:'Customer complaints', no_complaints:'No complaints. Great work!', ck_late:'Late delivery', ck_damaged:'Items damaged or spoiled', ck_rude:'Rude behaviour', ck_other:'Other',
+    cs_pending:'Being checked', cs_approved:'Counted', cs_rejected:'Not counted', pauses:'Pauses', penalty_rules:'What happens after complaints (same day)', pen_step:'Complaint {n}', pen_hours:'ID paused {h} hour(s)', pen_forfeit:"Today's earnings taken back", pen_eod:'ID paused for the rest of the day', pen_none:'Warning only',
+    late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -420,7 +458,18 @@ const I18N = {
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'دکان پر آرڈر تیار نہیں',
     k_shop_closed:'دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'حادثہ یا گاڑی کا مسئلہ',
     k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں',
-    shop_word:'دکان', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا'
+    shop_word:'دکان', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا',
+    tab_duty:'ڈیوٹی', susp_title:'آپ کی رائیڈر آئی ڈی روک دی گئی ہے', susp_back:'{t} پر دوبارہ چالو ہوگی', susp_note:'ابھی آپ ڈیلیوری نہیں لے سکتے۔ رکنے کے دوران ڈیوٹی کا وقت نہیں گنا جاتا۔', susp_left:'باقی',
+    deliver_by:'{t} تک پہنچائیں', due_left:'{m} منٹ باقی', due_late:'{m} منٹ دیر', cust_expects:'گاہک کو {t} تک آرڈر چاہیے',
+    att_title:'حاضری اور چھٹی', my_timing:'میری ڈیوٹی کا وقت', timing_none:'Wanhar Mart نے ابھی آپ کی ڈیوٹی کا وقت مقرر نہیں کیا۔', timing_from:'{a} سے', timing_range:'{a} سے {b} تک', timing_change:'آنے والی تبدیلی',
+    s_present:'حاضر', s_late:'دیر سے', s_leave:'چھٹی', s_half_leave:'آدھی چھٹی', s_absent:'غیر حاضر', s_suspended:'رکا ہوا', s_not_yet:'ابھی شروع نہیں', s_no_duty:'ڈیوٹی نہیں',
+    att_month:'اس مہینے', worked:'کام کیا', ask_leave:'چھٹی کی درخواست', my_leaves:'میری چھٹی کی درخواستیں', no_leaves:'ابھی کوئی درخواست نہیں۔',
+    lk_half:'آدھا دن', lk_full:'پورا دن', lk_emergency:'ایمرجنسی', half_first:'پہلا حصہ', half_second:'دوسرا حصہ', leave_date:'کس تاریخ سے', leave_days:'کتنے دن؟', leave_reason:'وجہ',
+    leave_which:'کون سا حصہ؟', leave_send:'Wanhar Mart کو بھیجیں', leave_sent:'درخواست بھیج دی گئی۔ فیصلے پر آپ کو پیغام ملے گا۔', leave_note:'پہلے سے درخواست دیں۔ چھٹی سے پہلے Wanhar Mart کی منظوری ضروری ہے۔ اچانک مسئلے کے لیے ایمرجنسی چنیں۔',
+    lv_pending:'انتظار میں', lv_approved:'منظور', lv_rejected:'منظور نہیں', lv_cancelled:'منسوخ', cancel_req:'درخواست منسوخ کریں', cancel_leave_q:'یہ درخواست منسوخ کریں؟', days_word:'دن', day_word:'دن',
+    my_complaints:'گاہکوں کی شکایات', no_complaints:'کوئی شکایت نہیں۔ بہت خوب!', ck_late:'دیر سے ڈیلیوری', ck_damaged:'سامان خراب یا ٹوٹا ہوا', ck_rude:'بدتمیزی', ck_other:'کچھ اور',
+    cs_pending:'چیک ہو رہی ہے', cs_approved:'گنی گئی', cs_rejected:'نہیں گنی گئی', pauses:'رکاوٹیں', penalty_rules:'شکایات پر کیا ہوتا ہے (ایک ہی دن میں)', pen_step:'شکایت {n}', pen_hours:'آئی ڈی {h} گھنٹے کے لیے بند', pen_forfeit:'اس دن کی کمائی واپس', pen_eod:'باقی دن کے لیے آئی ڈی بند', pen_none:'صرف تنبیہ',
+    late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں'
   }
 };
 const state = {
@@ -428,7 +477,7 @@ const state = {
   mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
   sound: ls.get('kh_rd_sound', true), seen:new Set(), seenOffer:new Set(), skipped:new Set(), pos:null
 };
-const t = k => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
+const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
 function toast(msg, isErr){
   const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
@@ -608,6 +657,7 @@ function renderShell(){
     <main id="view"></main>
     <nav class="nav"><div class="nav-in">
       <button id="t_jobs" onclick="go('jobs')">${t('jobs')}</button>
+      <button id="t_duty" onclick="go('duty')">${t('tab_duty')}</button>
       <button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
       <button id="t_rules" onclick="go('rules')">${t('rules')}</button>
       <button id="t_acct" onclick="go('acct')">${t('account')}</button>
@@ -616,7 +666,7 @@ function renderShell(){
 function updateDutyBtn(){ const b = $('dutyBtn'); if (b){ b.innerHTML = dutyLabel(); b.classList.toggle('on', onDuty()); } }
 setInterval(updateDutyBtn, 30000);
 function markTab(){
-  [['jobs','t_jobs'],['earn','t_earn'],['rules','t_rules'],['acct','t_acct']].forEach(([k, id]) => { const b = $(id); if (b) b.classList.toggle('on', state.tab === k); });
+  [['jobs','t_jobs'],['duty','t_duty'],['earn','t_earn'],['rules','t_rules'],['acct','t_acct']].forEach(([k, id]) => { const b = $(id); if (b) b.classList.toggle('on', state.tab === k); });
   const j = $('t_jobs'); if (j){ const n = state.mine.length; j.innerHTML = t('jobs') + (n ? `<span class="dot">${n}</span>` : ''); }
 }
 async function go(tab){
@@ -626,6 +676,7 @@ async function go(tab){
     if (tab === 'jobs') await Promise.all([loadJobs(), loadMoney()]);
     if (tab === 'earn') await loadMoney();
     if (tab === 'rules') await loadRules();
+    if (tab === 'duty') await Promise.all([loadDuty(), loadShift()]);
   });
   renderTab(); window.scrollTo(0, 0);
 }
@@ -635,6 +686,7 @@ function renderTab(){
   if (state.tab === 'earn') v.innerHTML = viewEarn();
   if (state.tab === 'rules') v.innerHTML = viewRules();
   if (state.tab === 'acct') v.innerHTML = viewAcct();
+  if (state.tab === 'duty') v.innerHTML = viewDuty();
   markTab(); bindSliders(); if (state.tab === 'acct') showMyFace();
   document.title = state.available.length && onDuty() ? `(${state.available.length}) Wanhar Mart Rider` : 'Wanhar Mart Rider';
 }
@@ -685,7 +737,14 @@ async function loadAvailable(){
   else if (fresh.length && state.firstLoadDone) beep();
   state.firstLoadDone = true;
 }
-async function loadJobs(){ await loadMine(); await loadAvailable(); }
+async function loadStatus(){
+  const { data } = await sb.from('riders').select('is_online,on_break,suspended_until,suspend_reason,shift_start,shift_end,break_start,break_minutes').eq('id', state.rider.id).maybeSingle();
+  if (!data) return;
+  const wasOn = !!state.rider.is_online;
+  Object.assign(state.rider, data);
+  if (wasOn && !data.is_online){ state.shift = null; stopGeo(); closeJobPopup(); updateDutyBtn(); if (suspended()) toast(t('susp_title'), true); }
+}
+async function loadJobs(){ await loadStatus(); await loadMine(); await loadAvailable(); }
 async function loadMoney(){
   const m = monthStart();
   const [done, unsettled, fines, pays, hand] = await Promise.all([
@@ -863,7 +922,7 @@ function activeCard(o){
     ? arrived + issueBlock(o) + slider(t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
-    <span class="pill">${t('st_' + o.status)}</span></div>${bigHtml}${restBlock}${custBlock}
+    <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${bigHtml}${restBlock}${custBlock}
     <div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>
     <div class="line muted"><span>${t('your_pay')}${num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee) ? `<div style="font-size:13px">${t('incl_extra').replace('{r}', money(Math.round((num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee)) * Math.min(100, Math.max(0, num(state.settings.rider_extra_share ?? 100))) / 100)))}</div>` : ''}</span><b>${money(o.rider_pay)}</b></div>${num(o.tip) ? `<div class="line" style="color:var(--green);font-weight:700"><span>💚 ${t('tip_incl')}</span><b>${money(o.tip)}</b></div>` : ''}${action}${chatRow(o)}</div>`;
 }
@@ -999,6 +1058,7 @@ function viewJobs(){
   const stats = `<div class="tiles" style="margin-bottom:12px">
     <div class="tile"><b>${today.length}</b><span>${t('deliveries_n')} · ${t('today')}</span></div>
     <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div></div>`;
+  if (suspended() && !state.mine.length) return suspBanner() + stats;
   if (!onDuty() && !state.mine.length){
     return `${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
   }
@@ -1009,10 +1069,114 @@ function viewJobs(){
   if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
-  return sound + cashWarning() + rankChip + (onDuty() && !state.mine.length ? targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
+  return sound + suspBanner() + cashWarning() + rankChip + (onDuty() && !state.mine.length ? targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
+
+// ================= PAUSED ID, DELIVERY TIME =================
+const tHM = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+function suspended(){ const r = state.rider; return !!(r && r.suspended_until && new Date(r.suspended_until).getTime() > Date.now()); }
+function suspBanner(){
+  if (!suspended()) return '';
+  const r = state.rider; const left = new Date(r.suspended_until).getTime() - Date.now();
+  return `<div class="susp"><div style="font-size:34px">⛔</div><b>${t('susp_title')}</b>
+    ${r.suspend_reason ? `<div style="margin-top:4px">${esc(r.suspend_reason)}</div>` : ''}
+    <div class="big" data-susp="${esc(r.suspended_until)}">${hms(left)}</div>
+    <div style="font-weight:700">${t('susp_back', { t:tHM(r.suspended_until) })}</div>
+    <div class="muted" style="font-size:13px;margin-top:6px">${t('susp_note')}</div></div>`;
+}
+const hms = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); const h = Math.floor(s / 3600); return (h ? h + ':' : '') + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60); };
+function dueLine(o){
+  if (o.status === 'picked_up' && o.rider_due_at){
+    const left = (new Date(o.rider_due_at).getTime() - Date.now()) / 60000;
+    const cls = left < 0 ? 'late' : left < 5 ? 'warn' : '';
+    return `<div class="due ${cls}" data-due="${esc(o.rider_due_at)}"><span>⏱ ${t('deliver_by', { t:tHM(o.rider_due_at) })}</span><span class="dl">${left < 0 ? t('due_late', { m:Math.ceil(-left) }) : t('due_left', { m:Math.floor(left) })}</span></div>`;
+  }
+  if (o.deliver_by) return `<div class="due" style="font-weight:600"><span>🕒 ${t('cust_expects', { t:tHM(o.deliver_by) })}</span></div>`;
+  return '';
+}
+setInterval(() => {
+  document.querySelectorAll('[data-susp]').forEach(el => {
+    const left = new Date(el.dataset.susp).getTime() - Date.now();
+    el.textContent = hms(left);
+    if (left <= 0 && !el.dataset.done){ el.dataset.done = 1; loadStatus().then(() => { if (state.tab === 'jobs' || state.tab === 'duty') renderTab(); }); }
+  });
+  document.querySelectorAll('.due[data-due]').forEach(el => {
+    const left = (new Date(el.dataset.due).getTime() - Date.now()) / 60000;
+    el.classList.toggle('late', left < 0); el.classList.toggle('warn', left >= 0 && left < 5);
+    const d = el.querySelector('.dl'); if (d) d.textContent = left < 0 ? t('due_late', { m:Math.ceil(-left) }) : t('due_left', { m:Math.floor(left) });
+  });
+}, 1000);
+
+// ================= SHEET =================
+function openSheet(title, html){
+  closeSheet();
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>${esc(title)}</h3><button class="x" aria-label="${t('close_word')}" onclick="closeSheet()">&times;</button></div><div id="sheetBody">${html}</div></div>`;
+  back.addEventListener('click', e => { if (e.target === back) closeSheet(); });
+  document.body.appendChild(back);
+}
+function closeSheet(){ const s = document.getElementById('sheet'); if (s) s.remove(); }
+
+// ================= DUTY TAB: timing, attendance, leave, complaints =================
+async function loadDuty(){
+  const id = state.rider.id; const m = monthStart(); const today = ymd(new Date());
+  const [att, lv, cp, su, pl] = await Promise.all([
+    sb.rpc('rider_attendance', { p_rider:id, p_from:ymd(m), p_to:today }),
+    sb.from('rider_leaves').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(20),
+    sb.from('rider_complaints').select('id,kind,note,status,penalty,created_at,late_minutes,order_id').eq('rider_id', id).order('created_at', { ascending:false }).limit(20),
+    sb.from('rider_suspensions').select('*').eq('rider_id', id).order('starts_at', { ascending:false }).limit(10),
+    sb.from('rider_shift_plan').select('*, shift:duty_shifts(name,start_time,end_time,break_start,break_minutes)').eq('rider_id', id).or(`date_to.is.null,date_to.gte.${today}`).order('created_at', { ascending:false }).limit(10)
+  ]);
+  state.att = need(att) || []; state.leaves = need(lv) || []; state.complaints = need(cp) || []; state.pauses = need(su) || []; state.plans = need(pl) || [];
+  await loadStatus();
+}
+const dLabel = d => new Date(d + 'T00:00:00').toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { weekday:'short', day:'numeric', month:'short' });
+function leaveText(l){
+  const k = t('lk_' + l.kind) + (l.kind === 'half' ? ' · ' + t('half_' + (l.half || 'first')) : '');
+  const d = num(l.days) > 1 ? t('timing_range', { a:dLabel(l.date_from), b:dLabel(ymd(new Date(new Date(l.date_from + 'T00:00:00').getTime() + (Math.ceil(num(l.days)) - 1) * 86400000))) }) + ` (${num(l.days)} ${t('days_word')})` : dLabel(l.date_from);
+  return { k, d };
+}
+function penaltyRules(){
+  const lad = Array.isArray(state.settings.rider_penalties) && state.settings.rider_penalties.length ? state.settings.rider_penalties : [{ hours:1 }, { hours:2 }, { forfeit:true, eod:true }];
+  const dr = state.settings.duty_rules || {};
+  const rows = lad.map((x, i) => {
+    const parts = [];
+    if (x.forfeit) parts.push(t('pen_forfeit'));
+    if (x.eod) parts.push(t('pen_eod')); else if (num(x.hours) > 0) parts.push(t('pen_hours', { h:num(x.hours) }));
+    return `<div class="line"><span>${t('pen_step', { n:(i + 1) + (i === lad.length - 1 ? '+' : '') })}</span><b style="text-align:end">${parts.join(' + ') || t('pen_none')}</b></div>`;
+  }).join('');
+  const lf = num(dr.late_fine);
+  return `<div class="card"><b>📋 ${t('penalty_rules')}</b><div style="margin-top:6px">${rows}</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">⏰ ${lf > 0 ? t('late_fine_rule', { g:num(state.settings.late_grace_minutes ?? 10), f:money(lf) }) + '<br>' : ''}🕘 ${t('must_hours', { h:+(goalMinutes() / 60).toFixed(1) })}</div></div>`;
+}
+function viewDuty(){
+  const r = state.rider || {};
+  const today = ymd(new Date());
+  const cur = state.plans.find(p => p.date_from <= today && (!p.date_to || p.date_to >= today));
+  const next = state.plans.filter(p => p.date_from > today).sort((a, b) => a.date_from < b.date_from ? -1 : 1);
+  const timing = r.shift_start && r.shift_end ? `<div style="font-size:22px;font-weight:800;margin-top:4px">${cur && cur.shift ? esc(cur.shift.name) + ' · ' : ''}${t12(r.shift_start)} – ${t12(r.shift_end)}</div>
+      <div class="muted" style="font-size:14px">☕ ${t('break_word')} ${r.break_start ? t12(r.break_start) + ' · ' : ''}${num(r.break_minutes)} ${t('min_word')}${cur ? ' · ' + (cur.date_to ? t('timing_range', { a:dLabel(cur.date_from), b:dLabel(cur.date_to) }) : t('timing_from', { a:dLabel(cur.date_from) })) : ''}</div>`
+    : `<div class="muted" style="margin-top:4px">${t('timing_none')}</div>`;
+  const nextHtml = next.map(p => `<div class="note" style="margin-top:8px">🔁 ${t('timing_change')}: <b>${esc(p.shift ? p.shift.name : '')} ${p.shift ? t12(p.shift.start_time) + ' – ' + t12(p.shift.end_time) : ''}</b> · ${p.date_to ? t('timing_range', { a:dLabel(p.date_from), b:dLabel(p.date_to) }) : t('timing_from', { a:dLabel(p.date_from) })}</div>`).join('');
+  const cnt = k => state.att.filter(a => a.status === k).length;
+  const att = state.att.filter(a => a.status !== 'no_duty').map(a => `<div class="lrow"><div><b>${dLabel(a.day)}</b><div class="muted" style="font-size:13px">${a.first_start ? tHM(a.first_start) + ' · ' : ''}${t('worked')} ${hm(a.work_minutes)}${num(a.required_minutes) ? ' / ' + hm(a.required_minutes) : ''}${a.late_minutes ? ' · ⏰ ' + a.late_minutes + ' ' + t('min_word') : ''}</div></div><span class="st ${a.status}">${t('s_' + a.status)}</span></div>`).join('');
+  const leaves = state.leaves.map(l => { const x = leaveText(l); return `<div class="lrow"><div style="min-width:0"><b>${x.k}</b><div class="muted" style="font-size:13px">${x.d}</div><div style="font-size:13px;overflow-wrap:anywhere">${esc(l.reason || '')}${l.admin_note ? `<br><span class="muted">💬 ${esc(l.admin_note)}</span>` : ''}</div>
+      ${l.status === 'pending' ? `<button class="chip" style="margin-top:6px" onclick="A.cancelLeave('${l.id}')">${t('cancel_req')}</button>` : ''}</div><span class="st ${l.status}">${t('lv_' + l.status)}</span></div>`; }).join('');
+  const comps = state.complaints.map(c => `<div class="lrow"><div style="min-width:0"><b>${t('ck_' + c.kind)}</b> <span class="muted" style="font-size:13px">#${esc(String(c.order_id).slice(-4).toUpperCase())}</span>
+      <div class="muted" style="font-size:13px">${when(c.created_at)}${c.late_minutes ? ' · ' + t('due_late', { m:c.late_minutes }) : ''}</div>${c.note ? `<div style="font-size:13px;overflow-wrap:anywhere">“${esc(c.note)}”</div>` : ''}${c.penalty && c.status === 'approved' ? `<div style="font-size:13px;color:var(--danger);font-weight:700">${esc(c.penalty)}</div>` : ''}</div><span class="st ${c.status}">${t('cs_' + c.status)}</span></div>`).join('');
+  return `<h1>${t('att_title')}</h1>${suspBanner()}
+    <div class="card"><b>🕘 ${t('my_timing')}</b>${timing}${nextHtml}</div>
+    <div class="card"><b>📊 ${t('att_month')}</b>
+      <div class="attgrid"><div><b>${cnt('present')}</b><span>${t('s_present')}</span></div><div><b style="color:#8a5a00">${cnt('late')}</b><span>${t('s_late')}</span></div>
+      <div><b style="color:#2257B8">${cnt('leave') + cnt('half_leave') / 2}</b><span>${t('s_leave')}</span></div><div><b style="color:var(--danger)">${cnt('absent')}</b><span>${t('s_absent')}</span></div></div>
+      ${att ? `<div style="max-height:300px;overflow:auto">${att}</div>` : ''}</div>
+    <button class="btn" style="margin-bottom:12px" onclick="A.leaveForm()">📅 ${t('ask_leave')}</button>
+    <div class="card"><b>${t('my_leaves')}</b>${leaves || `<div class="muted" style="margin-top:6px">${t('no_leaves')}</div>`}</div>
+    <div class="card"><b>📣 ${t('my_complaints')}</b>${comps || `<div class="muted" style="margin-top:6px">${t('no_complaints')}</div>`}</div>
+    ${penaltyRules()}`;
+}
 // ================= EARNINGS TAB =================
 function viewEarn(){
   const r = state.rider; const sum = (list, f) => list.reduce((n, o) => n + num(f(o)), 0);
@@ -1179,6 +1343,32 @@ const A = {
 
   // ---- Duty ----
   lbPer(p){ state.lbPer = p; renderTab(); },
+  leaveForm(){
+    state.lvKind = 'full'; state.lvHalf = 'first';
+    const today = ymd(new Date());
+    openSheet(t('ask_leave'), `<div class="muted" style="font-size:14px">${t('leave_note')}</div>
+      <div class="chips" id="lvKinds" style="margin-top:10px">${['half', 'full', 'emergency'].map(k => `<button type="button" class="chip ${k === 'full' ? 'on' : ''}" data-k="${k}" onclick="A.lvKind('${k}')">${k === 'emergency' ? '🚨 ' : ''}${t('lk_' + k)}</button>`).join('')}</div>
+      <label class="f">${t('leave_date')}</label><input type="date" id="lvFrom" value="${today}" min="${today}">
+      <div id="lvDaysBox"><label class="f">${t('leave_days')}</label><input type="number" id="lvDays" value="1" min="1" max="30" inputmode="numeric"></div>
+      <div id="lvHalfBox" style="display:none"><label class="f">${t('leave_which')}</label><div class="chips" id="lvHalves">${['first', 'second'].map(h => `<button type="button" class="chip ${h === 'first' ? 'on' : ''}" data-h="${h}" onclick="A.lvHalf('${h}')">${t('half_' + h)}</button>`).join('')}</div></div>
+      <label class="f">${t('leave_reason')}</label><textarea id="lvReason" rows="3"></textarea>
+      <button class="btn" style="margin-top:14px" id="lvSend" onclick="A.sendLeave()">${t('leave_send')}</button>`);
+  },
+  lvKind(k){ state.lvKind = k; document.querySelectorAll('#lvKinds .chip').forEach(b => b.classList.toggle('on', b.dataset.k === k)); $('lvDaysBox').style.display = k === 'half' ? 'none' : ''; $('lvHalfBox').style.display = k === 'half' ? '' : 'none'; },
+  lvHalf(h){ state.lvHalf = h; document.querySelectorAll('#lvHalves .chip').forEach(b => b.classList.toggle('on', b.dataset.h === h)); },
+  async sendLeave(){
+    const reason = $('lvReason').value.trim(); if (!reason) return toast(t('reason_need'), true);
+    const b = $('lvSend'); b.disabled = true;
+    await run(async () => {
+      need(await sb.rpc('request_leave', { p_kind:state.lvKind, p_from:$('lvFrom').value, p_days:state.lvKind === 'half' ? 0.5 : Math.max(1, parseInt($('lvDays').value, 10) || 1), p_half:state.lvKind === 'half' ? state.lvHalf : null, p_reason:reason }));
+      closeSheet(); toast(t('leave_sent')); await loadDuty(); renderTab();
+    });
+    if (b) b.disabled = false;
+  },
+  async cancelLeave(id){
+    if (!confirm(t('cancel_leave_q'))) return;
+    await run(async () => { need(await sb.rpc('cancel_leave', { p_id:id })); await loadDuty(); renderTab(); });
+  },
   async startBreak(){
     if (!confirm(t('break_q'))) return;
     await run(async () => { need(await sb.rpc('start_break')); await loadShift(); state.available = []; closeJobPopup(); renderTab(); toast(t('on_break')); });
@@ -1196,6 +1386,7 @@ const A = {
       });
     }
     await run(loadRider);
+    if (suspended()){ toast(t('susp_title') + ' · ' + t('susp_back', { t:tHM(state.rider.suspended_until) }), true); if (state.tab === 'jobs') renderTab(); return; }
     if (!state.rider.face_descriptor) return openCamera('register');
     openCamera('duty');
   },
