@@ -282,7 +282,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '3.9';
+const APP_VERSION = '4.0';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1111,10 +1111,12 @@ async function loadTargets(){
 function viewTargets(){
   const per = { day:'every day', week:'every week', month:'every month' };
   const rows = state.targets.map(x => `<button class="row" onclick="A.editTarget('${x.id}')"><div class="row-main"><div class="row-title">${esc(x.title)} ${x.is_active ? '<span class="pill g">On</span>' : '<span class="pill">Off</span>'}</div>
-      <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)}${x.contract ? ' · ' + (x.contract === 'company' ? 'company riders' : 'own-bike riders') : ' · all riders'}</div></div></button>`).join('');
+      <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)} bonus one time${x.contract ? ' · ' + (x.contract === 'company' ? 'company riders' : 'own-bike riders') : ' · all riders'}</div></div></button>`).join('');
   const bon = state.recentBonus.map(b => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(b.rider?.profile?.full_name || 'Rider')}</div><div class="row-sub">${esc(b.title || '')} · ${when(b.created_at)}</div></div><div class="row-side">${money(b.amount)}</div></div>`).join('');
   return `${backLink()}<h2>Rider targets and bonus</h2>
-    <div class="muted" style="margin:-6px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay automatically and they get a notification. Riders see their progress in the app.</div>
+    <div class="muted" style="margin:-6px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay automatically <b>one time</b> and they get a notification. Riders see their progress in the app.</div>
+    <div class="note" style="font-size:14px">💡 A target is a <b>one-time bonus</b> (example: 15 deliveries today = Rs 200 once). To pay <b>more for every delivery</b> after a number (example: Rs 40 each up to 450, then Rs 50 each up to 600, then Rs 60 each) use <b>Settings → Rider contracts → Pay per delivery</b> levels.
+      <button class="btn ghost small" style="margin-top:8px" onclick="go('settings')">Open pay per delivery levels</button></div>
     <div class="bar"><button class="btn" onclick="A.editTarget()">Add target</button></div>
     <div class="list">${rows || '<div class="empty">No targets yet.</div>'}</div>
     <h3>Latest bonuses earned</h3><div class="list">${bon || '<div class="empty">None yet.</div>'}</div>`;
@@ -1249,8 +1251,13 @@ function tierEditor(k){
       ${i === 0 ? '<span style="width:28px"></span>' : `<button type="button" class="linkbtn" style="color:var(--danger)" onclick="A.tierDel('${k}',${i})">✕</button>`}</div>
       <div class="muted" style="font-size:12px">Delivery ${x.from}${to ? ' to ' + to : ' and more'} in a month: ${money(x.pay)} each</div>`;
   }).join('');
-  return `<div id="tiers_${k}" style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"><b style="font-size:14px">Pay per delivery by monthly count</b>${rows}
-    <button type="button" class="linkbtn" style="margin-top:6px" onclick="A.tierAdd('${k}')">+ Add a level</button></div>`;
+  const ex = Math.max(100, (list[list.length - 1] ? list[list.length - 1].from : 1) + 99);
+  const parts = list.map((x, i) => { const to = list[i + 1] ? list[i + 1].from - 1 : Infinity; const c = Math.max(0, Math.min(ex, to) - x.from + 1); return { c, p:x.pay }; }).filter(x => x.c > 0);
+  const tot = parts.reduce((a, x) => a + x.c * x.p, 0);
+  return `<div id="tiers_${k}" style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"><b style="font-size:14px">Pay per delivery by monthly count</b>
+    <div class="muted" style="font-size:12px">Each level starts where the last one ended (it does not start from 0). The count starts again on the 1st of every month.</div>${rows}
+    <button type="button" class="linkbtn" style="margin-top:6px" onclick="A.tierAdd('${k}')">+ Add a level</button>
+    <div class="note" style="font-size:13px;margin-top:8px"><b>Example: ${ex} deliveries in a month</b><br>${parts.map(x => `${x.c} × ${money(x.p)} = ${money(x.c * x.p)}`).join('<br>')}<br><b>Total ${money(tot)}</b>${k === 'company' ? ' (on top of salary)' : ''} + tips</div></div>`;
 }
 function redrawTiers(k){ const el = $('tiers_' + k); if (el) el.outerHTML = tierEditor(k); }
 function viewSettings(){
@@ -1829,6 +1836,7 @@ const A = {
   editTarget(id){
     const x = (state.targets || []).find(y => y.id === id) || { title:'', period:'day', deliveries:15, amount:200, contract:null, is_active:true };
     openSheet(id ? 'Edit target' : 'Add target', `
+      <div class="note" style="font-size:13px;margin-top:0">This bonus is paid <b>one time</b> when the rider finishes the deliveries. For more money on every delivery use Settings → Rider contracts → Pay per delivery levels.</div>
       <label class="f" for="tg_title">Title riders see</label><input id="tg_title" type="text" value="${esc(x.title)}" placeholder="15 deliveries today">
       <div class="two"><div><label class="f" for="tg_n">Deliveries</label><input id="tg_n" type="number" min="1" value="${x.deliveries}"></div>
         <div><label class="f" for="tg_amt">Bonus (Rs)</label><input id="tg_amt" type="number" min="0" value="${num(x.amount)}"></div></div>
