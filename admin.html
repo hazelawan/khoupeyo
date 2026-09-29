@@ -266,7 +266,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '3.1';
+const APP_VERSION = '3.2';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -389,6 +389,9 @@ async function afterLogin(user){
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
   Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'admin', me:() => state.userId, lang:() => 'en', toast:(m, err) => toast(m, err) });
+  BackNav.init({ toast:m => toast(m), exitMsg:() => 'Press back again to exit',
+    overlays:[['#chatWrap', () => Chat.close()], ['#sheet', () => closeSheet()], ['#rptWrap', null], ['#receiptWrap', null], ['#slipWrap', null]],
+    back:() => { if (MORE_TABS.includes(state.tab)){ go('more'); return true; } if (state.tab !== 'home'){ go('home'); return true; } return false; } });
   showApp(); subscribeOrders();
 }
 
@@ -2290,6 +2293,49 @@ const Report = (() => {
     document.body.appendChild(w);
   }
   return { excel, pdf };
+})();
+
+// ================= BACK BUTTON (same code in all four apps) =================
+// Phone back button: closes the open popup first, then goes to the main tab, then asks "press back again to exit".
+const BackNav = (() => {
+  let cfg = null, pushed = 0, internal = 0, armed = false, armTimer = null, pushHash = [];
+  const present = () => cfg.overlays.filter(([sel]) => document.querySelector(sel));
+  function onMutate(){
+    const n = present().length;
+    while (pushed < n){ pushHash.push(location.hash); history.pushState({ wmov:pushed + 1 }, '', location.href); pushed++; }
+    if (pushed > n){
+      const extra = pushed - n; pushed = n;
+      const h = pushHash.splice(n).pop();
+      // Closed by a button (same page): remove our extra history steps. Closed because the page changed: leave history alone.
+      if (h === location.hash && history.state && history.state.wmov){ internal++; history.go(-extra); }
+    }
+  }
+  function guard(){ history.pushState({ wmg:1 }, '', location.href); }
+  function onPop(ev){
+    if (internal > 0){ internal--; return; }
+    const st = ev.state || {};
+    const open = present();
+    if (open.length){
+      // user pressed back while a popup is open: close the top one
+      pushed = Math.max(0, pushed - 1); pushHash.pop();
+      const [sel, close] = open[open.length - 1];
+      try { close ? close() : document.querySelector(sel).remove(); } catch (e) { const el = document.querySelector(sel); if (el) el.remove(); }
+      return;
+    }
+    if (st.wmov){ internal++; history.back(); return; }         // leftover popup step: skip it
+    if (!st.wmb) return;                                          // normal page change (hash links) is handled by the app
+    if (cfg.back && cfg.back()){ guard(); return; }               // went to main tab / home
+    if (armed){ return; }                                         // second press: nothing left, phone closes the app
+    armed = true; cfg.toast(cfg.exitMsg());
+    clearTimeout(armTimer); armTimer = setTimeout(() => { armed = false; if (history.state && history.state.wmb) guard(); }, 2200);
+  }
+  function init(c){
+    if (cfg) return; cfg = c;
+    history.replaceState({ wmb:1 }, '', location.href); guard();
+    window.addEventListener('popstate', onPop);
+    new MutationObserver(onMutate).observe(document.body, { childList:true });
+  }
+  return { init };
 })();
 
 (async function boot(){
