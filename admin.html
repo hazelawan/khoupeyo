@@ -266,7 +266,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.7';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -329,6 +329,28 @@ const state = {
   menuRestaurant:'all', productFilter:'all', productQ:'', categories:[], items:[], formCats:[],
   customers:[], customerQ:'', promos:[], fineRules:[], settings:{}
 };
+
+// ---- Payment form (pay a shop, pay a rider, receive cash from a rider) ----
+function payForm(o){
+  const chips = Object.keys(Receipt.M).map(k => `<button type="button" class="chip ${k === 'cash' ? 'on' : ''}" data-m="${k}" onclick="A.payMethod('${k}')">${Receipt.method(k)}</button>`).join('');
+  openSheet(o.title, `
+    ${o.who ? `<div class="muted" style="margin-bottom:6px">${o.recv ? 'From' : 'To'}: <b style="color:var(--ink)">${esc(o.who)}</b></div>` : ''}
+    <label class="f">Amount (Rs)</label>${o.editAmount ? `<input id="pmAmt" type="number" inputmode="numeric" value="${Math.round(num(o.amount))}">` : `<div style="font-size:26px;font-weight:800;margin:4px 0 6px">${money(o.amount)}</div>`}
+    <label class="f">${o.recv ? 'How did the rider pay?' : 'How are you paying?'}</label>
+    <div class="chips" id="pmChips" style="flex-wrap:wrap">${chips}</div>
+    <div id="pmRefBox" style="display:none"><label class="f">Transaction ID or reference (optional)</label><input id="pmRef" type="text" placeholder="For example: 03XX… or TID 1234567"></div>
+    <label class="f">Note (optional)</label><textarea id="pmNote" rows="2" placeholder="For example: paid at the shop, given to the manager"></textarea>
+    <div class="muted" style="font-size:13px;margin:8px 0">Time is saved automatically. A receipt is made and shown in the ${o.recv ? 'rider' : 'shop or rider'} app.</div>
+    <button class="btn block" id="pmSave">${esc(o.verb)}${o.editAmount ? '' : ' ' + money(o.amount)}</button>`);
+  $('pmSave').onclick = () => {
+    const amount = o.editAmount ? num($('pmAmt').value) : num(o.amount);
+    if (amount <= 0) return toast('Enter an amount', true);
+    const on = document.querySelector('#pmChips .chip.on'); const method = on ? on.dataset.m : 'cash';
+    const f = { amount, method, ref:method === 'cash' ? null : ($('pmRef').value.trim() || null), note:$('pmNote').value.trim() || null };
+    $('pmSave').disabled = true;
+    run(async () => { await o.save(f); }).finally(() => { const b = $('pmSave'); if (b) b.disabled = false; });
+  };
+}
 
 // ---- Bottom sheet ----
 function openSheet(title, html){
@@ -1246,17 +1268,16 @@ const A = {
         <button class="btn ghost block" onclick="A.shopProducts('${id}')">Manage products</button>
         <button class="btn ghost block" onclick="A.editRestaurant('${id}')">Edit shop details</button>
       </div>
-      <h3>Payment history</h3><div id="payHist" class="list"><div class="empty">Loading…</div></div>`);
+      <h3>Payment history</h3><div id="payHist"><div class="empty">Loading…</div></div>`);
     const { data } = await sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20);
-    const el = $('payHist'); if (el) el.innerHTML = (data || []).map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(p.amount)}</div><div class="row-sub">${p.period_start ? dayName(p.period_start) + ' to ' + dayName(p.period_end) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div><div class="row-side"><small>${when(p.created_at)}</small></div></div>`).join('') || '<div class="empty">No payments yet.</div>';
+    const el = $('payHist'); if (el) el.innerHTML = Receipt.list(data, { kind:'payout', to:r.name }, 'No payments yet.');
   },
-  async payShop(id, amt){
-    const note = prompt(`Pay ${money(amt)} to this shop. Add a note (for example: cash, JazzCash, bank):`, 'Cash');
-    if (note === null) return;
-    await run(async () => {
-      const v = need(await sb.rpc('settle_restaurant', { p_restaurant_id:id, p_note:note || null }));
+  payShop(id, amt){
+    const r = state.restaurants.find(x => x.id === id) || {};
+    payForm({ title:'Pay shop', who:r.name, amount:amt, verb:'Pay', save:async f => {
+      const v = need(await sb.rpc('settle_restaurant', { p_restaurant_id:id, p_note:f.note, p_method:f.method, p_reference:f.ref }));
       toast('Paid ' + money(v)); await loadShopReport(); if (state.tab === 'restaurants') renderTab(); A.openShop(id);
-    });
+    }});
   },
   shopProducts(id){ closeSheet(); state.menuRestaurant = id; state.productFilter = 'all'; state.productQ = ''; go('menu'); },
   editRestaurant(id){
@@ -1410,8 +1431,8 @@ const A = {
           <div class="muted">${s.ended_at ? hours(mins) : 'On duty now, ' + hours(mins)}${s.face_score != null ? ' · match ' + Math.round((1 - num(s.face_score)) * 100) + '%' : ''}</div>
           <div class="btns"><button class="btn ghost" onclick="A.reviewShift('${s.id}','ok','${id}')">OK</button><button class="btn warn" onclick="A.reviewShift('${s.id}','flagged','${id}')">Flag</button></div></div>`;
       }).join('');
-      const handRows = hd.map(h => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(h.amount)}</div><div class="row-sub">${h.orders_count} deliveries${h.note ? ' · ' + esc(h.note) : ''}</div></div><div class="row-side"><small>${when(h.created_at)}</small></div></div>`).join('');
-      const payRows = py.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${money(p.amount)}</div><div class="row-sub">${p.period_start ? monthLabel(p.period_start) : ''}${p.note ? ' · ' + esc(p.note) : ''}</div></div><div class="row-side"><small>${when(p.created_at)}</small></div></div>`).join('');
+      const handRows = hd.map(h => Receipt.row(h, { kind:'handover', to:r.full_name || 'Rider' })).join('');
+      const payRows = py.map(p => Receipt.row(p, { kind:'payout', to:r.full_name || 'Rider' })).join('');
       const body = $('sheetBody'); if (!body) return;
       body.innerHTML = `
         <div class="card-head"><div class="face">${faceImg}</div><div>
@@ -1469,8 +1490,8 @@ const A = {
         <div class="muted" style="font-size:13px">Leave duty times empty for no fixed timing. Starting duty more than ${num(state.settings.late_grace_minutes ?? 10)} minutes late is marked late.</div>
         <div class="actions"><button class="btn ghost block" onclick="A.saveRiderSettings('${id}')">Save settings</button></div>
 
-        <h3>Cash handovers</h3><div class="list">${handRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
-        <h3>Salary payments</h3><div class="list">${payRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
+        <h3>Cash handovers</h3><div>${handRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
+        <h3>Salary payments</h3><div>${payRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
 
         <div class="actions" style="margin-top:22px">
           ${r.face_registered ? `<button class="btn ghost block" onclick="A.resetFace('${id}')">Reset face (rider registers again)</button>` : ''}
@@ -1479,19 +1500,20 @@ const A = {
     });
   },
   async refreshRider(id){ await loadRiderMonth(); if (state.tab === 'riders') renderTab(); await A.openRider(id); },
-  async payRider(id, due){
-    const v = prompt(`Pay rider for ${monthLabel(state.riderMonth)}. Amount (Rs):`, String(due)); if (v === null) return;
-    const amt = num(v); if (amt <= 0) return toast('Enter an amount', true);
-    const note = prompt('Note (for example: cash, JazzCash):', 'Cash'); if (note === null) return;
-    await run(async () => {
-      need(await sb.from('payouts').insert({ party_type:'rider', party_id:id, amount:amt, period_start:state.riderMonth, period_end:monthEnd(state.riderMonth), status:'paid', note:note || null }));
+  payRider(id, due){
+    const r = state.riderRows.find(x => x.rider_id === id) || {};
+    payForm({ title:'Pay rider · ' + monthLabel(state.riderMonth), who:r.full_name, amount:due, editAmount:true, verb:'Pay', save:async f => {
+      need(await sb.from('payouts').insert({ party_type:'rider', party_id:id, amount:f.amount, period_start:state.riderMonth, period_end:monthEnd(state.riderMonth), status:'paid', note:f.note, method:f.method, reference:f.ref }));
       toast('Payment saved'); await A.refreshRider(id);
-    });
+    }});
   },
-  async receiveCash(id, amt){
-    const note = prompt(`Confirm you received ${money(amt)} from this rider. Note (optional):`, ''); if (note === null) return;
-    await run(async () => { const v = need(await sb.rpc('settle_rider_cash', { p_rider_id:id, p_note:note || null })); toast('Received ' + money(v)); await A.refreshRider(id); });
+  receiveCash(id, amt){
+    const r = state.riderRows.find(x => x.rider_id === id) || {};
+    payForm({ title:'Receive cash from rider', who:r.full_name, amount:amt, verb:'Confirm received', recv:true, save:async f => {
+      const v = need(await sb.rpc('settle_rider_cash', { p_rider_id:id, p_note:f.note, p_method:f.method, p_reference:f.ref })); toast('Received ' + money(v)); await A.refreshRider(id);
+    }});
   },
+  payMethod(m){ document.querySelectorAll('#pmChips .chip').forEach(b => b.classList.toggle('on', b.dataset.m === m)); $('pmRefBox').style.display = m === 'cash' ? 'none' : ''; },
   async fineForm(id){
     await run(async () => {
       if (!state.fineRules.length) await loadFineRules();
@@ -2330,17 +2352,18 @@ const Report = (() => {
     const kv = rows => rows.map(([a, b, bold]) => `<tr${bold ? ' style="font-weight:800;border-top:2px solid #111"' : ''}><td>${esc2(a)}</td><td style="text-align:right">${esc2(b)}</td></tr>`).join('');
     const tbl = t => `<table class="rt"><thead><tr>${t.head.map(h => `<th>${esc2(h)}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map((c, i) => `<td${i >= (t.numFrom ?? 99) ? ' style="text-align:right"' : ''}>${esc2(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     w.innerHTML = `<style>
-      #rptWrap .pg{max-width:800px;margin:0 auto;background:#fff;color:#111;border-radius:12px;padding:24px;font:14px/1.5 system-ui,sans-serif}
+      #rptWrap .pg{max-width:800px;overflow-wrap:anywhere;margin:0 auto;background:#fff;color:#111;border-radius:12px;padding:24px;font:14px/1.5 system-ui,sans-serif}
       #rptWrap h1{margin:0;font-size:22px} #rptWrap h2{font-size:16px;margin:18px 0 6px}
       #rptWrap table{width:100%;border-collapse:collapse} #rptWrap td,#rptWrap th{padding:5px 6px;border-bottom:1px solid #ddd;text-align:left;vertical-align:top}
-      #rptWrap .rt{font-size:12px} #rptWrap .rt th{background:#f0f3ee}
+      #rptWrap .rt{font-size:12px;min-width:520px} #rptWrap .rt th{white-space:nowrap} #rptWrap .rt th{background:#f0f3ee}
       #rptWrap .nb{max-width:800px;margin:12px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-      @media print{body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
+      @media (max-width:520px){#rptWrap{padding:10px}#rptWrap .pg{padding:16px}#rptWrap h1{font-size:19px}}
+      @media print{#rptWrap .rt{min-width:0}body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
     </style>
     <div class="pg"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h1>${esc2(o.title)}</h1><div style="color:#555">${esc2(o.subtitle || '')}</div></div>
       <div style="text-align:right"><b style="font-size:18px">Wanhar Mart<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
       ${(o.blocks || []).map(b => `<h2>${esc2(b.heading)}</h2><table>${kv(b.rows)}</table>`).join('')}
-      ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2>${tbl(o.table)}` : ''}
+      ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2><div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${tbl(o.table)}</div>` : ''}
       ${o.note ? `<p style="color:#555;font-size:12px;margin-top:16px">${esc2(o.note)}</p>` : ''}</div>
     <div class="nb"><button class="btn" onclick="window.print()">${esc2(o.printLabel || 'Print or save as PDF')}</button><button class="btn ghost" style="background:#fff" onclick="document.getElementById('rptWrap').remove()">${esc2(o.closeLabel || 'Close')}</button></div>`;
     document.body.appendChild(w);
@@ -2391,6 +2414,65 @@ const BackNav = (() => {
   return { init };
 })();
 
+// ================= PAYMENT RECEIPTS (Admin, Shop and Rider apps) =================
+// Shows each payment as a row; tap a row to see a full receipt (time, method, transaction ID, who paid, note) that can be printed or saved as PDF.
+const Receipt = (() => {
+  const M = { cash:['💵', 'Cash', 'نقد'], jazzcash:['📱', 'JazzCash', 'جاز کیش'], easypaisa:['📱', 'Easypaisa', 'ایزی پیسہ'], bank:['🏦', 'Bank transfer', 'بینک ٹرانسفر'], other:['🧾', 'Other', 'دیگر'] };
+  const W = {
+    en:{ receipt:'Payment receipt', deposit:'Cash deposit receipt', no:'Receipt no.', amount:'Amount', on:'Paid on', got_on:'Received on', method:'Payment method', ref:'Transaction ID', by:'Paid by', to:'Paid to', from:'Received from', recv_by:'Received by', period:'For orders', orders:'Orders', note:'Note', status:'Status', paid:'Paid ✓', recv:'Received ✓', print:'Print or save as PDF', close:'Close', n_orders:'orders', details:'Payment details', foot:'This receipt is made by the Wanhar Mart app. Keep it for your records.' },
+    ur:{ receipt:'ادائیگی کی رسید', deposit:'نقد جمع کرانے کی رسید', no:'رسید نمبر', amount:'رقم', on:'ادائیگی کا وقت', got_on:'وصولی کا وقت', method:'طریقہ', ref:'ٹرانزیکشن آئی ڈی', by:'ادا کرنے والا', to:'وصول کنندہ', from:'جمع کرانے والا', recv_by:'وصول کرنے والا', period:'آرڈرز کی مدت', orders:'آرڈرز', note:'نوٹ', status:'حالت', paid:'ادا ہو گیا ✓', recv:'وصول ہو گیا ✓', print:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', n_orders:'آرڈرز', details:'ادائیگی کی تفصیل', foot:'یہ رسید Wanhar Mart ایپ نے بنائی ہے۔ اپنے ریکارڈ کے لیے رکھیں۔' }
+  };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const rs = n => 'Rs ' + Math.round(Number(n) || 0).toLocaleString('en-US');
+  const method = (m, ur) => { const x = M[m] || M.other; return x[0] + ' ' + (ur ? x[2] : x[1]); };
+  const no = n => '#' + String(n || 0).padStart(5, '0');
+  const full = ts => new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+  const short = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+  const day = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  const dm = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+  const iso = x => x ? '\u2066' + x + '\u2069' : '';   // keeps dates in the right order in Urdu
+  const period = p => p.period_start ? iso(p.period_start === p.period_end || !p.period_end ? day(p.period_start) : day(p.period_start) + ' – ' + day(p.period_end)) : '';
+  const reg = {};
+  let styled = false;
+  function style(){
+    if (styled) return; styled = true;
+    const s = document.createElement('style');
+    s.textContent = `.rcpt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:start;background:var(--surface,#fff);border:1px solid var(--line,#e2e8e1);border-radius:16px;padding:12px;margin:0 0 8px;cursor:pointer;color:inherit;font:inherit}
+      .rcpt:active{transform:scale(.99)}
+      .rcpt .ri{width:40px;height:40px;border-radius:12px;background:var(--soft,#e8f3ec);display:grid;place-items:center;font-size:20px;flex:none}
+      .rcpt .rm{flex:1;min-width:0}.rcpt .rm b{font-size:16px}
+      .rcpt .rs{font-size:13px;color:var(--muted,#64736a);line-height:1.45;margin-top:2px}
+      .rcpt .rn{font-size:13px;margin-top:4px;background:var(--field,#f3f6f2);border-radius:8px;padding:4px 8px;display:inline-block;max-width:100%;overflow-wrap:anywhere}
+      .rcpt .rt{font-size:12px;color:var(--muted,#64736a);text-align:end;flex:none;white-space:nowrap}
+      .rcpt .rt u{display:block;text-decoration:none;color:var(--green,#0e7a4d);font-weight:700;margin-top:6px}`;
+    document.head.appendChild(s);
+  }
+  // p: payouts or cash_handovers row. o: { kind:'payout'|'handover', ur:bool, to:'Shop or rider name' }
+  function row(p, o){
+    style(); o = o || {}; reg[p.id] = { p, o };
+    const L = W[o.ur ? 'ur' : 'en'];
+    const per = p.period_start ? (p.period_end && p.period_end !== p.period_start ? dm(p.period_start) + ' – ' + dm(p.period_end) : dm(p.period_start)) : '';
+    const sub = [per ? `<bdi dir="ltr">${esc(per)}</bdi>` : '', esc(method(p.method, o.ur)), p.orders_count ? `<bdi>${p.orders_count} ${esc(L.n_orders)}</bdi>` : ''].filter(Boolean).join(' · ');
+    return `<button type="button" class="rcpt" onclick="Receipt.open('${p.id}')"><span class="ri">${(M[p.method] || M.other)[0]}</span>
+      <span class="rm"><b>${rs(p.amount)}</b><div class="rs">${sub}${p.reference ? '<br>' + esc(L.ref) + ': <bdi dir="ltr">' + esc(p.reference) + '</bdi>' : ''}</div>${p.note ? `<div class="rn">📝 ${esc(p.note)}</div>` : ''}</span>
+      <span class="rt"><bdi dir="ltr">${esc(short(p.created_at))}</bdi><u>${o.ur ? 'رسید ›' : 'Receipt ›'}</u></span></button>`;
+  }
+  function list(rows, o, empty){ return (rows || []).map(p => row(p, o)).join('') || `<div class="empty">${esc(empty || '')}</div>`; }
+  function open(id){
+    const r = reg[id]; if (!r) return; const { p, o } = r; const L = W[o.ur ? 'ur' : 'en'];
+    const dep = o.kind === 'handover';
+    const rows = [[L.no, iso(no(p.receipt_no))], [L.amount, rs(p.amount), true], [dep ? L.got_on : L.on, iso(full(p.created_at))], [L.method, method(p.method, o.ur)]];
+    if (p.reference) rows.push([L.ref, iso(p.reference)]);
+    if (dep){ rows.push([L.from, o.to || ''], [L.recv_by, p.received_by_name || 'Wanhar Mart']); }
+    else { rows.push([L.by, (p.paid_by_name || 'Wanhar Mart') + ' · Wanhar Mart'], [L.to, o.to || '']); }
+    if (p.period_start) rows.push([L.period, period(p)]);
+    if (p.orders_count) rows.push([L.orders, String(p.orders_count)]);
+    rows.push([L.status, dep ? L.recv : L.paid]);
+    if (p.note) rows.push([L.note, p.note]);
+    Report.pdf({ title:(dep ? L.deposit : L.receipt) + ' ' + no(p.receipt_no), subtitle:o.to || '', blocks:[{ heading:L.details, rows }], note:L.foot, printLabel:L.print, closeLabel:L.close });
+  }
+  return { row, list, open, method, M };
+})();
 (async function boot(){
   try {
     const { data:{ session } } = await sb.auth.getSession();
