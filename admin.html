@@ -259,6 +259,22 @@ h2{font-size:18px}
 .kv{padding:9px 0}
 .selfie{border-radius:18px;box-shadow:var(--sh-1)}
 .review{border-radius:16px}
+
+.hub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.hubbtn{position:relative;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 12px;cursor:pointer;text-align:start;color:inherit;font:inherit;box-shadow:var(--sh-1)}
+.hubbtn span{font-size:22px}.hubbtn b{font-size:14px;line-height:1.25}
+.hubbtn i{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;font-style:normal;font-weight:800;font-size:12px;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;padding:0 6px}
+.st{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.st.present,.st.approved{background:rgba(31,111,74,.14);color:var(--green)} .st.late{background:rgba(242,169,0,.2);color:#8a5a00}
+.st.leave,.st.half_leave{background:rgba(34,87,184,.12);color:#2257B8} .st.absent,.st.suspended,.st.rejected,.st.cancelled{background:rgba(214,59,47,.12);color:var(--danger)}
+.st.not_yet,.st.no_duty,.st.pending{background:var(--field);color:var(--muted)}
+.pausebox{border:2px solid var(--danger);border-radius:16px;padding:12px;margin:12px 0;background:rgba(214,59,47,.05)}
+.ladrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;padding:8px 0;border-bottom:1px solid var(--line)}
+.ladrow .opts{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:14px}
+.ladrow input[type=number]{width:74px;padding:8px}
+.rpick{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow:auto;padding:4px 0}
+.shiftrow{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--line)}
+@media (max-width:520px){.shiftrow{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -266,7 +282,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '3.7';
+const APP_VERSION = '3.9';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -281,7 +297,8 @@ const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
 const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish'];
 const can = p => (state.perms || []).includes('owner') || (state.perms || []).includes(p);
-const TAB_PERM = { orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'owner' };
+const RIDER_TABS = ['attendance','leaves','complaints','shifts'];
+const TAB_PERM = { attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'owner' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -427,7 +444,7 @@ async function loadRiders(){
 async function loadSettings(){
   const rows = need(await sb.from('app_settings').select('*'));
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
-  state.tierEdit = null; state.wtEdit = null;
+  state.tierEdit = null; state.wtEdit = null; state.ladEdit = null;
 }
 let channel;
 function subscribeOrders(){
@@ -457,7 +474,7 @@ function showApp(){
 function renderNav(){
   const d = state.dash || {};
   const tabs = [['home','Home',0],['orders','Orders',num(d.orders_waiting) + num(d.issues_open)],['restaurants','Shops',0],['menu','Products',num(d.products_pending)],['riders','Riders',num(d.riders_pending)],['more','More',0]].filter(([k]) => !TAB_PERM[k] || can(TAB_PERM[k]));
-  const cur = MORE_TABS.includes(state.tab) ? 'more' : state.tab;
+  const cur = MORE_TABS.includes(state.tab) ? 'more' : RIDER_TABS.includes(state.tab) ? 'riders' : state.tab;
   $('nav').innerHTML = tabs.map(([k, l, n]) => `<button class="${cur === k ? 'on' : ''}" onclick="go('${k}')">${l}${n ? `<span class="dot">${n}</span>` : ''}</button>`).join('');
 }
 async function go(tab){
@@ -471,6 +488,10 @@ async function go(tab){
     if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport()]);
     if (tab === 'menu') await loadProducts();
     if (tab === 'riders') await loadRiderMonth();
+    if (tab === 'attendance') await Promise.all([loadAttendance(), state.riderRows.length ? null : loadRiderMonth()]);
+    if (tab === 'leaves') await Promise.all([loadLeaves(), state.riderRows.length ? null : loadRiderMonth()]);
+    if (tab === 'complaints') await Promise.all([loadComplaints(), state.riderRows.length ? null : loadRiderMonth()]);
+    if (tab === 'shifts') await Promise.all([loadShiftsPage(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'customers') await loadCustomers();
     if (tab === 'promos') await loadPromos();
     if (tab === 'banners') await Promise.all([loadBanners(), state.restaurants.length ? null : loadRestaurants()]);
@@ -487,7 +508,7 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish }[state.tab];
+              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts }[state.tab];
   m.innerHTML = v ? v() : '';
   renderNav();
 }
@@ -788,6 +809,14 @@ async function loadRiderMonth(){
   const [rows, a, b, c] = await Promise.all([sb.rpc('admin_rider_month', { p_month:state.riderMonth }), sb.rpc('rider_leaderboard', { p_period:'today' }), sb.rpc('rider_leaderboard', { p_period:'month' }), sb.rpc('rider_leaderboard', { p_period:'last_month' }), state.settings && state.settings.rider_contracts ? null : loadSettings()]);
   state.riderRows = need(rows) || [];
   state.lb = { today:a.data || [], month:b.data || [], last_month:c.data || [] };
+  try {
+    const [sp, lv, cp] = await Promise.all([
+      sb.from('riders').select('id,suspended_until,suspend_reason').gt('suspended_until', new Date().toISOString()),
+      sb.from('rider_leaves').select('id', { count:'exact', head:true }).eq('status', 'pending'),
+      sb.from('rider_complaints').select('id', { count:'exact', head:true }).eq('status', 'pending')]);
+    state.paused = {}; (sp.data || []).forEach(x => { state.paused[x.id] = x; });
+    state.pendLeaves = lv.count || 0; state.pendComplaints = cp.count || 0;
+  } catch (e) { state.paused = {}; }
 }
 const CONTRACT_DEFAULT = { company:{ delivery_pay:0, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:0, daily_hours:8 } };
 const t12 = v => { if (!v) return ''; const [h, m] = String(v).slice(0, 5).split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); };
@@ -818,6 +847,7 @@ function viewRiders(){
       <div class="row-title">${esc(r.full_name || 'Rider')}
         <span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span>
         ${contractPill(r)}
+        ${state.paused && state.paused[r.rider_id] ? `<span class="pill r">⛔ Paused till ${esc(tAt(state.paused[r.rider_id].suspended_until))}</span>` : ''}
         ${r.face_registered ? '' : '<span class="pill y">No face</span>'}
         ${num(r.flagged_shifts) ? `<span class="pill r">${r.flagged_shifts} selfie issue</span>` : ''}
         ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
@@ -837,7 +867,9 @@ function viewRiders(){
   const medal = n => n === 1 ? '🥇' : n === 2 ? '🥈' : '🥉';
   const podium = (list, title, prize) => `<div class="card" style="flex:1;min-width:150px;border:2px solid var(--marigold)"><b>🏆 ${title}</b>${num(prize) ? `<div class="muted" style="font-size:13px">Prize ${money(prize)}</div>` : ''}
     ${list.slice(0, 3).map(x => `<div class="kv"><span>${medal(x.rank)} ${esc(x.name || '')}</span><span>${x.deliveries}</span></div>`).join('') || '<div class="muted" style="font-size:14px">No deliveries yet</div>'}</div>`;
+  const hub = (tab, ic, title, n) => `<button class="hubbtn" onclick="go('${tab}')"><span>${ic}</span><b>${title}</b>${n ? `<i>${n}</i>` : ''}</button>`;
   return `<h2>Riders</h2>
+    <div class="hub">${hub('attendance', '📋', 'Attendance', 0)}${hub('leaves', '📅', 'Leave requests', state.pendLeaves)}${hub('complaints', '📣', 'Complaints', state.pendComplaints)}${hub('shifts', '🕘', 'Shifts and duty time', 0)}</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">${podium(lb.today, 'Rider of the day', aw.day_prize)}${podium(lb.month, 'Rider of the month', aw.month_prize)}</div>
     ${lb.last_month[0] ? `<div class="muted" style="font-size:14px;margin-bottom:10px">👑 Last month's winner: <b>${esc(lb.last_month[0].name)}</b> (${lb.last_month[0].deliveries} deliveries)</div>` : ''}
     <select onchange="A.pickMonth(this.value)" aria-label="Month" style="margin-bottom:12px">${months}</select>
@@ -853,6 +885,165 @@ function viewRiders(){
     ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}`;
 }
 
+
+// ================= RIDER DUTY: attendance, leave, complaints, shifts, pauses =================
+const tAt = ts => new Date(ts).toLocaleString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+const pkToday = () => new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10);
+const addDays = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const dShort = d => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', timeZone:'UTC' });
+const riderName = id => { const r = (state.riderRows || []).find(x => x.rider_id === id); return r ? (r.full_name || 'Rider') : 'Rider'; };
+const ST = { present:'Present', late:'Late', leave:'Leave', half_leave:'Half leave', absent:'Absent', suspended:'Paused', not_yet:'Not started', no_duty:'No duty' };
+const LK = { half:'Half day', full:'Full day', emergency:'🚨 Emergency' };
+const CK = { late:'Late delivery', damaged:'Items damaged or spoiled', rude:'Rude behaviour', other:'Other' };
+function backBtn(){ return `<button class="linkbtn" style="padding-left:0" onclick="go('riders')">‹ Riders</button>`; }
+
+function pauseBlock(id, rd){
+  const on = rd && rd.suspended_until && new Date(rd.suspended_until) > new Date();
+  if (on) return `<div class="pausebox"><b class="red">⛔ ID paused until ${esc(tAt(rd.suspended_until))}</b><div class="muted" style="font-size:14px">${esc(rd.suspend_reason || '')}</div>
+    <div class="muted" style="font-size:13px">The rider cannot go on duty or take deliveries. Duty time does not count. It opens again by itself.</div>
+    <div class="actions"><button class="btn block" onclick="A.liftPause('${id}')">✅ Open the ID now</button></div></div>`;
+  if (!can('riders')) return '';
+  return `<div class="card" style="margin:12px 0 0"><b>⛔ Pause rider ID</b><div class="muted" style="font-size:13px">Rider goes off duty now and cannot work until the time ends.</div>
+    <div class="chips" style="flex-wrap:wrap;margin-top:8px">${[[60, '1 hour'], [120, '2 hours'], [-1, 'Rest of today'], [1440, '24 hours'], [0, 'Other…']].map(([m, l]) => `<button class="chip" onclick="A.pauseRider('${id}', ${m})">${l}</button>`).join('')}</div>
+    <button class="btn warn small" style="margin-top:6px;width:100%" onclick="A.forfeitDay('${id}')">Take back today's earnings</button></div>`;
+}
+
+// ---- attendance ----
+async function loadAttendance(){
+  if (!state.attDay) state.attDay = pkToday();
+  state.attRows = need(await sb.rpc('admin_attendance_day', { p_day:state.attDay })) || [];
+}
+function viewAttendance(){
+  const rows = state.attRows || []; const cnt = k => rows.filter(r => r.status === k).length;
+  const list = rows.map(r => `<div class="card click" onclick="A.openRider('${r.rider_id}')"><div class="row-title">${esc(r.full_name || 'Rider')} <span class="st ${r.status}">${ST[r.status] || r.status}</span>${r.suspended_until ? `<span class="pill r">⛔ till ${esc(tAt(r.suspended_until))}</span>` : ''}${r.is_online ? '<span class="pill g">On duty</span>' : ''}</div>
+      <div class="row-sub">🕘 ${r.shift_name ? esc(r.shift_name) + ' · ' : ''}${r.shift_start ? t12(r.shift_start) + ' – ' + t12(r.shift_end) : 'No duty time'}${r.leave_kind ? ` · ${LK[r.leave_kind]}${r.leave_half ? ' (' + r.leave_half + ' half)' : ''}` : ''}</div>
+      <div class="row-sub">${r.first_start ? 'Started ' + esc(tAt(r.first_start)) + ' · ' : ''}Worked ${hours(r.work_minutes)}${num(r.required_minutes) ? ' of ' + hours(r.required_minutes) : ''}${r.late_minutes ? ` · <b class="red">${r.late_minutes} min late</b>` : ''}</div></div>`).join('');
+  return `${backBtn()}<h2>📋 Attendance</h2>
+    <div class="two"><input type="date" value="${state.attDay}" max="${pkToday()}" onchange="A.attDay(this.value)"><button class="btn ghost small" onclick="A.attDay('${pkToday()}')">Today</button></div>
+    <div class="tiles" style="margin:12px 0">
+      <div class="tile"><b>${cnt('present')}</b><span>Present on time</span></div><div class="tile"><b class="${cnt('late') ? 'red' : ''}">${cnt('late')}</b><span>Late</span></div>
+      <div class="tile"><b>${cnt('leave') + cnt('half_leave')}</b><span>On leave</span></div><div class="tile"><b class="${cnt('absent') ? 'red' : ''}">${cnt('absent')}</b><span>Absent</span></div></div>
+    ${state.attDay === pkToday() && cnt('not_yet') ? `<div class="note">${cnt('not_yet')} rider(s) have not started duty yet today.</div>` : ''}
+    ${list || '<div class="empty">No approved riders.</div>'}`;
+}
+
+// ---- leave ----
+async function loadLeaves(){
+  let q = sb.from('rider_leaves').select('*').order('created_at', { ascending:false }).limit(100);
+  if ((state.leaveFilter || 'pending') === 'pending') q = q.eq('status', 'pending');
+  state.leaves = need(await q) || [];
+}
+function viewLeaves(){
+  const f = state.leaveFilter || 'pending';
+  const chips = [['pending', 'Waiting'], ['all', 'All']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" onclick="A.leaveFilter('${k}')">${l}</button>`).join('');
+  const card = l => { const end = addDays(l.date_from, Math.max(1, Math.ceil(num(l.days))) - 1);
+    return `<div class="card"><div class="row-title">${esc(riderName(l.rider_id))} <span class="st ${l.status}">${l.status === 'pending' ? 'Waiting' : l.status}</span></div>
+      <div style="font-weight:700;margin-top:4px">${LK[l.kind]}${l.half ? ' · ' + (l.half === 'first' ? 'first half' : 'second half') : ''} · ${dShort(l.date_from)}${end !== l.date_from ? ' to ' + dShort(end) : ''} (${num(l.days)} ${num(l.days) === 1 ? 'day' : 'days'})</div>
+      <div style="margin-top:4px">“${esc(l.reason || '')}”</div>
+      <div class="row-sub">Asked ${when(l.created_at)}${l.admin_note ? ' · Your note: ' + esc(l.admin_note) : ''}</div>
+      ${l.status === 'pending' ? `<div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.leaveAction('${l.id}','approve')">Approve</button><button class="btn warn" onclick="A.leaveAction('${l.id}','reject')">Reject</button></div>`
+        : l.status === 'approved' && end >= pkToday() ? `<button class="btn ghost small" style="margin-top:8px" onclick="A.leaveAction('${l.id}','cancel')">Cancel this leave</button>` : ''}</div>`; };
+  return `${backBtn()}<h2>📅 Leave requests</h2><div class="muted" style="font-size:14px;margin-bottom:8px">Riders ask for half day, full days or emergency leave in the Rider app. Approved leave days are not marked absent and get no late fine.</div>
+    <div class="chips">${chips}</div>${(state.leaves || []).map(card).join('') || '<div class="empty">No leave requests here.</div>'}`;
+}
+
+// ---- complaints ----
+async function loadComplaints(){
+  let q = sb.from('rider_complaints').select('*').order('created_at', { ascending:false }).limit(100);
+  if ((state.cmpFilter || 'pending') === 'pending') q = q.eq('status', 'pending');
+  state.complaints = need(await q) || [];
+  if (!state.settings || !state.settings.rider_penalties) await loadSettings();
+}
+function ladderText(){
+  const lad = Array.isArray(state.settings.rider_penalties) && state.settings.rider_penalties.length ? state.settings.rider_penalties : [{ hours:1 }, { hours:2 }, { forfeit:true, eod:true }];
+  return lad.map((x, i) => `${i + 1}${i === lad.length - 1 ? '+' : ''}: ${[x.forfeit ? "today's earnings taken back" : '', x.eod ? 'paused rest of day' : num(x.hours) ? 'paused ' + num(x.hours) + 'h' : ''].filter(Boolean).join(' + ') || 'warning'}`).join(' · ');
+}
+function viewComplaints(){
+  const f = state.cmpFilter || 'pending';
+  const chips = [['pending', 'To check'], ['all', 'All']].map(([k, l]) => `<button class="chip ${f === k ? 'on' : ''}" onclick="A.cmpFilter('${k}')">${l}</button>`).join('');
+  const card = c => `<div class="card"><div class="row-title">${esc(riderName(c.rider_id))} <span class="st ${c.status}">${c.status === 'pending' ? 'To check' : c.status === 'approved' ? 'Counted' : 'Not counted'}</span>${c.auto ? '<span class="pill b">Automatic</span>' : ''}</div>
+      <div style="font-weight:700;margin-top:4px">${CK[c.kind] || c.kind} · order #${esc(c.order_id.slice(-4).toUpperCase())}${c.late_minutes != null ? ` · <span class="${num(c.late_minutes) > 0 ? 'red' : ''}">${num(c.late_minutes) > 0 ? c.late_minutes + ' min late' : 'on time'}</span>` : ''}</div>
+      ${c.note ? `<div style="margin-top:4px">“${esc(c.note)}”</div>` : ''}
+      <div class="row-sub">${when(c.created_at)}${c.admin_note ? ' · Note: ' + esc(c.admin_note) : ''}</div>
+      ${c.penalty ? `<div class="red" style="font-weight:700;font-size:14px;margin-top:4px">${esc(c.penalty)}</div>` : ''}
+      ${c.status === 'pending' ? `<div class="two" style="margin-top:10px"><button class="btn warn" onclick="A.cmpAction('${c.id}','approve')">Count it<br><small>apply penalty</small></button><button class="btn ghost" onclick="A.cmpAction('${c.id}','reject')">Not the rider's fault</button></div>` : ''}
+      ${c.status === 'approved' ? `<button class="btn ghost block" style="margin-top:10px" onclick="A.cmpAction('${c.id}','undo')">↩️ Cancel complaint and its penalty</button>` : ''}
+      <div style="display:flex;gap:14px;margin-top:8px"><button class="linkbtn" onclick="A.openOrder('${c.order_id}')">See order ›</button><button class="linkbtn" onclick="A.openRider('${c.rider_id}')">See rider ›</button></div></div>`;
+  return `${backBtn()}<h2>📣 Complaints about riders</h2>
+    <div class="note" style="font-size:14px"><b>Penalty for complaints in one day:</b> ${esc(ladderText())}. Change it in More → Settings → Rider rules.</div>
+    <div class="chips">${chips}</div>${(state.complaints || []).map(card).join('') || '<div class="empty">No complaints here.</div>'}`;
+}
+
+// ---- shifts and duty time plans ----
+async function loadShiftsPage(){
+  const [sh, pl] = await Promise.all([
+    sb.from('duty_shifts').select('*').order('sort').order('created_at'),
+    sb.from('rider_shift_plan').select('*, shift:duty_shifts(name,start_time,end_time)').or(`date_to.is.null,date_to.gte.${pkToday()}`).order('created_at', { ascending:false }).limit(200)]);
+  state.shifts = need(sh) || []; state.plans = need(pl) || [];
+}
+function shiftHours(x){ const m = v => { const [h, mm] = String(v).slice(0, 5).split(':').map(Number); return h * 60 + mm; }; let d = m(x.end_time) - m(x.start_time); if (d <= 0) d += 1440; return (d - num(x.break_minutes)) / 60; }
+function viewShifts(){
+  const rows = state.shifts.map(x => `<div class="shiftrow" data-id="${x.id}">
+      <div><label class="f">Name</label><input type="text" class="sh_name" value="${esc(x.name)}"></div>
+      <div><label class="f">Starts</label><input type="time" class="sh_start" value="${String(x.start_time).slice(0, 5)}"></div>
+      <div><label class="f">Ends</label><input type="time" class="sh_end" value="${String(x.end_time).slice(0, 5)}"></div>
+      <div><label class="f">Break at</label><input type="time" class="sh_bstart" value="${x.break_start ? String(x.break_start).slice(0, 5) : ''}"></div>
+      <div><label class="f">Break (min)</label><input type="number" class="sh_bmin" min="0" max="180" value="${num(x.break_minutes)}"></div>
+      <div><label class="check" style="margin-top:28px"><input type="checkbox" class="sh_on" ${x.is_active ? 'checked' : ''}> In use</label></div>
+      <div class="muted" style="grid-column:1/-1;font-size:13px">Work time ${+shiftHours(x).toFixed(1)} hours (after break)${shiftHours(x) < 8 ? ' · <b class="red">less than 8 hours</b>' : ''}</div></div>`).join('');
+  const today = pkToday();
+  const byRider = {};
+  state.plans.forEach(p => { (byRider[p.rider_id] = byRider[p.rider_id] || []).push(p); });
+  const planList = Object.keys(byRider).map(rid => `<div class="card"><div class="row-title">${esc(riderName(rid))}</div>${byRider[rid].map(p => `<div class="kv"><span>${p.date_from <= today && (!p.date_to || p.date_to >= today) ? '▶ ' : ''}<b>${esc(p.shift ? p.shift.name : '')}</b> ${p.shift ? t12(p.shift.start_time) + ' – ' + t12(p.shift.end_time) : ''}<br><small class="muted">${dShort(p.date_from)} ${p.date_to ? 'to ' + dShort(p.date_to) : 'onwards'}${p.note ? ' · ' + esc(p.note) : ''}</small></span><button class="linkbtn red" onclick="A.delPlan('${p.id}')">Remove</button></div>`).join('')}</div>`).join('');
+  return `${backBtn()}<h2>🕘 Shifts and duty time</h2>
+    <button class="btn block" style="margin-bottom:12px" onclick="A.planForm([])">Change duty time of riders</button>
+    <div class="card"><b>Shifts</b><div class="muted" style="font-size:14px">Every rider must work 8 hours. A shift with a 1 hour break should be 9 hours long (example 7 AM – 4 PM). Changing a time here changes it for every rider on that shift.</div>
+      <div id="shiftBox">${rows || '<div class="empty">No shifts yet.</div>'}</div>
+      <div class="bar" style="margin-top:10px"><button class="btn ghost" onclick="A.addShift()">+ Add shift</button><button class="btn" onclick="A.saveShifts()">Save shifts</button></div></div>
+    <h3>Current and coming duty plans</h3><div class="muted" style="font-size:14px;margin-bottom:8px">The newest plan for a day is used. So a one-week change sits on top of a permanent plan and after the week the rider goes back.</div>
+    ${planList || '<div class="empty">No plans yet. Use the button above.</div>'}`;
+}
+
+// ---- rider rules (settings card) ----
+function riderRulesCard(){
+  const s = state.settings;
+  const cr = Object.assign({ mode:'late', hours:24, late_grace:5 }, s.complaint_rules || {});
+  const dr = Object.assign({ late_fine:100, absent_fine:0, absent_after:120 }, s.duty_rules || {});
+  const dt = Object.assign({ min_per_km:4, buffer_min:10, default_ride_min:25 }, s.delivery_time || {});
+  if (!state.ladEdit) state.ladEdit = (Array.isArray(s.rider_penalties) && s.rider_penalties.length ? s.rider_penalties : [{ hours:1 }, { hours:2 }, { forfeit:true, eod:true }]).map(x => Object.assign({ hours:0, forfeit:false, eod:false }, x));
+  return `<div class="card" id="riderRules">
+    <b>🚦 Rider rules: complaints, pauses, late fine</b>
+    <h3 style="margin:12px 0 4px">Customer complaints</h3>
+    <label class="f" for="cr_mode">Who decides a complaint?</label>
+    <select id="cr_mode">
+      <option value="late" ${cr.mode === 'late' ? 'selected' : ''}>Automatic only when the app shows the order was really late. You check the rest.</option>
+      <option value="all" ${cr.mode === 'all' ? 'selected' : ''}>Automatic for every complaint</option>
+      <option value="manual" ${cr.mode === 'manual' ? 'selected' : ''}>You check every complaint</option></select>
+    <div class="two"><div><label class="f" for="cr_hours">Customer can complain within (hours)</label><input id="cr_hours" type="number" min="1" max="168" value="${num(cr.hours)}"></div>
+      <div><label class="f" for="cr_grace">Late means more than (minutes)</label><input id="cr_grace" type="number" min="0" max="60" value="${num(cr.late_grace)}"></div></div>
+    <h3 style="margin:14px 0 4px">Penalty for complaints in the same day</h3>
+    <div class="muted" style="font-size:13px">The last step repeats for more complaints. "Take back today's earnings" adds a fine equal to the rider's pay today (without tips; for salary riders also 1 day of salary).</div>
+    <div id="ladBox">${ladderEditor()}</div>
+    <button class="btn ghost small" style="margin-top:8px" onclick="A.ladAdd()">+ Add step</button>
+    <h3 style="margin:14px 0 4px">Duty start</h3>
+    <div class="two"><div><label class="f" for="dr_grace">Late after (minutes)</label><input id="dr_grace" type="number" min="0" max="120" value="${num(s.late_grace_minutes ?? 10)}"></div>
+      <div><label class="f" for="dr_late">Late fine (Rs, 0 = none)</label><input id="dr_late" type="number" min="0" value="${num(dr.late_fine)}"></div></div>
+    <div class="two"><div><label class="f" for="dr_abs">Absent fine (Rs, 0 = none)</label><input id="dr_abs" type="number" min="0" value="${num(dr.absent_fine)}"></div>
+      <div><label class="f" for="dr_after">Absent if not started after (minutes)</label><input id="dr_after" type="number" min="30" max="600" value="${num(dr.absent_after)}"></div></div>
+    <div class="muted" style="font-size:13px">No fine on approved leave days or while the ID is paused.</div>
+    <h3 style="margin:14px 0 4px">Delivery time promised to customers</h3>
+    <div class="two"><div><label class="f" for="dt_km">Minutes per km</label><input id="dt_km" type="number" min="1" max="15" step="0.5" value="${num(dt.min_per_km)}"></div>
+      <div><label class="f" for="dt_buf">Extra minutes</label><input id="dt_buf" type="number" min="0" max="60" value="${num(dt.buffer_min)}"></div></div>
+    <div class="muted" style="font-size:13px">Rider must deliver within (distance × minutes per km + extra minutes) after pick-up. Example 3 km: 3 × ${num(dt.min_per_km)} + ${num(dt.buffer_min)} = ${3 * num(dt.min_per_km) + num(dt.buffer_min)} minutes. Customers see the time in the app.</div>
+    <div class="actions"><button class="btn block" onclick="A.saveRiderRules()">Save rider rules</button></div></div>`;
+}
+function ladderEditor(){
+  return (state.ladEdit || []).map((x, i) => `<div class="ladrow"><div><b>Complaint ${i + 1}${i === state.ladEdit.length - 1 ? ' and more' : ''}</b>
+    <div class="opts"><label>Pause <input type="number" min="0" max="720" step="0.5" value="${num(x.hours)}" onchange="A.ladSet(${i},'hours',this.value)" ${x.eod ? 'disabled' : ''}> hours</label>
+      <label class="check"><input type="checkbox" ${x.eod ? 'checked' : ''} onchange="A.ladSet(${i},'eod',this.checked)"> Rest of the day</label>
+      <label class="check"><input type="checkbox" ${x.forfeit ? 'checked' : ''} onchange="A.ladSet(${i},'forfeit',this.checked)"> Take back today's earnings</label></div></div>
+    <button class="linkbtn red" onclick="A.ladDel(${i})" aria-label="Remove">✕</button></div>`).join('') || '<div class="muted">No steps: complaints give no penalty.</div>';
+}
 // ================= MORE =================
 function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
@@ -1138,6 +1329,7 @@ function viewSettings(){
       <label class="f" for="s_grace">Late after (minutes past duty start)</label><input id="s_grace" type="number" min="0" max="120" value="${num(s.late_grace_minutes ?? 10)}">
       <div class="actions"><button class="btn ghost block" onclick="A.saveContracts()">Save contracts</button></div>
     </div>
+    ${riderRulesCard()}
     <div class="card">
       <b>🏆 Rider of the day and month</b>
       <div class="muted" style="font-size:14px">The rider with the most deliveries wins (ties go to the better rating). Riders see the ranking in their app. Set a prize to show them (0 = no prize). You pay the prize yourself from the rider's page.</div>
@@ -1410,7 +1602,7 @@ const A = {
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
       const [rd, fines, shifts, hand, pays] = await Promise.all([
-        sb.from('riders').select('face_photo_path,current_lat,current_lng').eq('id', id).single(),
+        sb.from('riders').select('face_photo_path,current_lat,current_lng,suspended_until,suspend_reason').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
         sb.from('cash_handovers').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(10),
@@ -1441,6 +1633,10 @@ const A = {
           <div class="muted" style="font-size:13px">${r.cnic ? 'CNIC ' + esc(r.cnic) + ' · ' : ''}Joined ${dayName(r.created_at)}${r.rating ? ' · ★ ' + r.rating : ''}</div>
           ${rider.current_lat ? `<a style="font-size:14px" href="https://www.google.com/maps/search/?api=1&query=${rider.current_lat},${rider.current_lng}" target="_blank" rel="noopener">Last location${r.location_updated_at ? ' (' + timeAgo(r.location_updated_at) + ')' : ''}</a>` : ''}
         </div></div>
+
+        ${pauseBlock(id, rider)}
+        <div class="kv" style="margin-top:8px"><span class="muted">🕘 Duty time</span><span>${esc(timingText(r))}</span></div>
+        <div class="bar" style="margin:8px 0 0"><button class="btn ghost small" onclick="A.planForm(['${id}'])">Change duty time</button><button class="btn ghost small" onclick="A.riderAttendance('${id}')">📋 Attendance</button></div>
 
         <h3>${monthLabel(state.riderMonth)} pay</h3>
         ${r.contract_type === 'company' ? `<div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>` : ''}
@@ -1487,7 +1683,7 @@ const A = {
           <div><label class="f" for="rs_bstart">Break at</label><input id="rs_bstart" type="time" value="${r.break_start ? String(r.break_start).slice(0, 5) : ''}"></div>
           <div><label class="f" for="rs_bmin">Break length (min)</label><input id="rs_bmin" type="number" min="0" max="180" step="5" value="${r.break_minutes ?? 60}"></div>
         </div>
-        <div class="muted" style="font-size:13px">Leave duty times empty for no fixed timing. Starting duty more than ${num(state.settings.late_grace_minutes ?? 10)} minutes late is marked late.</div>
+        <div class="muted" style="font-size:13px">Tip: use <b>Change duty time</b> above to put the rider on a shift for a week, a month or from a date. A shift plan replaces these times. Leave duty times empty for no fixed timing. Starting duty more than ${num(state.settings.late_grace_minutes ?? 10)} minutes late is marked late.</div>
         <div class="actions"><button class="btn ghost block" onclick="A.saveRiderSettings('${id}')">Save settings</button></div>
 
         <h3>Cash handovers</h3><div>${handRows || '<div class="empty" style="padding:14px">None yet.</div>'}</div>
@@ -1840,6 +2036,115 @@ const A = {
       need(await sb.from('app_settings').upsert([{ key:'shop_accept_minutes', value:acc, updated_at:new Date().toISOString() }, { key:'order_expiry_hours', value:exp, updated_at:new Date().toISOString() }]));
       await loadSettings(); renderTab(); toast('Saved');
     });
+  },
+  // ---- rider duty ----
+  async attDay(d){ state.attDay = d || pkToday(); await run(loadAttendance); renderTab(); },
+  async leaveFilter(f){ state.leaveFilter = f; await run(loadLeaves); renderTab(); },
+  async cmpFilter(f){ state.cmpFilter = f; await run(loadComplaints); renderTab(); },
+  async leaveAction(id, action){
+    let note = null;
+    if (action !== 'approve'){ note = prompt(action === 'reject' ? 'Reason for not approving (the rider will see it):' : 'Why cancel this leave? (optional)', ''); if (note === null) return; }
+    await run(async () => { need(await sb.rpc('admin_leave_action', { p_id:id, p_action:action, p_note:note || null })); toast(action === 'approve' ? 'Leave approved' : 'Done'); await loadLeaves(); await loadRiderMonth(); renderTab(); });
+  },
+  async cmpAction(id, action){
+    let note = null;
+    if (action === 'approve'){ if (!confirm("Count this complaint? The penalty is applied to the rider now (pause and/or taking back today's earnings).")) return; }
+    else if (action === 'undo'){ note = prompt("Cancel this complaint? The rider's pause from it ends now and money taken for it is given back. Reason (optional):", ''); if (note === null) return; }
+    else { note = prompt('Why is it not the rider\'s fault? (optional)', ''); if (note === null) return; }
+    await run(async () => { const v = need(await sb.rpc('admin_complaint_action', { p_id:id, p_action:action, p_note:note || null })); toast(action === 'approve' ? (v || 'Counted') : action === 'undo' ? 'Complaint cancelled, penalty given back' : 'Marked not counted'); await loadComplaints(); await loadRiderMonth(); renderTab(); });
+  },
+  async pauseRider(id, mins){
+    if (mins === 0){ const h = prompt('Pause for how many hours?', '3'); if (h === null) return; mins = Math.round(num(h) * 60); if (mins <= 0) return toast('Enter hours', true); }
+    const reason = prompt('Reason (the rider will see it):', 'Customer complaint'); if (reason === null) return;
+    await run(async () => { const until = need(await sb.rpc('admin_suspend_rider', { p_rider:id, p_minutes:mins, p_reason:reason || null })); toast('Paused until ' + tAt(until)); await A.refreshRider(id); });
+  },
+  async liftPause(id){
+    if (!confirm('Open the rider ID now?')) return;
+    await run(async () => { need(await sb.rpc('admin_lift_suspension', { p_rider:id })); toast('ID is open again'); await A.refreshRider(id); });
+  },
+  async forfeitDay(id){
+    const reason = prompt("Take back today's earnings as a fine. Reason:", 'Customer complaint'); if (reason === null) return;
+    await run(async () => { const v = need(await sb.rpc('admin_forfeit_day', { p_rider:id, p_reason:reason || null })); toast(num(v) ? 'Fine added ' + money(v) : 'No earnings today'); await A.refreshRider(id); });
+  },
+  async riderAttendance(id){
+    await run(async () => {
+      const today = pkToday(); const from = today.slice(0, 8) + '01';
+      const rows = need(await sb.rpc('rider_attendance', { p_rider:id, p_from:from, p_to:today })) || [];
+      const cnt = k => rows.filter(r => r.status === k).length;
+      openSheet('Attendance · ' + riderName(id), `<div class="tiles" style="margin-bottom:10px"><div class="tile"><b>${cnt('present')}</b><span>Present</span></div><div class="tile"><b class="${cnt('late') ? 'red' : ''}">${cnt('late')}</b><span>Late</span></div><div class="tile"><b>${cnt('leave') + cnt('half_leave') / 2}</b><span>Leave days</span></div><div class="tile"><b class="${cnt('absent') ? 'red' : ''}">${cnt('absent')}</b><span>Absent</span></div></div>
+        ${rows.filter(r => r.status !== 'no_duty').map(r => `<div class="kv"><span><b>${dShort(r.day)}</b><br><small class="muted">${r.first_start ? tAt(r.first_start) + ' · ' : ''}${hours(r.work_minutes)}${num(r.required_minutes) ? ' / ' + hours(r.required_minutes) : ''}${r.late_minutes ? ' · ' + r.late_minutes + ' min late' : ''}</small></span><span class="st ${r.status}">${ST[r.status]}</span></div>`).join('') || '<div class="empty">No duty days this month.</div>'}
+        <button class="btn ghost block" style="margin-top:12px" onclick="A.openRider('${id}')">‹ Back to rider</button>`);
+    });
+  },
+  async planForm(ids){
+    await run(async () => { if (!state.shifts || !state.shifts.length) await loadShiftsPage(); if (!state.riderRows.length) await loadRiderMonth(); });
+    const sel = new Set(ids || []); state.planPeriod = 'from';
+    const riders = state.riderRows.filter(r => r.is_approved);
+    const shifts = state.shifts.filter(x => x.is_active);
+    if (!shifts.length) return toast('Add a shift first (Riders → Shifts and duty time)', true);
+    openSheet('Change duty time', `
+      <label class="f">Riders</label>
+      <div class="rpick">${riders.map(r => `<label class="chip ${sel.has(r.rider_id) ? 'on' : ''}"><input type="checkbox" class="pl_r" value="${r.rider_id}" ${sel.has(r.rider_id) ? 'checked' : ''} style="display:none" onchange="this.parentNode.classList.toggle('on', this.checked)">${esc(r.full_name || 'Rider')}</label>`).join('')}</div>
+      <label class="f" for="pl_shift">Shift</label>
+      <select id="pl_shift">${shifts.map(x => `<option value="${x.id}">${esc(x.name)} · ${t12(x.start_time)} – ${t12(x.end_time)}</option>`).join('')}</select>
+      <label class="f">For how long?</label>
+      <div class="chips" id="plPer" style="flex-wrap:wrap">${[['from', 'From a date onwards'], ['tw', 'This week'], ['nw', 'Next week'], ['tm', 'This month'], ['nm', 'Next month'], ['custom', 'Choose dates']].map(([k, l]) => `<button type="button" class="chip ${k === 'from' ? 'on' : ''}" data-k="${k}" onclick="A.planPer('${k}')">${l}</button>`).join('')}</div>
+      <div class="two"><div><label class="f" for="pl_from">From</label><input type="date" id="pl_from" value="${pkToday()}"></div><div id="plToBox" style="display:none"><label class="f" for="pl_to">To</label><input type="date" id="pl_to" value="${addDays(pkToday(), 6)}"></div></div>
+      <div class="muted" id="plHint" style="font-size:13px;margin-top:6px">The rider stays on this shift until you change it again.</div>
+      <label class="f" for="pl_note">Note (optional)</label><input type="text" id="pl_note" placeholder="Example: Ramadan timing">
+      <button class="btn block" style="margin-top:14px" id="plSave" onclick="A.savePlan()">Save duty time</button>`);
+  },
+  planPer(k){
+    state.planPeriod = k; document.querySelectorAll('#plPer .chip').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+    const today = pkToday(); const dow = (new Date(today + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0 = Monday
+    const monthEndOf = d => { const x = new Date(d + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 0)).toISOString().slice(0, 10); };
+    const nm1 = (() => { const x = new Date(today + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 1)).toISOString().slice(0, 10); })();
+    const set = { tw:[today, addDays(today, 6 - dow)], nw:[addDays(today, 7 - dow), addDays(today, 13 - dow)], tm:[today, monthEndOf(today)], nm:[nm1, monthEndOf(nm1)] }[k];
+    if (set){ $('pl_from').value = set[0]; $('pl_to').value = set[1]; }
+    $('plToBox').style.display = k === 'from' ? 'none' : '';
+    $('plHint').textContent = k === 'from' ? 'The rider stays on this shift until you change it again.' : 'After the last day the rider goes back to the earlier duty time.';
+  },
+  async savePlan(){
+    const ids = Array.from(document.querySelectorAll('.pl_r:checked')).map(x => x.value);
+    if (!ids.length) return toast('Choose at least one rider', true);
+    const from = $('pl_from').value; const to = state.planPeriod === 'from' ? null : $('pl_to').value;
+    if (!from) return toast('Choose a start date', true);
+    if (to && to < from) return toast('End date is before start date', true);
+    await run(async () => {
+      const n = need(await sb.rpc('admin_plan_shift', { p_riders:ids, p_shift:$('pl_shift').value, p_from:from, p_to:to, p_note:$('pl_note').value.trim() || null }));
+      closeSheet(); toast('Duty time saved for ' + n + ' rider(s)'); await loadRiderMonth(); if (state.tab === 'shifts') await loadShiftsPage(); renderTab();
+    });
+  },
+  async delPlan(id){
+    if (!confirm('Remove this duty plan?')) return;
+    await run(async () => { need(await sb.rpc('admin_delete_plan', { p_id:id })); await loadShiftsPage(); await loadRiderMonth(); renderTab(); toast('Removed'); });
+  },
+  addShift(){ state.shifts.push({ id:'new-' + Date.now(), name:'New shift', start_time:'09:00', end_time:'18:00', break_start:'13:00', break_minutes:60, is_active:true, _new:true }); renderTab(); },
+  async saveShifts(){
+    const rows = Array.from(document.querySelectorAll('#shiftBox .shiftrow')).map((el, i) => ({ id:el.dataset.id, name:el.querySelector('.sh_name').value.trim(), start_time:el.querySelector('.sh_start').value, end_time:el.querySelector('.sh_end').value,
+      break_start:el.querySelector('.sh_bstart').value || null, break_minutes:Math.max(0, num(el.querySelector('.sh_bmin').value)), is_active:el.querySelector('.sh_on').checked, sort:i + 1 }));
+    if (rows.some(r => !r.name || !r.start_time || !r.end_time)) return toast('Every shift needs a name, start and end', true);
+    await run(async () => {
+      for (const r of rows){
+        const v = { name:r.name, start_time:r.start_time, end_time:r.end_time, break_start:r.break_start, break_minutes:r.break_minutes, is_active:r.is_active, sort:r.sort };
+        if (r.id.startsWith('new-')) need(await sb.from('duty_shifts').insert(v)); else need(await sb.from('duty_shifts').update(v).eq('id', r.id));
+      }
+      await loadShiftsPage(); await loadRiderMonth(); renderTab(); toast('Shifts saved');
+    });
+  },
+  ladSet(i, k, v){ const x = state.ladEdit[i]; x[k] = k === 'hours' ? Math.max(0, num(v)) : !!v; if (k === 'eod' && v) x.hours = 0; $('ladBox').innerHTML = ladderEditor(); },
+  ladAdd(){ state.ladEdit.push({ hours:24, forfeit:false, eod:false }); $('ladBox').innerHTML = ladderEditor(); },
+  ladDel(i){ state.ladEdit.splice(i, 1); $('ladBox').innerHTML = ladderEditor(); },
+  async saveRiderRules(){
+    const lad = (state.ladEdit || []).map(x => { const o = {}; if (x.eod) o.eod = true; else if (num(x.hours) > 0) o.hours = num(x.hours); if (x.forfeit) o.forfeit = true; return o; });
+    const rows = [
+      { key:'complaint_rules', value:{ mode:$('cr_mode').value, hours:Math.max(1, num($('cr_hours').value)), late_grace:Math.max(0, num($('cr_grace').value)) } },
+      { key:'rider_penalties', value:lad },
+      { key:'duty_rules', value:{ late_fine:Math.max(0, num($('dr_late').value)), absent_fine:Math.max(0, num($('dr_abs').value)), absent_after:Math.max(30, num($('dr_after').value)) } },
+      { key:'late_grace_minutes', value:Math.max(0, num($('dr_grace').value)) },
+      { key:'delivery_time', value:{ min_per_km:Math.max(1, num($('dt_km').value)), buffer_min:Math.max(0, num($('dt_buf').value)), default_ride_min:num((state.settings.delivery_time || {}).default_ride_min) || 25 } }
+    ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
+    await run(async () => { need(await sb.from('app_settings').upsert(rows)); await loadSettings(); renderTab(); toast('Rider rules saved'); });
   },
   async saveSetting(key, value){
     await run(async () => { need(await sb.from('app_settings').upsert({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
