@@ -454,7 +454,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.3';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -473,7 +473,7 @@ const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
 const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 const nav = h => { location.hash = h; };
 function logErr(e){ try { console.error(e && e.message ? e.message : JSON.stringify(e)); } catch (x) { console.error('error'); } }
-function replaceHash(h){ try { history.replaceState(null, '', h); } catch (e) { try { location.hash = h; } catch (e2) {} } }
+function replaceHash(h){ try { history.replaceState(history.state, '', h); } catch (e) { try { location.hash = h; } catch (e2) {} } }
 function need(res){ if (res.error) throw res.error; return res.data; }
 const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.price) / num(i.compare_price)) * 100) : 0;
 
@@ -1941,6 +1941,9 @@ async function afterLogin(user){
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'customer', ding:() => ring(), toast:(m, err) => toast(m, err) });
   Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'customer', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
+  BackNav.init({ toast:m => toast(m), exitMsg:() => state.lang === 'ur' ? 'باہر نکلنے کے لیے دوبارہ واپس دبائیں' : 'Press back again to exit',
+    overlays:[['#chatWrap', () => Chat.close()], ['#sheet', () => closeSheet()], ['#rptWrap', null], ['#receiptWrap', null], ['#slipWrap', null], ['#fbSheet', null], ['#recvSheet', () => { const el = $('recvSheet'); if (el) el.remove(); }], ['#alertSheet', () => A.alertOk()]],
+    back:() => { if (currentRoute !== 'home'){ history.replaceState({ wmb:1 }, '', location.pathname + location.search + '#/'); route(); return true; } return false; } });
   const target = state.pending; state.pending = null;
   renderShell();
   if (target && target !== '#') replaceHash(target);
@@ -2263,6 +2266,49 @@ const Legal = (() => {
     cfg.toast(tt(lang, 'del_done'));
   }
   return { init, agree, links, del };
+})();
+
+// ================= BACK BUTTON (same code in all four apps) =================
+// Phone back button: closes the open popup first, then goes to the main tab, then asks "press back again to exit".
+const BackNav = (() => {
+  let cfg = null, pushed = 0, internal = 0, armed = false, armTimer = null, pushHash = [];
+  const present = () => cfg.overlays.filter(([sel]) => document.querySelector(sel));
+  function onMutate(){
+    const n = present().length;
+    while (pushed < n){ pushHash.push(location.hash); history.pushState({ wmov:pushed + 1 }, '', location.href); pushed++; }
+    if (pushed > n){
+      const extra = pushed - n; pushed = n;
+      const h = pushHash.splice(n).pop();
+      // Closed by a button (same page): remove our extra history steps. Closed because the page changed: leave history alone.
+      if (h === location.hash && history.state && history.state.wmov){ internal++; history.go(-extra); }
+    }
+  }
+  function guard(){ history.pushState({ wmg:1 }, '', location.href); }
+  function onPop(ev){
+    if (internal > 0){ internal--; return; }
+    const st = ev.state || {};
+    const open = present();
+    if (open.length){
+      // user pressed back while a popup is open: close the top one
+      pushed = Math.max(0, pushed - 1); pushHash.pop();
+      const [sel, close] = open[open.length - 1];
+      try { close ? close() : document.querySelector(sel).remove(); } catch (e) { const el = document.querySelector(sel); if (el) el.remove(); }
+      return;
+    }
+    if (st.wmov){ internal++; history.back(); return; }         // leftover popup step: skip it
+    if (!st.wmb) return;                                          // normal page change (hash links) is handled by the app
+    if (cfg.back && cfg.back()){ guard(); return; }               // went to main tab / home
+    if (armed){ return; }                                         // second press: nothing left, phone closes the app
+    armed = true; cfg.toast(cfg.exitMsg());
+    clearTimeout(armTimer); armTimer = setTimeout(() => { armed = false; if (history.state && history.state.wmb) guard(); }, 2200);
+  }
+  function init(c){
+    if (cfg) return; cfg = c;
+    history.replaceState({ wmb:1 }, '', location.href); guard();
+    window.addEventListener('popstate', onPop);
+    new MutationObserver(onMutate).observe(document.body, { childList:true });
+  }
+  return { init };
 })();
 
 (async function boot(){
