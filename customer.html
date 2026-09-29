@@ -454,7 +454,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -533,6 +533,7 @@ const I18N = {
     addr_in_use:'This address was used in an earlier order, so it cannot be deleted.',
     browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
     need_details:'Please add your name and phone so the shop and rider can reach you.',
+    arrive_by:'Rider arriving by about {t}', deliver_around:'Delivery by about {t}', cmp_btn:'Problem with the delivery? Complain', cmp_title:'Complain about the rider', cmp_q:'What happened?', cmp_late:'Rider came late', cmp_damaged:'Items were damaged or spoiled', cmp_rude:'Rider was rude', cmp_other:'Something else', cmp_note:'Tell us more', cmp_send:'Send complaint', cmp_pick:'Please choose the problem', cmp_need_note:'Please write what happened', cmp_done:'Thank you. Your complaint is counted and action is taken on the rider.', cmp_sent:'Thank you. Wanhar Mart will check your complaint.', cmp_status:'Your complaint', cmp_pending:'Wanhar Mart is checking it', cmp_approved:'Complaint accepted, action taken on the rider', cmp_rejected:'Checked by Wanhar Mart: {n}', cmp_late_by:'The order came {m} minutes late',
     ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map',
     rate_title:'How was your order?', rate_food:'Products', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the products',
@@ -614,6 +615,7 @@ const I18N = {
     addr_in_use:'یہ پتہ پہلے آرڈر میں استعمال ہوا ہے، اس لیے حذف نہیں ہو سکتا۔',
     browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
+    arrive_by:'رائیڈر تقریباً {t} تک پہنچے گا', deliver_around:'ڈیلیوری تقریباً {t} تک', cmp_btn:'ڈیلیوری میں مسئلہ؟ شکایت کریں', cmp_title:'رائیڈر کی شکایت', cmp_q:'کیا ہوا؟', cmp_late:'دیر سے پہنچا', cmp_damaged:'سامان خراب یا ٹوٹا ہوا تھا', cmp_rude:'رائیڈر نے بدتمیزی کی', cmp_other:'کچھ اور', cmp_note:'تفصیل لکھیں', cmp_send:'شکایت بھیجیں', cmp_pick:'براہ کرم مسئلہ چنیں', cmp_need_note:'براہ کرم لکھیں کیا ہوا', cmp_done:'شکریہ۔ آپ کی شکایت درج ہو گئی اور رائیڈر پر لاگو ہو گئی۔', cmp_sent:'شکریہ۔ Wanhar Mart آپ کی شکایت چیک کرے گا۔', cmp_status:'آپ کی شکایت', cmp_pending:'Wanhar Mart چیک کر رہا ہے', cmp_approved:'شکایت منظور، رائیڈر کے خلاف کارروائی ہو گئی', cmp_rejected:'Wanhar Mart نے چیک کیا: {n}', cmp_late_by:'آرڈر {m} منٹ دیر سے پہنچا',
     ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں',
     rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'چیزیں', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم چیزوں کے لیے ستارے دبائیں',
@@ -912,6 +914,7 @@ async function loadProducts(){
   state.products = need(items);
   state.products.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; });
   sb.from('app_settings').select('value').eq('key', 'weight_tiers').maybeSingle().then(({ data }) => { state.weightTiers = (data && Array.isArray(data.value)) ? data.value : []; }, () => {});
+  sb.from('app_settings').select('value').eq('key', 'complaint_rules').maybeSingle().then(({ data }) => { state.cmpRules = (data && data.value) || null; }, () => {});
   await Promise.all([loadOptItems(), sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false }).then(({ data }) => { state.banners = data || []; }, () => {})]);
   if (!stats.error && stats.data) state.stats = stats.data;
 }
@@ -1375,7 +1378,9 @@ async function showOrder(id){
     if (lg.data && lg.data[0]) eta = new Date(new Date(lg.data[0].changed_at).getTime() + o.prep_minutes * 60000).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   }
   if (['rider_assigned', 'picked_up'].includes(o.status)){ const rr = await sb.rpc('order_rider_info', { p_order_id:id }); if (rr.data && rr.data[0]) rider = rr.data[0]; }
-  if (o.status === 'delivered'){ const rv = await sb.from('reviews').select('*').eq('order_id', id).maybeSingle(); review = rv.data || null; }
+  let cmp = null;
+  if (o.status === 'delivered'){ const rv = await sb.from('reviews').select('*').eq('order_id', id).maybeSingle(); review = rv.data || null;
+    if (o.rider_id){ try { const cq = await sb.from('rider_complaints').select('kind,status,admin_note,late_minutes').eq('order_id', id).maybeSingle(); cmp = cq.data || null; } catch (e) {} } }
   let waitHtml = '';
   if (o.status === 'picked_up'){
     const iss = await sb.from('order_issues').select('kind,wait_until,status').eq('order_id', id).eq('status', 'open').not('wait_until', 'is', null).limit(1);
@@ -1395,7 +1400,7 @@ async function showOrder(id){
   const items = o.order_items.map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
   const heroKey = 'hero_' + o.status;
   $('view').innerHTML = `
-    ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}${o.scheduled_for && !FINAL.includes(o.status) ? `<span style="display:block;margin-top:6px"><span class="schedpill">🗓️ ${esc(t('sched_for', { d:schedLabel(o.scheduled_for) }))}</span></span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
+    ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}${arriveLine(o)}${o.scheduled_for && !FINAL.includes(o.status) ? `<span style="display:block;margin-top:6px"><span class="schedpill">🗓️ ${esc(t('sched_for', { d:schedLabel(o.scheduled_for) }))}</span></span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
     <div class="muted">${when(o.created_at)}</div>
     ${waitHtml}
     ${trackerHtml(o)}
@@ -1420,7 +1425,7 @@ async function showOrder(id){
       ${o.restaurant && o.restaurant.phone ? `<a class="btn ghost" href="tel:${esc(o.restaurant.phone)}">${t('call')}</a>` : ''}
       ${o.status === 'placed' ? `<button class="btn warn" onclick="A.cancelOrder('${o.id}')">${t('cancel_order')}</button>` : ''}
       ${FINAL.includes(o.status) ? `<button class="btn" onclick="A.reorder()">${t('reorder')}</button>` : ''}
-    </div>${o.status === 'delivered' ? ratingHtml(o, review) : ''}`;
+    </div>${o.status === 'delivered' ? ratingHtml(o, review) + complainHtml(o, cmp) : ''}`;
   if (showTrackMap(o)) mountTrackMap(o, rider);
   if (!FINAL.includes(o.status)) pollTimer = setInterval(() => route(true), 15000);
   if (showTrackMap(o) && ['rider_assigned', 'picked_up'].includes(o.status)){
@@ -1431,6 +1436,21 @@ async function showOrder(id){
       if (rr && rr.lat) updateRiderPin(rr);
     }, 6000);
   }
+}
+
+// ---- Delivery time and complaints about the rider ----
+const tAt = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+function arriveLine(o){
+  if (o.status === 'picked_up' && o.rider_due_at) return `<span style="display:block;opacity:.95;font-weight:700;margin-top:4px">🛵 ${t('arrive_by', { t:tAt(o.rider_due_at) })}</span>`;
+  if (o.deliver_by && !FINAL.includes(o.status)) return `<span style="display:block;opacity:.9;margin-top:4px">🕒 ${t('deliver_around', { t:tAt(o.deliver_by) })}</span>`;
+  return '';
+}
+function complainHtml(o, c){
+  if (!o.rider_id) return '';
+  if (c) return `<div class="box" style="margin-top:12px"><b>📣 ${t('cmp_status')}: ${t('cmp_' + c.kind)}</b><div class="muted" style="font-size:14px;margin-top:4px">${c.status === 'rejected' ? esc(t('cmp_rejected', { n:c.admin_note || '—' })) : t('cmp_' + c.status)}</div></div>`;
+  const hrs = num((state.cmpRules && state.cmpRules.hours) || 24);
+  if (!o.delivered_at || Date.now() - new Date(o.delivered_at).getTime() > hrs * 3600000) return '';
+  return `<button class="btn warn" style="margin-top:12px" onclick="A.complainForm('${esc(o.id)}')">⚠️ ${t('cmp_btn')}</button>`;
 }
 // ---- Live tracking map ----
 let track = null, riderTimer = null;
@@ -1850,6 +1870,26 @@ const A = {
       const el = $('fbSheet'); if (el) el.remove();
       toast(t('fb_thanks')); if (currentRoute === 'order') await route(true);
     });
+  },
+  complainForm(id){
+    const o = state.curOrder || {}; state.cmpKind = null;
+    openSheet(t('cmp_title'), `${num(o.late_minutes) > 0 ? `<div class="waitwarn" style="margin:0 0 10px">${t('cmp_late_by', { m:o.late_minutes })}</div>` : ''}
+      <b>${t('cmp_q')}</b><div class="tagchips" id="cmpKinds" style="margin-top:8px">${['late', 'damaged', 'rude', 'other'].map(k => `<button type="button" class="tagchip" data-k="${k}" onclick="A.cmpKind('${k}')">${t('cmp_' + k)}</button>`).join('')}</div>
+      <label class="f" for="cmpNote">${t('cmp_note')}</label><textarea id="cmpNote" rows="3"></textarea>
+      <button class="btn" id="cmpSend" style="margin-top:14px" onclick="A.sendComplaint('${esc(id)}')">${t('cmp_send')}</button>`);
+  },
+  cmpKind(k){ state.cmpKind = k; document.querySelectorAll('#cmpKinds .tagchip').forEach(b => b.classList.toggle('on', b.dataset.k === k)); },
+  async sendComplaint(id){
+    const k = state.cmpKind; const note = ($('cmpNote').value || '').trim();
+    if (!k) return toast(t('cmp_pick'), true);
+    if ((k === 'rude' || k === 'other') && !note) return toast(t('cmp_need_note'), true);
+    const b = $('cmpSend'); if (b) b.disabled = true;
+    await run(async () => {
+      const r = need(await sb.rpc('complain_rider', { p_order_id:id, p_kind:k, p_note:note || null }));
+      closeSheet(); toast(r && r.status === 'approved' ? t('cmp_done') : t('cmp_sent'));
+      if (currentRoute === 'order') await route(true);
+    });
+    if (b) b.disabled = false;
   },
   async cancelOrder(id){
     if (!confirm(t('cancel_confirm'))) return;
