@@ -255,7 +255,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.3';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -307,7 +307,7 @@ const I18N = {
     order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider',
     ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
     open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
-    closed_bar:'Your shop is closed. Customers cannot order.', statement:'Statement', statement_note:'Download the statement for the period chosen above.', print_pdf:'Print or save as PDF', close_word:'Close', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
+    closed_bar:'Your shop is closed. Customers cannot order.', weight_kg:'Weight of one item (kg)', weight_note:'Used for the delivery charge of heavy orders. Leave empty for light items.', statement:'Statement', statement_note:'Download the statement for the period chosen above.', print_pdf:'Print or save as PDF', close_word:'Close', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
     commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart',
@@ -353,7 +353,7 @@ const I18N = {
     order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر',
     ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
     open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
-    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', statement:'اسٹیٹمنٹ', statement_note:'اوپر چنے گئے وقت کی اسٹیٹمنٹ ڈاؤن لوڈ کریں۔', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
+    closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', weight_kg:'ایک چیز کا وزن (کلو)', weight_note:'بھاری آرڈر کے ڈیلیوری چارج کے لیے۔ ہلکی چیز ہو تو خالی چھوڑ دیں۔', statement:'اسٹیٹمنٹ', statement_note:'اوپر چنے گئے وقت کی اسٹیٹمنٹ ڈاؤن لوڈ کریں۔', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے',
@@ -685,6 +685,8 @@ function itemForm(i){
       <div><label class="f" for="i_cmp">${t('compare')}</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}"></div>
     </div>
     <label class="f" for="i_cat">${t('section')}</label><select id="i_cat">${catOpts}</select>
+    <label class="f" for="i_kg">${t('weight_kg')}</label><input id="i_kg" type="number" min="0" step="0.1" inputmode="decimal" value="${i.weight_kg || ''}" placeholder="0">
+    <div class="muted" style="font-size:13px">${t('weight_note')}</div>
     <label class="f" for="i_photo">${t('photo')}</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
@@ -986,7 +988,7 @@ const A = {
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = t('loading');
     await run(async () => {
       const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
-        category_id:$('i_cat').value, is_available:$('i_avail').checked };
+        category_id:$('i_cat').value, is_available:$('i_avail').checked, weight_kg:Math.max(0, num($('i_kg').value)) };
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
       let itemId = id;
       if (id) need(await sb.from('menu_items').update(row).eq('id', id));
@@ -1326,12 +1328,12 @@ const Push = (() => {
 // ================= PRODUCT OPTIONS EDITOR (Shop app and Admin) =================
 const OE = (() => {
   const L = {
-    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. The price you add is on top of the product price.',
+    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. + Rs is added to the price. + kg is added to the weight (for delivery charges).',
          add:'+ Add option group', group:'Group name', group_ph:'Size', required:'Customer must choose', choose:'How many can they pick?', one:'Only 1', upto:'Up to {n}',
          choice:'Choice', choice_ph:'Large', price:'+ Rs', add_choice:'+ Add choice', remove_group:'Remove group', off:'Off', presets:'Quick add:',
          p_size:'Size', p_small:'Small', p_medium:'Medium', p_large:'Large', p_color:'Colour', p_black:'Black', p_white:'White', p_weight:'Weight', p_half:'Half kg', p_one:'1 kg', p_extras:'Extras', p_gift:'Gift wrap',
          need_name:'Write a name for every option group', need_choice:'Every option group needs at least one choice', loading:'Loading options…' },
-    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ جو قیمت لکھیں گے وہ پروڈکٹ کی قیمت کے اوپر لگے گی۔',
+    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ + روپے قیمت میں جڑیں گے، + kg وزن میں (ڈیلیوری چارج کے لیے)۔',
          add:'+ آپشن گروپ شامل کریں', group:'گروپ کا نام', group_ph:'سائز', required:'گاہک کو لازمی چننا ہے', choose:'کتنے چن سکتے ہیں؟', one:'صرف 1', upto:'زیادہ سے زیادہ {n}',
          choice:'چوائس', choice_ph:'بڑا', price:'+ روپے', add_choice:'+ چوائس شامل کریں', remove_group:'گروپ ہٹائیں', off:'بند', presets:'جلدی شامل کریں:',
          p_size:'سائز', p_small:'چھوٹا', p_medium:'درمیانہ', p_large:'بڑا', p_color:'رنگ', p_black:'کالا', p_white:'سفید', p_weight:'وزن', p_half:'آدھا کلو', p_one:'1 کلو', p_extras:'اضافی', p_gift:'گفٹ پیکنگ',
@@ -1346,9 +1348,9 @@ const OE = (() => {
   async function load(id){
     itemId = id || null; groups = []; removed = { groups:[], options:[] };
     if (id){
-      const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order)').eq('menu_item_id', id).order('sort_order').order('created_at');
+      const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg)').eq('menu_item_id', id).order('sort_order').order('created_at');
       if (error) throw error;
-      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, on:o.is_available !== false })) }));
+      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, w:Number(o.weight_kg) || 0, on:o.is_available !== false })) }));
     }
     draw();
   }
@@ -1360,9 +1362,10 @@ const OE = (() => {
           <button type="button" class="linkbtn" style="color:var(--danger);flex:none" onclick="OE.delGroup(${gi})">✕</button></div>
         <label class="check" style="margin-top:8px"><input type="checkbox" ${g.min ? 'checked' : ''} onchange="OE.set(${gi},'min',this.checked ? 1 : 0)"> ${tt('required')}</label>
         <label class="f">${tt('choose')}</label><select onchange="OE.set(${gi},'max',Number(this.value))">${maxOpts.map(n => `<option value="${n}" ${g.max === n ? 'selected' : ''}>${n === 1 ? tt('one') : tt('upto', { n })}</option>`).join('')}</select>
-        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 90px auto auto;gap:6px;align-items:center;margin-top:8px">
+        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 72px 62px auto auto;gap:5px;align-items:center;margin-top:8px">
             <input type="text" value="${e(o.name)}" placeholder="${tt('choice_ph')}" aria-label="${tt('choice')}" oninput="OE.setO(${gi},${oi},'name',this.value)">
             <input type="number" min="0" inputmode="decimal" value="${o.price || ''}" placeholder="${tt('price')}" aria-label="${tt('price')}" oninput="OE.setO(${gi},${oi},'price',Number(this.value)||0)">
+            <input type="number" min="0" step="0.1" inputmode="decimal" value="${o.w || ''}" placeholder="+kg" aria-label="kg" oninput="OE.setO(${gi},${oi},'w',Number(this.value)||0)">
             <label style="font-size:12px;display:flex;align-items:center;gap:3px;white-space:nowrap" title="${tt('off')}"><input type="checkbox" ${o.on ? '' : 'checked'} onchange="OE.setO(${gi},${oi},'on',!this.checked)">${tt('off')}</label>
             <button type="button" class="linkbtn" style="color:var(--danger)" onclick="OE.delO(${gi},${oi})">✕</button></div>`).join('')}
         <button type="button" class="linkbtn" style="margin-top:6px" onclick="OE.addO(${gi})">${tt('add_choice')}</button></div>`).join('')
@@ -1373,12 +1376,12 @@ const OE = (() => {
            <button type="button" class="linkbtn" onclick="OE.preset('weight')">${tt('p_weight')}</button>
            <button type="button" class="linkbtn" onclick="OE.preset('extras')">${tt('p_extras')}</button></div>`;
   }
-  const opt = (name, price) => ({ id:uid(), name, price:price || 0, on:true });
+  const opt = (name, price, w) => ({ id:uid(), name, price:price || 0, w:w || 0, on:true });
   function addGroup(){ groups.push({ id:uid(), name:'', min:0, max:1, options:[opt('', 0)] }); draw(); }
   function preset(k){
     if (k === 'size') groups.push({ id:uid(), name:tt('p_size'), min:1, max:1, options:[opt(tt('p_small'), 0), opt(tt('p_medium'), 0), opt(tt('p_large'), 0)] });
     if (k === 'color') groups.push({ id:uid(), name:tt('p_color'), min:1, max:1, options:[opt(tt('p_black'), 0), opt(tt('p_white'), 0)] });
-    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0), opt(tt('p_one'), 0)] });
+    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0, 0.5), opt(tt('p_one'), 0, 1)] });
     if (k === 'extras') groups.push({ id:uid(), name:tt('p_extras'), min:0, max:3, options:[opt(tt('p_gift'), 0)] });
     draw();
   }
@@ -1401,7 +1404,7 @@ const OE = (() => {
     if (removed.options.length) need(await sbc.from('menu_options').delete().in('id', removed.options));
     if (!groups.length) return;
     need(await sbc.from('menu_option_groups').upsert(groups.map((g, i) => ({ id:g.id, menu_item_id:id, name:g.name, min_select:Math.min(g.min, g.max), max_select:g.max, sort_order:i }))));
-    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), is_available:o.on, sort_order:i })));
+    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), weight_kg:Math.max(0, Number(o.w) || 0), is_available:o.on, sort_order:i })));
     if (rows.length) need(await sbc.from('menu_options').upsert(rows));
     removed = { groups:[], options:[] };
   }
