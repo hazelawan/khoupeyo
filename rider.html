@@ -294,7 +294,7 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.5';
+const APP_VERSION = '3.6';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -405,7 +405,11 @@ const I18N = {
     lv_pending:'Waiting', lv_approved:'Approved', lv_rejected:'Not approved', lv_cancelled:'Cancelled', cancel_req:'Cancel request', cancel_leave_q:'Cancel this leave request?', days_word:'days', day_word:'day',
     my_complaints:'Customer complaints', no_complaints:'No complaints. Great work!', ck_late:'Late delivery', ck_damaged:'Items damaged or spoiled', ck_rude:'Rude behaviour', ck_other:'Other',
     cs_pending:'Being checked', cs_approved:'Counted', cs_rejected:'Not counted', pauses:'Pauses', penalty_rules:'What happens after complaints (same day)', pen_step:'Complaint {n}', pen_hours:'ID paused {h} hour(s)', pen_forfeit:"Today's earnings taken back", pen_eod:'ID paused for the rest of the day', pen_none:'Warning only',
-    late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason'
+    late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason',
+    tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
+    tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
+    tp_next:'Your next {k} deliveries pay {p} each. From delivery number {f}, every delivery pays {q}.', tp_top:'You are on the highest level: every delivery pays {p}.', tp_reset:'Counting starts again from delivery 1 on the 1st of every month.',
+    tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -469,7 +473,11 @@ const I18N = {
     lv_pending:'انتظار میں', lv_approved:'منظور', lv_rejected:'منظور نہیں', lv_cancelled:'منسوخ', cancel_req:'درخواست منسوخ کریں', cancel_leave_q:'یہ درخواست منسوخ کریں؟', days_word:'دن', day_word:'دن',
     my_complaints:'گاہکوں کی شکایات', no_complaints:'کوئی شکایت نہیں۔ بہت خوب!', ck_late:'دیر سے ڈیلیوری', ck_damaged:'سامان خراب یا ٹوٹا ہوا', ck_rude:'بدتمیزی', ck_other:'کچھ اور',
     cs_pending:'چیک ہو رہی ہے', cs_approved:'گنی گئی', cs_rejected:'نہیں گنی گئی', pauses:'رکاوٹیں', penalty_rules:'شکایات پر کیا ہوتا ہے (ایک ہی دن میں)', pen_step:'شکایت {n}', pen_hours:'آئی ڈی {h} گھنٹے کے لیے بند', pen_forfeit:'اس دن کی کمائی واپس', pen_eod:'باقی دن کے لیے آئی ڈی بند', pen_none:'صرف تنبیہ',
-    late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں'
+    late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں',
+    tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
+    tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
+    tp_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری کے {q} ملیں گے۔', tp_top:'آپ سب سے اوپر والے لیول پر ہیں: ہر ڈیلیوری کے {p}۔', tp_reset:'ہر مہینے کی 1 تاریخ سے گنتی دوبارہ 1 سے شروع ہوتی ہے۔',
+    tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے'
   }
 };
 const state = {
@@ -744,7 +752,13 @@ async function loadStatus(){
   Object.assign(state.rider, data);
   if (wasOn && !data.is_online){ state.shift = null; stopGeo(); closeJobPopup(); updateDutyBtn(); if (suspended()) toast(t('susp_title'), true); }
 }
-async function loadJobs(){ await loadStatus(); await loadMine(); await loadAvailable(); }
+let lastBeat = 0;
+function heartbeat(){
+  if (!onDuty() || Date.now() - lastBeat < 60000) return; lastBeat = Date.now();
+  const v = { location_updated_at:new Date().toISOString() }; if (state.pos){ v.current_lat = state.pos.lat; v.current_lng = state.pos.lng; }
+  sb.from('riders').update(v).eq('id', state.rider.id).then(() => {});
+}
+async function loadJobs(){ heartbeat(); await loadStatus(); await loadMine(); await loadAvailable(); }
 async function loadMoney(){
   const m = monthStart();
   const [done, unsettled, fines, pays, hand] = await Promise.all([
@@ -982,7 +996,7 @@ function targetsCard(){
   const list = state.targets || []; if (!list.length) return '';
   const per = { day:t('p_day'), week:t('p_week'), month:t('p_month') };
   return `<div class="card"><b>🎯 ${t('targets')}</b>${list.map(x => { const pct = Math.min(100, x.done / x.goal * 100);
-    return `<div style="margin-top:10px"><div class="line"><span>${esc(x.title)} <span class="muted" style="font-size:12px">· ${per[x.period] || ''}</span></span><b style="color:${x.achieved ? 'var(--green)' : 'inherit'}">${x.achieved ? '✅ ' : ''}${money(x.amount)}</b></div>
+    return `<div style="margin-top:10px"><div class="line"><span>🎁 ${t('tg_line', { g:x.goal, per:t('tg_per_' + x.period), a:money(x.amount) })}${x.title && !/^\d+$/.test(String(x.title).trim()) ? `<div class="muted" style="font-size:12px">${esc(x.title)}</div>` : ''}</span><b style="color:${x.achieved ? 'var(--green)' : 'inherit'}">${x.achieved ? '✅ ' : ''}${money(x.amount)}</b></div>
       <div class="bar"><i style="width:${pct}%;${x.achieved ? '' : 'background:var(--marigold,#F2A900)'}"></i></div>
       <div class="muted" style="font-size:13px">${x.achieved ? t('target_done') : t('target_left').replace('{d}', x.done).replace('{g}', x.goal).replace('{k}', x.goal - x.done)}</div></div>`; }).join('')}</div>`;
 }
@@ -1027,16 +1041,31 @@ function lbCard(){
     ${past ? `<div class="muted" style="font-size:13px;margin-top:8px">👑 ${per === 'today' ? t('winner_yday') : t('winner_lmonth')}: <b>${esc(past.name)}</b> (${past.deliveries})</div>` : ''}
   </div>`;
 }
+function tierRows(tiers){
+  const l = (Array.isArray(tiers) ? tiers : []).map(x => ({ from:Math.max(1, Math.round(num(x.from))), pay:num(x.pay) })).sort((a, b) => a.from - b.from);
+  return l.map((x, i) => ({ from:x.from, to:l[i + 1] ? l[i + 1].from - 1 : null, pay:x.pay }));
+}
 function tierCard(){
-  const c = myContract(); const tiers = (Array.isArray(c.tiers) ? c.tiers : []).slice().sort((a, b) => num(a.from) - num(b.from));
-  const tr = state.tier;
-  if (!tiers.some(x => num(x.pay) > 0)) return '';
-  const rows = tiers.map((x, i) => { const to = tiers[i + 1] ? num(tiers[i + 1].from) - 1 : null; const n = tr ? tr.deliveries + 1 : 1; const on = n >= num(x.from) && (to === null || n <= to);
-    return `<div class="line" style="${on ? 'font-weight:800;color:var(--green)' : ''}"><span>${on ? '▶ ' : ''}${t('tier_range').replace('{a}', x.from).replace('{b}', to === null ? '+' : '– ' + to)}</span><span>${money(x.pay)}</span></div>`; }).join('');
-  return `<div class="card"><b>${t('tier_title')}</b>
-    ${tr ? `<div style="margin:6px 0">${t('tier_now').replace('{n}', tr.deliveries).replace('{p}', money(tr.current_pay))}</div>
-    ${tr.next_from ? `<div class="muted" style="font-size:14px">🎯 ${t('tier_next').replace('{k}', tr.next_from - tr.deliveries - 1).replace('{p}', money(tr.next_pay))}</div>` : ''}` : ''}
-    <div style="margin-top:8px">${rows}</div></div>`;
+  const c = myContract(); const rows = tierRows(c.tiers); const company = c.kind === 'company';
+  if (!rows.some(x => x.pay > 0)) return '';
+  const n = state.tier ? num(state.tier.deliveries) : state.done.length;
+  const cur = rows.findIndex(x => n + 1 >= x.from && (x.to === null || n + 1 <= x.to));
+  const list = rows.map((x, i) => `<div class="line" style="padding:8px 10px;border-radius:10px;${i === cur ? 'background:rgba(31,111,74,.12);font-weight:800;color:var(--green)' : ''}">
+      <span>${x.to === null ? t('tp_row_last', { a:x.from }) : t('tp_row', { a:x.from, b:x.to })}${i === cur ? ` <span style="font-size:12px">◀ ${t('tp_here')}</span>` : ''}</span><b>${x.pay > 0 ? t('tp_each', { p:money(x.pay) }) : t('tp_none')}</b></div>`).join('');
+  const split = rows.map(x => { const cnt = Math.max(0, Math.min(n, x.to === null ? Infinity : x.to) - x.from + 1); return { pay:x.pay, cnt }; }).filter(x => x.cnt > 0);
+  const total = split.reduce((a, x) => a + x.cnt * x.pay, 0);
+  const how = split.length ? `<div style="margin-top:12px;background:var(--paper);border-radius:12px;padding:10px 12px"><b style="font-size:14px">${t('tp_how')}</b>
+      ${split.map(x => `<div class="line" style="font-size:15px"><span>${t('tp_line', { c:x.cnt, p:money(x.pay) })}</span><span>${money(x.cnt * x.pay)}</span></div>`).join('')}
+      <div class="line" style="border-top:1px solid var(--line);margin-top:4px;padding-top:6px;font-weight:800"><span>${t('tp_total')}</span><span>${money(total)}</span></div>
+      <div class="muted" style="font-size:12px;margin-top:4px">${t('tp_extra')}</div></div>` : '';
+  const nx = cur >= 0 ? rows[cur + 1] : null;
+  const next = cur < 0 ? '' : nx ? t('tp_next', { k:nx.from - (n + 1), p:money(rows[cur].pay), f:nx.from, q:money(nx.pay) }) : t('tp_top', { p:money(rows[cur].pay) });
+  return `<div class="card"><b>${company ? t('tp_title_co') : t('tp_title')}</b>
+    <div style="margin:6px 0 4px;font-weight:700">${t('tp_done', { n })}</div>
+    <div>${list}</div>
+    ${next ? `<div class="note" style="margin-top:10px">🎯 ${next}</div>` : ''}
+    ${how}
+    <div class="muted" style="font-size:12px;margin-top:8px">${t('tp_reset')}</div></div>`;
 }
 function dutyCard(){
   const c = myContract(); const goal = goalMinutes();
