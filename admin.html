@@ -279,6 +279,10 @@ h2{font-size:18px}
 .regsel{margin-top:4px;background:rgba(255,255,255,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important;border-radius:999px!important;padding:5px 30px 5px 12px!important;font-size:13px!important;font-weight:700;width:auto!important;max-width:60vw}
 .regsel option{color:#111}
 .regchip{display:inline-block;margin-top:4px;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
+.regrow{display:block;width:100%;text-align:start;position:relative;cursor:pointer;color:inherit;font:inherit;padding-inline-end:34px!important}
+.regrow .go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted)}
+html[dir=rtl] .regrow .go{right:auto;left:14px}
+.regline{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:14px}
 .regcard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .regcard .nums div{background:var(--field);border-radius:12px;padding:8px;text-align:center}
 .regcard .nums b{display:block;font-size:16px}.regcard .nums span{font-size:12px;color:var(--muted)}
@@ -289,7 +293,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '4.3';
+const APP_VERSION = '4.5';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -302,10 +306,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts'];
-const TAB_PERM = { attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq' };
+const TAB_PERM = { attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -511,7 +515,8 @@ async function go(tab){
     if (tab === 'settings') await loadSettings();
     if (tab === 'targets') await loadTargets();
     if (tab === 'staff') await loadStaff();
-    if (tab === 'regions') await loadRegions();
+    if (tab === 'regions' || tab === 'region') await loadRegions();
+    if (tab === 'region') await loadRegionFile();
     if (tab === 'customers' && can('hq')) { const { data } = await sb.rpc('admin_deletion_requests'); state.delReq = data || []; }
     if (tab === 'reports' && !state.repMonth) state.repMonth = state.riderMonth || ymd(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   });
@@ -520,8 +525,8 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts }[state.tab];
-  const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
+              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts }[state.tab];
+  const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
 }
@@ -1071,23 +1076,33 @@ function putSettings(rows){
   if (scope()) return sb.from('region_settings').upsert(list.map(r => Object.assign({ region_id:scope() }, r)));
   return sb.from('app_settings').upsert(list);
 }
+function genPw(){ const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let p = ''; const a = new Uint32Array(10); crypto.getRandomValues(a); a.forEach(n => { p += c[n % c.length]; }); return p; }
+async function fnErr(e){ try { const j = await e.context.json(); return j.error || e.message; } catch (x) { return (e && e.message) || 'Something went wrong'; } }
+function showLoginCard(region, email, pw){
+  const link = location.origin + location.pathname;
+  const text = `Wanhar Mart · ${region} incharge\nAdmin panel: ${link}\nEmail: ${email}${pw ? '\nPassword: ' + pw : ''}`;
+  state.loginText = text;
+  openSheet('✅ Incharge saved', `<div class="muted" style="font-size:14px">Send these login details to the incharge. They open the link, sign in, and see only <b>${esc(region)}</b>.${pw ? ' Ask them to keep the password safe.' : ' They use their own password.'}</div>
+    <pre style="white-space:pre-wrap;background:var(--field);border-radius:12px;padding:12px;font-size:15px;margin:12px 0">${esc(text)}</pre>
+    <div class="two"><button class="btn" onclick="A.copyLogin()">📋 Copy</button><a class="btn ghost" style="text-align:center" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">WhatsApp</a></div>`);
+}
 async function loadRegions(){
   const now = new Date(); const f = new Date(now.getFullYear(), now.getMonth() - (state.regMonthBack || 0), 1); const t = new Date(f.getFullYear(), f.getMonth() + 1, 1);
-  const [rg, sm] = await Promise.all([sb.rpc('hq_regions'), sb.rpc('hq_region_summary', { p_from:f.toISOString(), p_to:t.toISOString() })]);
-  state.regions = need(rg) || []; state.regSum = need(sm) || []; state.regLabel = f.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+  const [rg, sm, pt, ct] = await Promise.all([sb.rpc('hq_regions'), sb.rpc('hq_region_summary', { p_from:f.toISOString(), p_to:t.toISOString() }), sb.rpc('hq_region_partners'),
+    sb.from('region_contracts').select('*').eq('is_current', true)]);
+  state.regions = need(rg) || []; state.regSum = need(sm) || []; state.partners = need(pt) || [];
+  state.contracts = {}; (need(ct) || []).forEach(c => { state.contracts[c.region_id] = c; }); state.regLabel = f.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
 }
 function viewRegions(){
   const card = x => {
-    const r = state.regions.find(g => g.id === x.region_id) || {};
     const earn = num(x.commission) + num(x.delivery_fees) - num(x.rider_pay) - num(x.discounts);
     const share = Math.round(Math.max(0, earn) * num(x.hq_percent) / 100 + num(x.monthly_fee));
-    return `<div class="card regcard"><div class="row-title">📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'}</div>
-      <div class="row-sub">Partner: ${x.partners ? esc(x.partners) : '<b>none yet</b>'} · ${x.shops} shops · ${x.riders} riders</div>
-      <div class="nums"><div><b>${x.delivered}</b><span>Delivered</span></div><div><b>${money(x.sales)}</b><span>Sales</span></div><div><b>${money(earn)}</b><span>Platform earning</span></div></div>
-      <div class="kv" style="margin-top:8px"><span>Your share (${num(x.hq_percent)}% of earning${num(x.monthly_fee) ? ' + ' + money(x.monthly_fee) + ' fee' : ''})</span><b>${money(share)}</b></div>
-      <div class="kv"><span class="muted">Partner keeps (earning − your share)</span><span>${money(earn - share)}</span></div>
-      <div class="muted" style="font-size:12px">The partner pays shops and riders of this region. Rider salaries and fines are in that region's Riders tab.</div>
-      <div class="bar" style="margin-top:8px"><button class="btn small" onclick="A.viewRegion('${x.region_id}', true)">Open this region</button><button class="btn ghost small" onclick="A.regionForm('${x.region_id}')">Edit</button><button class="btn ghost small" onclick="A.partnerForm('${x.region_id}')">Add partner</button></div></div>`;
+    const p = (state.partners || []).filter(y => y.region_id === x.region_id);
+    return `<button class="card regrow" onclick="A.regionPage('${x.region_id}')">
+      <div class="row-title">📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'} ${regContractPill(state.contracts[x.region_id])}</div>
+      <div class="row-sub">👤 ${p.length ? esc(p.map(y => y.full_name || y.email).join(', ')) : '<b class="red">No incharge yet</b>'} · ${x.shops} shops · ${x.riders} riders</div>
+      <div class="regline"><span>${x.delivered} delivered · ${money(x.sales)} sales</span><b>Your share ${money(share)}</b></div>
+      <span class="go">›</span></button>`;
   };
   return `${backLink()}<h2>🌍 Regions and partners</h2>
     <div class="muted" style="font-size:14px;margin-bottom:8px">Every city is a region. A region partner signs in to this same Admin panel and sees <b>only their region</b>: shops, products, riders, orders, money and their own settings. They can add their own staff. You see everything and can open any region from the top.</div>
@@ -1095,6 +1110,61 @@ function viewRegions(){
     <div class="muted" style="font-size:13px;margin-bottom:8px">${esc(state.regLabel || '')} · Platform earning = commission + delivery fees − rider delivery pay − promo discounts.</div>
     ${state.regSum.map(card).join('') || '<div class="empty">No regions yet.</div>'}
     <button class="btn block" style="margin-top:10px" onclick="A.regionForm()">+ Add a new region (city)</button>`;
+}
+
+// ---- Partner file (HQ only) ----
+const monthsText = m => { m = num(m); if (!m) return ''; return m % 12 === 0 ? (m / 12) + (m === 12 ? ' year' : ' years') : m + ' months'; };
+const dLong = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '';
+function contractLeft(c){ if (!c || !c.end_date) return null; return Math.ceil((new Date(c.end_date + 'T23:59:59') - new Date()) / 86400000); }
+function regContractPill(c){
+  if (!c || !c.end_date) return '<span class="pill y">No contract file</span>';
+  const d = contractLeft(c);
+  if (d < 0) return '<span class="pill r">Contract ended</span>';
+  if (d <= 30) return `<span class="pill y">Ends in ${d} days</span>`;
+  return `<span class="pill b">Till ${esc(dLong(c.end_date))}</span>`;
+}
+async function loadRegionFile(){
+  const id = state.regionId; state.fileUrls = {}; state.oldFiles = [];
+  const c = state.contracts[id];
+  const [h] = await Promise.all([sb.from('region_contracts').select('*').eq('region_id', id).eq('is_current', false).order('created_at', { ascending:false })]);
+  state.oldFiles = need(h) || [];
+  const paths = c ? [c.cnic_front_path, c.cnic_back_path, c.contract_file_path].filter(Boolean) : [];
+  if (paths.length){ const { data } = await sb.storage.from('hq-docs').createSignedUrls(paths, 3600); (data || []).forEach(x => { if (x.signedUrl) state.fileUrls[x.path] = x.signedUrl; }); }
+}
+function viewRegionPage(){
+  const id = state.regionId; const x = state.regSum.find(r => r.region_id === id); const r = state.regions.find(g => g.id === id) || {};
+  if (!x) return `<button class="linkbtn" style="padding-left:0" onclick="go('regions')">‹ Regions</button><div class="empty">Region not found.</div>`;
+  const c = state.contracts[id]; const pts = (state.partners || []).filter(p => p.region_id === id);
+  const earn = num(x.commission) + num(x.delivery_fees) - num(x.rider_pay) - num(x.discounts);
+  const share = Math.round(Math.max(0, earn) * num(x.hq_percent) / 100 + num(x.monthly_fee));
+  const kv = (k, v) => v ? `<div class="kv"><span class="muted">${k}</span><span style="text-align:end;overflow-wrap:anywhere">${v}</span></div>` : '';
+  const img = (p, label) => p ? (state.fileUrls[p] ? (/\.pdf$/i.test(p) ? `<a class="btn ghost small" href="${state.fileUrls[p]}" target="_blank" rel="noopener">📄 ${label}</a>` : `<a href="${state.fileUrls[p]}" target="_blank" rel="noopener" style="display:block"><img src="${state.fileUrls[p]}" alt="${label}" style="width:100%;border-radius:12px;border:1px solid var(--line)"><div class="muted" style="font-size:12px;text-align:center">${label}</div></a>`) : `<div class="muted">${label}: loading…</div>`) : '';
+  const left = contractLeft(c);
+  const file = c ? `
+      ${kv('Name', esc(c.partner_name || ''))}${kv('Father name', esc(c.father_name || ''))}${kv('CNIC', esc(c.cnic || ''))}${kv('Phone', c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : '')}${kv('Address', esc(c.address || ''))}
+      ${kv('Login email', esc(c.email || ''))}
+      ${c.login_password ? `<div class="kv"><span class="muted">Login password</span><span><b id="pwShow" data-pw="${esc(c.login_password)}">••••••••</b> <button class="linkbtn" onclick="A.togglePw()">👁 Show</button> <button class="linkbtn" onclick="A.copyText(document.getElementById('pwShow').dataset.pw)">Copy</button></span></div>` : ''}
+      ${(c.cnic_front_path || c.cnic_back_path) ? `<div class="two" style="margin-top:8px">${img(c.cnic_front_path, 'CNIC front')}${img(c.cnic_back_path, 'CNIC back')}</div>` : ''}
+      <h3 style="margin:14px 0 4px">📝 Contract</h3>
+      ${kv('Start', esc(dLong(c.start_date)))}${kv('Length', esc(monthsText(c.months)))}${kv('Ends', c.end_date ? esc(dLong(c.end_date)) + ' ' + regContractPill(c) : '')}
+      ${left != null && left >= 0 ? kv('Days left', left + ' days') : ''}
+      ${kv('Security deposit', num(c.deposit) ? money(c.deposit) : '')}
+      ${kv('Your share', num(x.hq_percent) + '% of platform earning' + (num(x.monthly_fee) ? ' + ' + money(x.monthly_fee) + ' a month' : ''))}
+      ${c.contract_file_path ? `<div style="margin-top:8px">${img(c.contract_file_path, 'Contract paper')}</div>` : ''}
+      ${c.notes ? `<div class="note" style="margin-top:8px">${esc(c.notes)}</div>` : ''}`
+    : '<div class="muted" style="margin-top:6px">No partner file yet. Add the incharge details, CNIC and contract.</div>';
+  return `<button class="linkbtn" style="padding-left:0" onclick="go('regions')">‹ Regions</button>
+    <h2>📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'}</h2>
+    <div class="card regcard"><b>${esc(state.regLabel || '')}</b>
+      <div class="nums"><div><b>${x.delivered}</b><span>Delivered</span></div><div><b>${money(x.sales)}</b><span>Sales</span></div><div><b>${money(earn)}</b><span>Platform earning</span></div></div>
+      <div class="nums"><div><b>${x.shops}</b><span>Shops</span></div><div><b>${x.riders}</b><span>Riders</span></div><div><b>${x.orders}</b><span>All orders</span></div></div>
+      <div class="kv" style="margin-top:8px"><span>Your share</span><b>${money(share)}</b></div><div class="kv"><span class="muted">Partner keeps</span><span>${money(earn - share)}</span></div>
+      <div class="chips" style="margin-top:8px"><button class="chip ${!state.regMonthBack ? 'on' : ''}" onclick="A.regMonth(0)">This month</button><button class="chip ${state.regMonthBack === 1 ? 'on' : ''}" onclick="A.regMonth(1)">Last month</button></div>
+      <button class="btn block" style="margin-top:6px" onclick="A.viewRegion('${id}', true)">🔍 Open all data of ${esc(x.name)} (orders, shops, riders…)</button></div>
+    <div class="card"><div class="row-title">📁 Partner file <span class="pill">Only you can see this</span></div>${file}
+      <div class="two" style="margin-top:12px"><button class="btn" onclick="A.fileForm('${id}')">${c ? 'Edit partner file' : '+ Add partner file'}</button><button class="btn ghost" onclick="A.regionForm('${id}')">👤 Login and region</button></div></div>
+    ${pts.length ? `<div class="muted" style="font-size:13px">Admin login: ${pts.map(p => esc(p.email)).join(', ')}</div>` : '<div class="note">This region has no incharge login yet. Tap “Login and region” → Add incharge.</div>'}
+    ${state.oldFiles.length ? `<h3>Old partner files</h3>${state.oldFiles.map(o => `<div class="card"><b>${esc(o.partner_name || '')}</b><div class="row-sub">${esc(o.email || '')}${o.cnic ? ' · CNIC ' + esc(o.cnic) : ''}</div><div class="row-sub">${o.start_date ? esc(dLong(o.start_date)) + ' – ' + esc(dLong(o.end_date)) : ''} · saved ${when(o.created_at)}</div></div>`).join('')}` : ''}`;
 }
 // ================= MORE =================
 function viewMore(){
@@ -2111,10 +2181,71 @@ const A = {
       showApp(); if (goHome) go('home');
     });
   },
-  async regMonth(b){ state.regMonthBack = b; await run(loadRegions); renderTab(); },
+  async regionPage(id){ state.regionId = id; await go('region'); },
+  togglePw(){ const el = document.getElementById('pwShow'); if (!el) return; el.textContent = el.textContent.startsWith('•') ? el.dataset.pw : '••••••••'; },
+  async copyText(t){ try { await navigator.clipboard.writeText(t || ''); toast('Copied'); } catch (e) { toast('Copy it by hand', true); } },
+  fileForm(id){
+    const c = state.contracts[id] || {}; const p = (state.partners || []).find(y => y.region_id === id) || {};
+    const v = (k, d) => esc(c[k] ?? d ?? '');
+    openSheet('Partner file · ' + regionName(id), `
+      <div class="muted" style="font-size:13px">Only you (HQ) can see this file. The partner cannot.</div>
+      <label class="f" for="pf_name">Partner name</label><input id="pf_name" type="text" value="${v('partner_name', p.full_name)}">
+      <label class="f" for="pf_father">Father name</label><input id="pf_father" type="text" value="${v('father_name')}">
+      <div class="two"><div><label class="f" for="pf_cnic">CNIC number</label><input id="pf_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x" value="${v('cnic')}"></div>
+        <div><label class="f" for="pf_phone">Phone</label><input id="pf_phone" type="text" inputmode="tel" value="${v('phone', p.phone)}"></div></div>
+      <label class="f" for="pf_addr">Address</label><input id="pf_addr" type="text" value="${v('address')}">
+      <div class="two"><div><label class="f" for="pf_email">Login email</label><input id="pf_email" type="text" value="${v('email', p.email)}"></div>
+        <div><label class="f" for="pf_pw">Login password</label><input id="pf_pw" type="text" value="${v('login_password')}"></div></div>
+      <div class="muted" style="font-size:12px">This only saves a note of the password. To really change it use “Login and region” → New password (it is saved here too).</div>
+      <div class="two"><div><label class="f" for="pf_f1">CNIC front photo</label><input id="pf_f1" type="file" accept="image/*"></div><div><label class="f" for="pf_f2">CNIC back photo</label><input id="pf_f2" type="file" accept="image/*"></div></div>
+      <h3 style="margin:14px 0 4px">📝 Contract</h3>
+      <div class="two"><div><label class="f" for="pf_start">Start date</label><input id="pf_start" type="date" value="${v('start_date')}"></div>
+        <div><label class="f" for="pf_len">Length</label><select id="pf_len">${[[6, '6 months'], [12, '1 year'], [18, '18 months'], [24, '2 years'], [36, '3 years'], [60, '5 years'], [0, 'Other (months)…']].map(([m, l]) => `<option value="${m}" ${num(c.months) === m ? 'selected' : ''}>${l}</option>`).join('')}</select></div></div>
+      <div id="pf_mbox" style="display:none"><label class="f" for="pf_months">Months</label><input id="pf_months" type="number" min="1" max="600" value="${num(c.months) || ''}"></div>
+      <label class="f" for="pf_dep">Security deposit (Rs)</label><input id="pf_dep" type="number" min="0" value="${num(c.deposit)}">
+      <label class="f" for="pf_doc">Contract paper (photo or PDF)</label><input id="pf_doc" type="file" accept="image/*,application/pdf">
+      <label class="f" for="pf_notes">Notes</label><textarea id="pf_notes" rows="2">${v('notes')}</textarea>
+      <div class="muted" style="font-size:12px;margin-top:6px">Your share % and monthly fee are set in “Login and region”.</div>
+      <div class="actions"><button class="btn block" id="pfSave" onclick="A.saveFile('${id}')">Save partner file</button></div>`);
+    const len = $('pf_len'); const known = [6, 12, 18, 24, 36, 60];
+    if (c.months && !known.includes(num(c.months))){ len.value = '0'; $('pf_mbox').style.display = ''; }
+    else if (!c.months) len.value = '12';
+    len.onchange = () => { $('pf_mbox').style.display = len.value === '0' ? '' : 'none'; };
+  },
+  async saveFile(id){
+    const c = state.contracts[id];
+    const b = $('pfSave'); b.disabled = true;
+    await run(async () => {
+      const up = async (inp, kind) => {
+        const f = $(inp).files[0]; if (!f) return undefined;
+        if (f.size > 8 * 1024 * 1024) throw new Error('File is too big (max 8 MB)');
+        const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const path = `${id}/${kind}-${Date.now()}.${ext}`;
+        need(await sb.storage.from('hq-docs').upload(path, f, { upsert:false, contentType:f.type || undefined }));
+        return path;
+      };
+      const months = $('pf_len').value === '0' ? Math.round(num($('pf_months').value)) : num($('pf_len').value);
+      const row = { region_id:id, partner_name:$('pf_name').value.trim() || null, father_name:$('pf_father').value.trim() || null, cnic:$('pf_cnic').value.trim() || null,
+        phone:$('pf_phone').value.trim() || null, address:$('pf_addr').value.trim() || null, email:$('pf_email').value.trim() || null, login_password:$('pf_pw').value || null,
+        start_date:$('pf_start').value || null, months:months > 0 ? months : null, deposit:Math.max(0, num($('pf_dep').value)), notes:$('pf_notes').value.trim() || null, is_current:true };
+      const f1 = await up('pf_f1', 'cnic-front'), f2 = await up('pf_f2', 'cnic-back'), f3 = await up('pf_doc', 'contract');
+      if (f1) row.cnic_front_path = f1; if (f2) row.cnic_back_path = f2; if (f3) row.contract_file_path = f3;
+      const p = (state.partners || []).find(y => y.region_id === id); if (p) row.partner_user = p.id;
+      if (c) need(await sb.from('region_contracts').update(row).eq('id', c.id)); else need(await sb.from('region_contracts').insert(row));
+      closeSheet(); await loadRegions(); await loadRegionFile(); renderTab(); toast('Partner file saved');
+    });
+    if (b) b.disabled = false;
+  },
+  async regMonth(b){ state.regMonthBack = b; await run(async () => { await loadRegions(); if (state.tab === 'region') await loadRegionFile(); }); renderTab(); },
   regionForm(id){
     const r = (state.regions || []).find(x => x.id === id) || { name:'', center_lat:'', center_lng:'', radius_km:30, is_active:true, hq_percent:0, monthly_fee:0, partner_note:'' };
+    const pts = id ? (state.partners || []).filter(p => p.region_id === id) : [];
     openSheet(id ? 'Edit region' : 'New region', `
+      ${id ? `<div class="card" style="margin:0 0 12px"><b>👤 Region incharge (partner)</b>
+        ${pts.map(p => `<div style="margin-top:8px;padding:10px;background:var(--field);border-radius:12px"><b>${esc(p.full_name || '')}</b>
+          <div class="muted" style="font-size:14px">📧 ${esc(p.email)}${p.phone ? ' · 📞 ' + esc(p.phone) : ''}</div>
+          <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.partnerPw('${p.id}', ${esc(JSON.stringify(p.email))})">🔑 New password</button><button class="btn warn small" onclick="A.removePartner('${p.id}', '${id}')">Remove</button></div></div>`).join('') || '<div class="muted" style="margin-top:6px">No incharge yet.</div>'}
+        <button class="btn block" style="margin-top:10px" onclick="A.partnerForm('${id}')">${pts.length ? '🔁 Change incharge' : '+ Add incharge'}</button></div>` : ''}
       <label class="f" for="rg_name">City or area name</label><input id="rg_name" type="text" value="${esc(r.name)}" placeholder="Chakwal">
       <div class="two"><div><label class="f" for="rg_lat">Center latitude</label><input id="rg_lat" type="number" step="any" value="${r.center_lat ?? ''}"></div>
         <div><label class="f" for="rg_lng">Center longitude</label><input id="rg_lng" type="number" step="any" value="${r.center_lng ?? ''}"></div></div>
@@ -2143,14 +2274,70 @@ const A = {
     });
   },
   partnerForm(id){
-    openSheet('Add partner · ' + regionName(id), `
-      <div class="muted" style="font-size:14px">The partner becomes the admin of <b>${esc(regionName(id))}</b> only. First they create an account in the Customer app, then you write their email here. They sign in to this Admin panel and can add their own staff.</div>
-      <label class="f" for="pt_email">Partner's email</label><input id="pt_email" type="email" placeholder="partner@gmail.com">
-      <div class="actions"><button class="btn block" onclick="A.savePartner('${id}')">Make partner</button></div>`);
+    state.ptMode = 'new'; const has = (state.partners || []).some(p => p.region_id === id);
+    openSheet('Incharge · ' + regionName(id), `
+      <div class="muted" style="font-size:14px">The incharge becomes the admin of <b>${esc(regionName(id))}</b> only. They sign in to the Admin panel with this email and password.</div>
+      <div class="chips" id="ptMode" style="margin-top:10px"><button type="button" class="chip on" data-m="new" onclick="A.ptMode('new')">New account</button><button type="button" class="chip" data-m="old" onclick="A.ptMode('old')">Existing account</button></div>
+      <div id="ptNew">
+        <label class="f" for="pt_name">Incharge name</label><input id="pt_name" type="text" placeholder="Full name">
+        <label class="f" for="pt_phone">Phone</label><input id="pt_phone" type="text" inputmode="tel" placeholder="03xx xxxxxxx">
+      </div>
+      <label class="f" for="pt_email">Email (for login)</label><input id="pt_email" type="email" placeholder="incharge@gmail.com" autocomplete="off">
+      <div id="ptPwBox"><label class="f" for="pt_pw">Password (at least 8 letters)</label>
+        <div style="display:flex;gap:8px"><input id="pt_pw" type="text" autocomplete="new-password" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('pt_pw').value = genPw()">New</button></div></div>
+      ${has ? '<label class="check"><input id="pt_rep" type="checkbox" checked> Remove the old incharge (they lose access)</label>' : ''}
+      <div class="actions"><button class="btn block" id="ptSave" onclick="A.savePartner('${id}')">Save incharge</button></div>`);
   },
+  async copyLogin(){ try { await navigator.clipboard.writeText(state.loginText || ''); toast('Copied'); } catch (e) { toast('Copy it by hand', true); } },
+  ptMode(m){ state.ptMode = m; document.querySelectorAll('#ptMode .chip').forEach(b => b.classList.toggle('on', b.dataset.m === m)); $('ptNew').style.display = m === 'new' ? '' : 'none'; $('ptPwBox').style.display = m === 'new' ? '' : 'none'; },
   async savePartner(id){
     const email = $('pt_email').value.trim(); if (!email) return toast('Write the email', true);
-    await run(async () => { need(await sb.rpc('hq_set_region_admin', { p_email:email, p_region:id })); closeSheet(); await loadRegions(); renderTab(); toast('Partner added'); });
+    const replace = $('pt_rep') ? $('pt_rep').checked : true;
+    const b = $('ptSave'); b.disabled = true;
+    await run(async () => {
+      let pw = null;
+      if (state.ptMode === 'new'){
+        const name = $('pt_name').value.trim(); pw = $('pt_pw').value;
+        if (!name) throw new Error('Write the incharge name');
+        if (pw.length < 8) throw new Error('Password must be at least 8 characters');
+        const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'create', email, password:pw, name, phone:$('pt_phone').value.trim(), region:id, replace } });
+        if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
+        const old = (state.contracts || {})[id];
+        const same = old && (old.email || '').toLowerCase() === email.toLowerCase();
+        if (same) await sb.from('region_contracts').update({ login_password:pw, partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || old.phone }).eq('id', old.id);
+        else if (old && !replace) {}
+        else await sb.from('region_contracts').insert({ region_id:id, partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || null, email, login_password:pw, is_current:true });
+      } else {
+        const uid = need(await sb.rpc('hq_set_region_admin', { p_email:email, p_region:id, p_replace:replace }));
+        const old = (state.contracts || {})[id];
+        if (!old || (replace && (old.email || '').toLowerCase() !== email.toLowerCase())) await sb.from('region_contracts').insert({ region_id:id, partner_user:uid, email, is_current:true });
+      }
+      await loadRegions(); renderTab();
+      showLoginCard(regionName(id), email, pw);
+    });
+    if (b) b.disabled = false;
+  },
+  partnerPw(uid, email){
+    openSheet('New password', `<div class="muted" style="font-size:14px">For <b>${esc(email)}</b>. The old password stops working.</div>
+      <label class="f" for="np_pw">New password</label><div style="display:flex;gap:8px"><input id="np_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('np_pw').value = genPw()">New</button></div>
+      <div class="actions"><button class="btn block" onclick="A.savePartnerPw('${uid}', ${esc(JSON.stringify(email))})">Save password</button></div>`);
+  },
+  async savePartnerPw(uid, email){
+    const pw = $('np_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    await run(async () => {
+      const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'password', user:uid, password:pw } });
+      if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
+      const p = (state.partners || []).find(x => x.id === uid);
+      const c = p && (state.contracts || {})[p.region_id];
+      if (c) await sb.from('region_contracts').update({ login_password:pw, partner_user:uid }).eq('id', c.id);
+      else if (p) await sb.from('region_contracts').insert({ region_id:p.region_id, partner_user:uid, partner_name:p.full_name, phone:p.phone, email, login_password:pw, is_current:true });
+      await loadRegions(); if (state.tab === 'region') await loadRegionFile(); renderTab();
+      showLoginCard(p ? regionName(p.region_id) : '', email, pw);
+    });
+  },
+  async removePartner(uid, rid){
+    if (!confirm('Remove this incharge? They cannot open the Admin panel any more. The region, shops and riders stay.')) return;
+    await run(async () => { need(await sb.rpc('admin_remove_staff', { p_user:uid })); await loadRegions(); renderTab(); A.regionForm(rid); toast('Incharge removed'); });
   },
   // ---- rider duty ----
   async attDay(d){ state.attDay = d || pkToday(); await run(loadAttendance); renderTab(); },
