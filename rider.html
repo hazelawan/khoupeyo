@@ -294,7 +294,7 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.7';
+const APP_VERSION = '3.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -406,6 +406,7 @@ const I18N = {
     my_complaints:'Customer complaints', no_complaints:'No complaints. Great work!', ck_late:'Late delivery', ck_damaged:'Items damaged or spoiled', ck_rude:'Rude behaviour', ck_other:'Other',
     cs_pending:'Being checked', cs_approved:'Counted', cs_rejected:'Not counted', pauses:'Pauses', penalty_rules:'What happens after complaints (same day)', pen_step:'Complaint {n}', pen_hours:'ID paused {h} hour(s)', pen_forfeit:"Today's earnings taken back", pen_eod:'ID paused for the rest of the day', pen_none:'Warning only',
     city_word:'City', city_pick:'Which city will you work in?',
+    id_or_email:'Rider ID (like KK-001)', get_id_note:'New rider? Get your Rider ID and password from the Wanhar Mart office in your city.', not_rider_title:'This is not a Rider ID', not_rider_note:'The Rider app opens only with an ID given by the Wanhar Mart office. Please contact the office in your city.', ask_office_pw:'Forgot your password? Ask the Wanhar Mart office in your city for a new one.', id_given:'This Rider ID was given to another person. Contact the office for a new ID.', my_id:'My Rider ID',
     late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason',
     tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
     tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
@@ -475,6 +476,7 @@ const I18N = {
     my_complaints:'گاہکوں کی شکایات', no_complaints:'کوئی شکایت نہیں۔ بہت خوب!', ck_late:'دیر سے ڈیلیوری', ck_damaged:'سامان خراب یا ٹوٹا ہوا', ck_rude:'بدتمیزی', ck_other:'کچھ اور',
     cs_pending:'چیک ہو رہی ہے', cs_approved:'گنی گئی', cs_rejected:'نہیں گنی گئی', pauses:'رکاوٹیں', penalty_rules:'شکایات پر کیا ہوتا ہے (ایک ہی دن میں)', pen_step:'شکایت {n}', pen_hours:'آئی ڈی {h} گھنٹے کے لیے بند', pen_forfeit:'اس دن کی کمائی واپس', pen_eod:'باقی دن کے لیے آئی ڈی بند', pen_none:'صرف تنبیہ',
     city_word:'شہر', city_pick:'آپ کس شہر میں کام کریں گے؟',
+    id_or_email:'رائیڈر آئی ڈی (جیسے KK-001)', get_id_note:'نئے رائیڈر: اپنے شہر کے Wanhar Mart دفتر سے رائیڈر آئی ڈی اور پاس ورڈ لیں۔', not_rider_title:'یہ رائیڈر آئی ڈی نہیں ہے', not_rider_note:'رائیڈر ایپ صرف اس آئی ڈی سے کھلتی ہے جو Wanhar Mart دفتر دیتا ہے۔ اپنے شہر کے دفتر سے رابطہ کریں۔', ask_office_pw:'پاس ورڈ بھول گئے؟ اپنے شہر کے Wanhar Mart دفتر سے نیا پاس ورڈ لیں۔', id_given:'یہ رائیڈر آئی ڈی کسی اور کو دے دی گئی ہے۔ نئی آئی ڈی کے لیے دفتر سے رابطہ کریں۔', my_id:'میری رائیڈر آئی ڈی',
     late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں',
     tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
     tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
@@ -622,14 +624,14 @@ function showAuth(msg, ok){
     <form onsubmit="A.submitAuth(event)">
       ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
       <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567">` : ''}
-      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
+      <label class="f" for="a_email">${signup ? t('email') : t('id_or_email')}</label><input id="a_email" type="${signup ? 'email' : 'text'}" autocomplete="username" autocapitalize="characters" placeholder="${signup ? '' : 'KK-001'}">
       <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--green)' : ''}">${esc(msg || '')}</div>
     </form>
     ${signup ? Legal.agree(state.lang) : ''}
     ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
-    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+    <div class="note" style="margin-top:14px">🆔 ${t('get_id_note')}</div>
     <div class="ver">v${APP_VERSION}</div>
   </div>`;
 }
@@ -757,8 +759,9 @@ async function loadAvailable(){
   state.firstLoadDone = true;
 }
 async function loadStatus(){
-  const { data } = await sb.from('riders').select('is_online,on_break,suspended_until,suspend_reason,shift_start,shift_end,break_start,break_minutes').eq('id', state.rider.id).maybeSingle();
+  const { data } = await sb.from('riders').select('is_online,on_break,suspended_until,suspend_reason,shift_start,shift_end,break_start,break_minutes,holder_no').eq('id', state.rider.id).maybeSingle();
   if (!data) return;
+  if (Number(data.holder_no || 1) !== Number(state.rider.holder_no || 1)){ await A.logout(); showAuth(t('id_given')); return; }
   const wasOn = !!state.rider.is_online;
   Object.assign(state.rider, data);
   if (wasOn && !data.is_online){ state.shift = null; stopGeo(); closeJobPopup(); updateDutyBtn(); if (suspended()) toast(t('susp_title'), true); }
@@ -1295,7 +1298,7 @@ function viewAcct(){
   return `<h1>${t('account')}</h1>
     <div class="card" style="display:flex;gap:14px;align-items:center">
       <div class="face" id="myFace">${esc((p.full_name || '?')[0])}</div>
-      <div><b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div><div class="muted" style="font-size:14px">${esc(state.user.email)}</div>
+      <div>${r.rider_code ? `<div style="font-weight:800;color:var(--green)">🆔 ${esc(r.rider_code)}</div>` : ''}<b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div>${/@rider\.wanharmart\.app$/.test(state.user.email || '') ? '' : `<div class="muted" style="font-size:14px">${esc(state.user.email)}</div>`}
       <div class="muted" style="font-size:14px">${t('vehicle')}: ${esc(r.vehicle || '')}${state.regionName ? ' · 📍 ' + esc(state.regionName) : ''}</div>
       <div style="margin-top:4px"><span class="pill ${reg ? '' : 'y'}">${reg ? t('face_ok') : t('face_missing')}</span></div></div>
     </div>
@@ -1326,6 +1329,7 @@ const A = {
   async forgotPw(){
     const email = ($('a_email') && $('a_email').value.trim()) || '';
     const msg = $('authMsg');
+    if (!email || !email.includes('@')){ msg.style.color = ''; msg.textContent = t('ask_office_pw'); return; }
     if (!email){ msg.style.color = ''; msg.textContent = t('enter_email_first'); $('a_email').focus(); return; }
     msg.textContent = t('loading');
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo:new URL('reset.html?app=rider', location.href).href });
@@ -1336,7 +1340,8 @@ const A = {
   async submitAuth(e){
     e.preventDefault(); unlockAudio();
     const signup = state.authMode === 'signup';
-    const email = $('a_email').value.trim(), pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
+    const raw = $('a_email').value.trim(); const email = raw.includes('@') ? raw : raw.toLowerCase().replace(/\s+/g, '') + '@rider.wanharmart.app';
+    const pw = $('a_pw').value; const msg = $('authMsg'); msg.style.color = ''; msg.textContent = '';
     if (!email || !pw){ msg.textContent = t('enter_all'); return; }
     if (pw.length < 6){ msg.textContent = t('short_pw'); return; }
     let name = '', phone = '';
@@ -1355,7 +1360,7 @@ const A = {
         await afterLogin(data.user);
       } else {
         const { data, error } = await sb.auth.signInWithPassword({ email, password:pw });
-        if (error) throw error; await afterLogin(data.user);
+        if (error) throw error; state.freshLogin = true; await afterLogin(data.user);
       }
     } catch (err) {
       logErr(err);
@@ -1542,8 +1547,18 @@ const A = {
 };
 
 // ================= START =================
+function showNotRider(){
+  $('app').innerHTML = `<div class="auth"><div class="brand">Wanhar Mart<b>.</b></div>
+    <h1 style="font-size:22px;margin-top:14px">🆔 ${t('not_rider_title')}</h1><p class="muted">${t('not_rider_note')}</p>
+    <div class="actions"><button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div></div>`;
+}
 async function route(){
-  if (!state.rider) return showProfileForm();
+  if (!state.rider) return showNotRider();
+  // the ID was given to another person: log this phone out
+  { const k = 'kh_holder_' + state.rider.id; const saved = ls.get(k, null);
+    if (state.freshLogin || saved === null) ls.set(k, state.rider.holder_no || 1);
+    else if (Number(saved) !== Number(state.rider.holder_no || 1)){ state.freshLogin = false; await A.logout(); showAuth(t('id_given')); return; }
+    state.freshLogin = false; }
   if (!state.rider.is_approved) return showPending();
   await startApp();
 }
