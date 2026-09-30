@@ -299,7 +299,7 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '4.6';
+const APP_VERSION = '4.7';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1188,7 +1188,8 @@ function riderIdBlock(id, rider, r){
     ${cur ? `<div style="margin-top:4px">👤 Used by <b>${esc(cur.name)}</b>${cur.phone ? ` · <a href="tel:${esc(cur.phone)}">${esc(cur.phone)}</a>` : ''}${cur.cnic ? ' · CNIC ' + esc(cur.cnic) : ''}</div>
       <div class="muted" style="font-size:13px">Since ${esc(dayName(cur.started_at))} · ${cur.deliveries} deliveries · ${money(cur.earned)} earned with this ID</div>` : ''}
     ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> / <b id="rpw" data-pw="${esc(cred.password || '')}">••••••••</b> <button class="linkbtn" onclick="A.toggleRpw()">👁</button></span></div>` : ''}
-    ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>` : ''}
+    ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>
+      <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.holderForm('${id}')">✏️ Name, phone, CNIC</button>${/^[A-Z0-9]+-\d{1,3}$/.test(rider.rider_code || '') ? `<button class="btn warn small" onclick="A.renewIdForm('${id}')">🔒 Make ID stronger</button>` : '<span></span>'}</div>` : ''}
     ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
 }
 function riderLoginCard(code, pw, name){
@@ -2225,7 +2226,7 @@ const A = {
         <div><label class="f" for="ri_cnic">CNIC</label><input id="ri_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x"></div></div>
       <div class="two"><div><label class="f" for="ri_veh">Vehicle</label><select id="ri_veh"><option value="motorbike">Motorbike</option><option value="bicycle">Bicycle</option><option value="car">Car</option></select></div>
         <div><label class="f" for="ri_ct">Contract</label><select id="ri_ct"><option value="freelance">Own bike · per delivery</option><option value="company">Company bike · salary</option></select></div></div>
-      <div class="two"><div><label class="f" for="ri_code">Rider ID</label><input id="ri_code" type="text" value="${esc(code)}" placeholder="KK-002" style="text-transform:uppercase"></div>
+      <div class="two"><div><label class="f" for="ri_code">Rider ID (made for you)</label><input id="ri_code" type="text" value="${esc(code)}" placeholder="KK-4827-1937" readonly style="text-transform:uppercase;font-weight:700"></div>
         <div><label class="f" for="ri_pw">Password</label><div style="display:flex;gap:6px"><input id="ri_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('ri_pw').value = genPw()">New</button></div></div></div>
       <div class="actions"><button class="btn block" id="riSave" onclick="A.saveRiderId()">Create Rider ID</button></div>`);
   },
@@ -2240,6 +2241,29 @@ const A = {
       await loadRiderMonth(); if (state.tab === 'riders') renderTab();
       riderLoginCard(d.code || code, pw, name);
     });
+    if (b) b.disabled = false;
+  },
+  holderForm(id){
+    const cur = (state.holders || []).find(h => !h.ended_at) || {};
+    openSheet('Rider details', `<div class="muted" style="font-size:14px">Fix the name, phone or CNIC of the person using this ID now. To give the ID to a new person use “Give ID to another person”.</div>
+      <label class="f" for="hd_name">Name</label><input id="hd_name" type="text" value="${esc(cur.name && cur.name !== 'Rider' ? cur.name : '')}">
+      <div class="two"><div><label class="f" for="hd_phone">Phone</label><input id="hd_phone" type="text" inputmode="tel" value="${esc(cur.phone || '')}"></div><div><label class="f" for="hd_cnic">CNIC</label><input id="hd_cnic" type="text" inputmode="numeric" value="${esc(cur.cnic || '')}"></div></div>
+      <div class="actions"><button class="btn block" onclick="A.saveHolder('${id}')">Save</button></div>`);
+  },
+  async saveHolder(id){
+    const name = $('hd_name').value.trim(); if (!name) return toast('Write the rider name', true);
+    await run(async () => { need(await sb.rpc('admin_update_holder', { p_rider:id, p_name:name, p_phone:$('hd_phone').value.trim(), p_cnic:$('hd_cnic').value.trim() })); await loadRiderMonth(); if (state.tab === 'riders') renderTab(); await A.openRider(id); toast('Saved'); });
+  },
+  renewIdForm(id){
+    const code = ((state.riderIds || {})[id] || {}).rider_code || '';
+    openSheet('Make ' + code + ' stronger', `<div class="note" style="font-size:14px">The rider gets a new long ID (like KK-4827-1937) and a new password. The old ID ${esc(code)} stops working. All work and pay history stays.</div>
+      <label class="f" for="rn_pw">New password</label><div style="display:flex;gap:8px"><input id="rn_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('rn_pw').value = genPw()">New</button></div>
+      <div class="actions"><button class="btn block" id="rnSave" onclick="A.saveRenewId('${id}')">Give new ID</button></div>`);
+  },
+  async saveRenewId(id){
+    const pw = $('rn_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    const b = $('rnSave'); b.disabled = true;
+    await run(async () => { const d = await callFn({ action:'renew_id', rider:id, password:pw }); await loadRiderMonth(); if (state.tab === 'riders') renderTab(); riderLoginCard(d.code, pw); });
     if (b) b.disabled = false;
   },
   toggleRpw(){ const el = document.getElementById('rpw'); if (el) el.textContent = el.textContent.startsWith('•') ? (el.dataset.pw || '(not saved)') : '••••••••'; },
