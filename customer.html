@@ -454,7 +454,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.7';
+const APP_VERSION = '3.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -534,6 +534,7 @@ const I18N = {
     browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
     need_details:'Please add your name and phone so the shop and rider can reach you.',
     arrive_by:'Rider arriving by about {t}', deliver_around:'Delivery by about {t}', cmp_btn:'Problem with the delivery? Complain', cmp_title:'Complain about the rider', cmp_q:'What happened?', cmp_late:'Rider came late', cmp_damaged:'Items were damaged or spoiled', cmp_rude:'Rider was rude', cmp_other:'Something else', cmp_note:'Tell us more', cmp_send:'Send complaint', cmp_pick:'Please choose the problem', cmp_need_note:'Please write what happened', cmp_done:'Thank you. Your complaint is counted and action is taken on the rider.', cmp_sent:'Thank you. Wanhar Mart will check your complaint.', cmp_status:'Your complaint', cmp_pending:'Wanhar Mart is checking it', cmp_approved:'Complaint accepted, action taken on the rider', cmp_rejected:'Checked by Wanhar Mart: {n}', cmp_late_by:'The order came {m} minutes late',
+    city_title:'Choose your city', city_note:'You will see shops and products of this city.', city_now:'Now showing shops in {c}',
     ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map',
     rate_title:'How was your order?', rate_food:'Products', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the products',
@@ -616,6 +617,7 @@ const I18N = {
     browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
     arrive_by:'رائیڈر تقریباً {t} تک پہنچے گا', deliver_around:'ڈیلیوری تقریباً {t} تک', cmp_btn:'ڈیلیوری میں مسئلہ؟ شکایت کریں', cmp_title:'رائیڈر کی شکایت', cmp_q:'کیا ہوا؟', cmp_late:'دیر سے پہنچا', cmp_damaged:'سامان خراب یا ٹوٹا ہوا تھا', cmp_rude:'رائیڈر نے بدتمیزی کی', cmp_other:'کچھ اور', cmp_note:'تفصیل لکھیں', cmp_send:'شکایت بھیجیں', cmp_pick:'براہ کرم مسئلہ چنیں', cmp_need_note:'براہ کرم لکھیں کیا ہوا', cmp_done:'شکریہ۔ آپ کی شکایت درج ہو گئی اور رائیڈر پر لاگو ہو گئی۔', cmp_sent:'شکریہ۔ Wanhar Mart آپ کی شکایت چیک کرے گا۔', cmp_status:'آپ کی شکایت', cmp_pending:'Wanhar Mart چیک کر رہا ہے', cmp_approved:'شکایت منظور، رائیڈر کے خلاف کارروائی ہو گئی', cmp_rejected:'Wanhar Mart نے چیک کیا: {n}', cmp_late_by:'آرڈر {m} منٹ دیر سے پہنچا',
+    city_title:'اپنا شہر چنیں', city_note:'آپ کو اسی شہر کی دکانیں اور چیزیں نظر آئیں گی۔', city_now:'اب {c} کی دکانیں دکھائی جا رہی ہیں',
     ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں',
     rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'چیزیں', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم چیزوں کے لیے ستارے دبائیں',
@@ -777,7 +779,7 @@ function renderShell(){
     <header class="top" id="topbar">
       <div class="top-row">
         <a class="brand" href="#/">Wanhar Mart<b>.</b></a>
-        <div class="actions-top">${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+        <div class="actions-top"><span id="cityBtn">${cityBtn()}</span>${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
       </div>
       ${state.user ? `<button class="addrchip" id="addrChip" onclick="A.pickAddr()">${addrChipHtml()}</button>` : ''}
       <div class="hello" id="hello">${helloHtml()}</div>
@@ -893,10 +895,44 @@ function closedText(r){
   if (r && r.manual_open !== false && r.open_time && !withinHours(r)) return t('closed_msg') + ' ' + t('opens_at').replace('{t}', fmtTime(r.open_time));
   return t('closed_msg');
 }
+// ---- City (region) ----
+async function loadRegionsC(){
+  try {
+    const { data } = await sb.from('regions').select('id,name,center_lat,center_lng,radius_km').eq('is_active', true).order('created_at');
+    state.regions = data || [];
+  } catch (e) { state.regions = []; }
+  const saved = ls.get('kh_region', null);
+  if (saved && state.regions.some(r => r.id === saved)) state.region = saved;
+  else if (state.regions.length === 1) state.region = state.regions[0].id;
+  else {
+    const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
+    state.region = (a && nearestRegion(a.lat, a.lng)) || (state.regions[0] || {}).id || null;
+    if (state.regions.length > 1 && !a && navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { const n = nearestRegion(p.coords.latitude, p.coords.longitude); if (n && n !== state.region) A.setRegion(n, true); }, () => {}, { timeout:10000, maximumAge:600000 });
+  }
+  await loadRegionSettings();
+  refreshCityBtn();
+}
+function nearestRegion(lat, lng){
+  if (lat == null || lng == null) return null;
+  let best = null, bd = Infinity;
+  state.regions.forEach(r => { if (r.center_lat == null) return; const d = kmBetween(lat, lng, r.center_lat, r.center_lng); if (d < bd && d <= num(r.radius_km || 30) * 1.5){ bd = d; best = r.id; } });
+  return best;
+}
+async function loadRegionSettings(){
+  state.rset = {};
+  if (!state.region) return;
+  try { const { data } = await sb.from('region_settings').select('key,value').eq('region_id', state.region); (data || []).forEach(x => { state.rset[x.key] = x.value; }); } catch (e) {}
+}
+const regionName = () => ((state.regions || []).find(r => r.id === state.region) || {}).name || '';
+const cityBtn = () => (state.regions || []).length > 1 ? `<button class="pillbtn" style="white-space:nowrap" onclick="A.pickRegion()">📍 ${esc(regionName())}</button>` : '';
+function refreshCityBtn(){ const el = document.getElementById('cityBtn'); if (el) el.innerHTML = cityBtn(); }
 async function loadRestaurants(){
-  const list = need(await sb.from('restaurants')
+  if (!state.regions) await loadRegionsC();
+  let q = sb.from('restaurants')
     .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers)')
-    .eq('is_active', true).order('name'));
+    .eq('is_active', true).order('name');
+  if (state.region) q = q.eq('region_id', state.region);
+  const list = need(await q);
   list.forEach(r => { r.manual_open = r.is_open; r.is_open = !!r.is_open && withinHours(r); });
   list.sort((a, b) => (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0));
   state.restaurants = list;
@@ -907,18 +943,21 @@ function syncShopOpen(p){
 }
 async function loadProducts(){
   const [items, stats] = await Promise.all([
-    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active)')
-      .eq('is_available', true).eq('restaurants.is_active', true).order('created_at', { ascending:false }).limit(400),
+    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
+      .eq('is_available', true).eq('restaurants.is_active', true).eq('restaurants.region_id', state.region || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending:false }).limit(400),
     sb.rpc('public_stats')
   ]);
   state.products = need(items);
   state.products.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; });
-  sb.from('app_settings').select('value').eq('key', 'weight_tiers').maybeSingle().then(({ data }) => { state.weightTiers = (data && Array.isArray(data.value)) ? data.value : []; }, () => {});
-  sb.from('app_settings').select('value').eq('key', 'complaint_rules').maybeSingle().then(({ data }) => { state.cmpRules = (data && data.value) || null; }, () => {});
-  await Promise.all([loadOptItems(), sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false }).then(({ data }) => { state.banners = data || []; }, () => {})]);
+  sb.from('app_settings').select('value').eq('key', 'weight_tiers').maybeSingle().then(({ data }) => { const v = 'weight_tiers' in (state.rset || {}) ? state.rset.weight_tiers : data && data.value; state.weightTiers = Array.isArray(v) ? v : []; }, () => {});
+  sb.from('app_settings').select('value').eq('key', 'complaint_rules').maybeSingle().then(({ data }) => { state.cmpRules = ('complaint_rules' in (state.rset || {}) ? state.rset.complaint_rules : data && data.value) || null; }, () => {});
+  let bq = sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false });
+  if (state.region) bq = bq.eq('region_id', state.region);
+  await Promise.all([loadOptItems(), bq.then(({ data }) => { state.banners = data || []; }, () => {})]);
   if (!stats.error && stats.data) state.stats = stats.data;
 }
 async function ensureData(){
+  if (!state.regions) await loadRegionsC();
   if (!state.restaurants.length) await loadRestaurants();
   if (!state.products.length) await loadProducts();
 }
@@ -1575,6 +1614,18 @@ function showReceipt(o){
 // ================= ACTIONS =================
 let searchTimer = null;
 const A = {
+  pickRegion(){
+    openSheet(t('city_title'), `<div class="muted" style="margin-bottom:10px">${t('city_note')}</div>${state.regions.map(r => `<button class="menu-row" style="width:100%" onclick="A.setRegion('${r.id}')"><span><b>${r.id === state.region ? '✅ ' : '📍 '}${esc(r.name)}</b></span><span class="muted">›</span></button>`).join('')}`);
+  },
+  async setRegion(id, quiet){
+    closeSheet();
+    if (id === state.region) return;
+    state.region = id; ls.set('kh_region', id);
+    state.restaurants = []; state.products = []; state.banners = [];
+    await run(async () => { await loadRegionSettings(); await ensureData(); });
+    renderShell(); route(true);
+    toast(t('city_now', { c:regionName() }));
+  },
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth) showAuth(); else { renderShell(); route(); }
@@ -1789,7 +1840,8 @@ const A = {
     const list = (state.addresses || []).map(a => `<button class="menu-row" style="width:100%" onclick="A.chooseAddr('${a.id}')"><span style="text-align:start"><b>${a.id === state.selAddr ? '✅ ' : '📍 '}${esc(a.label || t('address'))}</b><div class="muted" style="font-size:13px;font-weight:400">${esc(a.full_address)}</div></span><span class="muted">›</span></button>`).join('');
     openSheet(t('deliver_to_l'), `${list || `<div class="muted" style="margin-bottom:10px">${t('pick_address')}</div>`}<button class="btn" style="margin-top:8px" onclick="A.showAddrForm()">+ ${t('add_address')}</button>`);
   },
-  chooseAddr(id){ state.selAddr = id; ls.set('kh_addr', id); state.quote = null; closeSheet(); refreshChip(); if (currentRoute === 'checkout') drawCheckout(); toast('📍 ' + ((state.addresses.find(a => a.id === id) || {}).label || t('saved'))); },
+  chooseAddr(id){ state.selAddr = id; ls.set('kh_addr', id); state.quote = null; closeSheet(); refreshChip();
+    { const a = (state.addresses || []).find(x => x.id === id); const n = a && (state.regions || []).length > 1 ? nearestRegion(a.lat, a.lng) : null; if (n && n !== state.region && currentRoute !== 'checkout'){ A.setRegion(n, true); return; } } if (currentRoute === 'checkout') drawCheckout(); toast('📍 ' + ((state.addresses.find(a => a.id === id) || {}).label || t('saved'))); },
   async deleteAddress(id){
     if (!confirm(t('delete_confirm'))) return;
     await run(async () => {
