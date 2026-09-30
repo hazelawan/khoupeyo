@@ -286,6 +286,12 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 .regcard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .regcard .nums div{background:var(--field);border-radius:12px;padding:8px;text-align:center}
 .regcard .nums b{display:block;font-size:16px}.regcard .nums span{font-size:12px;color:var(--muted)}
+
+.idline{font-size:13px;margin-bottom:2px;letter-spacing:.02em}
+.idbox{border:2px solid var(--green);border-radius:16px;padding:12px;margin:12px 0;background:rgba(14,122,77,.05)}
+.idbox .code{font-size:24px;font-weight:800;letter-spacing:.04em}
+.hrow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hrow:last-child{border-bottom:0}
 </style>
 </head>
 <body>
@@ -293,7 +299,7 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '4.5';
+const APP_VERSION = '4.6';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -828,11 +834,13 @@ async function loadRiderMonth(){
   state.riderRows = need(rows) || [];
   state.lb = { today:a.data || [], month:b.data || [], last_month:c.data || [] };
   try {
-    const [sp, lv, cp] = await Promise.all([
+    const [sp, lv, cp, ids] = await Promise.all([
       sb.from('riders').select('id,suspended_until,suspend_reason').gt('suspended_until', new Date().toISOString()),
       sb.from('rider_leaves').select('id', { count:'exact', head:true }).eq('status', 'pending'),
-      sb.from('rider_complaints').select('id', { count:'exact', head:true }).eq('status', 'pending')]);
+      sb.from('rider_complaints').select('id', { count:'exact', head:true }).eq('status', 'pending'),
+      sb.from('riders').select('id,rider_code,holder_since,region_id')]);
     state.paused = {}; (sp.data || []).forEach(x => { state.paused[x.id] = x; });
+    state.riderIds = {}; (ids.data || []).forEach(x => { state.riderIds[x.id] = x; });
     state.pendLeaves = lv.count || 0; state.pendComplaints = cp.count || 0;
   } catch (e) { state.paused = {}; }
 }
@@ -861,7 +869,9 @@ function viewRiders(){
     <div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.approveRider('${r.rider_id}')">Approve</button><button class="btn warn" onclick="A.rejectRider('${r.rider_id}')">Reject</button></div></div>`).join('');
   const card = r => {
     const net = riderNet(r); const due = net - num(r.paid); const over = num(r.cash_limit) > 0 && num(r.cash_in_hand) >= num(r.cash_limit);
+    const idr = (state.riderIds || {})[r.rider_id] || {};
     return `<div class="card click" onclick="A.openRider('${r.rider_id}')">
+      ${idr.rider_code ? `<div class="idline">🆔 <b>${esc(idr.rider_code)}</b> <span class="muted">· used by</span></div>` : ''}
       <div class="row-title">${esc(r.full_name || 'Rider')}
         <span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span>
         ${contractPill(r)}
@@ -887,6 +897,7 @@ function viewRiders(){
     ${list.slice(0, 3).map(x => `<div class="kv"><span>${medal(x.rank)} ${esc(x.name || '')}</span><span>${x.deliveries}</span></div>`).join('') || '<div class="muted" style="font-size:14px">No deliveries yet</div>'}</div>`;
   const hub = (tab, ic, title, n) => `<button class="hubbtn" onclick="go('${tab}')"><span>${ic}</span><b>${title}</b>${n ? `<i>${n}</i>` : ''}</button>`;
   return `<h2>Riders</h2>
+    ${can('riders') ? `<button class="btn block" style="margin-bottom:12px" onclick="A.riderIdForm()">🆔 + Create Rider ID</button>` : ''}
     <div class="hub">${hub('attendance', '📋', 'Attendance', 0)}${hub('leaves', '📅', 'Leave requests', state.pendLeaves)}${hub('complaints', '📣', 'Complaints', state.pendComplaints)}${hub('shifts', '🕘', 'Shifts and duty time', 0)}</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">${podium(lb.today, 'Rider of the day', aw.day_prize)}${podium(lb.month, 'Rider of the month', aw.month_prize)}</div>
     ${lb.last_month[0] ? `<div class="muted" style="font-size:14px;margin-bottom:10px">👑 Last month's winner: <b>${esc(lb.last_month[0].name)}</b> (${lb.last_month[0].deliveries} deliveries)</div>` : ''}
@@ -899,7 +910,7 @@ function viewRiders(){
     </div>
     ${pending.length ? `<h3>New requests (${pending.length})</h3>${pRows}` : ''}
     <div class="chips">${chips}</div>
-    ${shown.map(card).join('') || '<div class="empty">No riders here. A rider signs up in the Rider app, then you approve them.</div>'}
+    ${shown.map(card).join('') || '<div class="empty">No riders here yet. Tap “Create Rider ID” to add a rider.</div>'}
     ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}`;
 }
 
@@ -1165,6 +1176,32 @@ function viewRegionPage(){
       <div class="two" style="margin-top:12px"><button class="btn" onclick="A.fileForm('${id}')">${c ? 'Edit partner file' : '+ Add partner file'}</button><button class="btn ghost" onclick="A.regionForm('${id}')">👤 Login and region</button></div></div>
     ${pts.length ? `<div class="muted" style="font-size:13px">Admin login: ${pts.map(p => esc(p.email)).join(', ')}</div>` : '<div class="note">This region has no incharge login yet. Tap “Login and region” → Add incharge.</div>'}
     ${state.oldFiles.length ? `<h3>Old partner files</h3>${state.oldFiles.map(o => `<div class="card"><b>${esc(o.partner_name || '')}</b><div class="row-sub">${esc(o.email || '')}${o.cnic ? ' · CNIC ' + esc(o.cnic) : ''}</div><div class="row-sub">${o.start_date ? esc(dLong(o.start_date)) + ' – ' + esc(dLong(o.end_date)) : ''} · saved ${when(o.created_at)}</div></div>`).join('')}` : ''}`;
+}
+
+// ================= RIDER IDs (made by the region office) =================
+const riderAppLink = () => location.origin + location.pathname.replace(/[^/]*$/, '') + 'rider.html';
+function riderIdBlock(id, rider, r){
+  const cur = (state.holders || []).find(h => !h.ended_at) || (state.holders || [])[0];
+  const cred = state.riderCred;
+  const hist = (state.holders || []).map(h => `<div class="hrow"><span><b>${esc(h.name)}</b>${h.phone ? ' · ' + esc(h.phone) : ''}<br><small class="muted">${esc(dayName(h.started_at))} → ${h.ended_at ? esc(dayName(h.ended_at)) : 'now'}</small></span><span style="text-align:end"><b>${h.deliveries}</b> deliveries<br><small class="muted">${money(h.earned)}</small></span></div>`).join('');
+  return `<div class="idbox"><div class="muted" style="font-size:13px">Rider ID</div><div class="code">🆔 ${esc(rider.rider_code || '—')}</div>
+    ${cur ? `<div style="margin-top:4px">👤 Used by <b>${esc(cur.name)}</b>${cur.phone ? ` · <a href="tel:${esc(cur.phone)}">${esc(cur.phone)}</a>` : ''}${cur.cnic ? ' · CNIC ' + esc(cur.cnic) : ''}</div>
+      <div class="muted" style="font-size:13px">Since ${esc(dayName(cur.started_at))} · ${cur.deliveries} deliveries · ${money(cur.earned)} earned with this ID</div>` : ''}
+    ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> / <b id="rpw" data-pw="${esc(cred.password || '')}">••••••••</b> <button class="linkbtn" onclick="A.toggleRpw()">👁</button></span></div>` : ''}
+    ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>` : ''}
+    ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
+}
+function riderLoginCard(code, pw, name){
+  const text = `Wanhar Mart Rider app\n${riderAppLink()}\nRider ID: ${code}\nPassword: ${pw}${name ? '\nName: ' + name : ''}`;
+  state.loginText = text;
+  openSheet('✅ Rider ID ready', `<div class="muted" style="font-size:14px">Give these details to the rider. They open the Rider app, write the Rider ID and password, and start work. They only get orders of this region.</div>
+    <pre style="white-space:pre-wrap;background:var(--field);border-radius:12px;padding:12px;font-size:15px;margin:12px 0">${esc(text)}</pre>
+    <div class="two"><button class="btn" onclick="A.copyLogin()">📋 Copy</button><a class="btn ghost" style="text-align:center" href="https://wa.me/?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">WhatsApp</a></div>`);
+}
+async function callFn(body){
+  const { data, error } = await sb.functions.invoke('partner-admin', { body });
+  if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
+  return data;
 }
 // ================= MORE =================
 function viewMore(){
@@ -1734,13 +1771,16 @@ const A = {
     openSheet(r.full_name || 'Rider', '<div class="empty">Loading…</div>');
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
-      const [rd, fines, shifts, hand, pays] = await Promise.all([
-        sb.from('riders').select('face_photo_path,current_lat,current_lng,suspended_until,suspend_reason').eq('id', id).single(),
+      const [rd, fines, shifts, hand, pays, hs, cr] = await Promise.all([
+        sb.from('riders').select('face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
         sb.from('cash_handovers').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(10),
-        sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', id).order('created_at', { ascending:false }).limit(12)
+        sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', id).order('created_at', { ascending:false }).limit(12),
+        sb.rpc('rider_holder_stats', { p_rider:id }),
+        sb.from('rider_credentials').select('login_id,password,updated_at').eq('rider_id', id).maybeSingle()
       ]);
+      state.holders = hs.data || []; state.riderCred = cr.data || null;
       const rider = need(rd); const fl = need(fines); const sh = need(shifts); const hd = need(hand); const py = need(pays);
       const urls = await signedUrls([rider.face_photo_path, ...sh.map(s => s.selfie_path)]);
       const net = riderNet(r); const due = net - num(r.paid);
@@ -1767,6 +1807,7 @@ const A = {
           ${rider.current_lat ? `<a style="font-size:14px" href="https://www.google.com/maps/search/?api=1&query=${rider.current_lat},${rider.current_lng}" target="_blank" rel="noopener">Last location${r.location_updated_at ? ' (' + timeAgo(r.location_updated_at) + ')' : ''}</a>` : ''}
         </div></div>
 
+        ${riderIdBlock(id, rider, r)}
         ${pauseBlock(id, rider)}
         <div class="kv" style="margin-top:8px"><span class="muted">🕘 Duty time</span><span>${esc(timingText(r))}</span></div>
         <div class="bar" style="margin:8px 0 0"><button class="btn ghost small" onclick="A.planForm(['${id}'])">Change duty time</button><button class="btn ghost small" onclick="A.riderAttendance('${id}')">📋 Attendance</button></div>
@@ -2170,6 +2211,67 @@ const A = {
       need(await putSettings([{ key:'shop_accept_minutes', value:acc, updated_at:new Date().toISOString() }, { key:'order_expiry_hours', value:exp, updated_at:new Date().toISOString() }]));
       await loadSettings(); renderTab(); toast('Saved');
     });
+  },
+  // ---- rider IDs ----
+  async riderIdForm(){
+    const needPick = !scope() && (state.regions || []).length > 1;
+    let code = '';
+    if (!needPick){ try { const reg = scope() || ((state.regions || [])[0] || {}).id; const { data } = await sb.rpc('next_rider_code', { p_region:reg }); code = data || ''; } catch (e) {} }
+    openSheet('Create Rider ID', `
+      <div class="muted" style="font-size:14px">The rider gets an ID and password from you. They cannot sign up by themselves. The ID works only in ${needPick ? 'the region you choose' : '<b>' + esc(regionName(scope() || ((state.regions || [])[0] || {}).id)) + '</b>'}.</div>
+      ${needPick ? `<label class="f" for="ri_reg">Region</label><select id="ri_reg" onchange="A.riderIdCode(this.value)"><option value="">Choose…</option>${state.regions.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>` : ''}
+      <label class="f" for="ri_name">Rider name</label><input id="ri_name" type="text" placeholder="Full name">
+      <div class="two"><div><label class="f" for="ri_phone">Phone</label><input id="ri_phone" type="text" inputmode="tel" placeholder="03xx xxxxxxx"></div>
+        <div><label class="f" for="ri_cnic">CNIC</label><input id="ri_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x"></div></div>
+      <div class="two"><div><label class="f" for="ri_veh">Vehicle</label><select id="ri_veh"><option value="motorbike">Motorbike</option><option value="bicycle">Bicycle</option><option value="car">Car</option></select></div>
+        <div><label class="f" for="ri_ct">Contract</label><select id="ri_ct"><option value="freelance">Own bike · per delivery</option><option value="company">Company bike · salary</option></select></div></div>
+      <div class="two"><div><label class="f" for="ri_code">Rider ID</label><input id="ri_code" type="text" value="${esc(code)}" placeholder="KK-002" style="text-transform:uppercase"></div>
+        <div><label class="f" for="ri_pw">Password</label><div style="display:flex;gap:6px"><input id="ri_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('ri_pw').value = genPw()">New</button></div></div></div>
+      <div class="actions"><button class="btn block" id="riSave" onclick="A.saveRiderId()">Create Rider ID</button></div>`);
+  },
+  async riderIdCode(reg){ if (!reg) return; try { const { data } = await sb.rpc('next_rider_code', { p_region:reg }); if (data) $('ri_code').value = data; } catch (e) {} },
+  async saveRiderId(){
+    const name = $('ri_name').value.trim(); if (!name) return toast('Write the rider name', true);
+    const reg = $('ri_reg') ? $('ri_reg').value : null; if ($('ri_reg') && !reg) return toast('Choose the region', true);
+    const code = $('ri_code').value.trim().toUpperCase(), pw = $('ri_pw').value;
+    const b = $('riSave'); b.disabled = true;
+    await run(async () => {
+      const d = await callFn({ action:'create_rider', name, phone:$('ri_phone').value.trim(), cnic:$('ri_cnic').value.trim(), vehicle:$('ri_veh').value, contract:$('ri_ct').value, code, password:pw, region:reg });
+      await loadRiderMonth(); if (state.tab === 'riders') renderTab();
+      riderLoginCard(d.code || code, pw, name);
+    });
+    if (b) b.disabled = false;
+  },
+  toggleRpw(){ const el = document.getElementById('rpw'); if (el) el.textContent = el.textContent.startsWith('•') ? (el.dataset.pw || '(not saved)') : '••••••••'; },
+  riderPwForm(id){
+    const code = ((state.riderIds || {})[id] || {}).rider_code || '';
+    openSheet('New password · ' + code, `<div class="muted" style="font-size:14px">The old password stops working.</div>
+      <label class="f" for="rp_pw">New password</label><div style="display:flex;gap:8px"><input id="rp_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('rp_pw').value = genPw()">New</button></div>
+      <div class="actions"><button class="btn block" onclick="A.saveRiderPw('${id}')">Save password</button></div>`);
+  },
+  async saveRiderPw(id){
+    const pw = $('rp_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    await run(async () => { await callFn({ action:'rider_password', rider:id, password:pw }); riderLoginCard(((state.riderIds || {})[id] || {}).rider_code || '', pw); });
+  },
+  handOverForm(id){
+    const code = ((state.riderIds || {})[id] || {}).rider_code || '';
+    openSheet('Give ' + code + ' to another person', `<div class="note" style="font-size:14px">The old person is logged out and cannot use this ID any more. Their work stays in the history. The new person gets a new password and must register their face again.</div>
+      <label class="f" for="ho_name">New rider name</label><input id="ho_name" type="text">
+      <div class="two"><div><label class="f" for="ho_phone">Phone</label><input id="ho_phone" type="text" inputmode="tel"></div><div><label class="f" for="ho_cnic">CNIC</label><input id="ho_cnic" type="text" inputmode="numeric"></div></div>
+      <label class="f" for="ho_pw">New password</label><div style="display:flex;gap:8px"><input id="ho_pw" type="text" value="${genPw()}"><button type="button" class="btn ghost small" style="width:auto" onclick="$('ho_pw').value = genPw()">New</button></div>
+      <div class="actions"><button class="btn block" id="hoSave" onclick="A.saveHandOver('${id}')">Give ID to this person</button></div>`);
+  },
+  async saveHandOver(id){
+    const name = $('ho_name').value.trim(); if (!name) return toast('Write the new rider name', true);
+    const pw = $('ho_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    const code = ((state.riderIds || {})[id] || {}).rider_code || '';
+    const b = $('hoSave'); b.disabled = true;
+    await run(async () => {
+      await callFn({ action:'hand_over', rider:id, name, phone:$('ho_phone').value.trim(), cnic:$('ho_cnic').value.trim(), password:pw });
+      await loadRiderMonth(); if (state.tab === 'riders') renderTab();
+      riderLoginCard(code, pw, name);
+    });
+    if (b) b.disabled = false;
   },
   // ---- regions ----
   async viewRegion(id, goHome){
