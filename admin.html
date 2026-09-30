@@ -275,6 +275,13 @@ h2{font-size:18px}
 .rpick{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow:auto;padding:4px 0}
 .shiftrow{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;align-items:end;padding:10px 0;border-bottom:1px solid var(--line)}
 @media (max-width:520px){.shiftrow{grid-template-columns:1fr 1fr}}
+
+.regsel{margin-top:4px;background:rgba(255,255,255,.18)!important;color:#fff!important;border:1px solid rgba(255,255,255,.35)!important;border-radius:999px!important;padding:5px 30px 5px 12px!important;font-size:13px!important;font-weight:700;width:auto!important;max-width:60vw}
+.regsel option{color:#111}
+.regchip{display:inline-block;margin-top:4px;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
+.regcard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.regcard .nums div{background:var(--field);border-radius:12px;padding:8px;text-align:center}
+.regcard .nums b{display:block;font-size:16px}.regcard .nums span{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -282,7 +289,7 @@ h2{font-size:18px}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '4.0';
+const APP_VERSION = '4.3';
 const APP_DATE = '29 Sep 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -295,10 +302,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish'];
-const can = p => (state.perms || []).includes('owner') || (state.perms || []).includes(p);
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions'];
+const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts'];
-const TAB_PERM = { attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'owner' };
+const TAB_PERM = { attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -421,10 +428,12 @@ function showLogin(msg){
   </div>`;
 }
 async function afterLogin(user){
-  const { data, error } = await sb.from('profiles').select('role').eq('id', user.id).single();
+  const { data, error } = await sb.from('profiles').select('role,region_id,view_region').eq('id', user.id).single();
   if (error || !data || data.role !== 'admin'){ await sb.auth.signOut(); showLogin('This account is not an admin.'); return; }
   state.userId = user.id;
   try { const { data:pm } = await sb.rpc('my_perms'); state.perms = pm || []; } catch (e) { state.perms = ['owner']; }
+  state.myRegion = data.region_id || null; state.viewRegion = data.view_region || null;
+  try { state.regions = need(await sb.from('regions').select('id,name,center_lat,center_lng,radius_km,is_active,created_at').order('created_at')) || []; } catch (e) { state.regions = []; }
   await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
   Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'admin', me:() => state.userId, lang:() => 'en', toast:(m, err) => toast(m, err) });
@@ -444,6 +453,8 @@ async function loadRiders(){
 async function loadSettings(){
   const rows = need(await sb.from('app_settings').select('*'));
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
+  state.regionSet = {};
+  if (scope()){ const rr = need(await sb.from('region_settings').select('key,value').eq('region_id', scope())) || []; rr.forEach(r => { state.settings[r.key] = r.value; state.regionSet[r.key] = true; }); }
   state.tierEdit = null; state.wtEdit = null; state.ladEdit = null;
 }
 let channel;
@@ -465,7 +476,7 @@ function subscribeOrders(){
 // ---- Shell ----
 function showApp(){
   $('app').innerHTML = `
-    <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">Admin v${APP_VERSION}</span></div>
+    <div class="topbar"><div class="brand">Wanhar Mart<b>.</b><span class="ver">Admin v${APP_VERSION}</span>${regionControl()}</div>
       <div style="display:flex;gap:10px;align-items:center">${Chat.button()}<button class="linkbtn" onclick="go(state.tab)">Refresh</button></div></div>
     <main id="main"></main>
     <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
@@ -500,7 +511,8 @@ async function go(tab){
     if (tab === 'settings') await loadSettings();
     if (tab === 'targets') await loadTargets();
     if (tab === 'staff') await loadStaff();
-    if (tab === 'customers' && can('owner')) { const { data } = await sb.rpc('admin_deletion_requests'); state.delReq = data || []; }
+    if (tab === 'regions') await loadRegions();
+    if (tab === 'customers' && can('hq')) { const { data } = await sb.rpc('admin_deletion_requests'); state.delReq = data || []; }
     if (tab === 'reports' && !state.repMonth) state.repMonth = state.riderMonth || ymd(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   });
   renderTab(); window.scrollTo(0, 0);
@@ -508,8 +520,9 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts }[state.tab];
-  m.innerHTML = v ? v() : '';
+              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts }[state.tab];
+  const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
+  m.innerHTML = allNote + (v ? v() : '');
   renderNav();
 }
 function periodChips(){ return `<div class="chips">${PERIODS.map(([k, l]) => `<button class="chip ${state.period === k ? 'on' : ''}" onclick="A.setPeriod('${k}')">${l}</button>`).join('')}</div>`; }
@@ -1044,6 +1057,45 @@ function ladderEditor(){
       <label class="check"><input type="checkbox" ${x.forfeit ? 'checked' : ''} onchange="A.ladSet(${i},'forfeit',this.checked)"> Take back today's earnings</label></div></div>
     <button class="linkbtn red" onclick="A.ladDel(${i})" aria-label="Remove">✕</button></div>`).join('') || '<div class="muted">No steps: complaints give no penalty.</div>';
 }
+
+// ================= REGIONS (cities run by partners) =================
+const scope = () => state.myRegion || state.viewRegion || null;
+const regionName = id => { const r = (state.regions || []).find(x => x.id === id); return r ? r.name : 'region'; };
+function regionControl(){
+  if (state.myRegion) return `<div><span class="regchip">📍 ${esc(regionName(state.myRegion))}</span></div>`;
+  if ((state.regions || []).length < 2) return '';
+  return `<div><select class="regsel" aria-label="Region" onchange="A.viewRegion(this.value)"><option value="">🌍 All regions</option>${state.regions.map(r => `<option value="${r.id}" ${r.id === state.viewRegion ? 'selected' : ''}>📍 ${esc(r.name)}${r.is_active ? '' : ' (off)'}</option>`).join('')}</select></div>`;
+}
+function putSettings(rows){
+  const list = (Array.isArray(rows) ? rows : [rows]).map(r => ({ key:r.key, value:r.value, updated_at:new Date().toISOString() }));
+  if (scope()) return sb.from('region_settings').upsert(list.map(r => Object.assign({ region_id:scope() }, r)));
+  return sb.from('app_settings').upsert(list);
+}
+async function loadRegions(){
+  const now = new Date(); const f = new Date(now.getFullYear(), now.getMonth() - (state.regMonthBack || 0), 1); const t = new Date(f.getFullYear(), f.getMonth() + 1, 1);
+  const [rg, sm] = await Promise.all([sb.rpc('hq_regions'), sb.rpc('hq_region_summary', { p_from:f.toISOString(), p_to:t.toISOString() })]);
+  state.regions = need(rg) || []; state.regSum = need(sm) || []; state.regLabel = f.toLocaleDateString('en-GB', { month:'long', year:'numeric' });
+}
+function viewRegions(){
+  const card = x => {
+    const r = state.regions.find(g => g.id === x.region_id) || {};
+    const earn = num(x.commission) + num(x.delivery_fees) - num(x.rider_pay) - num(x.discounts);
+    const share = Math.round(Math.max(0, earn) * num(x.hq_percent) / 100 + num(x.monthly_fee));
+    return `<div class="card regcard"><div class="row-title">📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'}</div>
+      <div class="row-sub">Partner: ${x.partners ? esc(x.partners) : '<b>none yet</b>'} · ${x.shops} shops · ${x.riders} riders</div>
+      <div class="nums"><div><b>${x.delivered}</b><span>Delivered</span></div><div><b>${money(x.sales)}</b><span>Sales</span></div><div><b>${money(earn)}</b><span>Platform earning</span></div></div>
+      <div class="kv" style="margin-top:8px"><span>Your share (${num(x.hq_percent)}% of earning${num(x.monthly_fee) ? ' + ' + money(x.monthly_fee) + ' fee' : ''})</span><b>${money(share)}</b></div>
+      <div class="kv"><span class="muted">Partner keeps (earning − your share)</span><span>${money(earn - share)}</span></div>
+      <div class="muted" style="font-size:12px">The partner pays shops and riders of this region. Rider salaries and fines are in that region's Riders tab.</div>
+      <div class="bar" style="margin-top:8px"><button class="btn small" onclick="A.viewRegion('${x.region_id}', true)">Open this region</button><button class="btn ghost small" onclick="A.regionForm('${x.region_id}')">Edit</button><button class="btn ghost small" onclick="A.partnerForm('${x.region_id}')">Add partner</button></div></div>`;
+  };
+  return `${backLink()}<h2>🌍 Regions and partners</h2>
+    <div class="muted" style="font-size:14px;margin-bottom:8px">Every city is a region. A region partner signs in to this same Admin panel and sees <b>only their region</b>: shops, products, riders, orders, money and their own settings. They can add their own staff. You see everything and can open any region from the top.</div>
+    <div class="chips"><button class="chip ${!state.regMonthBack ? 'on' : ''}" onclick="A.regMonth(0)">This month</button><button class="chip ${state.regMonthBack === 1 ? 'on' : ''}" onclick="A.regMonth(1)">Last month</button></div>
+    <div class="muted" style="font-size:13px;margin-bottom:8px">${esc(state.regLabel || '')} · Platform earning = commission + delivery fees − rider delivery pay − promo discounts.</div>
+    ${state.regSum.map(card).join('') || '<div class="empty">No regions yet.</div>'}
+    <button class="btn block" style="margin-top:10px" onclick="A.regionForm()">+ Add a new region (city)</button>`;
+}
 // ================= MORE =================
 function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
@@ -1059,6 +1111,7 @@ function viewMore(){
     ${it('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
     ${it('staff', '👥 Staff', 'Helpers who can use this panel with limited access')}
     ${it('settings', 'Settings', 'Auto-dispatch, selfie check, waiting time, contracts, support')}
+    ${it('regions', '🌍 Regions and partners', 'Cities, their partner admins and your share from each region')}
     ${it('publish', 'Publish updates', 'Upload new app files to GitHub')}
     <a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button>
@@ -1142,12 +1195,12 @@ function viewReports(){
 const PERM_LABEL = { orders:'Orders, problems and customers', chat:'Messages and support chat', shops:'Shops and products', riders:'Riders, fines and targets', money:'Payments, cash and reports', settings:'Settings, promo codes, banners, zones' };
 async function loadStaff(){ state.staff = need(await sb.rpc('admin_staff_list')) || []; }
 function viewStaff(){
-  const rows = state.staff.map(x => `<div class="card"><div class="row-title">${esc(x.full_name || x.email)} ${x.is_owner ? '<span class="pill g">Owner</span>' : '<span class="pill b">Staff</span>'}</div>
+  const rows = state.staff.map(x => `<div class="card"><div class="row-title">${esc(x.full_name || x.email)} ${x.is_owner ? `<span class="pill g">${x.region_id ? 'Region partner' : 'Owner'}</span>` : '<span class="pill b">Staff</span>'}${!state.myRegion ? ` <span class="pill">${x.region_id ? '📍 ' + esc(x.region_name || '') : 'HQ'}</span>` : ''}</div>
     <div class="row-sub">${esc(x.email || '')}${x.phone ? ' · ' + esc(x.phone) : ''}</div>
-    ${x.is_owner ? '<div class="muted" style="font-size:14px">Full access</div>' : `<div class="muted" style="font-size:14px">${(x.perms || []).map(p => esc(PERM_LABEL[p] || p)).join(' · ')}</div>
+    ${x.is_owner ? `<div class="muted" style="font-size:14px">Full access${x.region_id ? ' to ' + esc(x.region_name || 'the region') : ''}</div>${x.region_id && can('hq') ? `<button class="btn warn small" style="margin-top:8px" onclick="A.removeStaff('${x.id}')">Remove partner</button>` : ''}` : `<div class="muted" style="font-size:14px">${(x.perms || []).map(p => esc(PERM_LABEL[p] || p)).join(' · ')}</div>
     <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.staffForm(${esc(JSON.stringify(x.email))}, ${esc(JSON.stringify(x.perms || []))})">Change</button><button class="btn warn small" onclick="A.removeStaff('${x.id}')">Remove</button></div>`}</div>`).join('');
   return `${backLink()}<h2>👥 Staff</h2>
-    <div class="muted" style="margin:-6px 0 10px;font-size:14px">Staff sign in to this Admin panel with their own email. They only see and change what you allow. Only you (owner) can add staff, publish updates and delete accounts.</div>
+    <div class="muted" style="margin:-6px 0 10px;font-size:14px">Staff sign in to this Admin panel with their own email. They only see and change what you allow${state.myRegion ? ', and only in ' + esc(regionName(state.myRegion)) : ''}.${state.myRegion ? '' : ' Only you (owner) can add staff, publish updates and delete accounts. Region partners are added in More → Regions.'}</div>
     <div class="bar"><button class="btn" onclick="A.staffForm()">Add staff</button></div>${rows}`;
 }
 
@@ -1262,7 +1315,10 @@ function tierEditor(k){
 function redrawTiers(k){ const el = $('tiers_' + k); if (el) el.outerHTML = tierEditor(k); }
 function viewSettings(){
   const s = state.settings; const req = s.require_selfie === true; const th = num(s.face_match_threshold ?? 0.5);
+  const sc = scope();
   return `${backLink()}<h2>Settings</h2>
+    ${sc ? `<div class="note" style="border-color:var(--green)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Wanhar Mart settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
+      : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : ''}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div><b>Selfie face check at duty start</b><div class="muted" style="font-size:14px">When on, a rider must take a selfie that matches their registered face before going online. Turn this on after the new Rider app is published.</div></div>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${req ? 'checked' : ''} onchange="A.saveSetting('require_selfie', this.checked)"><span></span></label><small>${req ? 'On' : 'Off'}</small></div>
@@ -2019,7 +2075,7 @@ const A = {
   // ---- Settings ----
   async saveDispatch(){
     const rows = [{ key:'dispatch_auto', value:$('dp_on').checked }, { key:'dispatch_seconds', value:Math.min(180, Math.max(15, num($('dp_sec').value))) }, { key:'dispatch_km', value:Math.max(1, num($('dp_km').value)) }].map(x => Object.assign(x, { updated_at:new Date().toISOString() }));
-    await run(async () => { need(await sb.from('app_settings').upsert(rows)); await loadSettings(); renderTab(); toast('Saved'); });
+    await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Saved'); });
   },
   async saveContracts(){
     const hrs = num($('c_company_hrs').value); if (hrs < 1) return toast('Hours per day must be at least 1', true);
@@ -2028,7 +2084,7 @@ const A = {
     if (!ft.some(x => x.pay > 0)) return toast('Own-bike riders need a pay per delivery', true);
     const v = { company:{ delivery_pay:ct[0].pay, overtime_per_hour:num($('c_company_ot').value), daily_hours:hrs, tiers:ct }, freelance:{ delivery_pay:ft[0].pay, overtime_per_hour:0, daily_hours:8, tiers:ft } };
     state.tierEdit = null;
-    await run(async () => { need(await sb.from('app_settings').upsert({ key:'late_grace_minutes', value:Math.max(0, num($('s_grace').value)), updated_at:new Date().toISOString() })); });
+    await run(async () => { need(await putSettings({ key:'late_grace_minutes', value:Math.max(0, num($('s_grace').value)), updated_at:new Date().toISOString() })); });
     await A.saveSetting('rider_contracts', v);
   },
   wtSet(i, f, v){ const l = weightList(); if (l[i]) l[i][f] = num(v); },
@@ -2041,9 +2097,60 @@ const A = {
   async saveExpiry(){
     const acc = Math.max(5, num($('s_acc').value) || 15), exp = Math.max(1, num($('s_exp').value) || 3);
     await run(async () => {
-      need(await sb.from('app_settings').upsert([{ key:'shop_accept_minutes', value:acc, updated_at:new Date().toISOString() }, { key:'order_expiry_hours', value:exp, updated_at:new Date().toISOString() }]));
+      need(await putSettings([{ key:'shop_accept_minutes', value:acc, updated_at:new Date().toISOString() }, { key:'order_expiry_hours', value:exp, updated_at:new Date().toISOString() }]));
       await loadSettings(); renderTab(); toast('Saved');
     });
+  },
+  // ---- regions ----
+  async viewRegion(id, goHome){
+    await run(async () => {
+      need(await sb.rpc('set_view_region', { p_region:id || null }));
+      state.viewRegion = id || null; state.riderRows = []; state.shopReport = []; state.settings = {};
+      await Promise.all([loadZones(), loadRestaurants(), loadRiders(), loadSettings()]);
+      toast(id ? 'Now showing ' + regionName(id) : 'Now showing all regions');
+      showApp(); if (goHome) go('home');
+    });
+  },
+  async regMonth(b){ state.regMonthBack = b; await run(loadRegions); renderTab(); },
+  regionForm(id){
+    const r = (state.regions || []).find(x => x.id === id) || { name:'', center_lat:'', center_lng:'', radius_km:30, is_active:true, hq_percent:0, monthly_fee:0, partner_note:'' };
+    openSheet(id ? 'Edit region' : 'New region', `
+      <label class="f" for="rg_name">City or area name</label><input id="rg_name" type="text" value="${esc(r.name)}" placeholder="Chakwal">
+      <div class="two"><div><label class="f" for="rg_lat">Center latitude</label><input id="rg_lat" type="number" step="any" value="${r.center_lat ?? ''}"></div>
+        <div><label class="f" for="rg_lng">Center longitude</label><input id="rg_lng" type="number" step="any" value="${r.center_lng ?? ''}"></div></div>
+      <button type="button" class="btn ghost small" style="margin-top:8px" onclick="A.regionHere()">📍 Use my current location</button>
+      <label class="f" for="rg_km">Area size (km around the center)</label><input id="rg_km" type="number" min="1" max="200" value="${num(r.radius_km)}">
+      <div class="muted" style="font-size:13px">Customers inside this area see this region's shops first.</div>
+      <h3 style="margin:14px 0 4px">Partner contract</h3>
+      <div class="two"><div><label class="f" for="rg_pct">Your share (% of platform earning)</label><input id="rg_pct" type="number" min="0" max="100" value="${num(r.hq_percent)}"></div>
+        <div><label class="f" for="rg_fee">Monthly fee (Rs)</label><input id="rg_fee" type="number" min="0" value="${num(r.monthly_fee)}"></div></div>
+      <label class="f" for="rg_note">Notes (contract, phone…)</label><textarea id="rg_note" rows="2">${esc(r.partner_note || '')}</textarea>
+      <label class="check"><input id="rg_on" type="checkbox" ${r.is_active ? 'checked' : ''}> Region is live (customers can see it)</label>
+      <div class="actions"><button class="btn block" onclick="A.saveRegion('${id || ''}')">Save region</button></div>`);
+  },
+  regionHere(){
+    if (!navigator.geolocation) return toast('Location is not available', true);
+    navigator.geolocation.getCurrentPosition(p => { $('rg_lat').value = p.coords.latitude.toFixed(5); $('rg_lng').value = p.coords.longitude.toFixed(5); }, () => toast('Could not get your location', true), { enableHighAccuracy:true, timeout:15000 });
+  },
+  async saveRegion(id){
+    const name = $('rg_name').value.trim(); if (!name) return toast('Write the city name', true);
+    const lat = $('rg_lat').value === '' ? null : num($('rg_lat').value), lng = $('rg_lng').value === '' ? null : num($('rg_lng').value);
+    const row = { name, center_lat:lat, center_lng:lng, radius_km:Math.max(1, num($('rg_km').value) || 30), hq_percent:Math.min(100, Math.max(0, num($('rg_pct').value))), monthly_fee:Math.max(0, num($('rg_fee').value)), partner_note:$('rg_note').value.trim() || null, is_active:$('rg_on').checked };
+    await run(async () => {
+      if (id) need(await sb.from('regions').update(row).eq('id', id));
+      else need(await sb.from('regions').insert(row));
+      closeSheet(); await loadRegions(); renderTab(); showApp(); go('regions'); toast('Region saved');
+    });
+  },
+  partnerForm(id){
+    openSheet('Add partner · ' + regionName(id), `
+      <div class="muted" style="font-size:14px">The partner becomes the admin of <b>${esc(regionName(id))}</b> only. First they create an account in the Customer app, then you write their email here. They sign in to this Admin panel and can add their own staff.</div>
+      <label class="f" for="pt_email">Partner's email</label><input id="pt_email" type="email" placeholder="partner@gmail.com">
+      <div class="actions"><button class="btn block" onclick="A.savePartner('${id}')">Make partner</button></div>`);
+  },
+  async savePartner(id){
+    const email = $('pt_email').value.trim(); if (!email) return toast('Write the email', true);
+    await run(async () => { need(await sb.rpc('hq_set_region_admin', { p_email:email, p_region:id })); closeSheet(); await loadRegions(); renderTab(); toast('Partner added'); });
   },
   // ---- rider duty ----
   async attDay(d){ state.attDay = d || pkToday(); await run(loadAttendance); renderTab(); },
@@ -2152,10 +2259,10 @@ const A = {
       { key:'late_grace_minutes', value:Math.max(0, num($('dr_grace').value)) },
       { key:'delivery_time', value:{ min_per_km:Math.max(1, num($('dt_km').value)), buffer_min:Math.max(0, num($('dt_buf').value)), default_ride_min:num((state.settings.delivery_time || {}).default_ride_min) || 25 } }
     ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
-    await run(async () => { need(await sb.from('app_settings').upsert(rows)); await loadSettings(); renderTab(); toast('Rider rules saved'); });
+    await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Rider rules saved'); });
   },
   async saveSetting(key, value){
-    await run(async () => { need(await sb.from('app_settings').upsert({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
+    await run(async () => { need(await putSettings({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
   }
 };
 
