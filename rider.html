@@ -294,7 +294,7 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -405,6 +405,7 @@ const I18N = {
     lv_pending:'Waiting', lv_approved:'Approved', lv_rejected:'Not approved', lv_cancelled:'Cancelled', cancel_req:'Cancel request', cancel_leave_q:'Cancel this leave request?', days_word:'days', day_word:'day',
     my_complaints:'Customer complaints', no_complaints:'No complaints. Great work!', ck_late:'Late delivery', ck_damaged:'Items damaged or spoiled', ck_rude:'Rude behaviour', ck_other:'Other',
     cs_pending:'Being checked', cs_approved:'Counted', cs_rejected:'Not counted', pauses:'Pauses', penalty_rules:'What happens after complaints (same day)', pen_step:'Complaint {n}', pen_hours:'ID paused {h} hour(s)', pen_forfeit:"Today's earnings taken back", pen_eod:'ID paused for the rest of the day', pen_none:'Warning only',
+    city_word:'City', city_pick:'Which city will you work in?',
     late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason',
     tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
     tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
@@ -473,6 +474,7 @@ const I18N = {
     lv_pending:'انتظار میں', lv_approved:'منظور', lv_rejected:'منظور نہیں', lv_cancelled:'منسوخ', cancel_req:'درخواست منسوخ کریں', cancel_leave_q:'یہ درخواست منسوخ کریں؟', days_word:'دن', day_word:'دن',
     my_complaints:'گاہکوں کی شکایات', no_complaints:'کوئی شکایت نہیں۔ بہت خوب!', ck_late:'دیر سے ڈیلیوری', ck_damaged:'سامان خراب یا ٹوٹا ہوا', ck_rude:'بدتمیزی', ck_other:'کچھ اور',
     cs_pending:'چیک ہو رہی ہے', cs_approved:'گنی گئی', cs_rejected:'نہیں گنی گئی', pauses:'رکاوٹیں', penalty_rules:'شکایات پر کیا ہوتا ہے (ایک ہی دن میں)', pen_step:'شکایت {n}', pen_hours:'آئی ڈی {h} گھنٹے کے لیے بند', pen_forfeit:'اس دن کی کمائی واپس', pen_eod:'باقی دن کے لیے آئی ڈی بند', pen_none:'صرف تنبیہ',
+    city_word:'شہر', city_pick:'آپ کس شہر میں کام کریں گے؟',
     late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں',
     tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
     tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
@@ -631,10 +633,13 @@ function showAuth(msg, ok){
     <div class="ver">v${APP_VERSION}</div>
   </div>`;
 }
-function showProfileForm(){
+async function showProfileForm(){
+  let regs = [];
+  try { const { data } = await sb.from('regions').select('id,name').eq('is_active', true).order('created_at'); regs = data || []; } catch (e) {}
   $('app').innerHTML = `<div class="auth">
     <div class="brand">Wanhar Mart<b>.</b></div>
     <h1 style="font-size:22px;margin-top:14px">${t('rider_profile')}</h1>
+    ${regs.length > 1 ? `<label class="f" for="p_region">${t('city_pick')}</label><select id="p_region">${regs.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select>` : ''}
     <label class="f" for="p_vehicle">${t('vehicle')}</label>
     <select id="p_vehicle"><option value="motorbike">${t('v_bike')}</option><option value="bicycle">${t('v_bicycle')}</option><option value="car">${t('v_car')}</option></select>
     <label class="f" for="p_cnic">${t('cnic')}</label><input id="p_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x">
@@ -706,6 +711,12 @@ async function loadRider(){
   state.rider = need(await sb.from('riders').select('*').eq('profile_id', state.user.id).maybeSingle());
   const s = await sb.from('app_settings').select('key,value');
   state.settings = {}; (s.data || []).forEach(r => { state.settings[r.key] = r.value; });
+  if (state.rider && state.rider.region_id){
+    try {
+      const [rs, rg] = await Promise.all([sb.from('region_settings').select('key,value').eq('region_id', state.rider.region_id), sb.from('regions').select('name').eq('id', state.rider.region_id).maybeSingle()]);
+      (rs.data || []).forEach(r => { state.settings[r.key] = r.value; }); state.regionName = rg.data ? rg.data.name : '';
+    } catch (e) {}
+  }
 }
 async function loadShift(){
   if (!state.rider || !state.rider.is_approved) return;
@@ -786,7 +797,7 @@ async function loadMoney(){
 }
 async function loadRules(){
   const [r, f, rv] = await Promise.all([
-    sb.from('fine_rules').select('*').eq('is_active', true).order('amount'),
+    sb.from('fine_rules').select('*').eq('is_active', true).eq('region_id', state.rider.region_id).order('amount'),
     sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', monthStart().toISOString()).order('fined_at', { ascending:false }),
     sb.from('orders').select('id').eq('rider_id', state.rider.id).eq('status', 'delivered').order('delivered_at', { ascending:false }).limit(200)
   ]);
@@ -1285,7 +1296,7 @@ function viewAcct(){
     <div class="card" style="display:flex;gap:14px;align-items:center">
       <div class="face" id="myFace">${esc((p.full_name || '?')[0])}</div>
       <div><b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div><div class="muted" style="font-size:14px">${esc(state.user.email)}</div>
-      <div class="muted" style="font-size:14px">${t('vehicle')}: ${esc(r.vehicle || '')}</div>
+      <div class="muted" style="font-size:14px">${t('vehicle')}: ${esc(r.vehicle || '')}${state.regionName ? ' · 📍 ' + esc(state.regionName) : ''}</div>
       <div style="margin-top:4px"><span class="pill ${reg ? '' : 'y'}">${reg ? t('face_ok') : t('face_missing')}</span></div></div>
     </div>
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
@@ -1356,7 +1367,9 @@ const A = {
   async submitProfile(){
     const btn = $('profBtn'); btn.disabled = true;
     await run(async () => {
-      need(await sb.from('riders').insert({ profile_id:state.user.id, vehicle:$('p_vehicle').value, cnic:$('p_cnic').value.trim() || null }));
+      const row = { profile_id:state.user.id, vehicle:$('p_vehicle').value, cnic:$('p_cnic').value.trim() || null };
+      if ($('p_region')) row.region_id = $('p_region').value;
+      need(await sb.from('riders').insert(row));
       await loadRider(); await route();
     });
     const b = $('profBtn'); if (b) b.disabled = false;
