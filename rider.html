@@ -292,6 +292,8 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 
 
 
+.boost{border-radius:16px;padding:12px 14px;margin:0 0 12px;background:#FFF5D9;color:#4F3A00;border:1px solid rgba(255,180,0,.45)}
+.boost.live{background:var(--forest,#0B3A2B);color:#fff;border:0;box-shadow:inset 0 -4px 0 #FFB400}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -444,8 +446,88 @@ main{padding-bottom:130px!important}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ================= APP DIALOGS + SHOW PASSWORD (same code in all apps) =================
+// uiConfirm / uiPrompt look like the app instead of the browser's grey "site says" box.
+const UI = (() => {
+  const ur = () => (document.documentElement.lang || '').startsWith('ur');
+  const W = () => ur() ? { ok:'ٹھیک ہے', cancel:'واپس', yes:'جی ہاں', show:'پاس ورڈ دکھائیں', hide:'پاس ورڈ چھپائیں' } : { ok:'OK', cancel:'Cancel', yes:'Yes', show:'Show password', hide:'Hide password' };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const DANGER = /\b(delete|remove|block|reject|disconnect|log ?out|take back|stop|cancel this|forfeit|reset)\b|حذف|ختم|بلاک|منسوخ/i;
+  let styled = false;
+  function style(){
+    if (styled) return; styled = true;
+    const s = document.createElement('style');
+    s.textContent = `.uidlg{position:fixed;inset:0;z-index:9800;background:rgba(6,18,12,.5);display:flex;align-items:center;justify-content:center;padding:20px;animation:uiF .15s ease both}
+.uidlg .box{width:100%;max-width:380px;background:var(--surface,#fff);color:var(--ink,#12201A);border-radius:22px;padding:20px 18px 16px;box-shadow:0 24px 50px -14px rgba(8,28,20,.45);animation:uiP .2s cubic-bezier(.2,.8,.2,1) both}
+.uidlg .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--soft,#E5F1EA);margin-bottom:12px}
+.uidlg .ic.d{background:rgba(210,59,46,.12)}
+.uidlg .msg{font-size:16px;line-height:1.5;font-weight:600;white-space:pre-line;overflow-wrap:anywhere}
+.uidlg input,.uidlg textarea{width:100%;margin-top:12px;border:1.5px solid var(--line,#E1E6E1);background:var(--surface,#fff);color:inherit;border-radius:12px;padding:12px;font:inherit;font-size:16px;outline:none}
+.uidlg input:focus{border-color:var(--green,#0B7D4F);box-shadow:0 0 0 4px rgba(11,125,79,.14)}
+.uidlg .bt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.uidlg .bt.one{grid-template-columns:1fr}
+.uidlg button{border:0;border-radius:12px;min-height:48px;font:inherit;font-weight:700;font-size:15.5px;cursor:pointer}
+.uidlg .no{background:var(--field,#F1F4F0);color:var(--ink,#12201A)}
+.uidlg .yes{background:var(--green,#0B7D4F);color:#fff}
+.uidlg .yes.d{background:var(--danger,#D23B2E)}
+html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.8}
+@keyframes uiF{from{opacity:0}} @keyframes uiP{from{transform:translateY(12px) scale(.97);opacity:0}}
+@media (prefers-reduced-motion:reduce){.uidlg,.uidlg .box{animation:none}}
+.pwwrap{position:relative;display:block}
+.pwwrap input{padding-inline-end:50px!important}
+.pweye{position:absolute;top:50%;inset-inline-end:6px;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;border-radius:10px;cursor:pointer;color:var(--muted,#5E6D65);display:grid;place-items:center;padding:0}
+.pweye:active{background:var(--field,#F1F4F0)}
+.pweye svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}`;
+    document.head.appendChild(s);
+  }
+  function open(msg, o){
+    style();
+    return new Promise(res => {
+      const w = W(); const danger = o.danger ?? (!o.input && DANGER.test(msg));
+      const d = document.createElement('div'); d.className = 'uidlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+      d.innerHTML = `<div class="box"><div class="ic ${danger ? 'd' : ''}">${o.icon || (o.input ? '✏️' : danger ? '⚠️' : o.alert ? 'ℹ️' : '❓')}</div><div class="msg">${esc(msg)}</div>
+        ${o.input ? `<input type="${o.type || 'text'}" value="${esc(o.value ?? '')}" ${o.type === 'number' ? 'inputmode="decimal"' : ''}>` : ''}
+        <div class="bt ${o.alert ? 'one' : ''}">${o.alert ? '' : `<button type="button" class="no">${esc(o.cancel || w.cancel)}</button>`}<button type="button" class="yes ${danger ? 'd' : ''}">${esc(o.ok || w.ok)}</button></div></div>`;
+      const prev = document.activeElement;
+      const done = v => { d.remove(); document.removeEventListener('keydown', key, true); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
+      const inp = d.querySelector('input');
+      const ok = () => done(o.input ? inp.value : true);
+      const no = () => done(o.input ? null : false);
+      const key = e => { if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); no(); } else if (e.key === 'Enter' && (!inp || document.activeElement === inp)){ e.preventDefault(); ok(); } };
+      d.querySelector('.yes').onclick = ok; const n = d.querySelector('.no'); if (n) n.onclick = no;
+      d.addEventListener('click', e => { if (e.target === d && !o.alert) no(); });
+      document.addEventListener('keydown', key, true);
+      document.body.appendChild(d);
+      setTimeout(() => { if (inp){ inp.focus(); inp.select(); } else d.querySelector('.yes').focus(); }, 30);
+    });
+  }
+  const confirm = (msg, o) => open(String(msg ?? ''), Object.assign({}, o));
+  const prompt = (msg, value, o) => open(String(msg ?? ''), Object.assign({ input:true, value:value ?? '' }, o));
+  const alert = (msg, o) => open(String(msg ?? ''), Object.assign({ alert:true }, o));
+  // show / hide password on every password field
+  const EYE = '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.5 10.5 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  function eyes(root){
+    (root || document).querySelectorAll('input[type=password]:not([data-eye])').forEach(inp => {
+      inp.dataset.eye = '1'; style();
+      const wrap = document.createElement('span'); wrap.className = 'pwwrap';
+      inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pweye'; b.innerHTML = EYE; b.setAttribute('aria-label', W().show);
+      b.onclick = () => { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.innerHTML = show ? EYE_OFF : EYE; b.setAttribute('aria-label', show ? W().hide : W().show); inp.focus(); };
+      wrap.appendChild(b);
+    });
+  }
+  function watch(){
+    eyes();
+    try { new MutationObserver(ms => { if (ms.some(m => m.addedNodes.length)) eyes(); }).observe(document.body, { childList:true, subtree:true }); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+  return { confirm, prompt, alert, eyes };
+})();
+const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
+
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.6';
+const APP_VERSION = '4.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -562,6 +644,7 @@ const I18N = {
     you_owe:'This month you owe the company {r} (ID fee / fines / charges).',
     id_fee:'Rider ID fee (monthly)', id_fee_note:'This fee is cut from your month pay every month.',
     offers_title:'Company offers', offers_note:'Insurance, health package, mobile on installments and more. Ask here, the office approves. The cost is cut from your pay.', want_this:'I want this', asked_wait:'Asked · waiting for office', offer_free:'Free', per_month_x:'{a} a month × {n} months', every_month:'{a} every month', one_time:'{a} one time', cut_from_pay:'cut from pay', offer_q:'Ask the office for “{o}”?', note_opt:'Note for the office (optional):', req_sent:'Request sent to the office', my_charges:'Charges cut from my pay', no_charges:'No charges.', ch_stopped:'Stopped', ch_done:'Finished', ch_active:'Active', inst_part:'installment {k} of {n}', monthly_word:'monthly', once_word:'one time', my_requests:'My requests', rq_pending:'Waiting', rq_approved:'Approved', rq_rejected:'Not approved', rq_cancelled:'Cancelled', contract_title:'Change my contract', contract_note_free:'You are now a freelance rider (own bike). Want to work as a company rider? Send a request. First the ID fee for the days you worked this month is cleared, then you count as a company rider.', contract_note_co:'You are now a company rider. Want to work freelance? Send a request. Any dues are cleared first.', contract_btn:'Send contract change request', contract_q:'Send a request to change your contract?', contract_wait:'Your contract change request is waiting for the office.', rq_contract:'Contract change', no_offers:'No offers right now.', cancel_req_q:'Cancel this request?',
+    boost_now:'{t}: {a} extra on every delivery', boost_soon:'Coming: {t} — {a} extra on every delivery', boost_until:'Until {d}. On top of your normal pay.', boost_from:'{d} to {e}', boost_line:'Special day extra',
     late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason',
     tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
     tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
@@ -636,6 +719,7 @@ const I18N = {
     you_owe:'اس مہینے آپ نے کمپنی کو {r} دینے ہیں (آئی ڈی فیس / جرمانے / کٹوتیاں)۔',
     id_fee:'رائیڈر آئی ڈی کی ماہانہ فیس', id_fee_note:'یہ فیس ہر مہینے آپ کی تنخواہ/کمائی سے کٹتی ہے۔',
     offers_title:'کمپنی کی آفرز', offers_note:'انشورنس، ہیلتھ پیکج، قسطوں پر موبائل وغیرہ۔ یہاں درخواست دیں، دفتر منظور کرے گا۔ رقم آپ کی تنخواہ سے کٹے گی۔', want_this:'مجھے یہ چاہیے', asked_wait:'درخواست بھیج دی · دفتر کا انتظار', offer_free:'مفت', per_month_x:'{a} ماہانہ × {n} مہینے', every_month:'{a} ہر مہینے', one_time:'{a} ایک بار', cut_from_pay:'تنخواہ سے کٹے گا', offer_q:'دفتر سے “{o}” کی درخواست کریں؟', note_opt:'دفتر کے لیے نوٹ (اختیاری):', req_sent:'درخواست دفتر کو بھیج دی گئی', my_charges:'میری تنخواہ سے کٹوتیاں', no_charges:'کوئی کٹوتی نہیں۔', ch_stopped:'بند', ch_done:'مکمل', ch_active:'جاری', inst_part:'قسط {k} از {n}', monthly_word:'ماہانہ', once_word:'ایک بار', my_requests:'میری درخواستیں', rq_pending:'انتظار', rq_approved:'منظور', rq_rejected:'منظور نہیں', rq_cancelled:'منسوخ', contract_title:'کنٹریکٹ تبدیل کریں', contract_note_free:'آپ ابھی فری لانس رائیڈر ہیں (اپنی بائیک)۔ کمپنی رائیڈر بننا چاہتے ہیں؟ درخواست بھیجیں۔ پہلے اس مہینے جتنے دن کام کیا اتنے دن کی آئی ڈی فیس کلیئر ہوگی، پھر آپ کمپنی رائیڈر شمار ہوں گے۔', contract_note_co:'آپ ابھی کمپنی رائیڈر ہیں۔ فری لانس کام کرنا چاہتے ہیں؟ درخواست بھیجیں۔ پہلے بقایا رقم کلیئر ہوگی۔', contract_btn:'کنٹریکٹ تبدیلی کی درخواست بھیجیں', contract_q:'کنٹریکٹ تبدیل کرنے کی درخواست بھیجیں؟', contract_wait:'آپ کی کنٹریکٹ تبدیلی کی درخواست دفتر کے پاس ہے۔', rq_contract:'کنٹریکٹ تبدیلی', no_offers:'ابھی کوئی آفر نہیں۔', cancel_req_q:'یہ درخواست منسوخ کریں؟',
+    boost_now:'{t}: ہر ڈیلیوری پر {a} اضافی', boost_soon:'جلد: {t} — ہر ڈیلیوری پر {a} اضافی', boost_until:'{d} تک۔ آپ کی عام کمائی کے اوپر۔', boost_from:'{d} سے {e} تک', boost_line:'خاص دن کی اضافی کمائی',
     late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں',
     tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
     tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
@@ -939,7 +1023,7 @@ async function loadJobs(){ heartbeat(); await loadStatus(); await loadMine(); aw
 async function loadMoney(){
   const m = monthStart();
   const [done, unsettled, fines, pays, hand] = await Promise.all([
-    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,rider_settled,restaurant:restaurants(name)')
+    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,boost_pay,rider_settled,restaurant:restaurants(name)')
       .eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', m.toISOString()).order('delivered_at', { ascending:false }),
     sb.from('orders').select('total').eq('rider_id', state.rider.id).eq('status', 'delivered').eq('rider_settled', false),
     sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', m.toISOString()).order('fined_at', { ascending:false }),
@@ -948,6 +1032,8 @@ async function loadMoney(){
   ]);
   state.done = need(done); state.cash = need(unsettled).reduce((n, o) => n + num(o.total), 0);
   state.fines = need(fines); state.payouts = need(pays); state.handovers = need(hand);
+  try { const r = state.rider; const { data } = await sb.from('rider_boosts').select('*').eq('is_active', true).gt('ends_at', new Date().toISOString()).order('starts_at');
+    state.boosts = (data || []).filter(b => (!b.contract || b.contract === (r.contract_type || 'freelance')) && (!b.vehicle || b.vehicle === (r.vehicle || 'motorbike'))); } catch (e) { state.boosts = []; }
   try { state.mCharges = need(await sb.rpc('charges_for_month', { p_rider:state.rider.id, p_month:ymd(m) })) || []; } catch (e) { state.mCharges = []; }
   try {
     const ot = need(await sb.rpc('rider_overtime', { p_rider_id:state.rider.id, p_from:m.toISOString(), p_to:new Date().toISOString() }));
@@ -1046,7 +1132,7 @@ function bindSliders(){
       if (dx >= max() * 0.85){ set(max()); new Function(sl.dataset.action)(); } else set(0);
     };
     knob.addEventListener('pointerup', end); knob.addEventListener('pointercancel', end);
-    knob.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (confirm(sl.querySelector('.txt').textContent + '?')) new Function(sl.dataset.action)(); } });
+    knob.addEventListener('keydown', async e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (await uiConfirm(sl.querySelector('.txt').textContent + '?')) new Function(sl.dataset.action)(); } });
   });
 }
 
@@ -1264,6 +1350,15 @@ function dutyCard(){
     <div style="font-size:14px;margin-top:6px">${ot > 0 && c.kind === 'company' ? `<b style="color:var(--green)">${t('ot_now')}: +${hm(ot)}</b>` : (m >= goal ? t('hours_done') : `<span class="muted">${t('hours_left').replace('{t}', hm(goal - m))}</span>`)}</div>
   </div>`;
 }
+const tWhen = ts => new Date(ts).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+function boostBanner(){
+  const n = Date.now(); const l = state.boosts || [];
+  const now = l.filter(b => new Date(b.starts_at) <= n && new Date(b.ends_at) > n).sort((a, b) => b.extra - a.extra)[0];
+  const soon = !now && l.find(b => new Date(b.starts_at) > n && new Date(b.starts_at) - n < 2 * 86400000);
+  const b = now || soon; if (!b) return '';
+  return `<div class="boost ${now ? 'live' : ''}"><b>🎉 ${esc(t(now ? 'boost_now' : 'boost_soon', { t:b.title, a:money(b.extra) }))}</b>
+    <div style="font-size:13px;opacity:.85">${esc(now ? t('boost_until', { d:tWhen(b.ends_at) }) : t('boost_from', { d:tWhen(b.starts_at), e:tWhen(b.ends_at) }))}</div></div>`;
+}
 function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -1271,9 +1366,10 @@ function viewJobs(){
   const stats = `<div class="tiles" style="margin-bottom:12px">
     <div class="tile"><b>${today.length}</b><span>${t('deliveries_n')} · ${t('today')}</span></div>
     <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div></div>`;
-  if (suspended() && !state.mine.length) return suspBanner() + stats;
+  const boost = boostBanner();
+  if (suspended() && !state.mine.length) return suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return `${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
+    return `${boost}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
   const list = state.available.filter(j => !state.skipped.has(j.order_id));
@@ -1282,7 +1378,7 @@ function viewJobs(){
   if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
-  return sound + suspBanner() + cashWarning() + rankChip + (onDuty() && !state.mine.length ? targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
+  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -1445,7 +1541,7 @@ function viewEarn(){
   const dep = state.handovers.map(h => Receipt.row(h, { kind:'handover', ur:state.lang === 'ur', to:rname })).join('');
   const pay = state.payouts.map(p => Receipt.row(p, { kind:'payout', ur:state.lang === 'ur', to:rname })).join('');
   const monthName = new Date().toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { month:'long', year:'numeric' });
-  return `<h1>${t('earnings')}</h1>
+  return `<h1>${t('earnings')}</h1>${boostBanner()}
     <div class="tiles">
       <div class="tile hi"><b>${money(monthPay)}</b><span>${t('month_pay')}</span></div>
       <div class="tile hi"><b>${money(Math.max(0, monthPay - paid))}</b><span>${t('to_pay')}</span></div>
@@ -1465,6 +1561,7 @@ function viewEarn(){
     <div class="card">
       ${company ? `<div class="line"><span class="muted">${t('salary')}</span><span>${money(salary)}</span></div>` : ''}
       <div class="line"><span class="muted">${t('delivery_pay')} (${state.done.length})</span><span>${money(deliveryPay)}</span></div>
+      ${sum(state.done, o => o.boost_pay) ? `<div class="line" style="font-size:13px;margin-top:-4px"><span class="muted">↳ 🎉 ${t('boost_line')} (${state.done.filter(o => num(o.boost_pay)).length})</span><span style="color:var(--green)">${money(sum(state.done, o => o.boost_pay))}</span></div>` : ''}
       ${company ? `<div class="line"><span class="muted">${t('overtime')} (${hm(otMin)})</span><span>${money(otPay)}</span></div>` : ''}
       ${bonusSum ? `<div class="line"><span class="muted">🎁 ${t('bonus_word')} (${(state.bonuses || []).length})</span><span style="color:var(--green)">${money(bonusSum)}</span></div>` : ''}
       ${state.ot && num(state.ot.late_days) ? `<div class="line"><span class="muted">⏰ ${t('late_days')}</span><span class="red">${num(state.ot.late_days)}</span></div>` : ''}
@@ -1624,25 +1721,25 @@ const A = {
   },
   async askOffer(oid){
     const o = (state.offers || []).find(x => x.id === oid); if (!o) return;
-    if (!confirm(t('offer_q', { o:o.title }) + '\n' + offerCost(o))) return;
-    const note = prompt(t('note_opt'), ''); if (note === null) return;
+    if (!await uiConfirm(t('offer_q', { o:o.title }) + '\n' + offerCost(o))) return;
+    const note = await uiPrompt(t('note_opt'), ''); if (note === null) return;
     await run(async () => { need(await sb.rpc('request_offer', { p_offer:oid, p_note:note || null })); toast(t('req_sent')); await loadDuty(); renderTab(); });
   },
   async askContract(){
-    if (!confirm(t('contract_q'))) return;
-    const note = prompt(t('note_opt'), ''); if (note === null) return;
+    if (!await uiConfirm(t('contract_q'))) return;
+    const note = await uiPrompt(t('note_opt'), ''); if (note === null) return;
     await run(async () => { need(await sb.rpc('request_contract_change', { p_note:note || null })); toast(t('req_sent')); await loadDuty(); renderTab(); });
   },
   async cancelReq(id){
-    if (!confirm(t('cancel_req_q'))) return;
+    if (!await uiConfirm(t('cancel_req_q'))) return;
     await run(async () => { need(await sb.rpc('cancel_my_request', { p_id:id })); await loadDuty(); renderTab(); });
   },
   async cancelLeave(id){
-    if (!confirm(t('cancel_leave_q'))) return;
+    if (!await uiConfirm(t('cancel_leave_q'))) return;
     await run(async () => { need(await sb.rpc('cancel_leave', { p_id:id })); await loadDuty(); renderTab(); });
   },
   async startBreak(){
-    if (!confirm(t('break_q'))) return;
+    if (!await uiConfirm(t('break_q'))) return;
     await run(async () => { need(await sb.rpc('start_break')); await loadShift(); state.available = []; closeJobPopup(); renderTab(); toast(t('on_break')); });
   },
   async endBreak(){
@@ -1651,7 +1748,7 @@ const A = {
   async toggleDuty(){
     unlockAudio();
     if (onDuty()){
-      if (!confirm(t('end_duty_q'))) return;
+      if (!await uiConfirm(t('end_duty_q'))) return;
       if (state.rider.face_descriptor) return openCamera('off');
       return A.endDutyNow();
     }
@@ -1778,7 +1875,7 @@ const A = {
     renderTab();
   },
   async giveBack(id){
-    if (!confirm(t('confirm_giveback'))) return;
+    if (!await uiConfirm(t('confirm_giveback'))) return;
     await run(async () => { need(await sb.rpc('release_delivery', { p_order_id:id })); state.skipped.add(id); await loadJobs(); renderTab(); toast(t('saved')); });
   }
 };
@@ -2006,7 +2103,7 @@ const Chat = (() => {
   }
   async function askJoin(){
     if (!cur || !cur.orderId) return;
-    const reason = prompt(tr('ask_reason'), ''); if (reason === null) return;
+    const reason = await uiPrompt(tr('ask_reason'), ''); if (reason === null) return;
     const { error } = await sb.rpc('request_support', { p_order_id:cur.orderId, p_thread:cur.thread, p_reason:reason });
     if (error){ if (cfg.toast) cfg.toast(error.message, true); return; }
     if (cfg.toast) cfg.toast(tr('ask_sent'));
@@ -2137,8 +2234,8 @@ const Legal = (() => {
   function init(c){ cfg = c; }
   async function del(){
     const lang = cfg.lang();
-    if (!confirm(tt(lang, 'del_q'))) return;
-    const why = prompt(tt(lang, 'del_reason'), ''); if (why === null) return;
+    if (!await uiConfirm(tt(lang, 'del_q'))) return;
+    const why = await uiPrompt(tt(lang, 'del_reason'), ''); if (why === null) return;
     const { error } = await cfg.sb.rpc('request_account_deletion', { p_note:why || null });
     if (error) return cfg.toast(error.message, true);
     cfg.toast(tt(lang, 'del_done'));
