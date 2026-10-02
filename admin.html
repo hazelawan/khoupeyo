@@ -539,7 +539,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.7';
+const APP_VERSION = '5.8';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -971,7 +971,7 @@ function shopReqBlock(){
     <div class="muted" style="font-size:13px">Shops that want to join Wanhar Mart in your city. Check and approve.</div>
     ${l.map(q => `<button class="row" style="width:100%" onclick="A.shopReq('${q.id}')"><div class="row-main"><div class="row-title">${esc(q.shop_name)}</div>
       <div class="row-sub">${(q.categories || []).map(catName).map(esc).join(' · ')}${q.other_category ? ' · ' + esc(q.other_category) : ''}</div>
-      <div class="row-sub">${esc(q.owner_name || '')} · ${esc(q.phone || '')} · ${when(q.created_at)}${!scope() && (state.regions || []).length > 1 ? ' · 📍 ' + esc(regionName(q.region_id)) : ''}</div></div><span class="muted">›</span></button>`).join('')}</div>`;
+      <div class="row-sub">${q.seen_at ? '' : '<b style="color:var(--danger)">● New</b> · '}${esc(q.owner_name || '')} · ${esc(q.phone || '')} · ${when(q.created_at)}${!scope() && (state.regions || []).length > 1 ? ' · 📍 ' + esc(regionName(q.region_id)) : ''}</div></div><span class="muted">›</span></button>`).join('')}</div>`;
 }
 function restaurantForm(r){
   r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
@@ -2091,6 +2091,7 @@ const A = {
   },
   async shopReq(id){
     const q = (state.shopReqs || []).find(x => x.id === id); if (!q) return;
+    if (!q.seen_at){ q.seen_at = new Date().toISOString(); sb.rpc('admin_seen_shop_request', { p_id:id }).then(() => {}, () => {}); }
     const zones = (state.zones || []).filter(z => z.region_id === q.region_id);
     openSheet('🏪 ' + q.shop_name, '<div class="empty">Loading…</div>');
     const paths = [q.shop_photo_path, q.cnic_photo_path].filter(Boolean); let urls = {};
