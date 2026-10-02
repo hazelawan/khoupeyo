@@ -297,6 +297,15 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 
 
 
+/* pay page */
+.seg2{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--field);border-radius:12px;padding:4px;margin:2px 0 14px}
+.seg2 button{border:0;background:none;border-radius:9px;padding:10px;font:inherit;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
+.seg2 button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.paygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.paycard{text-align:start;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:10px;font:inherit;color:inherit;cursor:pointer;min-width:0}
+.paycard b{font-size:13.5px}
+.paycard .kv{font-size:12.5px}
+.paycard.on{border-color:var(--green);box-shadow:0 0 0 3px rgba(11,125,79,.14)}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -449,8 +458,88 @@ main{padding-bottom:130px!important}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ================= APP DIALOGS + SHOW PASSWORD (same code in all apps) =================
+// uiConfirm / uiPrompt look like the app instead of the browser's grey "site says" box.
+const UI = (() => {
+  const ur = () => (document.documentElement.lang || '').startsWith('ur');
+  const W = () => ur() ? { ok:'ٹھیک ہے', cancel:'واپس', yes:'جی ہاں', show:'پاس ورڈ دکھائیں', hide:'پاس ورڈ چھپائیں' } : { ok:'OK', cancel:'Cancel', yes:'Yes', show:'Show password', hide:'Hide password' };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const DANGER = /\b(delete|remove|block|reject|disconnect|log ?out|take back|stop|cancel this|forfeit|reset)\b|حذف|ختم|بلاک|منسوخ/i;
+  let styled = false;
+  function style(){
+    if (styled) return; styled = true;
+    const s = document.createElement('style');
+    s.textContent = `.uidlg{position:fixed;inset:0;z-index:9800;background:rgba(6,18,12,.5);display:flex;align-items:center;justify-content:center;padding:20px;animation:uiF .15s ease both}
+.uidlg .box{width:100%;max-width:380px;background:var(--surface,#fff);color:var(--ink,#12201A);border-radius:22px;padding:20px 18px 16px;box-shadow:0 24px 50px -14px rgba(8,28,20,.45);animation:uiP .2s cubic-bezier(.2,.8,.2,1) both}
+.uidlg .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:var(--soft,#E5F1EA);margin-bottom:12px}
+.uidlg .ic.d{background:rgba(210,59,46,.12)}
+.uidlg .msg{font-size:16px;line-height:1.5;font-weight:600;white-space:pre-line;overflow-wrap:anywhere}
+.uidlg input,.uidlg textarea{width:100%;margin-top:12px;border:1.5px solid var(--line,#E1E6E1);background:var(--surface,#fff);color:inherit;border-radius:12px;padding:12px;font:inherit;font-size:16px;outline:none}
+.uidlg input:focus{border-color:var(--green,#0B7D4F);box-shadow:0 0 0 4px rgba(11,125,79,.14)}
+.uidlg .bt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.uidlg .bt.one{grid-template-columns:1fr}
+.uidlg button{border:0;border-radius:12px;min-height:48px;font:inherit;font-weight:700;font-size:15.5px;cursor:pointer}
+.uidlg .no{background:var(--field,#F1F4F0);color:var(--ink,#12201A)}
+.uidlg .yes{background:var(--green,#0B7D4F);color:#fff}
+.uidlg .yes.d{background:var(--danger,#D23B2E)}
+html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.8}
+@keyframes uiF{from{opacity:0}} @keyframes uiP{from{transform:translateY(12px) scale(.97);opacity:0}}
+@media (prefers-reduced-motion:reduce){.uidlg,.uidlg .box{animation:none}}
+.pwwrap{position:relative;display:block}
+.pwwrap input{padding-inline-end:50px!important}
+.pweye{position:absolute;top:50%;inset-inline-end:6px;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;border-radius:10px;cursor:pointer;color:var(--muted,#5E6D65);display:grid;place-items:center;padding:0}
+.pweye:active{background:var(--field,#F1F4F0)}
+.pweye svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}`;
+    document.head.appendChild(s);
+  }
+  function open(msg, o){
+    style();
+    return new Promise(res => {
+      const w = W(); const danger = o.danger ?? (!o.input && DANGER.test(msg));
+      const d = document.createElement('div'); d.className = 'uidlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+      d.innerHTML = `<div class="box"><div class="ic ${danger ? 'd' : ''}">${o.icon || (o.input ? '✏️' : danger ? '⚠️' : o.alert ? 'ℹ️' : '❓')}</div><div class="msg">${esc(msg)}</div>
+        ${o.input ? `<input type="${o.type || 'text'}" value="${esc(o.value ?? '')}" ${o.type === 'number' ? 'inputmode="decimal"' : ''}>` : ''}
+        <div class="bt ${o.alert ? 'one' : ''}">${o.alert ? '' : `<button type="button" class="no">${esc(o.cancel || w.cancel)}</button>`}<button type="button" class="yes ${danger ? 'd' : ''}">${esc(o.ok || w.ok)}</button></div></div>`;
+      const prev = document.activeElement;
+      const done = v => { d.remove(); document.removeEventListener('keydown', key, true); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
+      const inp = d.querySelector('input');
+      const ok = () => done(o.input ? inp.value : true);
+      const no = () => done(o.input ? null : false);
+      const key = e => { if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); no(); } else if (e.key === 'Enter' && (!inp || document.activeElement === inp)){ e.preventDefault(); ok(); } };
+      d.querySelector('.yes').onclick = ok; const n = d.querySelector('.no'); if (n) n.onclick = no;
+      d.addEventListener('click', e => { if (e.target === d && !o.alert) no(); });
+      document.addEventListener('keydown', key, true);
+      document.body.appendChild(d);
+      setTimeout(() => { if (inp){ inp.focus(); inp.select(); } else d.querySelector('.yes').focus(); }, 30);
+    });
+  }
+  const confirm = (msg, o) => open(String(msg ?? ''), Object.assign({}, o));
+  const prompt = (msg, value, o) => open(String(msg ?? ''), Object.assign({ input:true, value:value ?? '' }, o));
+  const alert = (msg, o) => open(String(msg ?? ''), Object.assign({ alert:true }, o));
+  // show / hide password on every password field
+  const EYE = '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.5 10.5 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  function eyes(root){
+    (root || document).querySelectorAll('input[type=password]:not([data-eye])').forEach(inp => {
+      inp.dataset.eye = '1'; style();
+      const wrap = document.createElement('span'); wrap.className = 'pwwrap';
+      inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pweye'; b.innerHTML = EYE; b.setAttribute('aria-label', W().show);
+      b.onclick = () => { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.innerHTML = show ? EYE_OFF : EYE; b.setAttribute('aria-label', show ? W().hide : W().show); inp.focus(); };
+      wrap.appendChild(b);
+    });
+  }
+  function watch(){
+    eyes();
+    try { new MutationObserver(ms => { if (ms.some(m => m.addedNodes.length)) eyes(); }).observe(document.body, { childList:true, subtree:true }); } catch (e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
+  return { confirm, prompt, alert, eyes };
+})();
+const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
+
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.6';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -675,7 +764,7 @@ async function go(tab){
     if (tab === 'zones') await loadZones();
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
-    if (tab === 'targets') await loadTargets();
+    if (tab === 'targets') await Promise.all([loadTargets(), loadSettings()]);
     if (tab === 'staff') await loadStaff();
     if (tab === 'regions' || tab === 'region') await loadRegions();
     if (tab === 'region') await loadRegionFile();
@@ -1488,7 +1577,7 @@ function viewMore(){
     ${it('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
     ${it('banners', 'Home banners', 'Big pictures at the top of the customer app')}
     ${it('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
-    ${it('targets', '🎯 Rider targets and bonus', 'Example: 15 deliveries today = Rs 200 bonus')}
+    ${it('targets', '💰 Rider pay and targets', 'Pay per delivery for bike, car and bicycle · bonus targets')}
     ${it('rules', 'Rider fine rules', 'Rules and fine amounts for riders')}
     ${it('staff', '👥 Staff', 'Helpers who can use this panel with limited access')}
     ${it('settings', 'Settings', 'Auto-dispatch, selfie check, waiting time, contracts, support')}
@@ -1539,21 +1628,57 @@ function viewPromos(){
 
 // ---- Rider targets ----
 async function loadTargets(){
+  try { state.boosts = need(await sb.from('rider_boosts').select('*').order('starts_at', { ascending:false }).limit(50)) || []; } catch (e) { state.boosts = []; }
   const [t, b] = await Promise.all([sb.from('rider_targets').select('*').order('created_at'), sb.from('rider_bonuses').select('amount,title,created_at,rider:riders(profile:profiles(full_name))').order('created_at', { ascending:false }).limit(30)]);
   state.targets = need(t); state.recentBonus = b.data || [];
 }
+const CT_LABEL = { freelance:'🛵 Freelance', company:'🏢 Company' };
+function tierSummary(list){
+  const l = (list || []).slice().sort((a, b) => a.from - b.from);
+  return l.map((x, i) => { const to = l[i + 1] ? l[i + 1].from - 1 : null; return `<div class="kv" style="padding:3px 0"><span class="muted">${x.from}${to ? '–' + to : '+'}</span><b>${money(x.pay)}</b></div>`; }).join('');
+}
+function payPanel(){
+  const ct = state.payCt || 'freelance', veh = state.payVeh || 'motorbike';
+  const k = veh === 'motorbike' ? ct : ct + '|' + veh;
+  const card = v => { const on = v === 'motorbike' || vehOn(ct, v); const kk = v === 'motorbike' ? ct : ct + '|' + v;
+    return `<button class="paycard ${veh === v ? 'on' : ''}" onclick="A.payPick('${ct}','${v}')"><b>${VEH[v]}</b>
+      ${on ? tierSummary(tierList(kk)) : `<div class="muted" style="font-size:12.5px;margin-top:4px">Same pay as motorbike</div>`}</button>`; };
+  const own = veh === 'motorbike' || vehOn(ct, veh);
+  return `<div class="chips" style="margin-top:4px">${['freelance', 'company'].map(c => `<button class="chip ${ct === c ? 'on' : ''}" onclick="A.payPick('${c}','${veh}')">${CT_LABEL[c]}</button>`).join('')}</div>
+    <div class="muted" style="font-size:13px;margin:2px 0 8px">${ct === 'company' ? 'Company riders get a fixed salary. Pay here is extra money for each delivery (0 = none).' : 'Own-bike riders get only this pay for each delivery, plus tips.'} Tap a vehicle to change its pay.</div>
+    <div class="paygrid">${['motorbike', 'car', 'bicycle'].map(card).join('')}</div>
+    <div class="card" style="margin-top:12px">${own ? '' : `<b>${CT_LABEL[ct]} · ${VEH[veh]}</b>`}
+      ${own ? tierEditor(k) + (veh !== 'motorbike' ? `<button class="linkbtn" style="margin-top:8px" onclick="A.vehToggle('${ct}','${veh}',false); renderTab()">Use the motorbike pay for ${VEH[veh]} riders</button>` : '')
+        : `<div class="muted" style="font-size:14px;margin-top:6px">${VEH[veh]} riders get the same pay as motorbike riders now.</div>
+           <button class="btn ghost block" style="margin-top:10px" onclick="A.vehToggle('${ct}','${veh}',true); renderTab()">Give ${VEH[veh]} riders their own pay</button>`}
+    </div>
+    <div class="actions"><button class="btn block" onclick="A.savePayLevels()">Save pay for all vehicles</button></div>
+    <div class="muted" style="font-size:12.5px;text-align:center">Set each rider's vehicle in Riders → rider → Rider settings.${scope() ? ' This pay is only for ' + esc(regionName(scope())) + '.' : ''}</div>`;
+}
+const dtLocal = ts => { const d = new Date(ts); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+const tShort = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
+function boostState(b){ const n = Date.now(); if (!b.is_active) return ['Off', '']; if (n < new Date(b.starts_at)) return ['Coming', 'b']; if (n >= new Date(b.ends_at)) return ['Ended', '']; return ['Running now', 'g']; }
+function boostPanel(){
+  const rows = (state.boosts || []).map(b => { const [st, c] = boostState(b);
+    return `<button class="row" onclick="A.boostForm('${b.id}')"><div class="row-main"><div class="row-title">🎉 ${esc(b.title)} <span class="pill ${c}">${st}</span></div>
+      <div class="row-sub">+${money(b.extra)} on every delivery · ${esc(tShort(b.starts_at))} → ${esc(tShort(b.ends_at))} · ${b.contract ? CT_LABEL[b.contract] : 'all riders'}${b.vehicle ? ' · ' + VEH[b.vehicle] : ''}</div></div></button>`; }).join('');
+  return `<div class="muted" style="margin:4px 0 10px;font-size:14px">For Eid or any busy day: riders get <b>extra money on every delivery</b> made in that time, on top of their normal pay. Deliveries still count for levels and targets as usual. Riders get a notification and see it in their app.</div>
+    <div class="bar"><button class="btn" onclick="A.boostForm()">+ Add special day</button></div>
+    <div class="list">${rows || '<div class="empty">No special days yet.</div>'}</div>`;
+}
 function viewTargets(){
+  const tab = state.tgTab || 'pay';
   const per = { day:'every day', week:'every week', month:'every month' };
   const rows = state.targets.map(x => `<button class="row" onclick="A.editTarget('${x.id}')"><div class="row-main"><div class="row-title">${esc(x.title)} ${x.is_active ? '<span class="pill g">On</span>' : '<span class="pill">Off</span>'}</div>
-      <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)} bonus one time${x.contract ? ' · ' + (x.contract === 'company' ? 'company riders' : 'own-bike riders') : ' · all riders'}</div></div></button>`).join('');
+      <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)} bonus one time · ${x.contract ? (x.contract === 'company' ? 'company riders' : 'own-bike riders') : 'all riders'}${x.vehicle ? ' · ' + VEH[x.vehicle] : ''}</div></div></button>`).join('');
   const bon = state.recentBonus.map(b => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(b.rider?.profile?.full_name || 'Rider')}</div><div class="row-sub">${esc(b.title || '')} · ${when(b.created_at)}</div></div><div class="row-side">${money(b.amount)}</div></div>`).join('');
-  return `${backLink()}<h2>Rider targets and bonus</h2>
-    <div class="muted" style="margin:-6px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay automatically <b>one time</b> and they get a notification. Riders see their progress in the app.</div>
-    <div class="note" style="font-size:14px">💡 A target is a <b>one-time bonus</b> (example: 15 deliveries today = Rs 200 once). To pay <b>more for every delivery</b> after a number (example: Rs 40 each up to 450, then Rs 50 each up to 600, then Rs 60 each) use <b>Settings → Rider contracts → Pay per delivery</b> levels.
-      <button class="btn ghost small" style="margin-top:8px" onclick="go('settings')">Open pay per delivery levels</button></div>
+  return `${backLink()}<h2>💰 Rider pay and targets</h2>
+    <div class="seg2"><button class="${tab === 'pay' ? 'on' : ''}" onclick="A.tgTab('pay')">Pay per delivery</button><button class="${tab === 'tg' ? 'on' : ''}" onclick="A.tgTab('tg')">Bonus targets</button><button class="${tab === 'day' ? 'on' : ''}" onclick="A.tgTab('day')">🎉 Special days</button></div>
+    ${tab === 'pay' ? payPanel() : tab === 'day' ? boostPanel() : `
+    <div class="muted" style="margin:4px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay <b>one time</b> and they get a notification. A target can be for all riders, one contract or one vehicle.</div>
     <div class="bar"><button class="btn" onclick="A.editTarget()">Add target</button></div>
     <div class="list">${rows || '<div class="empty">No targets yet.</div>'}</div>
-    <h3>Latest bonuses earned</h3><div class="list">${bon || '<div class="empty">None yet.</div>'}</div>`;
+    <h3>Latest bonuses earned</h3><div class="list">${bon || '<div class="empty">None yet.</div>'}</div>`}`;
 }
 
 // ---- Reports ----
@@ -1773,17 +1898,14 @@ function viewSettings(){
       <div class="muted" style="font-size:14px">Set each rider's contract, salary and duty time in Riders → rider → Rider settings.</div>
       ${(() => { const c = contractOf({ contract_type:'company' }), f = contractOf({ contract_type:'freelance' }); return `
       <h3 style="margin:14px 0 4px">🏍️ Company bike + petrol · fixed salary</h3>
-      <div class="muted" style="font-size:13px">Paid a fixed monthly salary (set per rider). Work beyond their duty time is overtime. You can also pay extra per delivery after a number of deliveries (tiers below).</div>
-      ${tierEditor('company')}
-      ${vehicleTiers('company')}
+      <div class="muted" style="font-size:13px">Paid a fixed monthly salary (set per rider). Work beyond their duty time is overtime.</div>
       <div class="two">
         <div><label class="f" for="c_company_ot">Overtime per hour (Rs)</label><input id="c_company_ot" type="number" min="0" value="${num(c.overtime_per_hour)}"></div>
         <div><label class="f" for="c_company_hrs">Hours per day if no duty time</label><input id="c_company_hrs" type="number" min="1" max="16" step="0.5" value="${num(c.daily_hours)}"></div>
       </div>
       <h3 style="margin:14px 0 4px">🛵 Own bike + petrol · per delivery</h3>
-      <div class="muted" style="font-size:13px">No salary. Earns per delivery. The more deliveries in the month, the higher the pay (tiers).</div>
-      ${tierEditor('freelance')}
-      ${vehicleTiers('freelance')}
+      <div class="muted" style="font-size:13px">No salary. Earns per delivery.</div>
+      <div class="note" style="font-size:14px">💰 Pay per delivery for motorbike, car and bicycle is in <b>More → Rider pay and targets</b>. <button class="linkbtn" onclick="state.tgTab='pay'; go('targets')">Open it</button></div>
       <h3 style="margin:14px 0 4px">🆔 Monthly Rider ID fee</h3>
       <div class="muted" style="font-size:13px">The rider pays this to the company every month for the Rider ID. It is cut from the month pay and shown on the pay slip. 0 = no fee. You can change it for one rider in Riders → rider → Rider settings.</div>
       <div class="two"><div><label class="f" for="c_free_fee">Own bike riders (Rs a month)</label><input id="c_free_fee" type="number" min="0" value="${num(f.id_fee)}"></div>
@@ -1827,7 +1949,7 @@ const A = {
     if (error){ $('loginErr').textContent = error.message; btn.disabled = false; btn.textContent = 'Sign in'; return; }
     await run(() => afterLogin(data.user));
   },
-  async logout(){ if (!confirm('Sign out?')) return; await Push.logout(); Chat.stop(); await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
+  async logout(){ if (!await uiConfirm('Sign out?')) return; await Push.logout(); Chat.stop(); await sb.auth.signOut(); if (channel) sb.removeChannel(channel); showLogin(); },
   setPeriod(p){ state.period = p; go(state.tab); },
 
   // ---- Orders ----
@@ -1870,8 +1992,8 @@ const A = {
   },
   async setStatus(id, status){
     let reason = null;
-    if (status === 'rejected'){ reason = prompt('Reason for rejecting (optional)'); if (reason === null) return; }
-    if (status === 'cancelled' && !confirm('Cancel this order?')) return;
+    if (status === 'rejected'){ reason = await uiPrompt('Reason for rejecting (optional)'); if (reason === null) return; }
+    if (status === 'cancelled' && !await uiConfirm('Cancel this order?')) return;
     await run(async () => {
       need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason }));
       closeSheet(); await loadOrders(); renderTab(); toast('Order updated');
@@ -1879,15 +2001,15 @@ const A = {
   },
   async issueAction(id, action){
     let note = null;
-    if (action === 'resolve'){ note = prompt('How was it solved? (optional)', ''); if (note === null) return; }
-    if (action === 'allow_return' && !confirm('Allow the rider to return this order to the shop now?')) return;
+    if (action === 'resolve'){ note = await uiPrompt('How was it solved? (optional)', ''); if (note === null) return; }
+    if (action === 'allow_return' && !await uiConfirm('Allow the rider to return this order to the shop now?')) return;
     await run(async () => { need(await sb.rpc('admin_issue_action', { p_issue_id:id, p_action:action, p_note:note || null })); await loadOrders(); renderTab(); toast('Done'); });
   },
   async joinChat(orderId, thread){
     await run(async () => { need(await sb.rpc('admin_join_chat', { p_order_id:orderId, p_thread:thread })); Chat.open(orderId, thread, null); });
   },
   async confirmReturn(orderId){
-    if (!confirm('Confirm the shop received this order back?')) return;
+    if (!await uiConfirm('Confirm the shop received this order back?')) return;
     await run(async () => { need(await sb.rpc('confirm_return', { p_order_id:orderId })); closeSheet(); await loadOrders(); renderTab(); toast('Return confirmed'); });
   },
   async assign(id){
@@ -1950,7 +2072,7 @@ const A = {
     }});
   },
   async waiveFee(fid, id){
-    const note = prompt('Waive this month\'s fee? Reason (HQ can see it):', ''); if (note === null) return;
+    const note = await uiPrompt('Waive this month\'s fee? Reason (HQ can see it):', ''); if (note === null) return;
     await run(async () => { need(await sb.rpc('waive_shop_fee', { p_id:fid, p_note:note || null })); toast('Fee waived'); A.openShop(id); });
   },
   shopProducts(id){ closeSheet(); state.menuRestaurant = id; state.productFilter = 'all'; state.productQ = ''; go('menu'); },
@@ -2011,7 +2133,7 @@ const A = {
     });
   },
   async deleteCategory(id){
-    if (!confirm('Delete this section and all products inside it?')) return;
+    if (!await uiConfirm('Delete this section and all products inside it?')) return;
     await run(async () => { need(await sb.from('menu_categories').delete().eq('id', id)); await loadProducts(); closeSheet(); renderTab(); toast('Section deleted'); });
   },
   async editItem(id){
@@ -2048,11 +2170,11 @@ const A = {
   async approveItem(id){ await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).eq('id', id)); await loadProducts(); renderTab(); toast('Approved'); }); },
   async approveAll(){
     const ids = state.items.filter(i => !i.is_approved).map(i => i.id); if (!ids.length) return;
-    if (!confirm(`Approve ${ids.length} products?`)) return;
+    if (!await uiConfirm(`Approve ${ids.length} products?`)) return;
     await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).in('id', ids)); await loadProducts(); renderTab(); toast('Approved'); });
   },
   async deleteItem(id){
-    if (!confirm('Remove this product? Old orders keep their history.')) return;
+    if (!await uiConfirm('Remove this product? Old orders keep their history.')) return;
     await run(async () => { need(await sb.from('menu_items').delete().eq('id', id)); await loadProducts(); closeSheet(); renderTab(); toast('Product removed'); });
   },
 
@@ -2068,11 +2190,11 @@ const A = {
     });
   },
   async rejectRider(id){
-    if (!confirm('Reject and remove this rider request?')) return;
+    if (!await uiConfirm('Reject and remove this rider request?')) return;
     await run(async () => { need(await sb.from('riders').delete().eq('id', id)); await loadRiderMonth(); renderTab(); toast('Removed'); });
   },
   async blockRider(id){
-    if (!confirm('Block this rider? They go off duty and stop seeing deliveries.')) return;
+    if (!await uiConfirm('Block this rider? They go off duty and stop seeing deliveries.')) return;
     await run(async () => { need(await sb.from('riders').update({ is_approved:false, blocked:true, is_online:false }).eq('id', id)); closeSheet(); await Promise.all([loadRiderMonth(), loadRiders()]); renderTab(); toast('Rider blocked'); });
   },
   async unblockRider(id){
@@ -2253,7 +2375,7 @@ const A = {
         shift_start:st || null, shift_end:en || null, break_start:$('rs_bstart').value || null, break_minutes:Math.max(0, Math.round(num($('rs_bmin').value))) }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
   },
   async resetFace(id){
-    if (!confirm('Reset this rider\'s face? They must register a new selfie before the next duty.')) return;
+    if (!await uiConfirm('Reset this rider\'s face? They must register a new selfie before the next duty.')) return;
     await run(async () => { need(await sb.from('riders').update({ face_descriptor:null, face_photo_path:null }).eq('id', id)); toast('Face reset'); await A.refreshRider(id); });
   },
 
@@ -2273,7 +2395,7 @@ const A = {
     const el = $('custOrders'); if (el) el.innerHTML = (data || []).map(o => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || '')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div><div class="row-sub">${when(o.created_at)}</div></div><div class="row-side">${money(o.total)}</div></div>`).join('') || '<div class="empty">No orders.</div>';
   },
   async blockCustomer(id, v){
-    if (v && !confirm('Block this customer? They will not be able to place orders.')) return;
+    if (v && !await uiConfirm('Block this customer? They will not be able to place orders.')) return;
     await run(async () => { need(await sb.from('profiles').update({ is_blocked:v }).eq('id', id)); await loadCustomers(); closeSheet(); renderTab(); toast(v ? 'Customer blocked' : 'Customer unblocked'); });
   },
 
@@ -2323,31 +2445,77 @@ const A = {
       await loadPromos(); closeSheet(); renderTab(); toast('Promo saved');
     });
   },
-  async deletePromo(id){ if (!confirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
+  async deletePromo(id){ if (!await uiConfirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
 
   // ---- Targets ----
   editTarget(id){
     const x = (state.targets || []).find(y => y.id === id) || { title:'', period:'day', deliveries:15, amount:200, contract:null, is_active:true };
     openSheet(id ? 'Edit target' : 'Add target', `
-      <div class="note" style="font-size:13px;margin-top:0">This bonus is paid <b>one time</b> when the rider finishes the deliveries. For more money on every delivery use Settings → Rider contracts → Pay per delivery levels.</div>
+      <div class="note" style="font-size:13px;margin-top:0">This bonus is paid <b>one time</b> when the rider finishes the deliveries. For more money on every delivery use the <b>Pay per delivery</b> tab.</div>
       <label class="f" for="tg_title">Title riders see</label><input id="tg_title" type="text" value="${esc(x.title)}" placeholder="15 deliveries today">
       <div class="two"><div><label class="f" for="tg_n">Deliveries</label><input id="tg_n" type="number" min="1" value="${x.deliveries}"></div>
         <div><label class="f" for="tg_amt">Bonus (Rs)</label><input id="tg_amt" type="number" min="0" value="${num(x.amount)}"></div></div>
       <label class="f" for="tg_per">Every</label><select id="tg_per"><option value="day" ${x.period === 'day' ? 'selected' : ''}>Day</option><option value="week" ${x.period === 'week' ? 'selected' : ''}>Week (Monday to Sunday)</option><option value="month" ${x.period === 'month' ? 'selected' : ''}>Month</option></select>
-      <label class="f" for="tg_ct">For</label><select id="tg_ct"><option value="">All riders</option><option value="company" ${x.contract === 'company' ? 'selected' : ''}>Company bike riders</option><option value="freelance" ${x.contract === 'freelance' ? 'selected' : ''}>Own bike riders</option></select>
+      <div class="two"><div><label class="f" for="tg_ct">Contract</label><select id="tg_ct"><option value="">All riders</option><option value="company" ${x.contract === 'company' ? 'selected' : ''}>Company riders</option><option value="freelance" ${x.contract === 'freelance' ? 'selected' : ''}>Own bike riders</option></select></div>
+        <div><label class="f" for="tg_veh">Vehicle</label><select id="tg_veh"><option value="">All vehicles</option>${Object.keys(VEH).map(v => `<option value="${v}" ${x.vehicle === v ? 'selected' : ''}>${VEH[v]}</option>`).join('')}</select></div></div>
       <label class="check"><input id="tg_on" type="checkbox" ${x.is_active ? 'checked' : ''}> Target is on</label>
       <div class="actions"><button class="btn block" onclick="A.saveTarget('${id || ''}')">Save target</button>${id ? `<button class="btn warn block" onclick="A.deleteTarget('${id}')">Delete</button>` : ''}</div>`);
+  },
+  boostForm(id){
+    const b = (state.boosts || []).find(x => x.id === id);
+    const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0); d1.setHours(23, 59, 0, 0);
+    const x = b || { title:'', starts_at:d0.toISOString(), ends_at:d1.toISOString(), extra:30, contract:null, vehicle:null, is_active:true };
+    openSheet(id ? 'Edit special day' : 'Add special day', `
+      <div class="chips" style="flex-wrap:wrap">${['Eid ul Fitr', 'Eid ul Adha', 'Chand Raat', 'Rainy day', '14 August'].map(t => `<button class="chip" onclick="$('bs_title').value='${t}'">${t}</button>`).join('')}</div>
+      <label class="f" for="bs_title">Name riders see</label><input id="bs_title" type="text" value="${esc(x.title)}" placeholder="Eid ul Adha">
+      <label class="f" for="bs_extra">Extra on every delivery (Rs)</label><input id="bs_extra" type="number" min="1" value="${num(x.extra)}">
+      <label class="f" for="bs_from">Starts</label><input id="bs_from" type="datetime-local" value="${dtLocal(x.starts_at)}">
+      <label class="f" for="bs_to">Ends</label><input id="bs_to" type="datetime-local" value="${dtLocal(x.ends_at)}">
+      <div class="two"><div><label class="f" for="bs_ct">Contract</label><select id="bs_ct"><option value="">All riders</option><option value="freelance" ${x.contract === 'freelance' ? 'selected' : ''}>Freelance</option><option value="company" ${x.contract === 'company' ? 'selected' : ''}>Company</option></select></div>
+        <div><label class="f" for="bs_veh">Vehicle</label><select id="bs_veh"><option value="">All vehicles</option>${Object.keys(VEH).map(v => `<option value="${v}" ${x.vehicle === v ? 'selected' : ''}>${VEH[v]}</option>`).join('')}</select></div></div>
+      <label class="check"><input id="bs_on" type="checkbox" ${x.is_active ? 'checked' : ''}> Special day is on</label>
+      <div class="note" style="font-size:13px">Example: +Rs 30 from Eid morning to night. A rider with Rs 40 a delivery gets Rs 70 for each delivery in that time. If two special days are on at once, the bigger one is used.</div>
+      <div class="actions"><button class="btn block" onclick="A.saveBoost('${id || ''}')">Save and tell riders</button>${id ? `<button class="btn warn block" onclick="A.deleteBoost('${id}')">Delete</button>` : ''}</div>`);
+  },
+  async saveBoost(id){
+    const title = $('bs_title').value.trim(); const extra = num($('bs_extra').value);
+    const from = new Date($('bs_from').value), to = new Date($('bs_to').value);
+    if (!title) return toast('Write the name', true);
+    if (extra <= 0) return toast('Enter the extra amount', true);
+    if (isNaN(from) || isNaN(to) || to <= from) return toast('End time must be after the start time', true);
+    const row = { title, extra, starts_at:from.toISOString(), ends_at:to.toISOString(), contract:$('bs_ct').value || null, vehicle:$('bs_veh').value || null, is_active:$('bs_on').checked };
+    await run(async () => {
+      if (id) need(await sb.from('rider_boosts').update(row).eq('id', id));
+      else { if (!scope()) throw new Error('Choose the region at the top first.'); row.region_id = scope(); need(await sb.from('rider_boosts').insert(row)); }
+      closeSheet(); await loadTargets(); renderTab(); toast(id ? 'Saved' : 'Saved, riders notified');
+    });
+  },
+  async deleteBoost(id){ if (!await uiConfirm('Delete this special day? Extra already earned stays.')) return; await run(async () => { need(await sb.from('rider_boosts').delete().eq('id', id)); closeSheet(); await loadTargets(); renderTab(); }); },
+  payPick(ct, v){ state.payCt = ct; state.payVeh = v; renderTab(); },
+  tgTab(t){ state.tgTab = t; renderTab(); },
+  async savePayLevels(){
+    const clean = k => { const seen = new Set(); const l = tierList(k).map(x => ({ from:Math.max(1, Math.round(num(x.from))), pay:Math.max(0, num(x.pay)) })).sort((a, b) => a.from - b.from).filter(x => !seen.has(x.from) && seen.add(x.from)); if (l[0]) l[0].from = 1; return l; };
+    const out = {};
+    for (const ct of ['company', 'freelance']){
+      const cur = contractOf({ contract_type:ct }); const t = clean(ct);
+      if (ct === 'freelance' && !t.some(x => x.pay > 0)) return toast('Own-bike riders need a pay per delivery', true);
+      const vehicles = {}; ['car', 'bicycle'].forEach(v => { if (vehOn(ct, v)) vehicles[v] = { tiers:clean(ct + '|' + v) }; });
+      if (ct === 'freelance' && Object.values(vehicles).some(v => !v.tiers.some(x => x.pay > 0))) return toast('Car and bicycle riders need a pay per delivery', true);
+      out[ct] = Object.assign({}, cur, { delivery_pay:t[0].pay, tiers:t, vehicles });
+    }
+    state.tierEdit = null; state.vehOn = null;
+    await A.saveSetting('rider_contracts', out);
   },
   async saveTarget(id){
     const title = $('tg_title').value.trim(); const n = Math.round(num($('tg_n').value));
     if (!title || n < 1) return toast('Write a title and number of deliveries', true);
     await run(async () => {
-      const row = { title, deliveries:n, amount:num($('tg_amt').value), period:$('tg_per').value, contract:$('tg_ct').value || null, is_active:$('tg_on').checked };
+      const row = { title, deliveries:n, amount:num($('tg_amt').value), period:$('tg_per').value, contract:$('tg_ct').value || null, vehicle:$('tg_veh').value || null, is_active:$('tg_on').checked };
       need(await (id ? sb.from('rider_targets').update(row).eq('id', id) : sb.from('rider_targets').insert(row)));
       await loadTargets(); closeSheet(); renderTab(); toast('Target saved');
     });
   },
-  async deleteTarget(id){ if (!confirm('Delete this target? Bonuses already earned stay.')) return; await run(async () => { need(await sb.from('rider_targets').delete().eq('id', id)); await loadTargets(); closeSheet(); renderTab(); }); },
+  async deleteTarget(id){ if (!await uiConfirm('Delete this target? Bonuses already earned stay.')) return; await run(async () => { need(await sb.from('rider_targets').delete().eq('id', id)); await loadTargets(); closeSheet(); renderTab(); }); },
 
   // ---- Staff ----
   staffForm(email, perms){
@@ -2364,11 +2532,11 @@ const A = {
     if (!email) return toast('Enter the email', true); if (!perms.length) return toast('Choose at least one', true);
     await run(async () => { need(await sb.rpc('admin_set_staff', { p_email:email, p_perms:perms })); await loadStaff(); closeSheet(); renderTab(); toast('Staff saved. They can now sign in to the Admin panel.'); });
   },
-  async removeStaff(id){ if (!confirm('Remove this staff member? They will no longer open the Admin panel.')) return; await run(async () => { need(await sb.rpc('admin_remove_staff', { p_user:id })); await loadStaff(); renderTab(); toast('Removed'); }); },
+  async removeStaff(id){ if (!await uiConfirm('Remove this staff member? They will no longer open the Admin panel.')) return; await run(async () => { need(await sb.rpc('admin_remove_staff', { p_user:id })); await loadStaff(); renderTab(); toast('Removed'); }); },
 
   // ---- Account deletion ----
   async deleteAccount(id, name){
-    if (!confirm(`Delete ${name || 'this account'}? Name, phone, email, addresses and face data are removed and login is blocked. Orders stay without the name. This cannot be undone.`)) return;
+    if (!await uiConfirm(`Delete ${name || 'this account'}? Name, phone, email, addresses and face data are removed and login is blocked. Orders stay without the name. This cannot be undone.`)) return;
     await run(async () => { need(await sb.rpc('admin_delete_account', { p_user:id })); toast('Account deleted'); go('customers'); });
   },
 
@@ -2474,7 +2642,7 @@ const A = {
     });
     const b = $('bnSave'); if (b){ b.disabled = false; b.textContent = 'Save banner'; }
   },
-  async deleteBanner(id){ if (!confirm('Delete this banner?')) return; await run(async () => { need(await sb.from('banners').delete().eq('id', id)); await loadBanners(); closeSheet(); renderTab(); }); },
+  async deleteBanner(id){ if (!await uiConfirm('Delete this banner?')) return; await run(async () => { need(await sb.from('banners').delete().eq('id', id)); await loadBanners(); closeSheet(); renderTab(); }); },
 
   // ---- Zones ----
   async editZone(id){ if (!state.settings || !('weight_tiers' in state.settings)) await run(loadSettings); const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
@@ -2516,13 +2684,10 @@ const A = {
   },
   async saveContracts(){
     const hrs = num($('c_company_hrs').value); if (hrs < 1) return toast('Hours per day must be at least 1', true);
-    const clean = k => { const seen = new Set(); return tierList(k).map(x => ({ from:Math.max(1, Math.round(num(x.from))), pay:Math.max(0, num(x.pay)) })).sort((a, b) => a.from - b.from).filter(x => !seen.has(x.from) && seen.add(x.from)); };
-    const ct = clean('company'), ft = clean('freelance'); ct[0].from = 1; ft[0].from = 1;
-    if (!ft.some(x => x.pay > 0)) return toast('Own-bike riders need a pay per delivery', true);
-    const vehs = c => { const o = {}; ['car', 'bicycle'].forEach(v => { if (vehOn(c, v)){ const l = clean(c + '|' + v); l[0].from = 1; o[v] = { tiers:l }; } }); return o; };
-    const v = { company:{ delivery_pay:ct[0].pay, overtime_per_hour:num($('c_company_ot').value), daily_hours:hrs, tiers:ct, vehicles:vehs('company'), id_fee:Math.max(0, num($('c_co_fee').value)) },
-                freelance:{ delivery_pay:ft[0].pay, overtime_per_hour:0, daily_hours:8, tiers:ft, vehicles:vehs('freelance'), id_fee:Math.max(0, num($('c_free_fee').value)) } };
-    state.tierEdit = null; state.vehOn = null;
+    // pay per delivery levels are kept as they are (they are edited in Rider pay and targets)
+    const c = contractOf({ contract_type:'company' }), f = contractOf({ contract_type:'freelance' });
+    const v = { company:Object.assign({}, c, { overtime_per_hour:num($('c_company_ot').value), daily_hours:hrs, id_fee:Math.max(0, num($('c_co_fee').value)) }),
+                freelance:Object.assign({}, f, { overtime_per_hour:0, daily_hours:8, id_fee:Math.max(0, num($('c_free_fee').value)) }) };
     await run(async () => { need(await putSettings({ key:'late_grace_minutes', value:Math.max(0, num($('s_grace').value)), updated_at:new Date().toISOString() })); });
     await A.saveSetting('rider_contracts', v);
   },
@@ -2793,7 +2958,7 @@ const A = {
     });
   },
   async removePartner(uid, rid){
-    if (!confirm('Remove this incharge? They cannot open the Admin panel any more. The region, shops and riders stay.')) return;
+    if (!await uiConfirm('Remove this incharge? They cannot open the Admin panel any more. The region, shops and riders stay.')) return;
     await run(async () => { need(await sb.rpc('admin_remove_staff', { p_user:uid })); await loadRegions(); renderTab(); A.regionForm(rid); toast('Incharge removed'); });
   },
   // ---- rider duty ----
@@ -2835,11 +3000,11 @@ const A = {
     });
   },
   async stopCharge(cid, id){
-    if (!confirm('Stop this charge? Nothing more is cut from this month on.')) return;
+    if (!await uiConfirm('Stop this charge? Nothing more is cut from this month on.')) return;
     await run(async () => { need(await sb.from('rider_charges').update({ status:'stopped' }).eq('id', cid)); toast('Charge stopped'); await A.refreshRider(id); });
   },
   async deleteCharge(cid, id){
-    if (!confirm('Delete this charge completely? It is also removed from past months.')) return;
+    if (!await uiConfirm('Delete this charge completely? It is also removed from past months.')) return;
     await run(async () => { need(await sb.from('rider_charges').delete().eq('id', cid)); toast('Deleted'); await A.refreshRider(id); });
   },
   async reqFilter(f){ state.reqFilter = f; await run(loadPerks); renderTab(); },
@@ -2873,20 +3038,20 @@ const A = {
   },
   async offerActive(oid, on){ await run(async () => { need(await sb.from('rider_offers').update({ is_active:on }).eq('id', oid)); toast(on ? 'Riders can see it again (notified)' : 'Hidden from riders'); await loadPerks(); renderTab(); }); },
   async deleteOffer(oid){
-    if (!confirm('Delete this offer? Charges already approved stay.')) return;
+    if (!await uiConfirm('Delete this offer? Charges already approved stay.')) return;
     await run(async () => { need(await sb.from('rider_offers').delete().eq('id', oid)); closeSheet(); toast('Deleted'); await loadPerks(); renderTab(); });
   },
   async offerReq(qid, action){
     let note = null;
     if (action === 'approve'){ const q = (state.reqs || []).find(x => x.id === qid); const o = q && (state.offers || []).find(x => x.id === q.offer_id);
       const cost = o && o.kind !== 'free' && num(o.amount) ? (o.kind === 'installment' ? `${money(o.amount)} a month for ${num(o.months)} months` : o.kind === 'monthly' ? money(o.amount) + ' every month' : money(o.amount) + ' one time') : '';
-      if (!confirm('Approve this request?' + (cost ? '\n' + cost + ' will be cut from the rider\'s pay, starting this month.' : ''))) return;
-      note = prompt('Note for the rider (optional), e.g. when to collect it:', ''); if (note === null) return; }
-    else { note = prompt('Reason for not approving (the rider will see it):', ''); if (note === null) return; }
+      if (!await uiConfirm('Approve this request?' + (cost ? '\n' + cost + ' will be cut from the rider\'s pay, starting this month.' : ''))) return;
+      note = await uiPrompt('Note for the rider (optional), e.g. when to collect it:', ''); if (note === null) return; }
+    else { note = await uiPrompt('Reason for not approving (the rider will see it):', ''); if (note === null) return; }
     await run(async () => { need(await sb.rpc('admin_offer_request_action', { p_id:qid, p_action:action, p_start:null, p_note:note || null })); toast(action === 'approve' ? 'Approved' : 'Not approved'); await loadPerks(); await loadRiderMonth(); renderTab(); });
   },
   async contractReject(qid){
-    const note = prompt('Reason for not approving (the rider will see it):', ''); if (note === null) return;
+    const note = await uiPrompt('Reason for not approving (the rider will see it):', ''); if (note === null) return;
     await run(async () => { need(await sb.rpc('admin_contract_request_action', { p_id:qid, p_action:'reject', p_settle:0, p_how:'deduct', p_salary:null, p_note:note || null })); toast('Not approved'); await loadPerks(); await loadRiderMonth(); renderTab(); });
   },
   async contractReview(qid){
@@ -2923,7 +3088,7 @@ const A = {
   async contractApprove(qid){
     const how = (document.querySelector('#crHow .chip.on') || {}).dataset?.h || 'deduct';
     const amt = Math.max(0, num($('cr_amt').value)); const sal = $('cr_sal') ? num($('cr_sal').value) : null;
-    if ($('cr_sal') && sal <= 0 && !confirm('Salary is 0. Approve anyway?')) return;
+    if ($('cr_sal') && sal <= 0 && !await uiConfirm('Salary is 0. Approve anyway?')) return;
     await run(async () => {
       need(await sb.rpc('admin_contract_request_action', { p_id:qid, p_action:'approve', p_settle:amt, p_how:how, p_salary:sal, p_note:$('cr_note').value.trim() || null }));
       closeSheet(); toast('Contract changed'); await loadPerks(); await loadRiderMonth(); renderTab();
@@ -2934,27 +3099,27 @@ const A = {
   async cmpFilter(f){ state.cmpFilter = f; await run(loadComplaints); renderTab(); },
   async leaveAction(id, action){
     let note = null;
-    if (action !== 'approve'){ note = prompt(action === 'reject' ? 'Reason for not approving (the rider will see it):' : 'Why cancel this leave? (optional)', ''); if (note === null) return; }
+    if (action !== 'approve'){ note = await uiPrompt(action === 'reject' ? 'Reason for not approving (the rider will see it):' : 'Why cancel this leave? (optional)', ''); if (note === null) return; }
     await run(async () => { need(await sb.rpc('admin_leave_action', { p_id:id, p_action:action, p_note:note || null })); toast(action === 'approve' ? 'Leave approved' : 'Done'); await loadLeaves(); await loadRiderMonth(); renderTab(); });
   },
   async cmpAction(id, action){
     let note = null;
-    if (action === 'approve'){ if (!confirm("Count this complaint? The penalty is applied to the rider now (pause and/or taking back today's earnings).")) return; }
-    else if (action === 'undo'){ note = prompt("Cancel this complaint? The rider's pause from it ends now and money taken for it is given back. Reason (optional):", ''); if (note === null) return; }
-    else { note = prompt('Why is it not the rider\'s fault? (optional)', ''); if (note === null) return; }
+    if (action === 'approve'){ if (!await uiConfirm("Count this complaint? The penalty is applied to the rider now (pause and/or taking back today's earnings).")) return; }
+    else if (action === 'undo'){ note = await uiPrompt("Cancel this complaint? The rider's pause from it ends now and money taken for it is given back. Reason (optional):", ''); if (note === null) return; }
+    else { note = await uiPrompt('Why is it not the rider\'s fault? (optional)', ''); if (note === null) return; }
     await run(async () => { const v = need(await sb.rpc('admin_complaint_action', { p_id:id, p_action:action, p_note:note || null })); toast(action === 'approve' ? (v || 'Counted') : action === 'undo' ? 'Complaint cancelled, penalty given back' : 'Marked not counted'); await loadComplaints(); await loadRiderMonth(); renderTab(); });
   },
   async pauseRider(id, mins){
-    if (mins === 0){ const h = prompt('Pause for how many hours?', '3'); if (h === null) return; mins = Math.round(num(h) * 60); if (mins <= 0) return toast('Enter hours', true); }
-    const reason = prompt('Reason (the rider will see it):', 'Customer complaint'); if (reason === null) return;
+    if (mins === 0){ const h = await uiPrompt('Pause for how many hours?', '3'); if (h === null) return; mins = Math.round(num(h) * 60); if (mins <= 0) return toast('Enter hours', true); }
+    const reason = await uiPrompt('Reason (the rider will see it):', 'Customer complaint'); if (reason === null) return;
     await run(async () => { const until = need(await sb.rpc('admin_suspend_rider', { p_rider:id, p_minutes:mins, p_reason:reason || null })); toast('Paused until ' + tAt(until)); await A.refreshRider(id); });
   },
   async liftPause(id){
-    if (!confirm('Open the rider ID now?')) return;
+    if (!await uiConfirm('Open the rider ID now?')) return;
     await run(async () => { need(await sb.rpc('admin_lift_suspension', { p_rider:id })); toast('ID is open again'); await A.refreshRider(id); });
   },
   async forfeitDay(id){
-    const reason = prompt("Take back today's earnings as a fine. Reason:", 'Customer complaint'); if (reason === null) return;
+    const reason = await uiPrompt("Take back today's earnings as a fine. Reason:", 'Customer complaint'); if (reason === null) return;
     await run(async () => { const v = need(await sb.rpc('admin_forfeit_day', { p_rider:id, p_reason:reason || null })); toast(num(v) ? 'Fine added ' + money(v) : 'No earnings today'); await A.refreshRider(id); });
   },
   async riderAttendance(id){
@@ -3007,7 +3172,7 @@ const A = {
     });
   },
   async delPlan(id){
-    if (!confirm('Remove this duty plan?')) return;
+    if (!await uiConfirm('Remove this duty plan?')) return;
     await run(async () => { need(await sb.rpc('admin_delete_plan', { p_id:id })); await loadShiftsPage(); await loadRiderMonth(); renderTab(); toast('Removed'); });
   },
   addShift(){ state.shifts.push({ id:'new-' + Date.now(), name:'New shift', start_time:'09:00', end_time:'18:00', break_start:'13:00', break_minutes:60, is_active:true, _new:true }); renderTab(); },
@@ -3096,7 +3261,7 @@ A.publishMany = async function(files){
   if (bad.length) return toast('Rename these files (no spaces): ' + bad.map(f => f.name).join(', '), true);
   const adm = files.find(f => f.name === 'admin.html');
   if (adm){ const txt = await adm.text(); if (!txt.includes('createClient(') || !/<\/html>\s*$/i.test(txt.trim())) return toast('admin.html looks wrong or cut off. Publishing stopped.', true); }
-  if (!confirm(`Publish ${files.length} files to the live site?`)) return;
+  if (!await uiConfirm(`Publish ${files.length} files to the live site?`)) return;
   const btn = $('pubBtn'); btn.disabled = true; const out = $('pubResult'); const done = [], failed = [];
   for (let i = 0; i < files.length; i++){
     const f = files[i]; btn.textContent = `Publishing ${i + 1} of ${files.length}…`;
@@ -3120,7 +3285,7 @@ A.saveToken = async function(){
   });
   const b = $('tokBtn'); if (b){ b.disabled = false; b.textContent = 'Connect GitHub'; }
 };
-A.removeToken = function(){ if (!confirm('Disconnect GitHub from this phone?')) return; try { localStorage.removeItem('gh_token'); } catch (e) {} renderTab(); toast('Disconnected'); };
+A.removeToken = async function(){ if (!await uiConfirm('Disconnect GitHub from this phone?')) return; try { localStorage.removeItem('gh_token'); } catch (e) {} renderTab(); toast('Disconnected'); };
 A.publish = async function(){
   const picked = Array.from(($('pub_file') && $('pub_file').files) || []);
   if (picked.length > 1) return A.publishMany(picked);
@@ -3135,7 +3300,7 @@ A.publish = async function(){
     if (!/<\/html>\s*$/i.test(txt.trim())) return toast('This HTML looks cut off. Copy the whole file and try again.', true);
     if (path === 'admin.html' && !txt.includes('createClient(')) return toast('That is not the admin page. Publishing stopped to protect your dashboard.', true);
   }
-  if (!confirm(`Publish ${path} to the live site?`)) return;
+  if (!await uiConfirm(`Publish ${path} to the live site?`)) return;
   const btn = $('pubBtn'); btn.disabled = true; btn.textContent = 'Publishing…';
   await run(async () => {
     const res = await ghPublish(path, bytes);
@@ -3324,7 +3489,7 @@ const Chat = (() => {
   }
   async function askJoin(){
     if (!cur || !cur.orderId) return;
-    const reason = prompt(tr('ask_reason'), ''); if (reason === null) return;
+    const reason = await uiPrompt(tr('ask_reason'), ''); if (reason === null) return;
     const { error } = await sb.rpc('request_support', { p_order_id:cur.orderId, p_thread:cur.thread, p_reason:reason });
     if (error){ if (cfg.toast) cfg.toast(error.message, true); return; }
     if (cfg.toast) cfg.toast(tr('ask_sent'));
