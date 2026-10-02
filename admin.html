@@ -306,6 +306,42 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 .paycard b{font-size:13.5px}
 .paycard .kv{font-size:12.5px}
 .paycard.on{border-color:var(--green);box-shadow:0 0 0 3px rgba(11,125,79,.14)}
+
+/* payments, photos */
+.paycard{border:1.5px solid var(--green);margin-top:10px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
+.pgrid:empty{display:none}
+.pth{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.pth img{width:100%;height:100%;object-fit:cover;display:block}
+.pth button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px;line-height:1;cursor:pointer}
+.filebtn{display:flex;align-items:center;justify-content:center;margin-top:8px;border:1.5px dashed var(--line);border-radius:12px;padding:12px;text-align:center;font-weight:700;cursor:pointer;color:var(--muted);min-height:48px}
+
+/* bulk products + photo mode */
+.bk small{display:block;color:var(--muted);font-size:13px;line-height:1.45;margin-top:2px}
+.bkst{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.bkst>div{flex:1;min-width:0}
+.bkn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:15px}
+.bkbtn{display:flex!important;width:100%;margin-top:10px;justify-content:center;align-items:center;cursor:pointer}
+.bkfile{display:flex;align-items:center;justify-content:center;margin-top:10px;border:1.5px dashed var(--green);border-radius:12px;padding:12px;text-align:center;font-weight:700;cursor:pointer;color:var(--green);min-height:48px;overflow-wrap:anywhere}
+.bksum{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 8px}
+.bksum span{background:var(--field,#F1F4F0);border-radius:999px;padding:6px 10px;font-size:13px}
+.bksum span.e{background:rgba(210,59,46,.12);color:var(--danger,#D23B2E)}
+.bklist{border:1px solid var(--line);border-radius:14px;max-height:46vh;overflow:auto}
+.bkrow{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bkrow:last-child{border-bottom:0}
+.bkrow.bad{background:rgba(210,59,46,.06)}
+.bkrow>div{min-width:0}
+.bkrow b{display:block;overflow-wrap:anywhere}
+.bkrow small.e{color:var(--danger,#D23B2E);font-weight:700}
+.bkrow small.w{color:#9A5B00}
+.bki{flex:none}
+.bkerr{margin-top:12px;background:rgba(210,59,46,.1);color:var(--danger,#D23B2E);border-radius:12px;padding:12px;font-weight:600;font-size:14px;line-height:1.5}
+.bkdone{margin-top:12px;background:rgba(11,125,79,.1);color:var(--green);border-radius:12px;padding:14px;font-weight:800}
+.bkprog{margin-top:14px;font-weight:700}
+.bkprog i,.pmbar{display:block;height:10px;border-radius:6px;background:var(--field,#F1F4F0);overflow:hidden;margin-top:8px}
+.bkprog i b,.pmbar b{display:block;height:100%;background:var(--green);transition:width .3s}
+.pm{text-align:center}
+.pmname{font-size:22px;font-weight:800;margin-top:14px;overflow-wrap:anywhere}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -539,7 +575,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.8';
+const APP_VERSION = '6.1';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -609,6 +645,7 @@ function payForm(o){
   const chips = Object.keys(Receipt.M).map(k => `<button type="button" class="chip ${k === 'cash' ? 'on' : ''}" data-m="${k}" onclick="A.payMethod('${k}')">${Receipt.method(k)}</button>`).join('');
   openSheet(o.title, `
     ${o.who ? `<div class="muted" style="margin-bottom:6px">${o.recv ? 'From' : 'To'}: <b style="color:var(--ink)">${esc(o.who)}</b></div>` : ''}
+    ${o.acc !== undefined ? accBox(o.acc) : ''}
     <label class="f">Amount (Rs)</label>${o.editAmount ? `<input id="pmAmt" type="number" inputmode="numeric" value="${Math.round(num(o.amount))}">` : `<div style="font-size:26px;font-weight:800;margin:4px 0 6px">${money(o.amount)}</div>`}
     <label class="f">${o.recv ? 'How did the rider pay?' : 'How are you paying?'}</label>
     <div class="chips" id="pmChips" style="flex-wrap:wrap">${chips}</div>
@@ -651,9 +688,14 @@ function resizeImage(file, max){
   });
 }
 async function uploadImage(file, folder){
-  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}.jpg`;
+  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
   need(await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' }));
   return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
+}
+function drawPics(){
+  const g = $('pgrid'); if (!g || !state.pics) return;
+  g.innerHTML = state.pics.old.map((u, k) => `<div class="pth"><img src="${esc(u)}" alt=""><button type="button" onclick="A.rmPhoto('o', ${k})" aria-label="Remove">×</button></div>`).concat(
+    state.pics.add.map((f, k) => `<div class="pth"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="A.rmPhoto('a', ${k})" aria-label="Remove">×</button></div>`)).join('');
 }
 function previewFile(input, imgId){ const f = input.files && input.files[0]; if (!f) return; const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
 async function signedUrls(paths){
@@ -705,6 +747,7 @@ async function loadSettings(){
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
   state.regionSet = {};
   if (scope()){ const rr = need(await sb.from('region_settings').select('key,value').eq('region_id', scope())) || []; rr.forEach(r => { state.settings[r.key] = r.value; state.regionSet[r.key] = true; }); }
+  else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
   state.tierEdit = null; state.wtEdit = null; state.ladEdit = null; state.vehOn = null;
 }
 let channel;
@@ -855,6 +898,7 @@ async function loadOrders(){
 }
 const ORDER_FILTERS = [
   ['active','Active', o => !FINAL.includes(o.status)],
+  ['pay','💳 Payments', o => o.payment_method !== 'cod' && ['checking','refund_due'].includes(o.payment_status)],
   ['placed','New', o => o.status === 'placed'],
   ['kitchen','Preparing', o => ['accepted','preparing'].includes(o.status)],
   ['ready','Ready', o => o.status === 'ready'],
@@ -898,7 +942,7 @@ function viewOrders(){
     const idx = STEPS.indexOf(o.status);
     return `<button class="row" onclick="A.openOrder('${o.id}')">
       <div class="row-main">
-        <div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || 'Shop')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div>
+        <div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || 'Shop')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span>${payPill(o)}</div>
         <div class="row-sub">${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
         ${FINAL.includes(o.status) ? '' : `<div class="steps">${STEPS.map((s, i) => `<i class="${i <= idx ? 'on' : ''}"></i>`).join('')}</div>`}
       </div>
@@ -908,6 +952,32 @@ function viewOrders(){
     <input type="search" placeholder="Search order no, shop, customer, phone" value="${esc(state.orderQ)}" oninput="A.orderSearch(this.value)" style="margin-bottom:10px">
     <div class="chips">${chips}</div>
     <div class="list" id="orderList">${rows || '<div class="empty">No orders here. New orders appear by themselves.</div>'}</div>`;
+}
+const PAY_ST = { unpaid:['Waiting for customer to pay', 'y'], checking:['Check payment', 'r'], paid:['Paid', 'g'], refund_due:['Refund due', 'r'], refunded:['Refunded', ''] };
+function payPill(o){ if (o.payment_method === 'cod') return ''; const p = PAY_ST[o.payment_status]; return p ? ` <span class="pill ${p[1]}">💳 ${p[0]}</span>` : ''; }
+function orderPayPanel(o){
+  if (o.payment_method === 'cod') return '';
+  const st = o.payment_status; const p = PAY_ST[st] || [st, ''];
+  const canPay = can('orders') || can('money');
+  let h = `<div class="card paycard"><div class="kv"><b>💳 Online payment</b><span class="pill ${p[1]}">${esc(p[0])}</span></div>
+    ${o.pay_label ? `<div class="kv"><span class="muted">Paid with</span><span>${esc(o.pay_label)}</span></div>` : ''}
+    ${o.pay_ref ? `<div class="kv"><span class="muted">Transaction ID (TID)</span><b style="user-select:all">${esc(o.pay_ref)}</b></div>` : ''}
+    ${o.pay_note ? `<div class="kv"><span class="muted">Note</span><span>${esc(o.pay_note)}</span></div>` : ''}
+    ${o.pay_verified_at ? `<div class="kv"><span class="muted">Checked</span><span>${when(o.pay_verified_at)}</span></div>` : ''}
+    ${o.pay_proof_path ? `<button class="btn ghost block" style="margin-top:8px" onclick="A.payProof('${o.id}')">🖼️ See payment screenshot</button>` : ''}`;
+  if (['checking', 'unpaid'].includes(st) && canPay) h += `<div class="muted" style="font-size:13px;margin-top:8px">Open your JazzCash / Easypaisa / bank app and find ${money(o.total)} with this TID. Approve only when the money is really there.</div>
+    <div class="two" style="margin-top:8px"><button class="btn warn" onclick="A.payCheck('${o.id}', false)">Not received</button><button class="btn" onclick="A.payCheck('${o.id}', true)">✅ Money received</button></div>`;
+  if (st === 'refund_due' && can('money')) h += `<div class="muted" style="font-size:13px;margin-top:8px">This order was cancelled after the customer paid. Send ${money(o.total)} back to the customer, then tap the button.</div>
+    <button class="btn block" style="margin-top:8px" onclick="A.refundDone('${o.id}')">↩️ I sent the money back</button>`;
+  return h + '</div>';
+}
+function accBox(acc){
+  if (!acc || !acc.number) return `<div class="note">No payment account added yet. They can add it in their app.</div>`;
+  const m = { jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:(acc.bank || 'Bank') }[acc.method] || acc.method;
+  return `<div class="card paycard"><div class="muted" style="font-size:13px">Send to</div><b>${esc(m)}</b>
+    <div class="kv"><span class="muted">${acc.method === 'bank' ? 'IBAN / account' : 'Number'}</span><b style="user-select:all;overflow-wrap:anywhere">${esc(acc.number)}</b></div>
+    <div class="kv"><span class="muted">Name</span><span>${esc(acc.title || '')}</span></div>
+    <button type="button" class="btn ghost small" onclick='navigator.clipboard.writeText(${esc(JSON.stringify(acc.number))}).then(() => toast("Copied"), () => {})'>Copy number</button></div>`;
 }
 function orderActions(o){
   const b = [];
@@ -1056,7 +1126,7 @@ function viewProducts(){
     <input type="search" placeholder="Search products" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)" style="margin:10px 0">
     <div class="chips">${chips}</div>
     <div class="bar">
-      ${state.menuRestaurant !== 'all' ? `<button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
+      ${state.menuRestaurant !== 'all' ? `<button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
       ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve all ${pending}</button>` : ''}
     </div>
     <div id="prodBody">${body}</div>`;
@@ -1075,10 +1145,17 @@ function itemForm(i){
     <label class="f" for="i_photo">Photo</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <label class="f">More photos (up to 5)</label>
+    <div class="pgrid" id="pgrid"></div>
+    <label class="filebtn">📷 Add more photos<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
+    <label class="f" for="i_stock">How many in stock?</label><input id="i_stock" type="number" min="0" step="1" inputmode="numeric" value="${i.stock_qty ?? ''}" placeholder="Empty = no limit">
+    <div class="muted" style="font-size:13px">At 0 the product turns “Out of stock” by itself. Orders lower it, cancelled orders put it back.</div>
     <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> In stock</label>
     <label class="check"><input id="i_appr" type="checkbox" ${i.is_approved ? 'checked' : ''}> Approved (customers can see it)</label>
     <label class="check"><input id="i_feat" type="checkbox" ${i.is_featured ? 'checked' : ''}> Featured on the home screen</label>
-    <label class="f" for="i_kg">Weight of one item (kg)</label><input id="i_kg" type="number" min="0" step="0.1" value="${i.weight_kg || ''}" placeholder="0">
+    <label class="f" for="i_kg">Weight of one item (grams or kg)</label>
+    <div style="display:flex;gap:6px"><input id="i_kg" type="number" min="0" step="any" inputmode="decimal" value="${num(i.weight_kg) ? (num(i.weight_kg) < 1 ? Math.round(num(i.weight_kg) * 1000) : num(i.weight_kg)) : ''}" placeholder="0" style="flex:1">
+      <select id="i_kgu" style="width:84px;flex:none"><option value="g" ${num(i.weight_kg) && num(i.weight_kg) < 1 ? 'selected' : ''}>g</option><option value="kg" ${num(i.weight_kg) && num(i.weight_kg) < 1 ? '' : 'selected'}>kg</option></select></div>
     <label class="f" for="i_heavy">Extra delivery charge for this item (Rs, heavy or large items like a flour bag, cooler, gas cylinder)</label>
     <input id="i_heavy" type="number" min="0" value="${num(i.heavy_fee)}" placeholder="0">
     <div class="muted" style="font-size:13px">Added to the delivery fee for each one ordered. 0 = normal item.</div>
@@ -1845,12 +1922,39 @@ function vehicleTiers(ct){
     ${['car', 'bicycle'].map(v => `<label class="check"><input type="checkbox" ${vehOn(ct, v) ? 'checked' : ''} onchange="A.vehToggle('${ct}','${v}',this.checked)"> ${VEH[v]} riders get their own pay</label>
       <div id="vehwrap_${ct}_${v}">${vehOn(ct, v) ? tierEditor(ct + '|' + v) : ''}</div>`).join('')}</div>`;
 }
+const payRegion = () => scope() || ((state.regions || []).length === 1 ? state.regions[0].id : null);
+function payAccCard(){
+  const rid = payRegion();
+  if (!rid) return `<div class="card"><b>📲 Online payment (JazzCash / Easypaisa / Bank / Raast QR)</b><div class="muted" style="font-size:14px;margin-top:4px">Each region uses its own accounts. Choose a region at the top to set its payment accounts.</div></div>`;
+  const p = Object.assign({ on:false, jazzcash:{}, easypaisa:{}, bank:{} }, state.settings.pay_accounts || {});
+  if (state.payQr === undefined) state.payQr = p.qr_url || null;
+  return `<div class="card">
+    <b>📲 Online payment for ${esc(regionName(rid))}</b>
+    <div class="muted" style="font-size:14px">Customers can pay before the order with JazzCash, Easypaisa or a bank transfer (Raast). The money comes straight to these accounts — no company fee. The customer sends the Transaction ID; you check it in your app and tap “Money received”. Only then does the shop get the order. Riders can also show the QR at the door.</div>
+    <label class="check"><input id="pa_on" type="checkbox" ${p.on ? 'checked' : ''}> Online payment is on</label>
+    <h3 style="margin:12px 0 4px">🔴 JazzCash</h3>
+    <div class="two"><div><label class="f" for="pa_jn">Number</label><input id="pa_jn" type="text" inputmode="tel" dir="ltr" value="${esc(p.jazzcash.number || '')}" placeholder="03001234567"></div><div><label class="f" for="pa_jt">Account name</label><input id="pa_jt" type="text" value="${esc(p.jazzcash.title || '')}"></div></div>
+    <h3 style="margin:12px 0 4px">🟢 Easypaisa</h3>
+    <div class="two"><div><label class="f" for="pa_en">Number</label><input id="pa_en" type="text" inputmode="tel" dir="ltr" value="${esc(p.easypaisa.number || '')}" placeholder="03001234567"></div><div><label class="f" for="pa_et">Account name</label><input id="pa_et" type="text" value="${esc(p.easypaisa.title || '')}"></div></div>
+    <h3 style="margin:12px 0 4px">🏦 Bank / Raast</h3>
+    <div class="two"><div><label class="f" for="pa_bb">Bank</label><input id="pa_bb" type="text" value="${esc(p.bank.bank || '')}" placeholder="Meezan, HBL…"></div><div><label class="f" for="pa_bt">Account name</label><input id="pa_bt" type="text" value="${esc(p.bank.title || '')}"></div></div>
+    <label class="f" for="pa_br">Raast ID (usually your mobile number)</label><input id="pa_br" type="text" inputmode="tel" dir="ltr" value="${esc(p.bank.raast_id || '')}" placeholder="03001234567">
+    <label class="f" for="pa_bi">IBAN</label><input id="pa_bi" type="text" dir="ltr" value="${esc(p.bank.iban || '')}" placeholder="PK00XXXX0000000000000000">
+    <h3 style="margin:12px 0 4px">🔳 Raast / bank QR code</h3>
+    <div class="muted" style="font-size:13px">In your bank app open “Receive money” or “My QR”, save the QR picture and upload it here. Customers and riders show this QR.</div>
+    <img id="pa_qrp" class="preview" alt="" style="display:${state.payQr ? 'block' : 'none'};max-width:200px;background:#fff" src="${esc(state.payQr || '')}">
+    <div class="two"><label class="filebtn">📷 Upload QR<input type="file" accept="image/*" hidden onchange="A.payQr(this)"></label>${state.payQr ? `<button class="btn ghost" type="button" onclick="A.payQrOff()">Remove QR</button>` : '<span></span>'}</div>
+    <label class="f" for="pa_wait">Customer must pay within (minutes)</label><input id="pa_wait" type="number" min="10" max="180" value="${num(state.settings.pay_wait_minutes ?? 45)}">
+    <div class="actions"><button class="btn ghost block" onclick="A.savePayAcc()">Save payment accounts</button></div>
+  </div>`;
+}
 function viewSettings(){
   const s = state.settings; const req = s.require_selfie === true; const th = num(s.face_match_threshold ?? 0.5);
   const sc = scope();
   return `${backLink()}<h2>Settings</h2>
     ${sc ? `<div class="note" style="border-color:var(--green)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Wanhar Mart settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
       : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : ''}
+    ${payAccCard()}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div><b>Selfie face check at duty start</b><div class="muted" style="font-size:14px">When on, a rider must take a selfie that matches their registered face before going online. Turn this on after the new Rider app is published.</div></div>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${req ? 'checked' : ''} onchange="A.saveSetting('require_selfie', this.checked)"><span></span></label><small>${req ? 'On' : 'Off'}</small></div>
@@ -1987,7 +2091,8 @@ const A = {
       <div class="kv"><span class="muted">Delivery${num(o.bulk_fee) || num(o.heavy_fee) ? ` (incl. ${num(o.bulk_fee) ? 'big order ' + money(o.bulk_fee) : ''}${num(o.bulk_fee) && num(o.heavy_fee) ? ', ' : ''}${num(o.heavy_fee) ? 'heavy items ' + money(o.heavy_fee) : ''})` : ''}</span><span>${money(o.delivery_fee)}</span></div>
       ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
       ${num(o.tip) ? `<div class="kv"><span class="muted">Rider tip (goes to rider)</span><span>${money(o.tip)}</span></div>` : ''}
-      <div class="kv total"><span>Cash on delivery</span><span>${money(o.total)}</span></div>
+      <div class="kv total"><span>${o.payment_method === 'wallet' ? 'Paid online' + (o.pay_label ? ' (' + esc(o.pay_label) + ')' : '') : o.payment_method === 'qr_door' ? 'Paid by QR at the door' : 'Cash on delivery'}</span><span>${money(o.total)}</span></div>
+      ${orderPayPanel(o)}
       ${o.status === 'delivered' ? `<div class="kv"><span class="muted">Commission</span><span>${money(o.commission_amount)}</span></div><div class="kv"><span class="muted">Shop gets</span><span>${money(o.restaurant_earning)}</span></div><div class="kv"><span class="muted">Rider pay</span><span>${money(o.rider_pay)}</span></div>` : ''}
       ${o.reject_reason ? `<div class="muted" style="margin-top:8px">Reason: ${esc(o.reject_reason)}</div>` : ''}
       ${o.arrived_at ? `<div class="muted">Rider arrived at customer: ${when(o.arrived_at)}</div>` : ''}
@@ -2004,6 +2109,45 @@ const A = {
     const { data } = await sb.from('order_status_log').select('status,changed_at').eq('order_id', id).order('changed_at');
     const tl = $('tl'); if (tl) tl.innerHTML = (data || []).map(x => `<li><span>${LABEL[x.status] || x.status}</span><span class="muted">${when(x.changed_at)}</span></li>`).join('') || '<li class="muted">No history</li>';
   },
+  async payCheck(id, ok){
+    let note = null;
+    if (!ok){ note = await uiPrompt('What should the customer know? For example: TID not found, amount is less', 'Payment not found. Check the TID and send again.'); if (note === null) return; }
+    else if (!await uiConfirm('Is the money really in your account?')) return;
+    await run(async () => { need(await sb.rpc('admin_check_payment', { p_order:id, p_ok:ok, p_note:note })); closeSheet(); await loadOrders(); renderTab(); toast(ok ? 'Payment approved. The shop got the order.' : 'Customer told'); });
+  },
+  async refundDone(id){
+    const note = await uiPrompt('How did you send it back? (optional, e.g. JazzCash TID)', ''); if (note === null) return;
+    await run(async () => { need(await sb.rpc('admin_refund_done', { p_order:id, p_note:note || null })); closeSheet(); await loadOrders(); renderTab(); toast('Refund saved'); });
+  },
+  async payProof(id){
+    const o = state.orders.find(x => x.id === id); if (!o || !o.pay_proof_path) return;
+    await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(o.pay_proof_path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); });
+  },
+  async payQr(inp){
+    const f = inp.files && inp.files[0]; if (!f) return;
+    await run(async () => { state.payQr = await uploadImage(f, 'qr'); const p = $('pa_qrp'); if (p){ p.src = state.payQr; p.style.display = 'block'; } toast('QR uploaded. Tap Save payment accounts.'); });
+  },
+  payQrOff(){ state.payQr = null; const p = $('pa_qrp'); if (p) p.style.display = 'none'; toast('Tap Save payment accounts'); },
+  async savePayAcc(){
+    const rid = payRegion(); if (!rid) return toast('Choose a region first', true);
+    const ph = v => { const d = String(v || '').replace(/\D/g, '').replace(/^92(?=3\d{9}$)/, '0'); return d; };
+    const v = { on:$('pa_on').checked,
+      jazzcash:{ number:ph($('pa_jn').value), title:$('pa_jt').value.trim() },
+      easypaisa:{ number:ph($('pa_en').value), title:$('pa_et').value.trim() },
+      bank:{ bank:$('pa_bb').value.trim(), title:$('pa_bt').value.trim(), raast_id:ph($('pa_br').value), iban:$('pa_bi').value.replace(/\s/g, '').toUpperCase() },
+      qr_url:state.payQr || null };
+    for (const k of ['jazzcash', 'easypaisa']) if (v[k].number && !/^03\d{9}$/.test(v[k].number)) return toast('Check the ' + k + ' number (03XXXXXXXXX)', true);
+    if (v.bank.iban && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(v.bank.iban)) return toast('IBAN should look like PK00ABCD0000000000000000', true);
+    if (v.on && !(v.jazzcash.number || v.easypaisa.number || v.bank.iban || v.bank.raast_id || v.qr_url)) return toast('Add at least one account', true);
+    const wait = Math.min(180, Math.max(10, Math.round(num($('pa_wait').value) || 45)));
+    const now = new Date().toISOString();
+    await run(async () => {
+      need(await sb.from('region_settings').upsert([{ region_id:rid, key:'pay_accounts', value:v, updated_at:now }, { region_id:rid, key:'pay_wait_minutes', value:wait, updated_at:now }]));
+      state.payQr = undefined; await loadSettings(); renderTab(); toast('Saved');
+    });
+  },
+  morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast('Up to 5 photos', true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
+  rmPhoto(w, k){ if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); },
   async setStatus(id, status){
     let reason = null;
     if (status === 'rejected'){ reason = await uiPrompt('Reason for rejecting (optional)'); if (reason === null) return; }
@@ -2074,7 +2218,7 @@ const A = {
   },
   payShop(id, amt){
     const r = state.restaurants.find(x => x.id === id) || {};
-    payForm({ title:'Pay shop', who:r.name, amount:amt, verb:'Pay', save:async f => {
+    payForm({ title:'Pay shop', who:r.name, acc:r.payout || null, amount:amt, verb:'Pay', save:async f => {
       const v = need(await sb.rpc('settle_restaurant', { p_restaurant_id:id, p_note:f.note, p_method:f.method, p_reference:f.ref }));
       toast('Paid ' + money(v) + ' (monthly fee cut, if due)'); await loadShopReport(); if (state.tab === 'restaurants') renderTab(); A.openShop(id);
     }});
@@ -2192,7 +2336,8 @@ const A = {
       state.formCats = shop === state.menuRestaurant && state.categories.length ? state.categories
         : need(await sb.from('menu_categories').select('*').eq('restaurant_id', shop).order('sort_order'));
       if (!state.formCats.length) return toast('Add a section first, for example Burgers', true);
-      openSheet(i ? 'Edit product' : 'Add product', itemForm(i));
+      state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
+      openSheet(i ? 'Edit product' : 'Add product', itemForm(i)); drawPics();
       OE.init({ sb, lang:() => 'en' }); OE.load(i ? i.id : null).catch(e => toast(e.message || 'Could not load options', true));
     });
   },
@@ -2204,8 +2349,12 @@ const A = {
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
     await run(async () => {
       const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
-        category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop, heavy_fee:Math.max(0, num($('i_heavy').value)), weight_kg:Math.max(0, num($('i_kg').value)) };
+        category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop, heavy_fee:Math.max(0, num($('i_heavy').value)), weight_kg:Math.round(Math.max(0, num($('i_kg').value)) / ($('i_kgu').value === 'g' ? 1000 : 1) * 1000) / 1000 };
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
+      const st = $('i_stock').value.trim(); row.stock_qty = st === '' ? null : Math.max(0, Math.round(num(st)));
+      const pics = state.pics || { old:[], add:[] }; const up = [];
+      for (const pf of pics.add) up.push(await uploadImage(pf, 'items'));
+      row.photos = pics.old.concat(up).slice(0, 5);
       let itemId = id;
       if (id) need(await sb.from('menu_items').update(row).eq('id', id));
       else itemId = need(await sb.from('menu_items').insert(row).select('id').single()).id;
@@ -2365,9 +2514,10 @@ const A = {
     });
   },
   async refreshRider(id){ await loadRiderMonth(); if (state.tab === 'riders') renderTab(); await A.openRider(id); },
-  payRider(id, due){
+  async payRider(id, due){
     const r = state.riderRows.find(x => x.rider_id === id) || {};
-    payForm({ title:'Pay rider · ' + monthLabel(state.riderMonth), who:r.full_name, amount:due, editAmount:true, verb:'Pay', save:async f => {
+    let acc = null; try { acc = (await sb.from('riders').select('payout').eq('id', id).single()).data?.payout || null; } catch (e) {}
+    payForm({ title:'Pay rider · ' + monthLabel(state.riderMonth), who:r.full_name, acc, amount:due, editAmount:true, verb:'Pay', save:async f => {
       need(await sb.from('payouts').insert({ party_type:'rider', party_id:id, amount:f.amount, period_start:state.riderMonth, period_end:monthEnd(state.riderMonth), status:'paid', note:f.note, method:f.method, reference:f.ref, breakdown:payBreakdown(r) }));
       toast('Payment saved'); await A.refreshRider(id);
     }});
@@ -3645,71 +3795,451 @@ const Push = (() => {
   return { init, logout, turnOn, show, enabled:() => supported() && Notification.permission === 'granted' };
 })();
 
+// ================= BULK PRODUCTS: EXCEL SHEET + PHOTO MODE (same code in shop and admin apps) =================
+// Reads .xlsx (Excel / Google Sheets) and .csv right on the phone. No extra library, nothing to download.
+const Bulk = (() => {
+  let C = null, S = null, PM = null;
+  const L = () => (C && C.lang && C.lang() === 'ur') ? 'ur' : 'en';
+  const TX = {
+    en:{ title:'Add products from Excel', s1:'Download the sheet', s1d:'Your products are already in it. A new shop gets 3 examples — write over them.', dl:'⬇️ Download Excel sheet',
+      s2:'Fill it in Excel or Google Sheets', s2d:'One product on each line. Name, Price and Section are needed. Stock empty = no limit. Weight like 500g or 1kg. Do not change the first line or the ID column.',
+      s3:'Upload it here', pick:'📊 Choose filled sheet (.xlsx or .csv)', pics:'🖼️ Choose photos (optional)', picsd:'A photo is matched when its file name is written in the Photo column, or is the same as the product name (Dalda Ghee 1kg.jpg). No photos? Add them later with 📷 Photo mode.',
+      reading:'Reading the sheet…', nohead:'Could not find the Name and Price columns in the first line. Download the sheet again and fill that one.', xls:'Old .xls file. In Excel choose Save As → Excel Workbook (.xlsx), or File → Download → .xlsx in Google Sheets.',
+      empty:'No products found in this sheet.', newp:'New', upd:'Update', same:'No change', bad:'Problems', photos:'Photos matched', save:'Save {n} products', saving:'Saving… {a} of {b}', done:'Done! {n} new, {u} updated.', donebad:'{n} lines could not be saved:',
+      line:'Line {n}', e_name:'Name is empty', e_price:'Price is missing or wrong', e_dup:'Same name is written twice in the sheet', w_photo:'Photo “{f}” not found', w_sec:'No section, saved in “Other”', more:'…and {n} more', none:'Nothing to save. All products are the same as in the shop.',
+      skip:'Lines with problems are skipped. Fix them in the sheet and upload again.', other:'Other', pm:'Photo mode', pmt:'Products without a photo', pmall:'🎉 All products have a photo.', take:'📷 Take photo', gallery:'🖼️ From gallery', skipb:'Skip ›', pmtip:'Tip: good light, plain background, product in the middle.', uploading:'Uploading…', of:'{a} of {b}', close:'Close', choose_shop:'Choose a shop first' },
+    ur:{ title:'Excel سے پروڈکٹس ڈالیں', s1:'شیٹ ڈاؤن لوڈ کریں', s1d:'آپ کی پروڈکٹس پہلے سے اس میں ہیں۔ نئی دکان کو 3 مثالیں ملیں گی — ان کے اوپر لکھ دیں۔', dl:'⬇️ Excel شیٹ ڈاؤن لوڈ کریں',
+      s2:'Excel یا Google Sheets میں بھریں', s2d:'ہر لائن میں ایک پروڈکٹ۔ نام، قیمت اور سیکشن ضروری ہیں۔ اسٹاک خالی = کوئی حد نہیں۔ وزن جیسے 500g یا 1kg۔ پہلی لائن اور ID والا کالم نہ بدلیں۔',
+      s3:'یہاں اپ لوڈ کریں', pick:'📊 بھری ہوئی شیٹ چنیں (.xlsx یا .csv)', pics:'🖼️ تصویریں چنیں (اختیاری)', picsd:'تصویر تب لگے گی جب اس کا نام Photo کالم میں لکھا ہو یا پروڈکٹ کے نام جیسا ہو (Dalda Ghee 1kg.jpg)۔ تصویریں نہیں؟ بعد میں 📷 فوٹو موڈ سے لگا لیں۔',
+      reading:'شیٹ پڑھی جا رہی ہے…', nohead:'پہلی لائن میں Name اور Price کالم نہیں ملے۔ شیٹ دوبارہ ڈاؤن لوڈ کر کے وہی بھریں۔', xls:'پرانی .xls فائل ہے۔ Excel میں Save As → Excel Workbook (.xlsx) کریں، یا Google Sheets میں File → Download → .xlsx۔',
+      empty:'اس شیٹ میں کوئی پروڈکٹ نہیں ملی۔', newp:'نئی', upd:'تبدیل', same:'کوئی تبدیلی نہیں', bad:'مسئلے', photos:'تصویریں ملیں', save:'{n} پروڈکٹس محفوظ کریں', saving:'محفوظ ہو رہا ہے… {a} از {b}', done:'ہو گیا! {n} نئی، {u} تبدیل۔', donebad:'{n} لائنیں محفوظ نہیں ہو سکیں:',
+      line:'لائن {n}', e_name:'نام خالی ہے', e_price:'قیمت نہیں لکھی یا غلط ہے', e_dup:'یہ نام شیٹ میں دو بار لکھا ہے', w_photo:'تصویر ”{f}“ نہیں ملی', w_sec:'سیکشن نہیں لکھا، ”دیگر“ میں جائے گی', more:'…اور {n}', none:'محفوظ کرنے کو کچھ نہیں۔ سب پروڈکٹس دکان جیسی ہی ہیں۔',
+      skip:'مسئلے والی لائنیں چھوڑ دی جائیں گی۔ شیٹ میں ٹھیک کر کے دوبارہ اپ لوڈ کریں۔', other:'دیگر', pm:'فوٹو موڈ', pmt:'بغیر تصویر کی پروڈکٹس', pmall:'🎉 سب پروڈکٹس کی تصویر لگ گئی۔', take:'📷 تصویر کھینچیں', gallery:'🖼️ گیلری سے', skipb:'چھوڑیں ›', pmtip:'مشورہ: اچھی روشنی، سادہ پس منظر، پروڈکٹ درمیان میں۔', uploading:'اپ لوڈ ہو رہا ہے…', of:'{a} از {b}', close:'بند کریں', choose_shop:'پہلے دکان چنیں' }
+  };
+  const t = (k, v) => { let s = (TX[L()] || TX.en)[k] || TX.en[k] || k; if (v) for (const x in v) s = s.split('{' + x + '}').join(v[x]); return s; };
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const $ = id => document.getElementById(id);
+  const norm = s => String(s ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+  const base = f => norm(String(f || '').replace(/\.[a-z0-9]{2,5}$/i, ''));
+
+  // ---------- tiny zip + xlsx reader ----------
+  async function unzip(buf){
+    const dv = new DataView(buf), u8 = new Uint8Array(buf); let e = -1;
+    for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50){ e = i; break; }
+    if (e < 0) throw new Error('zip');
+    const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true); const files = {}; const td = new TextDecoder();
+    for (let k = 0; k < n && dv.getUint32(p, true) === 0x02014b50; k++){
+      const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+      files[td.decode(u8.subarray(p + 46, p + 46 + nl))] = { m:dv.getUint16(p + 10, true), size:dv.getUint32(p + 20, true), off:dv.getUint32(p + 42, true) };
+      p += 46 + nl + xl + cl;
+    }
+    const read = async name => {
+      const f = files[name]; if (!f) return null;
+      const st = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true); const data = u8.subarray(st, st + f.size);
+      if (f.m === 0) return td.decode(data);
+      if (f.m !== 8) throw new Error('zip');
+      const out = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+      return td.decode(out);
+    };
+    return { names:Object.keys(files), read };
+  }
+  const xml = s => new DOMParser().parseFromString(s, 'application/xml');
+  const tags = (el, n) => [...el.getElementsByTagNameNS('*', n)];
+  const colNo = ref => { const m = /^([A-Z]+)/.exec(ref || ''); if (!m) return -1; let n = 0; for (const ch of m[1]) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+  async function readXlsx(buf){
+    const z = await unzip(buf);
+    const ssx = await z.read('xl/sharedStrings.xml');
+    const shared = ssx ? tags(xml(ssx), 'si').map(si => tags(si, 't').map(x => x.textContent).join('')) : [];
+    let path = null;
+    try {
+      const wb = xml(await z.read('xl/workbook.xml')), rels = xml(await z.read('xl/_rels/workbook.xml.rels'));
+      const first = tags(wb, 'sheet')[0]; const rid = first && (first.getAttribute('r:id') || first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id'));
+      const rel = tags(rels, 'Relationship').find(r => r.getAttribute('Id') === rid);
+      if (rel){ const tg = rel.getAttribute('Target'); path = tg.startsWith('/') ? tg.slice(1) : 'xl/' + tg.replace(/^\.\//, ''); }
+    } catch (e) {}
+    if (!path || !z.names.includes(path)) path = z.names.filter(x => /^xl\/worksheets\/[^/]+\.xml$/.test(x)).sort()[0];
+    if (!path) throw new Error('zip');
+    const rows = [];
+    tags(xml(await z.read(path)), 'row').forEach(r => {
+      const ri = (parseInt(r.getAttribute('r'), 10) || rows.length + 1) - 1; const row = []; let ci = 0;
+      tags(r, 'c').forEach(c => {
+        const ref = c.getAttribute('r'); if (ref) ci = colNo(ref);
+        const ty = c.getAttribute('t'); const v = tags(c, 'v')[0]; let val = v ? v.textContent : '';
+        if (ty === 's') val = shared[+val] ?? ''; else if (ty === 'inlineStr') val = tags(c, 't').map(x => x.textContent).join(''); else if (ty === 'b') val = val === '1' ? 'TRUE' : 'FALSE';
+        row[ci] = val; ci++;
+      });
+      rows[ri] = row;
+    });
+    return rows.map(r => r || []);
+  }
+  function readCsv(txt){
+    txt = txt.replace(/^﻿/, ''); const first = txt.split(/\r?\n/)[0] || '';
+    const sep = first.includes('\t') && !first.includes(',') ? '\t' : ((first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ';' : ',');
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < txt.length; i++){ const ch = txt[i];
+      if (q){ if (ch === '"'){ if (txt[i + 1] === '"'){ cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true; else if (ch === sep){ row.push(cur); cur = ''; } else if (ch === '\n'){ row.push(cur); rows.push(row); row = []; cur = ''; } else if (ch !== '\r') cur += ch; }
+    if (cur !== '' || row.length){ row.push(cur); rows.push(row); }
+    return rows;
+  }
+  // ---------- tiny xlsx writer ----------
+  const CRC = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
+  const crc32 = u => { let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zipStore(files){
+    const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+    for (const f of files){
+      const nm = enc.encode(f.name), d = enc.encode(f.data), crc = crc32(d);
+      const h = new DataView(new ArrayBuffer(30)); h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(12, 0x21, true); h.setUint32(14, crc, true); h.setUint32(18, d.length, true); h.setUint32(22, d.length, true); h.setUint16(26, nm.length, true);
+      parts.push(new Uint8Array(h.buffer), nm, d);
+      const c = new DataView(new ArrayBuffer(46)); c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(14, 0x21, true); c.setUint32(16, crc, true); c.setUint32(20, d.length, true); c.setUint32(24, d.length, true); c.setUint16(28, nm.length, true); c.setUint32(42, off, true);
+      cen.push(new Uint8Array(c.buffer), nm); off += 30 + nm.length + d.length;
+    }
+    const cs = cen.reduce((n, a) => n + a.length, 0); const e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, cs, true); e.setUint32(16, off, true);
+    return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+  const colL = i => { let s = ''; i++; while (i){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  const xe = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c])).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+  function sheetXml(rows, widths, head){
+    const body = rows.map((r, ri) => `<row r="${ri + 1}">` + r.map((v, ci) => {
+      if (v === null || v === undefined || v === '') return '';
+      const ref = colL(ci) + (ri + 1), st = head && ri === 0 ? ' s="1"' : (head ? ' s="2"' : ' s="3"');
+      return typeof v === 'number' && isFinite(v) ? `<c r="${ref}"${st}><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+    }).join('') + '</row>').join('');
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+      + (head ? '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : '')
+      + '<cols>' + widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('') + '</cols>'
+      + `<sheetData>${body}</sheetData></worksheet>`;
+  }
+  function xlsxBlob(sheets){
+    const NS = 'http://schemas.openxmlformats.org/';
+    const files = [
+      { name:'[Content_Types].xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="${NS}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>` },
+      { name:'_rels/.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${NS}package/2006/relationships"><Relationship Id="rId1" Type="${NS}officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+      { name:'xl/workbook.xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${NS}spreadsheetml/2006/main" xmlns:r="${NS}officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${xe(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>` },
+      { name:'xl/_rels/workbook.xml.rels', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${NS}package/2006/relationships">${sheets.map((_, i) => `<Relationship Id="rId${i + 1}" Type="${NS}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="${NS}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+      { name:'xl/styles.xml', data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${NS}spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0B7D4F"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` }
+    ].concat(sheets.map((s, i) => ({ name:`xl/worksheets/sheet${i + 1}.xml`, data:sheetXml(s.rows, s.widths, s.head) })));
+    return zipStore(files);
+  }
+  function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
+
+  // ---------- columns ----------
+  const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Photo'];
+  const ALIAS = { id:['id','productid'], name:['name','product','productname','item','itemname','naam'], price:['price','rate','saleprice','sellingprice','qeemat','priceRs'.toLowerCase()],
+    old:['oldprice','mrp','compareprice','pricebeforediscount','originalprice','retailprice','cutprice'], section:['section','category','group','department'], stock:['stock','qty','quantity','stockqty'],
+    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
+  const key = h => String(h ?? '').toLowerCase().replace(/[^a-z]/g, '');
+  function headerMap(row){ const m = {}; row.forEach((h, i) => { const k = key(h); for (const f in ALIAS) if (m[f] === undefined && ALIAS[f].includes(k)) m[f] = i; }); return m.name !== undefined && m.price !== undefined ? m : null; }
+  const numv = v => { const s = String(v ?? '').replace(/rs\.?|pkr|,|\s/gi, ''); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : NaN; };
+  function kgv(v){ const s = String(v ?? '').trim().toLowerCase().replace(/,/g, ''); if (!s) return null; const m = /^([\d.]+)\s*(kg|kgs|kilo|g|gm|gms|gram|grams|grm)?$/.exec(s); if (!m) return NaN; const n = Number(m[1]); if (!isFinite(n)) return NaN; return Math.round((m[2] && m[2][0] === 'g' ? n / 1000 : n) * 1000) / 1000; }
+  const kgText = kg => !kg ? '' : kg < 1 ? Math.round(kg * 1000) + 'g' : (Math.round(kg * 1000) / 1000) + 'kg';
+
+  async function loadShop(){
+    const id = C.shopId(); if (!id || id === 'all') throw new Error(t('choose_shop'));
+    const [c, i] = await Promise.all([C.sb.from('menu_categories').select('id,name,sort_order').eq('restaurant_id', id).order('sort_order'),
+      C.sb.from('menu_items').select('id,name,price,compare_price,category_id,stock_qty,weight_kg,description,photo_url,sort_order').eq('restaurant_id', id).order('sort_order').order('name').limit(5000)]);
+    if (c.error) throw c.error; if (i.error) throw i.error;
+    return { id, cats:c.data || [], items:i.data || [] };
+  }
+  // ---------- open ----------
+  function open(){
+    if (!C.shopId() || C.shopId() === 'all') return C.toast(t('choose_shop'), true);
+    S = { rows:null, files:[] };
+    C.openSheet(t('title'), `<div class="bk">
+      <div class="bkst"><b class="bkn">1</b><div><b>${t('s1')}</b><small>${t('s1d')}</small><button type="button" class="btn ghost small bkbtn" id="bkDl" onclick="Bulk.template()">${t('dl')}</button></div></div>
+      <div class="bkst"><b class="bkn">2</b><div><b>${t('s2')}</b><small>${t('s2d')}</small></div></div>
+      <div class="bkst"><b class="bkn">3</b><div><b>${t('s3')}</b>
+        <label class="bkfile"><span id="bkSheetL">${t('pick')}</span><input type="file" accept=".xlsx,.csv,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" hidden onchange="Bulk.pickSheet(this)"></label>
+        <label class="bkfile"><span id="bkPicsL">${t('pics')}</span><input type="file" accept="image/*" multiple hidden onchange="Bulk.pickPhotos(this)"></label>
+        <small>${t('picsd')}</small></div></div>
+      <div id="bkPrev"></div></div>`);
+  }
+  async function template(){
+    const b = $('bkDl'); if (b) b.disabled = true;
+    try {
+      const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
+      let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', '']);
+      if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
+      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
+        'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
+    } catch (e) { C.toast(e.message || 'Error', true); }
+    if (b) b.disabled = false;
+  }
+  async function pickSheet(inp){
+    const f = inp.files && inp.files[0]; if (!f) return;
+    $('bkSheetL').textContent = '📊 ' + f.name; const pv = $('bkPrev'); pv.innerHTML = `<div class="muted" style="margin-top:12px">${t('reading')}</div>`;
+    try {
+      let rows;
+      if (/\.xls$/i.test(f.name)) throw new Error(t('xls'));
+      if (/\.csv$/i.test(f.name) || f.type === 'text/csv') rows = readCsv(await f.text());
+      else rows = await readXlsx(await f.arrayBuffer());
+      S.raw = rows; await build();
+    } catch (e) { pv.innerHTML = `<div class="bkerr">${esc(e.message === 'zip' ? t('xls') : e.message)}</div>`; }
+    inp.value = '';
+  }
+  async function pickPhotos(inp){
+    S.files = [...(inp.files || [])]; $('bkPicsL').textContent = '🖼️ ' + S.files.length + ' ✓'; inp.value = '';
+    if (S.raw) await build();
+  }
+  async function build(){
+    const pv = $('bkPrev'); const rows = S.raw || [];
+    let hi = -1, m = null; for (let i = 0; i < Math.min(6, rows.length); i++){ m = headerMap(rows[i] || []); if (m){ hi = i; break; } }
+    if (!m) { pv.innerHTML = `<div class="bkerr">${t('nohead')}</div>`; return; }
+    const sh = await loadShop(); S.shop = sh;
+    const byId = new Map(sh.items.map(i => [i.id, i])), byName = new Map(sh.items.map(i => [norm(i.name), i]));
+    const catByName = new Map(sh.cats.map(c => [norm(c.name), c])), catName = id => (sh.cats.find(c => c.id === id) || {}).name || '';
+    const files = new Map(); S.files.forEach(f => { files.set(norm(f.name), f); files.set(base(f.name), f); });
+    const seen = new Set(); const out = [];
+    for (let r = hi + 1; r < rows.length && out.length < 5000; r++){
+      const row = rows[r] || []; const g = k => m[k] === undefined ? undefined : String(row[m[k]] ?? '').trim();
+      if (!row.some(x => String(x ?? '').trim())) continue;
+      const it = { line:r + 1, name:g('name') || '', errs:[], warns:[] };
+      const price = numv(g('price'));
+      if (!it.name) it.errs.push(t('e_name'));
+      if (price === null || isNaN(price) || price < 0) it.errs.push(t('e_price'));
+      const nk = norm(it.name); if (it.name && seen.has(nk)) it.errs.push(t('e_dup')); seen.add(nk);
+      const idv = g('id'); const ex = (idv && byId.get(idv)) || byName.get(nk) || null;
+      it.ex = ex; it.price = price;
+      const old = numv(g('old')); it.old = m.old === undefined ? undefined : (old === null || isNaN(old) || old <= 0 ? null : old);
+      let st = numv(g('stock')); it.stock = m.stock === undefined ? undefined : (st === null || isNaN(st) ? null : Math.max(0, Math.round(st)));
+      const kg = kgv(g('weight')); it.kg = m.weight === undefined ? undefined : (kg === null || isNaN(kg) ? 0 : kg);
+      it.desc = m.desc === undefined ? undefined : (g('desc') || null);
+      it.section = g('section') || (ex ? catName(ex.category_id) : '') || '';
+      if (!it.section){ it.section = t('other'); it.warns.push(t('w_sec')); }
+      it.cat = catByName.get(norm(it.section)) || null;
+      const ph = g('photo') || '';
+      if (/^https?:\/\//i.test(ph)) it.photoUrl = ph;
+      else { const f = (ph && (files.get(norm(ph)) || files.get(base(ph)))) || files.get(nk); if (f) it.file = f; else if (ph && S.files.length) it.warns.push(t('w_photo', { f:ph })); }
+      if (it.errs.length) it.status = 'bad';
+      else if (!ex) it.status = 'new';
+      else {
+        const ch = Number(ex.price) !== price || (it.old !== undefined && (ex.compare_price == null ? null : Number(ex.compare_price)) !== it.old)
+          || (it.stock !== undefined && (ex.stock_qty == null ? null : Number(ex.stock_qty)) !== it.stock) || (it.kg !== undefined && Number(ex.weight_kg || 0) !== it.kg)
+          || (it.desc !== undefined && (ex.description || null) !== it.desc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
+        it.status = ch ? 'upd' : 'same';
+      }
+      out.push(it);
+    }
+    S.rows = out; drawPrev();
+  }
+  function drawPrev(){
+    const pv = $('bkPrev'); const R = S.rows || [];
+    if (!R.length){ pv.innerHTML = `<div class="bkerr">${t('empty')}</div>`; return; }
+    const c = k => R.filter(r => r.status === k).length; const todo = c('new') + c('upd');
+    const pics = R.filter(r => r.file || r.photoUrl).length;
+    const badge = { new:'🆕', upd:'🔄', same:'➖', bad:'⚠️' };
+    const line = r => `<div class="bkrow ${r.status}"><span class="bki">${badge[r.status]}</span><div><b>${esc(r.name || '—')}</b><small>${t('line', { n:r.line })}${r.price != null && !isNaN(r.price) ? ' · Rs ' + Math.round(r.price) : ''} · ${esc(r.section)}${r.stock != null ? ' · 📦 ' + r.stock : ''}${r.file || r.photoUrl ? ' · 🖼️' : ''}</small>${r.errs.concat(r.warns).map(x => `<small class="${r.errs.includes(x) ? 'e' : 'w'}">${esc(x)}</small>`).join('')}</div></div>`;
+    const bad = R.filter(r => r.status === 'bad'), warn = R.filter(r => r.status !== 'bad' && r.warns.length), rest = R.filter(r => r.status !== 'bad' && !r.warns.length && r.status !== 'same');
+    const shown = bad.concat(warn).concat(rest.slice(0, 40)); const hidden = bad.length + warn.length + rest.length - shown.length;
+    pv.innerHTML = `<div class="bksum"><span>🆕 ${t('newp')} <b>${c('new')}</b></span><span>🔄 ${t('upd')} <b>${c('upd')}</b></span><span>➖ ${t('same')} <b>${c('same')}</b></span>${c('bad') ? `<span class="e">⚠️ ${t('bad')} <b>${c('bad')}</b></span>` : ''}${S.files.length ? `<span>🖼️ ${t('photos')} <b>${pics}</b></span>` : ''}</div>
+      ${c('bad') ? `<div class="muted" style="font-size:13px">${t('skip')}</div>` : ''}
+      <div class="bklist">${shown.map(line).join('')}${hidden > 0 ? `<div class="muted" style="padding:8px">${t('more', { n:hidden })}</div>` : ''}</div>
+      ${todo ? `<button type="button" class="btn bkbtn" id="bkSave" onclick="Bulk.save()">${t('save', { n:todo })}</button>` : `<div class="note">${t('none')}</div>`}`;
+  }
+  async function save(){
+    const R = (S.rows || []).filter(r => r.status === 'new' || r.status === 'upd'); if (!R.length) return;
+    const pv = $('bkPrev'); const sh = S.shop; const fails = [];
+    const prog = (a, b) => { pv.innerHTML = `<div class="bkprog"><div>${t('saving', { a, b })}</div><i><b style="width:${Math.round(a / Math.max(1, b) * 100)}%"></b></i></div>`; };
+    const total = R.length; let done = 0; prog(0, total);
+    try {
+      // 1. sections
+      const need = []; R.forEach(r => { if (!r.cat && !need.some(n => norm(n) === norm(r.section))) need.push(r.section); });
+      if (need.length){
+        let so = sh.cats.reduce((n, c) => Math.max(n, Number(c.sort_order) || 0), 0);
+        const { data, error } = await C.sb.from('menu_categories').insert(need.map(n => ({ restaurant_id:sh.id, name:n.slice(0, 60), sort_order:++so }))).select('id,name');
+        if (error) throw error;
+        (data || []).forEach(c => sh.cats.push(c));
+        R.forEach(r => { if (!r.cat) r.cat = sh.cats.find(c => norm(c.name) === norm(r.section)) || null; });
+      }
+      // 2. photos
+      const up = new Map();
+      for (const r of R){ if (r.file){ try { if (!up.has(r.file)) up.set(r.file, await C.uploadImage(r.file, 'items')); r.photoUrl = up.get(r.file); } catch (e) { r.warns.push(String(e.message || e)); } } }
+      // 3. new products, 100 at a time
+      let so = sh.items.reduce((n, i) => Math.max(n, Number(i.sort_order) || 0), 0);
+      const news = R.filter(r => r.status === 'new');
+      for (let i = 0; i < news.length; i += 100){
+        const part = news.slice(i, i + 100);
+        const rows = part.map(r => { const o = { restaurant_id:sh.id, category_id:r.cat ? r.cat.id : null, name:r.name.slice(0, 120), price:r.price, compare_price:r.old ?? null, stock_qty:r.stock ?? null, weight_kg:r.kg || 0, description:r.desc ?? null, photo_url:r.photoUrl || null, is_available:r.stock !== 0, sort_order:++so }; if (C.isAdmin) o.is_approved = true; return o; });
+        const { error } = await C.sb.from('menu_items').insert(rows);
+        if (error){ for (const r of part){ const one = rows[part.indexOf(r)]; const x = await C.sb.from('menu_items').insert(one); if (x.error) fails.push([r, x.error.message]); } }
+        done += part.length; prog(done, total);
+      }
+      // 4. updates
+      for (const r of R.filter(x => x.status === 'upd')){
+        const o = { name:r.name.slice(0, 120), price:r.price };
+        if (r.cat) o.category_id = r.cat.id;
+        if (r.old !== undefined) o.compare_price = r.old;
+        if (r.stock !== undefined) o.stock_qty = r.stock;
+        if (r.kg !== undefined) o.weight_kg = r.kg || 0;
+        if (r.desc !== undefined) o.description = r.desc;
+        if (r.photoUrl) o.photo_url = r.photoUrl;
+        const { error } = await C.sb.from('menu_items').update(o).eq('id', r.ex.id);
+        if (error) fails.push([r, error.message]);
+        done++; if (done % 5 === 0 || done === total) prog(done, total);
+      }
+    } catch (e) { fails.push([{ line:'—', name:'' }, e.message || String(e)]); }
+    const failed = new Set(fails.map(f => f[0])); const general = fails.some(f => !f[0].status);
+    const nNew = general ? 0 : R.filter(r => r.status === 'new' && !failed.has(r)).length, nUpd = general ? 0 : R.filter(r => r.status === 'upd' && !failed.has(r)).length;
+    pv.innerHTML = `<div class="bkdone">✅ ${t('done', { n:nNew, u:nUpd })}</div>${fails.length ? `<div class="bkerr">${t('donebad', { n:fails.length })}<br>${fails.slice(0, 20).map(f => esc(t('line', { n:f[0].line }) + ' ' + f[0].name + ': ' + f[1])).join('<br>')}</div>` : ''}
+      <button type="button" class="btn ghost bkbtn" onclick="Bulk.close()">${t('close')}</button>`;
+    S.rows = null; S.raw = null;
+    try { await C.onDone(); } catch (e) {}
+  }
+  // ---------- photo mode ----------
+  async function photoMode(){
+    if (!C.shopId() || C.shopId() === 'all') return C.toast(t('choose_shop'), true);
+    try {
+      const sh = await loadShop();
+      PM = { list:sh.items.filter(i => !i.photo_url), i:0, cats:sh.cats, done:0 };
+      C.openSheet(t('pm'), '<div id="pmBody"></div>'); drawPM();
+    } catch (e) { C.toast(e.message || 'Error', true); }
+  }
+  function drawPM(){
+    const el = $('pmBody'); if (!el || !PM) return;
+    const it = PM.list[PM.i];
+    if (!it){ el.innerHTML = `<div class="bkdone" style="text-align:center;font-size:18px">${t('pmall')}</div><button type="button" class="btn bkbtn" onclick="Bulk.close()">${t('close')}</button>`; return; }
+    const cat = (PM.cats.find(c => c.id === it.category_id) || {}).name || '';
+    el.innerHTML = `<div class="pm">
+      <div class="muted" style="font-size:13px">${t('pmt')} · ${t('of', { a:PM.i + 1, b:PM.list.length })}</div>
+      <i class="pmbar"><b style="width:${Math.round(PM.i / PM.list.length * 100)}%"></b></i>
+      <div class="pmname">${esc(it.name)}</div><div class="muted">Rs ${Math.round(Number(it.price) || 0)}${cat ? ' · ' + esc(cat) : ''}</div>
+      <label class="btn bkbtn">${t('take')}<input type="file" accept="image/*" capture="environment" hidden onchange="Bulk.pmPick(this)"></label>
+      <label class="btn ghost bkbtn">${t('gallery')}<input type="file" accept="image/*" hidden onchange="Bulk.pmPick(this)"></label>
+      <button type="button" class="link" style="margin-top:10px" onclick="Bulk.pmNext()">${t('skipb')}</button>
+      <div class="muted" style="font-size:13px;margin-top:8px">${t('pmtip')}</div></div>`;
+  }
+  async function pmPick(inp){
+    const f = inp.files && inp.files[0]; if (!f || !PM) return; const it = PM.list[PM.i];
+    const el = $('pmBody'); if (el) el.innerHTML = `<div class="pm"><div class="pmname">${esc(it.name)}</div><div class="muted">${t('uploading')}</div></div>`;
+    try {
+      const url = await C.uploadImage(f, 'items');
+      const { error } = await C.sb.from('menu_items').update({ photo_url:url }).eq('id', it.id); if (error) throw error;
+      PM.done++; C.toast('✓ ' + it.name); pmNext();
+    } catch (e) { C.toast(e.message || 'Error', true); drawPM(); }
+  }
+  function pmNext(){ if (!PM) return; PM.i++; drawPM(); }
+  async function close(){ const had = PM && PM.done; C.closeSheet(); PM = null; S = null; if (had) try { await C.onDone(); } catch (e) {} }
+  function init(cfg){ C = cfg; }
+  return { init, open, template, pickSheet, pickPhotos, save, photoMode, pmPick, pmNext, close, _readXlsx:readXlsx, _readCsv:readCsv, _xlsxBlob:xlsxBlob };
+})();
+Bulk.init({ get sb(){ return sb; }, shopId:() => state.menuRestaurant, isAdmin:true, lang:() => 'en', uploadImage:(f, d) => uploadImage(f, d), openSheet:(a, b) => openSheet(a, b), closeSheet:() => closeSheet(), toast:(m, e) => toast(m, e), onDone:async () => { await loadProducts(); renderTab(); } });
 // ================= PRODUCT OPTIONS EDITOR (Shop app and Admin) =================
+// Sizes, colours, weights and extras. The customer picks them before adding the product to the cart.
 const OE = (() => {
   const L = {
-    en:{ title:'Options (size, colour, weight, extras)', hint:'Let customers choose things like size, colour, weight or extras. + Rs is added to the price. + kg is added to the weight (for delivery charges).',
-         add:'+ Add option group', group:'Group name', group_ph:'Size', required:'Customer must choose', choose:'How many can they pick?', one:'Only 1', upto:'Up to {n}',
-         choice:'Choice', choice_ph:'Large', price:'+ Rs', add_choice:'+ Add choice', remove_group:'Remove group', off:'Off', presets:'Quick add:',
-         p_size:'Size', p_small:'Small', p_medium:'Medium', p_large:'Large', p_color:'Colour', p_black:'Black', p_white:'White', p_weight:'Weight', p_half:'Half kg', p_one:'1 kg', p_extras:'Extras', p_gift:'Gift wrap',
-         need_name:'Write a name for every option group', need_choice:'Every option group needs at least one choice', loading:'Loading options…' },
-    ur:{ title:'آپشنز (سائز، رنگ، وزن، اضافی)', hint:'گاہک سائز، رنگ، وزن یا اضافی چیز چن سکیں گے۔ + روپے قیمت میں جڑیں گے، + kg وزن میں (ڈیلیوری چارج کے لیے)۔',
-         add:'+ آپشن گروپ شامل کریں', group:'گروپ کا نام', group_ph:'سائز', required:'گاہک کو لازمی چننا ہے', choose:'کتنے چن سکتے ہیں؟', one:'صرف 1', upto:'زیادہ سے زیادہ {n}',
-         choice:'چوائس', choice_ph:'بڑا', price:'+ روپے', add_choice:'+ چوائس شامل کریں', remove_group:'گروپ ہٹائیں', off:'بند', presets:'جلدی شامل کریں:',
-         p_size:'سائز', p_small:'چھوٹا', p_medium:'درمیانہ', p_large:'بڑا', p_color:'رنگ', p_black:'کالا', p_white:'سفید', p_weight:'وزن', p_half:'آدھا کلو', p_one:'1 کلو', p_extras:'اضافی', p_gift:'گفٹ پیکنگ',
-         need_name:'ہر آپشن گروپ کا نام لکھیں', need_choice:'ہر آپشن گروپ میں کم از کم ایک چوائس ہو', loading:'آپشنز لوڈ ہو رہے ہیں…' }
+    en:{ title:'Sizes, colours and other choices', opt:'optional',
+         hint:'Use this when one product comes in different sizes or colours. Example: a shirt in S, M, L, XL. The customer must pick one before adding it to the cart.',
+         quick:'Tap to add a ready list:', own:'Make my own list',
+         q_cloth:'👕 Clothes size', q_shoe:'👟 Shoe size', q_waist:'👖 Waist size', q_color:'🎨 Colour', q_weight:'⚖️ Weight', q_food:'🍕 Small / Large', q_extras:'➕ Extras',
+         group:'What does the customer choose?', group_ph:'Size', required:'Customer must choose one', many:'Customer can choose more than one',
+         col_name:'Choice', col_price:'Extra price', col_w:'Extra weight', same:'same price', choice_ph:'XL',
+         add_choice:'+ Add another choice', remove_group:'Remove this list', avail:'In stock',
+         preview:'Customer sees:', need_name:'Write what the customer chooses (for example: Size)', need_choice:'Every list needs at least one choice', loading:'Loading…',
+         cloth:'Size', shoe:'Shoe size', waist:'Waist', color:'Colour', weight:'Weight', food:'Size', extras:'Extras',
+         black:'Black', white:'White', blue:'Blue', red:'Red', small:'Small', medium:'Medium', large:'Large', gift:'Gift wrap', del_q:'Remove the list “{n}”?' },
+    ur:{ title:'سائز، رنگ اور دوسری چوائسز', opt:'اختیاری',
+         hint:'جب ایک ہی پروڈکٹ مختلف سائز یا رنگ میں ہو تو یہ استعمال کریں۔ مثال: شرٹ S، M، L، XL میں۔ گاہک کارٹ میں ڈالنے سے پہلے ایک چنے گا۔',
+         quick:'تیار لسٹ کے لیے دبائیں:', own:'اپنی لسٹ بنائیں',
+         q_cloth:'👕 کپڑوں کا سائز', q_shoe:'👟 جوتے کا سائز', q_waist:'👖 کمر کا سائز', q_color:'🎨 رنگ', q_weight:'⚖️ وزن', q_food:'🍕 چھوٹا / بڑا', q_extras:'➕ اضافی',
+         group:'گاہک کیا چنے گا؟', group_ph:'سائز', required:'گاہک کو ایک چننا لازمی ہے', many:'گاہک ایک سے زیادہ چن سکتا ہے',
+         col_name:'چوائس', col_price:'اضافی قیمت', col_w:'اضافی وزن', same:'وہی قیمت', choice_ph:'XL',
+         add_choice:'+ ایک اور چوائس', remove_group:'یہ لسٹ ہٹائیں', avail:'دستیاب',
+         preview:'گاہک کو یہ دکھے گا:', need_name:'لکھیں گاہک کیا چنے گا (مثلاً: سائز)', need_choice:'ہر لسٹ میں کم از کم ایک چوائس ہو', loading:'لوڈ ہو رہا ہے…',
+         cloth:'سائز', shoe:'جوتے کا سائز', waist:'کمر', color:'رنگ', weight:'وزن', food:'سائز', extras:'اضافی',
+         black:'کالا', white:'سفید', blue:'نیلا', red:'لال', small:'چھوٹا', medium:'درمیانہ', large:'بڑا', gift:'گفٹ پیک', del_q:'لسٹ “{n}” ہٹائیں؟' }
   };
   let sbc = null, lang = () => 'en', groups = [], itemId = null, removed = { groups:[], options:[] };
   const tt = (k, v) => { let s = L[lang() === 'ur' ? 'ur' : 'en'][k] || k; if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]); return s; };
   const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
-  function init(c){ sbc = c.sb; lang = c.lang || lang; }
-  function html(){ return `<div class="oe"><label class="f" style="margin-bottom:2px">${tt('title')}</label><div class="muted" style="font-size:13px">${tt('hint')}</div><div id="oeBody"><div class="muted">${tt('loading')}</div></div></div>`; }
+  let styled = false;
+  function style(){
+    if (styled) return; styled = true;
+    const s = document.createElement('style');
+    s.textContent = `.oe{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--surface)}
+.oe .qk{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.oe .qk button{border:1px solid var(--line);background:var(--field,#F1F4F0);color:var(--ink);border-radius:999px;padding:7px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.oeg{border:1.5px solid var(--line);border-radius:14px;padding:12px;margin-top:12px;background:var(--paper)}
+.oeg .ghead{display:flex;gap:8px;align-items:flex-end}
+.oeg .orow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px;margin-top:8px}
+.oeg .orow .r1{display:flex;gap:6px;align-items:center}
+.oeg .orow .r2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.oeg .orow small{display:block;font-size:11.5px;color:var(--muted);font-weight:700;margin-bottom:2px}
+.oeg .wrow{display:flex;gap:4px} .oeg .wrow select{width:62px;flex:none;padding-inline:6px}
+.oeg .pv{margin-top:10px;font-size:13px;color:var(--muted)} .oeg .pv b{color:var(--ink)}
+.oeg .pv span{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 9px;margin:3px 3px 0 0;background:var(--surface);color:var(--ink);font-weight:600}
+.oeg .x{flex:none;border:0;background:none;color:var(--danger);font-size:20px;cursor:pointer;padding:6px 8px}`;
+    document.head.appendChild(s);
+  }
+  function init(c){ sbc = c.sb; lang = c.lang || lang; style(); }
+  function html(){ style(); return `<div class="oe"><b>🧩 ${tt('title')}</b> <span class="muted" style="font-size:13px">(${tt('opt')})</span>
+    <div class="muted" style="font-size:13px;margin-top:4px">${tt('hint')}</div><div id="oeBody"><div class="muted">${tt('loading')}</div></div></div>`; }
   async function load(id){
     itemId = id || null; groups = []; removed = { groups:[], options:[] };
     if (id){
       const { data, error } = await sbc.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg)').eq('menu_item_id', id).order('sort_order').order('created_at');
       if (error) throw error;
-      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order).map(o => ({ id:o.id, name:o.name, price:Number(o.price) || 0, w:Number(o.weight_kg) || 0, on:o.is_available !== false })) }));
+      groups = (data || []).map(g => ({ id:g.id, name:g.name, min:g.min_select, max:g.max_select, options:(g.menu_options || []).sort((a, b) => a.sort_order - b.sort_order)
+        .map(o => { const w = Number(o.weight_kg) || 0; return { id:o.id, name:o.name, price:Number(o.price) || 0, w, unit:w && w < 1 ? 'g' : 'kg', on:o.is_available !== false }; }) }));
     }
     draw();
   }
+  const wShow = o => o.unit === 'g' ? Math.round(o.w * 1000) : o.w;
   function draw(){
     const el = document.getElementById('oeBody'); if (!el) return;
-    const maxOpts = [1, 2, 3, 4, 5, 10];
-    el.innerHTML = groups.map((g, gi) => `<div class="oeg" style="border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:var(--paper)">
-        <div style="display:flex;gap:8px;align-items:end"><div style="flex:1"><label class="f" style="margin-top:0">${tt('group')}</label><input type="text" value="${e(g.name)}" placeholder="${tt('group_ph')}" oninput="OE.set(${gi},'name',this.value)"></div>
-          <button type="button" class="linkbtn" style="color:var(--danger);flex:none" onclick="OE.delGroup(${gi})">✕</button></div>
+    el.innerHTML = groups.map((g, gi) => `<div class="oeg">
+        <div class="ghead"><div style="flex:1"><label class="f" style="margin-top:0">${tt('group')}</label><input type="text" value="${e(g.name)}" placeholder="${tt('group_ph')}" oninput="OE.set(${gi},'name',this.value);OE.pv(${gi})"></div>
+          <button type="button" class="x" title="${tt('remove_group')}" aria-label="${tt('remove_group')}" onclick="OE.delGroup(${gi})">🗑️</button></div>
         <label class="check" style="margin-top:8px"><input type="checkbox" ${g.min ? 'checked' : ''} onchange="OE.set(${gi},'min',this.checked ? 1 : 0)"> ${tt('required')}</label>
-        <label class="f">${tt('choose')}</label><select onchange="OE.set(${gi},'max',Number(this.value))">${maxOpts.map(n => `<option value="${n}" ${g.max === n ? 'selected' : ''}>${n === 1 ? tt('one') : tt('upto', { n })}</option>`).join('')}</select>
-        ${g.options.map((o, oi) => `<div style="display:grid;grid-template-columns:1fr 72px 62px auto auto;gap:5px;align-items:center;margin-top:8px">
-            <input type="text" value="${e(o.name)}" placeholder="${tt('choice_ph')}" aria-label="${tt('choice')}" oninput="OE.setO(${gi},${oi},'name',this.value)">
-            <input type="number" min="0" inputmode="decimal" value="${o.price || ''}" placeholder="${tt('price')}" aria-label="${tt('price')}" oninput="OE.setO(${gi},${oi},'price',Number(this.value)||0)">
-            <input type="number" min="0" step="0.1" inputmode="decimal" value="${o.w || ''}" placeholder="+kg" aria-label="kg" oninput="OE.setO(${gi},${oi},'w',Number(this.value)||0)">
-            <label style="font-size:12px;display:flex;align-items:center;gap:3px;white-space:nowrap" title="${tt('off')}"><input type="checkbox" ${o.on ? '' : 'checked'} onchange="OE.setO(${gi},${oi},'on',!this.checked)">${tt('off')}</label>
-            <button type="button" class="linkbtn" style="color:var(--danger)" onclick="OE.delO(${gi},${oi})">✕</button></div>`).join('')}
-        <button type="button" class="linkbtn" style="margin-top:6px" onclick="OE.addO(${gi})">${tt('add_choice')}</button></div>`).join('')
-      + `<div style="margin-top:10px"><button type="button" class="btn ghost" onclick="OE.addGroup()">${tt('add')}</button></div>
-         <div class="muted" style="font-size:13px;margin-top:8px">${tt('presets')}
-           <button type="button" class="linkbtn" onclick="OE.preset('size')">${tt('p_size')}</button>
-           <button type="button" class="linkbtn" onclick="OE.preset('color')">${tt('p_color')}</button>
-           <button type="button" class="linkbtn" onclick="OE.preset('weight')">${tt('p_weight')}</button>
-           <button type="button" class="linkbtn" onclick="OE.preset('extras')">${tt('p_extras')}</button></div>`;
+        <label class="check"><input type="checkbox" ${g.max > 1 ? 'checked' : ''} onchange="OE.set(${gi},'max',this.checked ? 10 : 1)"> ${tt('many')}</label>
+        ${g.options.map((o, oi) => `<div class="orow">
+          <div class="r1"><input type="text" value="${e(o.name)}" placeholder="${tt('choice_ph')}" aria-label="${tt('col_name')}" oninput="OE.setO(${gi},${oi},'name',this.value);OE.pv(${gi})" style="flex:1">
+            <label class="switch" title="${tt('avail')}"><input type="checkbox" ${o.on ? 'checked' : ''} onchange="OE.setO(${gi},${oi},'on',this.checked);OE.pv(${gi})" aria-label="${tt('avail')}"><span></span></label>
+            <button type="button" class="x" aria-label="✕" onclick="OE.delO(${gi},${oi})">✕</button></div>
+          <div class="r2"><div><small>${tt('col_price')} (Rs)</small><input type="number" min="0" inputmode="decimal" value="${o.price || ''}" placeholder="0" oninput="OE.setO(${gi},${oi},'price',Number(this.value)||0);OE.pv(${gi})"></div>
+            <div><small>${tt('col_w')}</small><div class="wrow"><input type="number" min="0" step="any" inputmode="decimal" value="${o.w ? wShow(o) : ''}" placeholder="0" oninput="OE.setW(${gi},${oi},this.value)">
+              <select onchange="OE.setU(${gi},${oi},this.value,this.previousElementSibling.value)"><option value="g" ${o.unit === 'g' ? 'selected' : ''}>g</option><option value="kg" ${o.unit !== 'g' ? 'selected' : ''}>kg</option></select></div></div></div></div>`).join('')}
+        <button type="button" class="linkbtn" style="margin-top:8px" onclick="OE.addO(${gi})">${tt('add_choice')}</button>
+        <div class="pv" id="oepv${gi}">${pvHtml(g)}</div></div>`).join('')
+      + `<div class="muted" style="font-size:13px;margin-top:12px">${tt('quick')}</div>
+         <div class="qk">${['cloth', 'shoe', 'waist', 'color', 'weight', 'food', 'extras'].map(k => `<button type="button" onclick="OE.preset('${k}')">${tt('q_' + k)}</button>`).join('')}
+           <button type="button" onclick="OE.addGroup()">✏️ ${tt('own')}</button></div>`;
   }
-  const opt = (name, price, w) => ({ id:uid(), name, price:price || 0, w:w || 0, on:true });
-  function addGroup(){ groups.push({ id:uid(), name:'', min:0, max:1, options:[opt('', 0)] }); draw(); }
+  function pvHtml(g){
+    const l = g.options.filter(o => (o.name || '').trim() && o.on);
+    if (!l.length) return '';
+    return `${tt('preview')} <b>${e(g.name || tt('group_ph'))}</b><br>${l.map(o => `<span>${e(o.name)}${o.price ? ' +Rs ' + o.price : ''}</span>`).join('')}`;
+  }
+  const opt = (name, price, w, unit) => ({ id:uid(), name, price:price || 0, w:w || 0, unit:unit || 'kg', on:true });
+  function addGroup(){ groups.push({ id:uid(), name:'', min:1, max:1, options:[opt('', 0)] }); draw(); }
   function preset(k){
-    if (k === 'size') groups.push({ id:uid(), name:tt('p_size'), min:1, max:1, options:[opt(tt('p_small'), 0), opt(tt('p_medium'), 0), opt(tt('p_large'), 0)] });
-    if (k === 'color') groups.push({ id:uid(), name:tt('p_color'), min:1, max:1, options:[opt(tt('p_black'), 0), opt(tt('p_white'), 0)] });
-    if (k === 'weight') groups.push({ id:uid(), name:tt('p_weight'), min:1, max:1, options:[opt(tt('p_half'), 0, 0.5), opt(tt('p_one'), 0, 1)] });
-    if (k === 'extras') groups.push({ id:uid(), name:tt('p_extras'), min:0, max:3, options:[opt(tt('p_gift'), 0)] });
+    const P = {
+      cloth:[tt('cloth'), 1, 1, ['S', 'M', 'L', 'XL', 'XXL'].map(n => opt(n))],
+      shoe:[tt('shoe'), 1, 1, ['6', '7', '8', '9', '10', '11'].map(n => opt(n))],
+      waist:[tt('waist'), 1, 1, ['28', '30', '32', '34', '36', '38', '40'].map(n => opt(n))],
+      color:[tt('color'), 1, 1, [tt('black'), tt('white'), tt('blue'), tt('red')].map(n => opt(n))],
+      weight:[tt('weight'), 1, 1, [opt('250 g', 0, 0.25, 'g'), opt('500 g', 0, 0.5, 'g'), opt('1 kg', 0, 1, 'kg')]],
+      food:[tt('food'), 1, 1, [opt(tt('small')), opt(tt('medium')), opt(tt('large'))]],
+      extras:[tt('extras'), 0, 3, [opt(tt('gift'))]]
+    }[k];
+    if (P) groups.push({ id:uid(), name:P[0], min:P[1], max:P[2], options:P[3] });
     draw();
   }
-  function delGroup(gi){ const g = groups[gi]; if (!g) return; removed.groups.push(g.id); groups.splice(gi, 1); draw(); }
-  function addO(gi){ groups[gi].options.push(opt('', 0)); draw(); }
+  async function delGroup(gi){
+    const g = groups[gi]; if (!g) return;
+    if (typeof uiConfirm === 'function' && (g.name || g.options.some(o => o.name)) && !await uiConfirm(tt('del_q', { n:g.name || '…' }))) return;
+    removed.groups.push(g.id); groups.splice(gi, 1); draw();
+  }
+  function addO(gi){ const last = groups[gi].options.slice(-1)[0]; groups[gi].options.push(opt('', 0, 0, last ? last.unit : 'kg')); draw(); }
   function delO(gi, oi){ const o = groups[gi].options[oi]; removed.options.push(o.id); groups[gi].options.splice(oi, 1); draw(); }
   function set(gi, k, v){ groups[gi][k] = v; }
   function setO(gi, oi, k, v){ groups[gi].options[oi][k] = v; }
+  function setW(gi, oi, v){ const o = groups[gi].options[oi]; const n = Math.max(0, Number(v) || 0); o.w = o.unit === 'g' ? n / 1000 : n; }
+  function setU(gi, oi, unit, v){ const o = groups[gi].options[oi]; o.unit = unit; setW(gi, oi, v); }
+  function pv(gi){ const el = document.getElementById('oepv' + gi); if (el) el.innerHTML = pvHtml(groups[gi]); }
   function check(){
     for (const g of groups){
       g.name = (g.name || '').trim(); g.options = g.options.filter(o => (o.name || '').trim());
@@ -3724,11 +4254,11 @@ const OE = (() => {
     if (removed.options.length) need(await sbc.from('menu_options').delete().in('id', removed.options));
     if (!groups.length) return;
     need(await sbc.from('menu_option_groups').upsert(groups.map((g, i) => ({ id:g.id, menu_item_id:id, name:g.name, min_select:Math.min(g.min, g.max), max_select:g.max, sort_order:i }))));
-    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), weight_kg:Math.max(0, Number(o.w) || 0), is_available:o.on, sort_order:i })));
+    const rows = []; groups.forEach(g => g.options.forEach((o, i) => rows.push({ id:o.id, group_id:g.id, name:o.name.trim(), price:Math.max(0, Number(o.price) || 0), weight_kg:Math.round(Math.max(0, Number(o.w) || 0) * 1000) / 1000, is_available:o.on, sort_order:i })));
     if (rows.length) need(await sbc.from('menu_options').upsert(rows));
     removed = { groups:[], options:[] };
   }
-  return { init, html, load, save, addGroup, delGroup, addO, delO, set, setO, preset };
+  return { init, html, load, save, addGroup, delGroup, addO, delO, set, setO, setW, setU, pv, preset };
 })();
 
 // ================= REPORTS: Excel and PDF (Shop app and Admin) =================
