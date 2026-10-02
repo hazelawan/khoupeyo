@@ -253,6 +253,14 @@ h2{font-size:18px}
 
 
 
+  .secrow{display:flex;align-items:center;gap:12px;margin:18px 0 6px}
+.secoff{opacity:.5}
+#rqWait .rqsteps{margin-top:12px;display:grid;gap:10px}
+.rqsteps div{display:flex;gap:10px;align-items:flex-start;color:var(--muted)}
+.rqsteps i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px;background:var(--field);color:var(--muted)}
+.rqsteps .done{color:var(--ink)} .rqsteps .done i{background:var(--green);color:#fff}
+.rqsteps .now{color:var(--ink);font-weight:700} .rqsteps .now i{background:var(--marigold,#FFB400);color:#2A1D00}
+.rqsteps small{display:block;font-weight:500;color:var(--muted);font-size:12px}
 #rqCats .chip{text-align:start;white-space:normal;line-height:1.25;padding:9px 10px;font-size:13.5px}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
@@ -487,7 +495,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.1';
+const APP_VERSION = '4.4';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -547,6 +555,8 @@ const I18N = {
     to_receive_note:'Your earning from delivered orders that Wanhar Mart has not paid yet.',
     payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
     reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
+    cancel:'Cancel', del_section:'Delete section', del_sec_empty_q:'Delete the section “{s}”?', del_sec_items:'This section has {n} products. What should happen to them?', del_sec_move:'Move them to', del_sec_kill:'Delete the products too', del_sec_go:'Delete section', del_sec_kill_q:'Delete “{s}” and its {n} products? This can not be undone.', sec_deleted:'Section deleted',
+    sec_switch:'Whole section on or off', sec_all_on:'All in stock', sec_all_off:'Section is off', sec_some_on:'{a} of {b} in stock', sec_empty:'No products', sec_off_q:'Turn off the whole section “{s}”? Customers will not see its {n} products until you turn it on.', sec_on_done:'Section is on', sec_off_done:'Section is off',
     add_product:'Add product', add_section:'Add section', edit_section:'Edit section', section:'Section', section_name:'Section name',
     product_name:'Product name', description:'Description', price:'Selling price (Rs)', compare:'Price before discount (optional)',
     photo:'Photo', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
@@ -557,6 +567,7 @@ const I18N = {
     prep_default:'Usual preparing time (minutes)', sound:'Alert sound', logout:'Log out', language:'Language',
     enable_sound:'Tap here to turn on the alert sound',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    rq_s_sent:'Request sent', rq_s_seen:'Office opened it', rq_s_wait_seen:'Waiting for the office to open it', rq_s_ok:'Shop approved and opened', rq_usual:'Usually checked within 1 to 2 hours (9 AM to 9 PM). You also get a notification.', rq_still_t:'Still waiting', rq_still_unseen:'Your request was sent {a}. The office has not opened it yet. It is usually checked within 1 to 2 hours (9 AM to 9 PM).', rq_still_seen:'The office opened your request {a} and is checking it. You will get a notification when it is approved.', rq_long:'It is taking longer than usual. You can call the Wanhar Mart office of your city.', ago_now:'just now', ago_min:'{n} min ago', ago_h:'{n} hours ago', ago_d:'{n} days ago',
     rq_title:'Bring your shop to Wanhar Mart', rq_note:'Fill this once. The Wanhar Mart office of your city checks it and turns your shop on.', rq_city:'Your city', rq_cnic:'CNIC number (must)', rq_cnic_hint:'13 digits, like 37201-1234567-1', rq_owner:'Owner name', rq_phone:'Phone / WhatsApp', rq_shop:'Shop name', rq_cats:'What do you sell? (choose all that fit)', rq_other:'Write what you sell', rq_loc:'Shop location', rq_loc_btn:'Use my location (stand inside the shop)', rq_loc_ok:'Location saved', rq_map:'Check on map', rq_addr:'Address (if the map is wrong, this helps)', rq_addr_ph:'Main Bazar, near Jamia Masjid', rq_photo:'Photo of the shop front (optional)', rq_cnic_photo:'Photo of CNIC front (optional)', rq_note2:'Anything else? (optional)', rq_send:'Send request', rq_need_city:'Choose your city', rq_need_cnic:'Write your 13 digit CNIC number', rq_need_shop:'Write the shop name', rq_need_cat:'Choose at least one thing you sell', rq_sent:'Request sent', rq_wait_t:'Your request is with the office', rq_wait_n:'The Wanhar Mart office of {c} will check your shop and call you. When it is approved, this app opens by itself.', rq_cancel:'Cancel request', rq_cancel_q:'Cancel your shop request?', rq_rej:'Your last request was not approved', rq_edit:'Change and send again', rq_photo_saved:'Photo added', rq_loc_no:'Location is blocked. Allow location for this site, or write the address.',
     not_linked:'Your account is not linked to a shop yet',
     not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your shop:', check_again:'Check again',
@@ -597,6 +608,8 @@ const I18N = {
     to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Wanhar Mart نے ابھی ادا نہیں کی۔',
     payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
     reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
+    cancel:'واپس', del_section:'سیکشن ختم کریں', del_sec_empty_q:'سیکشن “{s}” ختم کریں؟', del_sec_items:'اس سیکشن میں {n} پروڈکٹس ہیں۔ ان کا کیا کریں؟', del_sec_move:'انہیں منتقل کریں', del_sec_kill:'پروڈکٹس بھی ختم کر دیں', del_sec_go:'سیکشن ختم کریں', del_sec_kill_q:'“{s}” اور اس کی {n} پروڈکٹس ختم کریں؟ یہ واپس نہیں ہو سکتا۔', sec_deleted:'سیکشن ختم ہو گیا',
+    sec_switch:'پورا سیکشن آن یا آف', sec_all_on:'سب دستیاب', sec_all_off:'سیکشن بند ہے', sec_some_on:'{b} میں سے {a} دستیاب', sec_empty:'کوئی پروڈکٹ نہیں', sec_off_q:'پورا سیکشن “{s}” بند کریں؟ جب تک آپ دوبارہ نہ کھولیں، گاہک اس کی {n} پروڈکٹس نہیں دیکھیں گے۔', sec_on_done:'سیکشن کھل گیا', sec_off_done:'سیکشن بند ہو گیا',
     add_product:'پروڈکٹ شامل کریں', add_section:'سیکشن شامل کریں', edit_section:'سیکشن تبدیل کریں', section:'سیکشن', section_name:'سیکشن کا نام',
     product_name:'پروڈکٹ کا نام', description:'تفصیل', price:'قیمت (Rs)', compare:'رعایت سے پہلے کی قیمت (اختیاری)',
     photo:'تصویر', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
@@ -607,6 +620,7 @@ const I18N = {
     prep_default:'عام تیاری کا وقت (منٹ)', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    rq_s_sent:'درخواست بھیج دی', rq_s_seen:'دفتر نے کھول لی', rq_s_wait_seen:'دفتر کے کھولنے کا انتظار', rq_s_ok:'دکان منظور اور چالو', rq_usual:'عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔ آپ کو نوٹیفکیشن بھی آئے گا۔', rq_still_t:'ابھی انتظار ہے', rq_still_unseen:'آپ کی درخواست {a} بھیجی گئی۔ دفتر نے ابھی اسے کھولا نہیں۔ عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔', rq_still_seen:'دفتر نے آپ کی درخواست {a} کھول لی ہے اور چیک کر رہا ہے۔ منظوری پر آپ کو نوٹیفکیشن آئے گا۔', rq_long:'معمول سے زیادہ وقت لگ رہا ہے۔ اپنے شہر کے Wanhar Mart دفتر کو فون کر سکتے ہیں۔', ago_now:'ابھی', ago_min:'{n} منٹ پہلے', ago_h:'{n} گھنٹے پہلے', ago_d:'{n} دن پہلے',
     rq_title:'اپنی دکان Wanhar Mart پر لائیں', rq_note:'یہ ایک بار بھریں۔ آپ کے شہر کا Wanhar Mart دفتر اسے چیک کر کے آپ کی دکان چالو کرے گا۔', rq_city:'آپ کا شہر', rq_cnic:'شناختی کارڈ نمبر (ضروری)', rq_cnic_hint:'13 ہندسے، جیسے 37201-1234567-1', rq_owner:'مالک کا نام', rq_phone:'فون / واٹس ایپ', rq_shop:'دکان کا نام', rq_cats:'آپ کیا بیچتے ہیں؟ (جتنے ہوں سب چنیں)', rq_other:'لکھیں آپ کیا بیچتے ہیں', rq_loc:'دکان کی لوکیشن', rq_loc_btn:'میری لوکیشن لیں (دکان کے اندر کھڑے ہو کر)', rq_loc_ok:'لوکیشن محفوظ', rq_map:'نقشے پر دیکھیں', rq_addr:'پتہ (اگر نقشہ غلط ہو تو یہ کام آئے گا)', rq_addr_ph:'مین بازار، جامع مسجد کے پاس', rq_photo:'دکان کے سامنے کی تصویر (اختیاری)', rq_cnic_photo:'شناختی کارڈ کی تصویر (اختیاری)', rq_note2:'کچھ اور؟ (اختیاری)', rq_send:'درخواست بھیجیں', rq_need_city:'اپنا شہر چنیں', rq_need_cnic:'اپنا 13 ہندسوں کا شناختی کارڈ نمبر لکھیں', rq_need_shop:'دکان کا نام لکھیں', rq_need_cat:'کم از کم ایک چیز چنیں جو آپ بیچتے ہیں', rq_sent:'درخواست بھیج دی گئی', rq_wait_t:'آپ کی درخواست دفتر کے پاس ہے', rq_wait_n:'{c} کا Wanhar Mart دفتر آپ کی دکان چیک کر کے آپ کو فون کرے گا۔ منظوری کے بعد یہ ایپ خود کھل جائے گی۔', rq_cancel:'درخواست منسوخ کریں', rq_cancel_q:'دکان کی درخواست منسوخ کریں؟', rq_rej:'آپ کی پچھلی درخواست منظور نہیں ہوئی', rq_edit:'بدل کر دوبارہ بھیجیں', rq_photo_saved:'تصویر لگ گئی', rq_loc_no:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں، یا پتہ لکھیں۔',
     not_linked:'آپ کا اکاؤنٹ ابھی کسی دکان سے نہیں جڑا',
     not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
@@ -708,6 +722,8 @@ async function loadMyRequest(){
       shop_name:old.shop_name || '', categories:old.categories || [], other_category:old.other_category || '', address:old.address || '', lat:old.lat ?? null, lng:old.lng ?? null, note:'', shop_photo_path:null, cnic_photo_path:null };
   }
 }
+function agoText(ts){ const m = Math.max(0, Math.round((Date.now() - new Date(ts)) / 60000));
+  return m < 1 ? t('ago_now') : m < 60 ? t('ago_min').replace('{n}', m) : m < 1440 ? t('ago_h').replace('{n}', Math.floor(m / 60)) : t('ago_d').replace('{n}', Math.floor(m / 1440)); }
 function showShopRequest(){
   const q = state.sreq;
   const top = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
@@ -717,8 +733,14 @@ function showShopRequest(){
     $('app').innerHTML = `<div class="auth" id="rqWait">${top}<div style="font-size:54px;margin:20px 0 6px">⏳</div>
       <h1 style="font-size:24px;margin:0 0 8px">${t('rq_wait_t')}</h1><p class="muted">${esc(t('rq_wait_n').replace('{c}', city))}</p>
       <div class="card" style="margin-top:12px"><b>${esc(q.shop_name)}</b><div class="muted" style="font-size:14px">${(q.categories || []).map(catName).map(esc).join(' · ')}</div>
-        <div class="muted" style="font-size:13px;margin-top:4px">📍 ${esc(city)}${q.address ? ' · ' + esc(q.address) : ''}</div></div>
-      <div class="actions" style="display:grid;gap:10px;margin-top:12px"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+        <div class="muted" style="font-size:13px;margin-top:4px">📍 ${esc(city)}${q.address ? ' · ' + esc(q.address) : ''}</div>
+        <div class="rqsteps">
+          <div class="done"><i>✓</i><span>${t('rq_s_sent')}<small>${esc(agoText(q.created_at))}</small></span></div>
+          <div class="${q.seen_at ? 'done' : 'now'}"><i>${q.seen_at ? '✓' : '2'}</i><span>${q.seen_at ? t('rq_s_seen') : t('rq_s_wait_seen')}${q.seen_at ? `<small>${esc(agoText(q.seen_at))}</small>` : ''}</span></div>
+          <div class="${q.seen_at ? 'now' : ''}"><i>3</i><span>${t('rq_s_ok')}</span></div></div>
+        <div class="muted" style="font-size:13px;margin-top:10px">🕘 ${t('rq_usual')}</div>
+        ${Date.now() - new Date(q.created_at) > 24 * 3600000 ? `<div class="note" style="margin-top:8px">${t('rq_long')}</div>` : ''}</div>
+      <div class="actions" style="display:grid;gap:10px;margin-top:12px"><button class="btn" onclick="A.recheck(true)">${t('check_again')}</button>
         <button class="btn ghost" onclick="A.cancelShopReq()">${t('rq_cancel')}</button><button class="link" onclick="A.logout()">${t('logout')}</button></div>
       <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
     return;
@@ -961,7 +983,11 @@ function viewMenu(){
   else {
     body = state.cats.map(c => {
       const items = list.filter(i => i.category_id === c.id);
-      return `<div class="cat"><h3>${esc(c.name)}</h3><button class="link" style="padding:4px 0" onclick="A.editCategory('${c.id}')">${t('edit_section')}</button></div>${items.map(itemRow).join('')}`;
+      const all = state.items.filter(i => i.category_id === c.id); const on = all.filter(i => i.is_available).length;
+      return `<div class="cat secrow"><div style="min-width:0;flex:1"><h3 style="margin:0">${esc(c.name)}</h3>
+        <small class="muted">${all.length ? (on === all.length ? t('sec_all_on') : on ? t('sec_some_on', { a:on, b:all.length }) : t('sec_all_off')) : t('sec_empty')} · <button class="link" style="padding:0;font-size:inherit" onclick="A.editCategory('${c.id}')">${t('edit_section')}</button></small></div>
+        ${all.length ? `<label class="switch" title="${t('sec_switch')}"><input type="checkbox" ${on ? 'checked' : ''} onchange="A.toggleSection('${c.id}', this.checked)" aria-label="${t('sec_switch')}: ${esc(c.name)}"><span></span></label>` : ''}</div>
+        <div class="${all.length && !on ? 'secoff' : ''}">${items.map(itemRow).join('')}</div>`;
     }).join('');
     const loose = list.filter(i => !state.cats.some(c => c.id === i.category_id));
     if (loose.length) body += loose.map(itemRow).join('');
@@ -1226,7 +1252,8 @@ const A = {
     if (!await uiConfirm(t('rq_cancel_q'))) return;
     await run(async () => { need(await sb.rpc('cancel_shop_request')); state.rqForm = null; await loadMyRequest(); showShopRequest(); });
   },
-  async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else { await loadMyRequest(); showShopRequest(); } }); },
+  async recheck(manual){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else { await loadMyRequest(); showShopRequest();
+    const q = state.sreq; if (manual === true && q && q.status === 'pending') uiAlert(t('rq_still_t') + '\n\n' + (q.seen_at ? t('rq_still_seen').replace('{a}', agoText(q.seen_at)) : t('rq_still_unseen').replace('{a}', agoText(q.created_at))), { icon:q.seen_at ? '👀' : '⏳' }); } }); },
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
   statement(kind){
     const e = state.earn || {}; const r = state.restaurant; const list = (state.earnOrders || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -1328,12 +1355,41 @@ const A = {
   // ---- Products ----
   productFilter(f){ state.productFilter = f; renderTab(); },
   productSearch(v){ state.productQ = v; renderTab(); const inp = $('pq'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
+  async toggleSection(id, v){
+    const c = state.cats.find(x => x.id === id); const n = state.items.filter(i => i.category_id === id).length;
+    if (!v && !await uiConfirm(t('sec_off_q', { s:c ? c.name : '', n }))) { renderTab(); return; }
+    await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('category_id', id)); await loadMenu(); renderTab(); toast(v ? t('sec_on_done') : t('sec_off_done')); });
+  },
   async toggleItem(id, v){ await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('id', id)); await loadMenu(); renderTab(); }); },
   editCategory(id){
     const c = state.cats.find(x => x.id === id);
     openSheet(c ? t('edit_section') : t('add_section'), `
       <label class="f" for="c_name" style="margin-top:0">${t('section_name')}</label><input id="c_name" type="text" value="${esc(c ? c.name : '')}" placeholder="Burgers">
-      <div class="actions"><button class="btn" onclick="A.saveCategory('${id || ''}')">${t('save')}</button></div>`);
+      <div class="actions"><button class="btn" onclick="A.saveCategory('${id || ''}')">${t('save')}</button>
+      ${c ? `<button class="btn warn" onclick="A.deleteCategory('${id}')">🗑️ ${t('del_section')}</button>` : ''}</div>`);
+  },
+  async deleteCategory(id){
+    const c = state.cats.find(x => x.id === id); if (!c) return;
+    const items = (state.items || []).filter(i => i.category_id === id); const others = state.cats.filter(x => x.id !== id);
+    if (!items.length){
+      if (!await uiConfirm(t('del_sec_empty_q').replace('{s}', c.name))) return;
+      return run(async () => { need(await sb.from('menu_categories').delete().eq('id', id)); await loadMenu(); closeSheet(); renderTab(); toast(t('sec_deleted')); });
+    }
+    openSheet('🗑️ ' + t('del_section'), `<p style="margin-top:0"><b>${esc(c.name)}</b></p><p class="muted">${t('del_sec_items').replace('{n}', items.length)}</p>
+      ${others.length ? `<label class="check"><input type="radio" name="dsec" value="move" checked> ${t('del_sec_move')}</label>
+        <select id="dsec_to" style="margin:4px 0 10px">${others.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('')}</select>` : ''}
+      <label class="check"><input type="radio" name="dsec" value="kill" ${others.length ? '' : 'checked'}> ${t('del_sec_kill')}</label>
+      <div class="actions"><button class="btn warn" onclick="A.deleteCategoryGo('${id}')">${t('del_sec_go')}</button><button class="btn ghost" onclick="A.editCategory('${id}')">${t('cancel')}</button></div>`);
+  },
+  async deleteCategoryGo(id){
+    const c = state.cats.find(x => x.id === id); const items = (state.items || []).filter(i => i.category_id === id);
+    const how = (document.querySelector('input[name=dsec]:checked') || {}).value || 'kill';
+    if (how === 'kill' && !await uiConfirm(t('del_sec_kill_q').replace('{s}', c.name).replace('{n}', items.length))) return;
+    await run(async () => {
+      if (how === 'move') need(await sb.from('menu_items').update({ category_id:$('dsec_to').value }).eq('category_id', id));
+      need(await sb.from('menu_categories').delete().eq('id', id));
+      await loadMenu(); closeSheet(); renderTab(); toast(t('sec_deleted'));
+    });
   },
   async saveCategory(id){
     const name = $('c_name').value.trim(); if (!name) return toast(t('enter_all'), true);
