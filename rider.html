@@ -314,6 +314,11 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 .gpbox{position:relative;background:var(--surface);border-radius:24px;padding:24px 20px;text-align:center;max-width:340px;width:100%;animation:uiP .3s cubic-bezier(.2,.8,.2,1) both}
 @keyframes gFall{to{transform:translateY(105vh) rotate(540deg)}}
 @media (prefers-reduced-motion:reduce){.gparty i{display:none}}
+
+/* online payment + whatsapp */
+.paidok{margin-top:10px;background:rgba(31,111,74,.12);color:var(--green);border-radius:12px;padding:10px 12px;font-weight:800}
+.paidok.wait{background:rgba(232,160,40,.14);color:#9A5B00}
+.wabtn{display:flex!important;width:100%;margin-top:8px;background:#25D366!important;color:#fff!important;border:0!important;justify-content:center;text-decoration:none}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -547,7 +552,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.9';
+const APP_VERSION = '5.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -612,7 +617,9 @@ const I18N = {
     accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
     slide_picked:'Slide when you have the order', slide_delivered:'Slide when delivered and cash collected',
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call',
-    cash_collect:'Collect cash', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
+    cash_collect:'Collect cash', paid_short:'Paid online', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
+    qr_btn:'📲 Customer wants to pay by QR', qr_t:'Pay by QR', qr_s:'Ask the customer to scan this QR and pay {n}. Then type the Transaction ID (TID) from their phone.', qr_none:'QR payment is not set up in your area. Take cash.', tid:'Transaction ID (TID)', qr_send:'Payment done — send for check',
+    payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Wanhar Mart rider for order #{n}.', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
     today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Wanhar Mart at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
@@ -625,7 +632,8 @@ const I18N = {
     rules_note:'Breaking a rule means a fine that is cut from your monthly pay.', rating:'Customer rating',
     enable_sound:'Tap here to turn on the alert sound', sound:'Alert sound', logout:'Log out', language:'Language',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
-    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    not_confirmed:'Your email is not confirmed yet. Open the email from Wanhar Mart (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
+    confirm_email:'Account created. We sent you an email: open it (look in Spam too) and tap the link, then log in.',
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
     bad_phone:'Enter a valid phone number like 0300 1234567', st_rider_assigned:'Go to the shop', st_picked_up:'On the way to the customer',
     accepted:'Delivery accepted', no_phone:'No phone number', customer:'Customer',
@@ -688,7 +696,9 @@ const I18N = {
     accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
     slide_picked:'آرڈر لینے کے بعد سلائیڈ کریں', slide_delivered:'پہنچا کر رقم لینے کے بعد سلائیڈ کریں',
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال',
-    cash_collect:'وصول کریں', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
+    cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
+    qr_btn:'📲 گاہک QR سے ادائیگی کرنا چاہتا ہے', qr_t:'QR سے ادائیگی', qr_s:'گاہک سے کہیں یہ QR اسکین کر کے {n} ادا کرے۔ پھر اس کے فون سے ٹرانزیکشن آئی ڈی (TID) لکھیں۔', qr_none:'آپ کے علاقے میں QR ادائیگی سیٹ نہیں۔ نقد لیں۔', tid:'ٹرانزیکشن آئی ڈی (TID)', qr_send:'ادائیگی ہو گئی — چیک کے لیے بھیجیں',
+    payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
     today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Wanhar Mart طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
@@ -701,7 +711,8 @@ const I18N = {
     rules_note:'اصول توڑنے پر جرمانہ آپ کی ماہانہ رقم سے کٹے گا۔', rating:'گاہکوں کی ریٹنگ',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
-    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Wanhar Mart کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
+    confirm_email:'اکاؤنٹ بن گیا۔ ہم نے آپ کو ای میل بھیجی ہے: اسے کھولیں (Spam میں بھی دیکھیں)، لنک دبائیں، پھر لاگ اِن کریں۔',
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
     bad_phone:'درست فون نمبر لکھیں، جیسے 0300 1234567', st_rider_assigned:'دکان جائیں', st_picked_up:'گاہک کی طرف جا رہے ہیں',
     accepted:'ڈیلیوری قبول ہو گئی', no_phone:'فون نمبر نہیں', customer:'گاہک',
@@ -1106,6 +1117,14 @@ function bigBadges(big, heavy, n, kg){
   kg = Math.round(num(kg) * 10) / 10;
   return (big || heavy || kg) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">${big ? `<span class="pill y">📦 ${t('big_order')} · ${n} ${t('items')}</span>` : ''}${kg ? `<span class="pill y">⚖️ ${kg} kg</span>` : ''}${heavy && !kg ? `<span class="pill y">🏋️ ${t('heavy_items')}</span>` : ''}</div>` : '';
 }
+const cashTxt = n => num(n) ? money(n) : '✅ ' + t('paid_short');
+const waNum = p => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('92') && d.length === 12) d = '0' + d.slice(2); if (d.startsWith('3') && d.length === 10) d = '0' + d; return /^03\d{9}$/.test(d) ? '92' + d.slice(1) : null; };
+function cashBox(o){
+  if (o.payment_method !== 'cod' && o.payment_status === 'paid') return `<div class="paidok">${t('paid_online')}</div>`;
+  if (o.payment_method !== 'cod') return `<div class="paidok wait">${t('qr_check')}${o.pay_ref ? ` · TID ${esc(o.pay_ref)}` : ''}</div>`;
+  const qr = ((state.settings.pay_accounts || {}).on && (state.settings.pay_accounts || {}).qr_url);
+  return `<div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>${o.status === 'picked_up' && qr ? `<button class="btn ghost small" style="width:100%;margin-top:6px" onclick="A.qrPay('${o.id}')">${t('qr_btn')}</button>` : ''}`;
+}
 function payNote(extra, tip){
   const parts = []; if (num(extra)) parts.push(t('incl_extra').replace('{r}', money(extra))); if (num(tip)) parts.push(t('incl_tip').replace('{r}', money(tip)));
   return parts.length ? `<div class="muted" style="font-size:13px">${parts.join(' · ')}</div>` : '';
@@ -1119,7 +1138,7 @@ function showJobPopup(j){
     <div class="timer"><i id="popBar"></i></div>
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="line" style="align-items:flex-end"><div><div class="muted">${t('your_pay')}</div><div class="big">${money(j.rider_pay)}</div>${payNote(j.extra_pay, j.tip)}</div>
-      <div style="text-align:end"><div class="muted">${t('cash_collect')}</div><b style="font-size:20px">${money(j.total)}</b></div></div>
+      <div style="text-align:end"><div class="muted">${num(j.total) ? t('cash_collect') : '&nbsp;'}</div><b style="font-size:20px">${cashTxt(j.total)}</b></div></div>
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
@@ -1216,16 +1235,17 @@ function activeCard(o){
       <div class="muted">${esc(o.address_text || '')}</div>
       ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
       ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')}</a>` : `<span class="muted">${t('no_phone')}</span>`}
-      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(o.address_lat, o.address_lng, o.address_text)}">${t('open_maps')}</a></div>` : ''}</div></div>`;
+      <a class="btn ghost small" target="_blank" rel="noopener" href="${mapsUrl(o.address_lat, o.address_lng, o.address_text)}">${t('open_maps')}</a></div>
+      ${waNum(c.phone) ? `<a class="btn small wabtn" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent(t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : ''}</div></div>`;
   const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
   const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   const action = picked
-    ? arrived + issueBlock(o) + slider(t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
+    ? arrived + issueBlock(o) + slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
     <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${bigHtml}${restBlock}${custBlock}
-    <div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>
+    ${cashBox(o)}
     <div class="line muted"><span>${t('your_pay')}${num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee) ? `<div style="font-size:13px">${t('incl_extra').replace('{r}', money(Math.round((num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee)) * Math.min(100, Math.max(0, num(state.settings.rider_extra_share ?? 100))) / 100)))}</div>` : ''}</span><b>${money(o.rider_pay)}</b></div>${num(o.tip) ? `<div class="line" style="color:var(--green);font-weight:700"><span>💚 ${t('tip_incl')}</span><b>${money(o.tip)}</b></div>` : ''}${action}${chatRow(o)}</div>`;
 }
 function jobCard(j){
@@ -1233,7 +1253,7 @@ function jobCard(j){
   return `<div class="card" ${j.offered_to_me ? 'style="border:2px solid var(--marigold,#F2A900)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
     <div class="muted">${esc(j.restaurant_address || '')}</div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
-    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}<span>${t('cash_collect')} <b>${money(j.total)}</b></span></div>
+    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="cash"><span>${t('your_pay')}${payNote(j.extra_pay, j.tip)}</span><b>${money(j.rider_pay)}</b></div>
     <button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>`;
@@ -1688,6 +1708,8 @@ function viewAcct(){
       <div style="margin-top:4px"><span class="pill ${reg ? '' : 'y'}">${reg ? t('face_ok') : t('face_missing')}</span></div></div>
     </div>
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
+      <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
     <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
     <button class="btn ghost" style="margin-bottom:10px" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
@@ -1710,6 +1732,12 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
     renderShell(); markTab(); renderTab();
+  },
+  async resendConfirm(){
+    const email = ($('a_email') && $('a_email').value.trim()) || ''; if (!email.includes('@')) return;
+    const { error } = await sb.auth.resend({ type:'signup', email, options:{ emailRedirectTo:new URL('verified.html?app=rider', location.href).href } });
+    if (error) return toast(/rate|seconds/i.test(error.message) ? error.message : t('error'), true);
+    toast(t('resent'));
   },
   async forgotPw(){
     const email = ($('a_email') && $('a_email').value.trim()) || '';
@@ -1754,7 +1782,9 @@ const A = {
     } catch (err) {
       logErr(err);
       const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
-      const el = $('authMsg'); if (el) el.textContent = m;
+      const el = $('authMsg');
+      if (el && /not confirmed/i.test((err && err.message) || '')) el.innerHTML = `${esc(t('not_confirmed'))}<br><button class="link" style="padding:8px 0 0" onclick="A.resendConfirm()">📧 ${esc(t('resend'))}</button>`;
+      else if (el) el.textContent = m;
       const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
     }
   },
@@ -1977,6 +2007,38 @@ const A = {
   async markPicked(id){
     await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'picked_up' })); await loadJobs(); renderTab(); toast(t('saved')); });
     renderTab();
+  },
+  payoutForm(){
+    const p = (state.rider && state.rider.payout) || {}; const m = p.method || 'jazzcash';
+    openSheet(t('payout_t'), `<div class="muted" style="font-size:14px">${t('payout_s')}</div>
+      <label class="f" for="po_m">${t('pay_method')}</label><select id="po_m" onchange="A.poMethod(this.value)">${[['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['bank','Bank / Raast']].map(([k, l]) => `<option value="${k}" ${m === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <div id="po_bank" style="display:${m === 'bank' ? 'block' : 'none'}"><label class="f" for="po_bn">${t('bank_name')}</label><input id="po_bn" type="text" value="${esc(p.bank || '')}" placeholder="Meezan, HBL, UBL…"></div>
+      <label class="f" for="po_t">${t('acc_title')}</label><input id="po_t" type="text" value="${esc(p.title || '')}">
+      <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
+      <div class="actions"><button class="btn" onclick="A.savePayout()">${t('save_acc')}</button></div>`);
+  },
+  poMethod(m){ $('po_bank').style.display = m === 'bank' ? 'block' : 'none'; $('po_nl').textContent = m === 'bank' ? t('iban_l') : t('acc_number'); const n = $('po_n'); n.placeholder = m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'; n.inputMode = m === 'bank' ? 'text' : 'tel'; },
+  async savePayout(){
+    const m = $('po_m').value, title = $('po_t').value.trim(); let n = $('po_n').value.replace(/[\s-]/g, '').toUpperCase();
+    if (!title || !n) return toast(t('enter_all'), true);
+    if (m !== 'bank'){ n = n.replace(/^\+?92/, '0'); if (!/^03\d{9}$/.test(n)) return toast('03XXXXXXXXX', true); }
+    if (m === 'bank' && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(n) && !/^\d{8,20}$/.test(n)) return toast(t('iban_l'), true);
+    const payout = { method:m, title, number:n, bank:m === 'bank' ? ($('po_bn').value.trim() || null) : null, updated_at:new Date().toISOString() };
+    await run(async () => { need(await sb.from('riders').update({ payout }).eq('id', state.rider.id)); state.rider.payout = payout; closeSheet(); renderTab(); toast(t('acc_saved')); });
+  },
+  qrPay(id){
+    const o = (state.mine || []).find(x => x.id === id) || {}; const p = state.settings.pay_accounts || {};
+    if (!p.qr_url) return toast(t('qr_none'), true);
+    openSheet(t('qr_t'), `<div style="text-align:center"><img src="${esc(p.qr_url)}" alt="QR" style="width:240px;max-width:80%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:14px;padding:6px;border:1px solid var(--line)"></div>
+      <p style="margin:10px 0 0">${t('qr_s', { n:'<b>' + money(o.total) + '</b>' })}</p>
+      <label class="f" for="qr_tid">${t('tid')}</label><input id="qr_tid" type="text" inputmode="numeric" dir="ltr" autocomplete="off">
+      <div class="actions"><button class="btn" id="qrSend" onclick="A.qrSend('${id}')">${t('qr_send')}</button></div>`);
+  },
+  async qrSend(id){
+    const ref = ($('qr_tid').value || '').trim(); if (ref.length < 4) return toast(t('tid'), true);
+    const b = $('qrSend'); if (b) b.disabled = true;
+    await run(async () => { need(await sb.rpc('rider_paid_online', { p_order:id, p_ref:ref })); closeSheet(); await loadJobs(); renderTab(); toast('✓'); });
+    const b2 = $('qrSend'); if (b2) b2.disabled = false;
   },
   async markDelivered(id){
     await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'delivered' })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
