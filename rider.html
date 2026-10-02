@@ -90,7 +90,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .tile.hi span{color:rgba(255,255,255,.85)}
 .bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0 4px}
 .bar i{display:block;height:100%;background:var(--green);border-radius:6px}
-.bar i.over{background:var(--danger)}
+.bar i.overlim{background:var(--danger)!important}
 .row{display:flex;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
 .row .r{text-align:end;white-space:nowrap}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:60;max-width:90%;font-weight:600;text-align:center}
@@ -294,6 +294,26 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 
 .boost{border-radius:16px;padding:12px 14px;margin:0 0 12px;background:#FFF5D9;color:#4F3A00;border:1px solid rgba(255,180,0,.45)}
 .boost.live{background:var(--forest,#0B3A2B);color:#fff;border:0;box-shadow:inset 0 -4px 0 #FFB400}
+.goal{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin:0 0 12px}
+.goal.empty{display:flex;gap:12px;align-items:center;border-style:dashed}
+.goal .gi{font-size:28px}
+.gring{position:relative;width:84px;height:84px;flex:none}
+.gring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.gring .bg{stroke:var(--field,#F1F4F0)} .gring .fg{stroke:var(--marigold,#FFB400);transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)}
+.gring.done .fg{stroke:var(--green)}
+.gnum{position:absolute;inset:0;display:grid;place-items:center}
+.gnum b{font-family:var(--display,inherit);font-size:19px}
+.gring.done .gnum b{color:var(--green);font-size:26px}
+.gbig{font-family:var(--display,inherit);font-size:22px;font-weight:800;letter-spacing:-.02em}
+.gbig .muted{font-size:15px;font-weight:600}
+.gstreak{display:inline-flex;gap:4px;align-items:center;margin-top:6px;background:rgba(255,180,0,.16);color:#7A4A00;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:800}
+@media (prefers-color-scheme: dark){ .gstreak{color:#F2C66B} }
+.gparty{position:fixed;inset:0;z-index:9700;background:rgba(6,18,12,.55);display:grid;place-items:center;padding:20px;overflow:hidden}
+.gparty i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:gFall 1.8s ease-in forwards}
+.gpbox{position:relative;background:var(--surface);border-radius:24px;padding:24px 20px;text-align:center;max-width:340px;width:100%;animation:uiP .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes gFall{to{transform:translateY(105vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.gparty i{display:none}}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -527,7 +547,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.8';
+const APP_VERSION = '4.9';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -645,6 +665,7 @@ const I18N = {
     id_fee:'Rider ID fee (monthly)', id_fee_note:'This fee is cut from your month pay every month.',
     offers_title:'Company offers', offers_note:'Insurance, health package, mobile on installments and more. Ask here, the office approves. The cost is cut from your pay.', want_this:'I want this', asked_wait:'Asked · waiting for office', offer_free:'Free', per_month_x:'{a} a month × {n} months', every_month:'{a} every month', one_time:'{a} one time', cut_from_pay:'cut from pay', offer_q:'Ask the office for “{o}”?', note_opt:'Note for the office (optional):', req_sent:'Request sent to the office', my_charges:'Charges cut from my pay', no_charges:'No charges.', ch_stopped:'Stopped', ch_done:'Finished', ch_active:'Active', inst_part:'installment {k} of {n}', monthly_word:'monthly', once_word:'one time', my_requests:'My requests', rq_pending:'Waiting', rq_approved:'Approved', rq_rejected:'Not approved', rq_cancelled:'Cancelled', contract_title:'Change my contract', contract_note_free:'You are now a freelance rider (own bike). Want to work as a company rider? Send a request. First the ID fee for the days you worked this month is cleared, then you count as a company rider.', contract_note_co:'You are now a company rider. Want to work freelance? Send a request. Any dues are cleared first.', contract_btn:'Send contract change request', contract_q:'Send a request to change your contract?', contract_wait:'Your contract change request is waiting for the office.', rq_contract:'Contract change', no_offers:'No offers right now.', cancel_req_q:'Cancel this request?',
     boost_now:'{t}: {a} extra on every delivery', boost_soon:'Coming: {t} — {a} extra on every delivery', boost_until:'Until {d}. On top of your normal pay.', boost_from:'{d} to {e}', boost_line:'Special day extra',
+    g_title:'My goal', g_none:'Set your own goal and beat it every day. It is just for you.', g_set:'Set my goal', g_change:'Change', g_today:'Today', g_week:'This week', g_month:'This month', g_period_day:'Every day', g_period_week:'Every week', g_period_month:'Every month', g_kind_d:'Deliveries', g_kind_e:'Earnings (Rs)', g_left_d:'{n} more deliveries', g_left_e:'{n} more to earn', g_done:'Goal done! 🎉', g_streak:'{n} day streak', g_best:'Best: {n} days', g_sheet:'My own goal', g_sheet_note:'This goal is only for you, to push yourself. It is not a company target and gives no bonus.', g_how:'Goal type', g_amount:'My goal', g_save:'Save goal', g_off:'Remove this goal', g_saved:'Goal saved. You can do it! 💪', g_party:'You hit your goal!', g_party_sub:'{v} today. Keep the streak going tomorrow.', g_half:'Halfway there, keep going!', g_almost:'Almost there!', g_start:'Let\'s start!',
     late_fine_rule:'Late for duty (after {g} min): fine {f}', must_hours:'Duty every day: {h} hours', reason_need:'Please write the reason',
     tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
     tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
@@ -720,6 +741,7 @@ const I18N = {
     id_fee:'رائیڈر آئی ڈی کی ماہانہ فیس', id_fee_note:'یہ فیس ہر مہینے آپ کی تنخواہ/کمائی سے کٹتی ہے۔',
     offers_title:'کمپنی کی آفرز', offers_note:'انشورنس، ہیلتھ پیکج، قسطوں پر موبائل وغیرہ۔ یہاں درخواست دیں، دفتر منظور کرے گا۔ رقم آپ کی تنخواہ سے کٹے گی۔', want_this:'مجھے یہ چاہیے', asked_wait:'درخواست بھیج دی · دفتر کا انتظار', offer_free:'مفت', per_month_x:'{a} ماہانہ × {n} مہینے', every_month:'{a} ہر مہینے', one_time:'{a} ایک بار', cut_from_pay:'تنخواہ سے کٹے گا', offer_q:'دفتر سے “{o}” کی درخواست کریں؟', note_opt:'دفتر کے لیے نوٹ (اختیاری):', req_sent:'درخواست دفتر کو بھیج دی گئی', my_charges:'میری تنخواہ سے کٹوتیاں', no_charges:'کوئی کٹوتی نہیں۔', ch_stopped:'بند', ch_done:'مکمل', ch_active:'جاری', inst_part:'قسط {k} از {n}', monthly_word:'ماہانہ', once_word:'ایک بار', my_requests:'میری درخواستیں', rq_pending:'انتظار', rq_approved:'منظور', rq_rejected:'منظور نہیں', rq_cancelled:'منسوخ', contract_title:'کنٹریکٹ تبدیل کریں', contract_note_free:'آپ ابھی فری لانس رائیڈر ہیں (اپنی بائیک)۔ کمپنی رائیڈر بننا چاہتے ہیں؟ درخواست بھیجیں۔ پہلے اس مہینے جتنے دن کام کیا اتنے دن کی آئی ڈی فیس کلیئر ہوگی، پھر آپ کمپنی رائیڈر شمار ہوں گے۔', contract_note_co:'آپ ابھی کمپنی رائیڈر ہیں۔ فری لانس کام کرنا چاہتے ہیں؟ درخواست بھیجیں۔ پہلے بقایا رقم کلیئر ہوگی۔', contract_btn:'کنٹریکٹ تبدیلی کی درخواست بھیجیں', contract_q:'کنٹریکٹ تبدیل کرنے کی درخواست بھیجیں؟', contract_wait:'آپ کی کنٹریکٹ تبدیلی کی درخواست دفتر کے پاس ہے۔', rq_contract:'کنٹریکٹ تبدیلی', no_offers:'ابھی کوئی آفر نہیں۔', cancel_req_q:'یہ درخواست منسوخ کریں؟',
     boost_now:'{t}: ہر ڈیلیوری پر {a} اضافی', boost_soon:'جلد: {t} — ہر ڈیلیوری پر {a} اضافی', boost_until:'{d} تک۔ آپ کی عام کمائی کے اوپر۔', boost_from:'{d} سے {e} تک', boost_line:'خاص دن کی اضافی کمائی',
+    g_title:'میرا ہدف', g_none:'اپنا ہدف خود بنائیں اور روز اسے پورا کریں۔ یہ صرف آپ کے لیے ہے۔', g_set:'ہدف بنائیں', g_change:'بدلیں', g_today:'آج', g_week:'اس ہفتے', g_month:'اس مہینے', g_period_day:'ہر روز', g_period_week:'ہر ہفتے', g_period_month:'ہر مہینے', g_kind_d:'ڈیلیوریاں', g_kind_e:'کمائی (روپے)', g_left_d:'{n} ڈیلیوریاں اور', g_left_e:'{n} اور کمانے ہیں', g_done:'ہدف پورا! 🎉', g_streak:'{n} دن مسلسل', g_best:'سب سے زیادہ: {n} دن', g_sheet:'میرا اپنا ہدف', g_sheet_note:'یہ ہدف صرف آپ کے لیے ہے تاکہ آپ خود کو آگے بڑھائیں۔ یہ کمپنی کا ٹارگٹ نہیں اور اس پر بونس نہیں ملتا۔', g_how:'ہدف کس چیز کا', g_amount:'میرا ہدف', g_save:'ہدف محفوظ کریں', g_off:'یہ ہدف ہٹا دیں', g_saved:'ہدف محفوظ۔ آپ کر سکتے ہیں! 💪', g_party:'آپ نے اپنا ہدف پورا کر لیا!', g_party_sub:'آج {v}۔ کل بھی سلسلہ جاری رکھیں۔', g_half:'آدھا ہو گیا، جاری رکھیں!', g_almost:'بس تھوڑا سا اور!', g_start:'چلیں شروع کریں!',
     late_fine_rule:'ڈیوٹی پر دیر ({g} منٹ کے بعد): جرمانہ {f}', must_hours:'روزانہ ڈیوٹی: {h} گھنٹے', reason_need:'براہ کرم وجہ لکھیں',
     tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
     tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
@@ -946,6 +968,7 @@ function renderTab(){
   const v = $('view'); if (!v) return;
   if (state.tab === 'jobs') v.innerHTML = viewJobs();
   if (state.tab === 'earn') v.innerHTML = viewEarn();
+  if ((state.tab === 'jobs' || state.tab === 'earn') && state.goals) setTimeout(goalParty, 400);
   if (state.tab === 'rules') v.innerHTML = viewRules();
   if (state.tab === 'acct') v.innerHTML = viewAcct();
   if (state.tab === 'duty') v.innerHTML = viewDuty();
@@ -1032,6 +1055,7 @@ async function loadMoney(){
   ]);
   state.done = need(done); state.cash = need(unsettled).reduce((n, o) => n + num(o.total), 0);
   state.fines = need(fines); state.payouts = need(pays); state.handovers = need(hand);
+  await loadGoals();
   try { const r = state.rider; const { data } = await sb.from('rider_boosts').select('*').eq('is_active', true).gt('ends_at', new Date().toISOString()).order('starts_at');
     state.boosts = (data || []).filter(b => (!b.contract || b.contract === (r.contract_type || 'freelance')) && (!b.vehicle || b.vehicle === (r.vehicle || 'motorbike'))); } catch (e) { state.boosts = []; }
   try { state.mCharges = need(await sb.rpc('charges_for_month', { p_rider:state.rider.id, p_month:ymd(m) })) || []; } catch (e) { state.mCharges = []; }
@@ -1260,6 +1284,63 @@ function breakCard(){
   }
   return `<button class="btn ghost" style="margin-bottom:12px" onclick="A.startBreak()">☕ ${t('start_break')}${used ? ` <span class="muted" style="font-weight:600">(${hm(Math.max(0, allow - used))} ${t('left_word')})</span>` : ''}</button>`;
 }
+// ================= MY OWN GOAL (rider sets it, just for motivation) =================
+const dayKey = d => ymd(d);
+function weekStartD(){ const d = new Date(); d.setHours(0, 0, 0, 0); const k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return d; }
+async function loadGoals(){
+  try {
+    const from = new Date(Math.min(weekStartD(), monthStart(), Date.now() - 40 * 86400000));
+    const [g, o] = await Promise.all([sb.from('rider_goals').select('*').eq('rider_id', state.rider.id),
+      sb.from('orders').select('delivered_at,rider_pay').eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', from.toISOString())]);
+    state.goals = {}; (g.data || []).forEach(x => { state.goals[x.period] = x; });
+    const days = {}; (o.data || []).forEach(x => { const k = dayKey(new Date(x.delivered_at)); const d = days[k] || (days[k] = { n:0, e:0 }); d.n++; d.e += num(x.rider_pay); });
+    state.goalDays = days;
+  } catch (e) { state.goals = {}; state.goalDays = {}; }
+}
+function goalDone(period){
+  const g = (state.goals || {})[period]; if (!g) return null;
+  const start = period === 'day' ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() : period === 'week' ? weekStartD() : monthStart();
+  let v = 0; Object.entries(state.goalDays || {}).forEach(([k, d]) => { if (new Date(k + 'T00:00:00') >= start) v += g.kind === 'earnings' ? d.e : d.n; });
+  return { g, v, pct:Math.min(100, v / num(g.goal) * 100), left:Math.max(0, num(g.goal) - v) };
+}
+function goalStreak(){
+  const g = (state.goals || {}).day; if (!g) return { cur:0, best:0 };
+  const hit = d => { const x = (state.goalDays || {})[dayKey(d)]; return !!x && (g.kind === 'earnings' ? x.e : x.n) >= num(g.goal); };
+  const d = new Date(); d.setHours(12, 0, 0, 0); if (!hit(d)) d.setDate(d.getDate() - 1);
+  let cur = 0; while (cur < 40 && hit(d)){ cur++; d.setDate(d.getDate() - 1); }
+  let best = 0, run = 0; const e = new Date(); e.setHours(12, 0, 0, 0);
+  for (let i = 0; i < 40; i++){ if (hit(e)){ run++; best = Math.max(best, run); } else run = 0; e.setDate(e.getDate() - 1); }
+  return { cur, best:Math.max(best, cur) };
+}
+const gVal = (g, v) => g.kind === 'earnings' ? money(v) : String(Math.round(v));
+function goalCard(){
+  const per = ['day', 'week', 'month'].filter(p => (state.goals || {})[p]);
+  if (!per.length) return `<div class="goal empty"><div class="gi">🎯</div><div style="flex:1;min-width:0"><b>${t('g_title')}</b><div class="muted" style="font-size:13px">${t('g_none')}</div></div><button class="btn small" style="width:auto;flex:none" onclick="A.goalForm('day')">${t('g_set')}</button></div>`;
+  const day = goalDone('day'); const st = goalStreak();
+  const ring = day ? (() => { const r = 34, c = 2 * Math.PI * r, off = c * (1 - day.pct / 100); const done = day.pct >= 100;
+    return `<div class="gring ${done ? 'done' : ''}"><svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="${r}" class="bg"/><circle cx="40" cy="40" r="${r}" class="fg" stroke-dasharray="${c}" stroke-dashoffset="${off}"/></svg>
+      <div class="gnum"><b>${done ? '✓' : Math.round(day.pct) + '%'}</b></div></div>
+      <div style="flex:1;min-width:0"><div class="muted" style="font-size:12.5px">${t('g_today')}</div><div class="gbig">${gVal(day.g, day.v)} <span class="muted">/ ${gVal(day.g, day.g.goal)}</span></div>
+      <div style="font-size:13px;font-weight:700;color:${done ? 'var(--green)' : 'var(--ink)'}">${done ? t('g_done') : day.pct >= 85 ? t('g_almost') + ' · ' + t(day.g.kind === 'earnings' ? 'g_left_e' : 'g_left_d', { n:gVal(day.g, day.left) }) : day.pct >= 50 ? t('g_half') : day.v ? t(day.g.kind === 'earnings' ? 'g_left_e' : 'g_left_d', { n:gVal(day.g, day.left) }) : t('g_start')}</div>
+      ${st.cur || st.best ? `<div class="gstreak">🔥 ${t('g_streak', { n:st.cur })}${st.best > st.cur ? ` <span class="muted">· ${t('g_best', { n:st.best })}</span>` : ''}</div>` : ''}</div>`; })() : '';
+  const bars = ['week', 'month'].filter(p => (state.goals || {})[p]).map(p => { const x = goalDone(p);
+    return `<div style="margin-top:10px"><div class="line" style="padding:0"><span class="muted" style="font-size:13px">${t(p === 'week' ? 'g_week' : 'g_month')}</span><b style="font-size:14px">${gVal(x.g, x.v)} / ${gVal(x.g, x.g.goal)}${x.pct >= 100 ? ' ✓' : ''}</b></div>
+      <div class="bar" style="margin:6px 0 0"><i style="width:${x.pct}%;${x.pct >= 100 ? '' : 'background:var(--marigold,#FFB400)'}"></i></div></div>`; }).join('');
+  return `<div class="goal"><div class="line" style="padding:0 0 8px"><b>🎯 ${t('g_title')}</b><button class="link" style="padding:0" onclick="A.goalForm('${day ? 'day' : per[0]}')">${t('g_change')}</button></div>
+    ${day ? `<div style="display:flex;gap:14px;align-items:center">${ring}</div>` : ''}${bars}</div>`;
+}
+// celebrate once a day when the daily goal is reached
+function goalParty(){
+  const d = goalDone('day'); if (!d || d.pct < 100) return;
+  const k = 'kh_goalparty_' + state.rider.id + '_' + dayKey(new Date()); if (ls.get(k, null)) return; ls.set(k, 1);
+  const w = document.createElement('div'); w.className = 'gparty';
+  const bits = Array.from({ length:28 }, (_, i) => `<i style="left:${Math.random() * 100}%;animation-delay:${(Math.random() * .6).toFixed(2)}s;background:${['#FFB400', '#14A064', '#E2472F', '#2463B5'][i % 4]}"></i>`).join('');
+  w.innerHTML = `${bits}<div class="gpbox"><div style="font-size:54px">🏆</div><h2 style="margin:6px 0 4px">${t('g_party')}</h2><div class="muted">${t('g_party_sub', { v:gVal(d.g, d.v) })}</div>
+    ${goalStreak().cur > 1 ? `<div class="gstreak" style="justify-content:center;margin-top:10px">🔥 ${t('g_streak', { n:goalStreak().cur })}</div>` : ''}
+    <button class="btn" style="margin-top:16px" onclick="this.closest('.gparty').remove()">👍</button></div>`;
+  document.body.appendChild(w);
+  try { navigator.vibrate && navigator.vibrate([80, 60, 120]); } catch (e) {}
+}
 function targetsCard(){
   const list = state.targets || []; if (!list.length) return '';
   const per = { day:t('p_day'), week:t('p_week'), month:t('p_month') };
@@ -1369,7 +1450,7 @@ function viewJobs(){
   const boost = boostBanner();
   if (suspended() && !state.mine.length) return suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return `${boost}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
+    return `${boost}${goalCard()}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
   const list = state.available.filter(j => !state.skipped.has(j.order_id));
@@ -1378,7 +1459,7 @@ function viewJobs(){
   if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
-  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
+  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -1549,6 +1630,7 @@ function viewEarn(){
       <div class="tile"><b>${hm(state.todayMinutes)}</b><span>${t('on_duty_time')} · ${t('today')}</span></div>
     </div>
     <button class="btn ghost" style="margin-bottom:12px" onclick="showPaySlip()">🧾 ${t('pay_slip_btn')}</button>
+    ${goalCard()}
     ${targetsCard()}
     ${lbCard()}
     ${dutyCard()}
@@ -1576,7 +1658,7 @@ function viewEarn(){
     <h2>${t('cash_in_hand')}</h2>
     <div class="card">
       <div class="line"><b style="font-size:24px" class="${lim && cash >= lim ? 'red' : ''}">${money(cash)}</b>${lim ? `<span class="muted">${t('cash_limit')} ${money(lim)}</span>` : ''}</div>
-      ${lim ? `<div class="bar"><i class="${cash >= lim ? 'over' : ''}" style="width:${pct}%"></i></div>` : ''}
+      ${lim ? `<div class="bar"><i class="${cash >= lim ? 'overlim' : ''}" style="width:${pct}%"></i></div>` : ''}
       <div class="muted" style="font-size:13px">${t('cash_note')}</div>
     </div>
     <h2>${t('recent')}</h2>${rows || `<div class="empty">${t('no_recent')}</div>`}
@@ -1693,6 +1775,32 @@ const A = {
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
     state.user = null; state.rider = null; state.profile = null; state.mine = []; state.available = []; state.authMode = 'login'; showAuth();
+  },
+
+  // ---- My own goal ----
+  goalForm(period, kind, val){
+    state.gPer = period || 'day'; const g = (state.goals || {})[state.gPer] || { kind:'deliveries', goal:'' }; state.gKind = kind || g.kind;
+    const chips = k => (k === 'earnings' ? { day:[1000, 1500, 2000, 3000], week:[7000, 10000, 15000], month:[30000, 40000, 60000] } : { day:[10, 15, 20, 25], week:[80, 100, 150], month:[300, 450, 600] })[state.gPer];
+    openSheet('🎯 ' + t('g_sheet'), `<div class="muted" style="font-size:14px">${t('g_sheet_note')}</div>
+      <div class="chips" id="gPers" style="margin-top:12px">${['day', 'week', 'month'].map(p => `<button type="button" class="chip ${state.gPer === p ? 'on' : ''}" onclick="A.goalForm('${p}')">${t('g_period_' + p)}${(state.goals || {})[p] ? ' ✓' : ''}</button>`).join('')}</div>
+      <label class="f">${t('g_how')}</label>
+      <div class="chips" id="gKinds">${['deliveries', 'earnings'].map(k => `<button type="button" class="chip ${state.gKind === k ? 'on' : ''}" data-k="${k}" onclick="A.goalKind('${k}')">${k === 'earnings' ? '💰 ' + t('g_kind_e') : '📦 ' + t('g_kind_d')}</button>`).join('')}</div>
+      <label class="f" for="gVal">${t('g_amount')}</label><input id="gVal" type="number" inputmode="numeric" min="1" value="${val ?? (kind && kind !== g.kind ? '' : g.goal) ?? ''}">
+      <div class="chips" id="gQuick" style="margin-top:8px">${chips(state.gKind).map(v => `<button type="button" class="chip" onclick="$('gVal').value=${v}">${state.gKind === 'earnings' ? money(v) : v}</button>`).join('')}</div>
+      <button class="btn" style="margin-top:14px" onclick="A.saveGoal()">${t('g_save')}</button>
+      ${(state.goals || {})[state.gPer] ? `<button class="btn ghost" style="margin-top:10px" onclick="A.removeGoal()">${t('g_off')}</button>` : ''}`);
+  },
+  goalKind(k){ A.goalForm(state.gPer, k, ''); },
+  async saveGoal(){
+    const v = Math.round(num($('gVal').value)); if (v <= 0) return toast(t('g_amount'), true);
+    await run(async () => {
+      need(await sb.from('rider_goals').upsert({ rider_id:state.rider.id, period:state.gPer, kind:state.gKind || 'deliveries', goal:v, updated_at:new Date().toISOString() }));
+      closeSheet(); await loadGoals(); renderTab(); toast(t('g_saved'));
+    });
+  },
+  async removeGoal(){
+    if (!await uiConfirm(t('g_off') + '?')) return;
+    await run(async () => { need(await sb.from('rider_goals').delete().eq('rider_id', state.rider.id).eq('period', state.gPer)); closeSheet(); await loadGoals(); renderTab(); });
   },
 
   // ---- Duty ----
