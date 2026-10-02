@@ -539,7 +539,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.6';
+const APP_VERSION = '5.7';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -750,7 +750,7 @@ async function go(tab){
   await run(async () => {
     if (tab === 'home') await loadDash();
     if (tab === 'orders') await Promise.all([loadOrders(), loadRiders()]);
-    if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport()]);
+    if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport(), loadShopRequests()]);
     if (tab === 'menu') await loadProducts();
     if (tab === 'riders') await loadRiderMonth();
     if (tab === 'attendance') await Promise.all([loadAttendance(), state.riderRows.length ? null : loadRiderMonth()]);
@@ -956,8 +956,22 @@ function viewShops(){
       <div class="tile"><b>${money(totUnpaid)}</b><span>To pay shops (all time)</span></div>
       <div class="tile"><b>${state.restaurants.filter(r => r.is_open && r.is_active).length} / ${state.restaurants.length}</b><span>Open now</span></div>
     </div>
+    ${shopReqBlock()}
     <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
     <div class="list">${rows || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
+}
+const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const catName = k => { const c = SHOP_CATS.find(x => x.k === k); return c ? c.i + ' ' + c.en : k; };
+async function loadShopRequests(){
+  try { state.shopReqs = need(await sb.from('shop_requests').select('*').eq('status', 'pending').order('created_at')) || []; } catch (e) { state.shopReqs = []; }
+}
+function shopReqBlock(){
+  const l = state.shopReqs || []; if (!l.length) return '';
+  return `<div class="card" style="border:1.5px solid var(--marigold);box-shadow:0 0 0 4px rgba(255,180,0,.16)"><div class="row-title">🏪 New shop requests <span class="pill y">${l.length}</span></div>
+    <div class="muted" style="font-size:13px">Shops that want to join Wanhar Mart in your city. Check and approve.</div>
+    ${l.map(q => `<button class="row" style="width:100%" onclick="A.shopReq('${q.id}')"><div class="row-main"><div class="row-title">${esc(q.shop_name)}</div>
+      <div class="row-sub">${(q.categories || []).map(catName).map(esc).join(' · ')}${q.other_category ? ' · ' + esc(q.other_category) : ''}</div>
+      <div class="row-sub">${esc(q.owner_name || '')} · ${esc(q.phone || '')} · ${when(q.created_at)}${!scope() && (state.regions || []).length > 1 ? ' · 📍 ' + esc(regionName(q.region_id)) : ''}</div></div><span class="muted">›</span></button>`).join('')}</div>`;
 }
 function restaurantForm(r){
   r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
@@ -2074,6 +2088,39 @@ const A = {
   async waiveFee(fid, id){
     const note = await uiPrompt('Waive this month\'s fee? Reason (HQ can see it):', ''); if (note === null) return;
     await run(async () => { need(await sb.rpc('waive_shop_fee', { p_id:fid, p_note:note || null })); toast('Fee waived'); A.openShop(id); });
+  },
+  async shopReq(id){
+    const q = (state.shopReqs || []).find(x => x.id === id); if (!q) return;
+    const zones = (state.zones || []).filter(z => z.region_id === q.region_id);
+    openSheet('🏪 ' + q.shop_name, '<div class="empty">Loading…</div>');
+    const paths = [q.shop_photo_path, q.cnic_photo_path].filter(Boolean); let urls = {};
+    if (paths.length){ const { data } = await sb.storage.from('shop-docs').createSignedUrls(paths, 3600); (data || []).forEach(x => { if (x.signedUrl) urls[x.path] = x.signedUrl; }); }
+    const img = (p, l) => p && urls[p] ? `<a href="${urls[p]}" target="_blank" rel="noopener"><img src="${urls[p]}" alt="${l}" style="width:100%;border-radius:12px;border:1px solid var(--line)"></a><div class="muted" style="font-size:12px">${l}</div>` : '';
+    const kv = (k, v) => v ? `<div class="kv"><span class="muted">${k}</span><span style="text-align:end;overflow-wrap:anywhere">${v}</span></div>` : '';
+    const body = $('sheetBody'); if (!body) return;
+    body.innerHTML = `
+      ${kv('City', esc(regionName(q.region_id)))}${kv('Owner', esc(q.owner_name || ''))}${kv('Phone', q.phone ? `<a href="tel:${esc(q.phone)}">${esc(q.phone)}</a> · <a href="https://wa.me/92${esc(String(q.phone).replace(/\D/g, '').replace(/^0/, ''))}" target="_blank" rel="noopener">WhatsApp</a>` : '')}
+      ${kv('CNIC', '<b>' + esc(q.cnic) + '</b>')}${kv('Sells', (q.categories || []).map(catName).map(esc).join('<br>') + (q.other_category ? '<br>' + esc(q.other_category) : ''))}
+      ${kv('Address', esc(q.address || ''))}${q.lat != null ? kv('Location', `<a href="https://www.google.com/maps/search/?api=1&query=${q.lat},${q.lng}" target="_blank" rel="noopener">Open in Google Maps</a>`) : kv('Location', '<span class="red">Not given</span>')}
+      ${kv('Note', esc(q.note || ''))}${kv('Asked', esc(when(q.created_at)))}
+      ${paths.length ? `<div class="two" style="margin-top:10px"><div>${img(q.shop_photo_path, 'Shop front')}</div><div>${img(q.cnic_photo_path, 'CNIC')}</div></div>` : ''}
+      <h3>Approve</h3>
+      ${zones.length ? `<label class="f" for="sq_zone">Delivery zone</label><select id="sq_zone">${zones.map(z => `<option value="${z.id}">${esc(z.name)}</option>`).join('')}</select>` : '<div class="warnbox">This city has no delivery zone yet. Add one in More → Delivery zones first.</div>'}
+      <div class="two"><div><label class="f" for="sq_comm">Commission %</label><input id="sq_comm" type="number" min="0" max="100" step="0.5" value="15"></div>
+        <div><label class="f" for="sq_fee">Monthly fee (Rs)</label><input id="sq_fee" type="number" min="0" step="100" value="0"></div></div>
+      <label class="f" for="sq_note">Message to the shop (optional)</label><input id="sq_note" type="text" placeholder="Welcome! Add your products today.">
+      <div class="muted" style="font-size:12px;margin-top:6px">The shop is made with these details and the owner's app opens. You can change everything later in Edit shop.</div>
+      <div class="actions"><button class="btn block" ${zones.length ? '' : 'disabled'} onclick="A.shopReqDo('${id}','approve')">✅ Approve and open the shop</button>
+        <button class="btn warn block" onclick="A.shopReqDo('${id}','reject')">Reject</button></div>`;
+  },
+  async shopReqDo(id, action){
+    let note = $('sq_note') ? $('sq_note').value.trim() : '';
+    if (action === 'reject'){ const r = await uiPrompt('Why not? The shop owner will see this:', note); if (r === null) return; note = r; }
+    await run(async () => {
+      need(await sb.rpc('admin_shop_request_action', { p_id:id, p_action:action, p_zone:action === 'approve' ? $('sq_zone').value : null, p_commission:num(($('sq_comm') || {}).value || 15), p_fee:num(($('sq_fee') || {}).value || 0), p_note:note || null }));
+      closeSheet(); toast(action === 'approve' ? 'Shop approved and opened' : 'Request rejected');
+      await Promise.all([loadRestaurants(), loadShopRequests()]); renderTab();
+    });
   },
   shopProducts(id){ closeSheet(); state.menuRestaurant = id; state.productFilter = 'all'; state.productQ = ''; go('menu'); },
   editRestaurant(id){
