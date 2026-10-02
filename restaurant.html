@@ -253,6 +253,7 @@ h2{font-size:18px}
 
 
 
+#rqCats .chip{text-align:start;white-space:normal;line-height:1.25;padding:9px 10px;font-size:13.5px}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -486,7 +487,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '3.8';
+const APP_VERSION = '4.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -556,9 +557,12 @@ const I18N = {
     prep_default:'Usual preparing time (minutes)', sound:'Alert sound', logout:'Log out', language:'Language',
     enable_sound:'Tap here to turn on the alert sound',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
+    rq_title:'Bring your shop to Wanhar Mart', rq_note:'Fill this once. The Wanhar Mart office of your city checks it and turns your shop on.', rq_city:'Your city', rq_cnic:'CNIC number (must)', rq_cnic_hint:'13 digits, like 37201-1234567-1', rq_owner:'Owner name', rq_phone:'Phone / WhatsApp', rq_shop:'Shop name', rq_cats:'What do you sell? (choose all that fit)', rq_other:'Write what you sell', rq_loc:'Shop location', rq_loc_btn:'Use my location (stand inside the shop)', rq_loc_ok:'Location saved', rq_map:'Check on map', rq_addr:'Address (if the map is wrong, this helps)', rq_addr_ph:'Main Bazar, near Jamia Masjid', rq_photo:'Photo of the shop front (optional)', rq_cnic_photo:'Photo of CNIC front (optional)', rq_note2:'Anything else? (optional)', rq_send:'Send request', rq_need_city:'Choose your city', rq_need_cnic:'Write your 13 digit CNIC number', rq_need_shop:'Write the shop name', rq_need_cat:'Choose at least one thing you sell', rq_sent:'Request sent', rq_wait_t:'Your request is with the office', rq_wait_n:'The Wanhar Mart office of {c} will check your shop and call you. When it is approved, this app opens by itself.', rq_cancel:'Cancel request', rq_cancel_q:'Cancel your shop request?', rq_rej:'Your last request was not approved', rq_edit:'Change and send again', rq_photo_saved:'Photo added', rq_loc_no:'Location is blocked. Allow location for this site, or write the address.',
     not_linked:'Your account is not linked to a shop yet',
     not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your shop:', check_again:'Check again',
-    confirm_email:'Account created. Check your email to confirm it, then log in.',
+    v_title:'Confirm your email to continue', v_note:'We send a link to {e}. Open the email (look in Spam too) and tap the link. Then come back here.', v_send:'Send confirmation email', v_sent:'Email sent to {e}. Open it and tap the link.', v_done:'I have confirmed', v_not_yet:'Not confirmed yet. Open the email and tap the link first.', v_ok:'Email confirmed. Welcome! 🎉', v_wrong:'Wrong email? Log out and sign up again.',
+    not_confirmed:'Your email is not confirmed yet. Open the email from Wanhar Mart (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
+    confirm_email:'Account created. We sent you an email: open it (look in Spam too) and tap the link, then log in.',
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
     commission_rate:'Commission', close_q:'Close the shop? Customers will not be able to order.',
     coming_back:'Coming back to your shop', coming_back_note:'Delivery failed. The rider is bringing this order back.',
@@ -603,9 +607,12 @@ const I18N = {
     prep_default:'عام تیاری کا وقت (منٹ)', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
+    rq_title:'اپنی دکان Wanhar Mart پر لائیں', rq_note:'یہ ایک بار بھریں۔ آپ کے شہر کا Wanhar Mart دفتر اسے چیک کر کے آپ کی دکان چالو کرے گا۔', rq_city:'آپ کا شہر', rq_cnic:'شناختی کارڈ نمبر (ضروری)', rq_cnic_hint:'13 ہندسے، جیسے 37201-1234567-1', rq_owner:'مالک کا نام', rq_phone:'فون / واٹس ایپ', rq_shop:'دکان کا نام', rq_cats:'آپ کیا بیچتے ہیں؟ (جتنے ہوں سب چنیں)', rq_other:'لکھیں آپ کیا بیچتے ہیں', rq_loc:'دکان کی لوکیشن', rq_loc_btn:'میری لوکیشن لیں (دکان کے اندر کھڑے ہو کر)', rq_loc_ok:'لوکیشن محفوظ', rq_map:'نقشے پر دیکھیں', rq_addr:'پتہ (اگر نقشہ غلط ہو تو یہ کام آئے گا)', rq_addr_ph:'مین بازار، جامع مسجد کے پاس', rq_photo:'دکان کے سامنے کی تصویر (اختیاری)', rq_cnic_photo:'شناختی کارڈ کی تصویر (اختیاری)', rq_note2:'کچھ اور؟ (اختیاری)', rq_send:'درخواست بھیجیں', rq_need_city:'اپنا شہر چنیں', rq_need_cnic:'اپنا 13 ہندسوں کا شناختی کارڈ نمبر لکھیں', rq_need_shop:'دکان کا نام لکھیں', rq_need_cat:'کم از کم ایک چیز چنیں جو آپ بیچتے ہیں', rq_sent:'درخواست بھیج دی گئی', rq_wait_t:'آپ کی درخواست دفتر کے پاس ہے', rq_wait_n:'{c} کا Wanhar Mart دفتر آپ کی دکان چیک کر کے آپ کو فون کرے گا۔ منظوری کے بعد یہ ایپ خود کھل جائے گی۔', rq_cancel:'درخواست منسوخ کریں', rq_cancel_q:'دکان کی درخواست منسوخ کریں؟', rq_rej:'آپ کی پچھلی درخواست منظور نہیں ہوئی', rq_edit:'بدل کر دوبارہ بھیجیں', rq_photo_saved:'تصویر لگ گئی', rq_loc_no:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں، یا پتہ لکھیں۔',
     not_linked:'آپ کا اکاؤنٹ ابھی کسی دکان سے نہیں جڑا',
     not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
-    confirm_email:'اکاؤنٹ بن گیا۔ ای میل چیک کر کے تصدیق کریں، پھر لاگ اِن کریں۔',
+    v_title:'جاری رکھنے کے لیے ای میل کی تصدیق کریں', v_note:'ہم {e} پر ایک لنک بھیجتے ہیں۔ ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر یہاں واپس آئیں۔', v_send:'تصدیقی ای میل بھیجیں', v_sent:'{e} پر ای میل بھیج دی گئی۔ اسے کھول کر لنک دبائیں۔', v_done:'میں نے تصدیق کر لی', v_not_yet:'ابھی تصدیق نہیں ہوئی۔ پہلے ای میل کھول کر لنک دبائیں۔', v_ok:'ای میل کی تصدیق ہو گئی۔ خوش آمدید! 🎉', v_wrong:'غلط ای میل؟ لاگ آؤٹ کر کے دوبارہ اکاؤنٹ بنائیں۔',
+    not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Wanhar Mart کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
+    confirm_email:'اکاؤنٹ بن گیا۔ ہم نے آپ کو ای میل بھیجی ہے: اسے کھولیں (Spam میں بھی دیکھیں)، لنک دبائیں، پھر لاگ اِن کریں۔',
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
     commission_rate:'کمیشن', close_q:'دکان بند کریں؟ گاہک آرڈر نہیں کر سکیں گے۔',
     coming_back:'دکان واپس آ رہے ہیں', coming_back_note:'ڈیلیوری نہیں ہو سکی۔ رائیڈر یہ آرڈر واپس لا رہا ہے۔',
@@ -688,6 +695,63 @@ function showAuth(msg, ok){
     <div class="ver">v${APP_VERSION}</div>
   </div>`;
 }
+const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const catName = k => { const c = SHOP_CATS.find(x => x.k === k); return c ? c.i + ' ' + (state.lang === 'ur' ? c.ur : c.en) : k; };
+async function loadMyRequest(){
+  const [r, g] = await Promise.all([sb.from('shop_requests').select('*').eq('user_id', state.user.id).order('created_at', { ascending:false }).limit(1),
+    sb.from('regions').select('id,name').eq('is_active', true).order('name')]);
+  state.sreq = (r.data || [])[0] || null; state.regionsList = g.data || [];
+  if (!state.rqForm){
+    const p = (await sb.from('profiles').select('full_name,phone').eq('id', state.user.id).maybeSingle()).data || {};
+    const old = state.sreq && state.sreq.status !== 'pending' ? state.sreq : {};
+    state.rqForm = { region_id:old.region_id || (state.regionsList.length === 1 ? state.regionsList[0].id : ''), cnic:old.cnic || '', owner_name:old.owner_name || p.full_name || '', phone:old.phone || p.phone || '',
+      shop_name:old.shop_name || '', categories:old.categories || [], other_category:old.other_category || '', address:old.address || '', lat:old.lat ?? null, lng:old.lng ?? null, note:'', shop_photo_path:null, cnic_photo_path:null };
+  }
+}
+function showShopRequest(){
+  const q = state.sreq;
+  const top = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
+  if (q && q.status === 'pending'){
+    const city = (state.regionsList.find(r => r.id === q.region_id) || {}).name || '';
+    clearInterval(state.rqPoll); state.rqPoll = setInterval(() => { if (!document.hidden && $('rqWait')) A.recheck(); else if (!$('rqWait')) clearInterval(state.rqPoll); }, 30000);
+    $('app').innerHTML = `<div class="auth" id="rqWait">${top}<div style="font-size:54px;margin:20px 0 6px">⏳</div>
+      <h1 style="font-size:24px;margin:0 0 8px">${t('rq_wait_t')}</h1><p class="muted">${esc(t('rq_wait_n').replace('{c}', city))}</p>
+      <div class="card" style="margin-top:12px"><b>${esc(q.shop_name)}</b><div class="muted" style="font-size:14px">${(q.categories || []).map(catName).map(esc).join(' · ')}</div>
+        <div class="muted" style="font-size:13px;margin-top:4px">📍 ${esc(city)}${q.address ? ' · ' + esc(q.address) : ''}</div></div>
+      <div class="actions" style="display:grid;gap:10px;margin-top:12px"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+        <button class="btn ghost" onclick="A.cancelShopReq()">${t('rq_cancel')}</button><button class="link" onclick="A.logout()">${t('logout')}</button></div>
+      <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+    return;
+  }
+  const f = state.rqForm;
+  $('app').innerHTML = `<div class="auth" style="padding-bottom:40px">${top}
+    <h1 style="font-size:24px;margin:18px 0 6px">🏪 ${t('rq_title')}</h1><p class="muted" style="margin:0">${t('rq_note')}</p>
+    ${q && q.status === 'rejected' ? `<div class="warnbox" style="margin-top:12px">${t('rq_rej')}${q.admin_note ? ': ' + esc(q.admin_note) : ''}<div style="font-weight:600;font-size:13px">${t('rq_edit')}</div></div>` : ''}
+    <label class="f">${t('rq_city')}</label>
+    <div class="chips" id="rqCity">${state.regionsList.map(r => `<button type="button" class="chip ${f.region_id === r.id ? 'on' : ''}" onclick="A.rqCity('${r.id}')">📍 ${esc(r.name)}</button>`).join('')}</div>
+    <label class="f" for="rq_cnic">${t('rq_cnic')}</label><input id="rq_cnic" type="text" inputmode="numeric" maxlength="15" placeholder="37201-1234567-1" value="${esc(cnicFmt(f.cnic))}" oninput="this.value=cnicFmt(this.value)">
+    <div class="muted" style="font-size:12px">${t('rq_cnic_hint')}</div>
+    <div class="two"><div><label class="f" for="rq_owner">${t('rq_owner')}</label><input id="rq_owner" type="text" value="${esc(f.owner_name)}"></div>
+      <div><label class="f" for="rq_phone">${t('rq_phone')}</label><input id="rq_phone" type="tel" inputmode="tel" value="${esc(f.phone)}" placeholder="03001234567"></div></div>
+    <label class="f" for="rq_shop">${t('rq_shop')}</label><input id="rq_shop" type="text" maxlength="80" value="${esc(f.shop_name)}" placeholder="Al-Madina Garments">
+    <label class="f">${t('rq_cats')}</label>
+    <div id="rqCats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${SHOP_CATS.map(c => `<button type="button" class="chip ${f.categories.includes(c.k) ? 'on' : ''}" data-k="${c.k}" onclick="A.rqCat('${c.k}')">${catName(c.k)}</button>`).join('')}</div>
+    <div id="rqOtherBox" style="display:${f.categories.includes('other') ? '' : 'none'}"><input id="rq_other" type="text" value="${esc(f.other_category)}" placeholder="${t('rq_other')}" style="margin-top:8px"></div>
+    <label class="f">${t('rq_loc')}</label>
+    <button type="button" class="btn ghost" onclick="A.rqLoc()">📍 ${t('rq_loc_btn')}</button>
+    <div id="rqLocOk" class="muted" style="font-size:13px;margin-top:6px">${f.lat != null ? `✅ ${t('rq_loc_ok')} · <a href="https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lng}" target="_blank" rel="noopener">${t('rq_map')}</a>` : ''}</div>
+    <label class="f" for="rq_addr">${t('rq_addr')}</label><input id="rq_addr" type="text" value="${esc(f.address)}" placeholder="${t('rq_addr_ph')}">
+    <div style="display:grid;gap:8px;margin-top:14px">
+      <label class="btn ghost small" style="cursor:pointer">📷 ${t('rq_photo')} <span id="ok_shop_photo_path">${f.shop_photo_path ? '✅' : ''}</span><input type="file" accept="image/*" hidden onchange="A.rqPhoto(this,'shop_photo_path')"></label>
+      <label class="btn ghost small" style="cursor:pointer">🪪 ${t('rq_cnic_photo')} <span id="ok_cnic_photo_path">${f.cnic_photo_path ? '✅' : ''}</span><input type="file" accept="image/*" hidden onchange="A.rqPhoto(this,'cnic_photo_path')"></label></div>
+    <label class="f" for="rq_note">${t('rq_note2')}</label><textarea id="rq_note" rows="2">${esc(f.note)}</textarea>
+    <div id="rqMsg" class="err-text"></div>
+    <div class="actions" style="display:grid;gap:10px"><button class="btn" id="rqSend" onclick="A.sendShopReq()">${t('rq_send')}</button><button class="link" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
+function cnicFmt(v){ const d = String(v || '').replace(/\D/g, '').slice(0, 13); return d.length > 12 ? d.slice(0, 5) + '-' + d.slice(5, 12) + '-' + d.slice(12) : d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; }
+function rqKeep(){ const f = state.rqForm; if (!$('rq_shop')) return; f.cnic = $('rq_cnic').value; f.owner_name = $('rq_owner').value; f.phone = $('rq_phone').value; f.shop_name = $('rq_shop').value;
+  f.address = $('rq_addr').value; f.note = $('rq_note').value; f.other_category = ($('rq_other') || {}).value || ''; }
 function showUnlinked(){
   $('app').innerHTML = `<div class="auth">
     <div class="brand">Wanhar Mart<b>.</b></div>
@@ -1064,6 +1128,25 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.restaurant) showAuth(); else { renderShell(); renderTab(); }
   },
+  async sendVerify(){
+    const b = $('vSend'); if (b) b.disabled = true; const m = $('vMsg');
+    const { error } = await sb.auth.signInWithOtp({ email:state.user.email, options:{ shouldCreateUser:false, emailRedirectTo:new URL('verified.html?app=shop&v=1', location.href).href } });
+    if (b) b.disabled = false;
+    if (error){ if (m){ m.style.color = ''; m.textContent = /rate|seconds|security/i.test(error.message) ? error.message : t('error'); } return; }
+    if (m){ m.style.color = 'var(--green)'; m.textContent = t('v_sent').replace('{e}', state.user.email); }
+  },
+  async checkVerify(quiet){
+    try { await sb.rpc('mark_email_verified'); } catch (e) {}
+    const { data } = await sb.from('profiles').select('email_verified').eq('id', state.user.id).single();
+    if (data && data.email_verified){ toast(t('v_ok')); return afterLogin(state.user); }
+    if (!quiet){ const m = $('vMsg'); if (m){ m.style.color = ''; m.textContent = t('v_not_yet'); } }
+  },
+  async resendConfirm(){
+    const email = ($('a_email') && $('a_email').value.trim()) || ''; if (!email.includes('@')) return;
+    const { error } = await sb.auth.resend({ type:'signup', email, options:{ emailRedirectTo:new URL('verified.html?app=shop', location.href).href } });
+    if (error) return toast(/rate|seconds/i.test(error.message) ? error.message : t('error'), true);
+    toast(t('resent'));
+  },
   async forgotPw(){
     const email = ($('a_email') && $('a_email').value.trim()) || '';
     const msg = $('authMsg');
@@ -1088,6 +1171,7 @@ const A = {
         const { data, error } = await sb.auth.signUp({ email, password:pw, options:{ data:{ full_name:name }, emailRedirectTo:new URL('verified.html?app=shop', location.href).href } });
         if (error) throw error;
         if (!data.session){ state.authMode = 'login'; showAuth(t('confirm_email'), true); return; }
+        state.justSignedUp = true;
         await sb.from('profiles').update({ full_name:name, phone }).eq('id', data.user.id);
         await afterLogin(data.user);
       } else {
@@ -1097,7 +1181,9 @@ const A = {
     } catch (err) {
       logErr(err);
       const m = /invalid login/i.test((err && err.message) || '') ? t('bad_login') : ((err && err.message) || t('error'));
-      const el = $('authMsg'); if (el) el.textContent = m;
+      const el = $('authMsg');
+      if (el && /not confirmed/i.test((err && err.message) || '')) el.innerHTML = `${esc(t('not_confirmed'))}<br><button class="link" style="padding:8px 0 0" onclick="A.resendConfirm()">📧 ${esc(t('resend'))}</button>`;
+      else if (el) el.textContent = m;
       const b = $('authBtn'); if (b){ b.disabled = false; b.textContent = signup ? t('signup') : t('login'); }
     }
   },
@@ -1108,7 +1194,39 @@ const A = {
     if (channel){ sb.removeChannel(channel); channel = null; }
     closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Wanhar Mart Shop'; showAuth();
   },
-  async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else toast(t('not_linked'), true); }); },
+  rqCity(id){ rqKeep(); state.rqForm.region_id = id; document.querySelectorAll('#rqCity .chip').forEach(b => b.classList.toggle('on', b.getAttribute('onclick').includes(id))); },
+  rqCat(k){ const l = state.rqForm.categories; const i = l.indexOf(k); if (i > -1) l.splice(i, 1); else l.push(k);
+    const b = document.querySelector(`#rqCats [data-k="${k}"]`); if (b) b.classList.toggle('on', i < 0); if (k === 'other') $('rqOtherBox').style.display = i < 0 ? '' : 'none'; },
+  rqLoc(){
+    if (!navigator.geolocation) return toast(t('rq_loc_no'), true);
+    navigator.geolocation.getCurrentPosition(p => { const f = state.rqForm; f.lat = +p.coords.latitude.toFixed(6); f.lng = +p.coords.longitude.toFixed(6);
+      const el = $('rqLocOk'); if (el) el.innerHTML = `✅ ${t('rq_loc_ok')} · <a href="https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lng}" target="_blank" rel="noopener">${t('rq_map')}</a>`; },
+      () => toast(t('rq_loc_no'), true), { enableHighAccuracy:true, timeout:15000 });
+  },
+  async rqPhoto(inp, field){
+    const file = inp.files && inp.files[0]; if (!file) return;
+    await run(async () => { const blob = await resizeImage(file, 1280); const path = `${state.user.id}/${field.startsWith('cnic') ? 'cnic' : 'shop'}-${Date.now()}.jpg`;
+      const { error } = await sb.storage.from('shop-docs').upload(path, blob, { contentType:'image/jpeg', upsert:true }); if (error) throw error;
+      state.rqForm[field] = path; const ok = $('ok_' + field); if (ok) ok.textContent = '✅'; toast(t('rq_photo_saved')); });
+  },
+  async sendShopReq(){
+    rqKeep(); const f = state.rqForm; const m = $('rqMsg'); const bad = x => { if (m) m.textContent = t(x); m && m.scrollIntoView({ block:'center' }); };
+    if (!f.region_id) return bad('rq_need_city');
+    if (String(f.cnic).replace(/\D/g, '').length !== 13) return bad('rq_need_cnic');
+    if (f.shop_name.trim().length < 2) return bad('rq_need_shop');
+    if (!f.categories.length) return bad('rq_need_cat');
+    const b = $('rqSend'); b.disabled = true;
+    await run(async () => {
+      need(await sb.rpc('submit_shop_request', { p:Object.assign({}, f, { lat:f.lat ?? '', lng:f.lng ?? '' }) }));
+      toast(t('rq_sent')); state.rqForm = null; await loadMyRequest(); showShopRequest();
+    });
+    if ($('rqSend')) $('rqSend').disabled = false;
+  },
+  async cancelShopReq(){
+    if (!await uiConfirm(t('rq_cancel_q'))) return;
+    await run(async () => { need(await sb.rpc('cancel_shop_request')); state.rqForm = null; await loadMyRequest(); showShopRequest(); });
+  },
+  async recheck(){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else { await loadMyRequest(); showShopRequest(); } }); },
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
   statement(kind){
     const e = state.earn || {}; const r = state.restaurant; const list = (state.earnOrders || []).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -1283,9 +1401,32 @@ async function startApp(){
     back:() => { if (state.tab !== 'orders'){ go('orders'); return true; } return false; } });
   await go('orders');
 }
+// ================= EMAIL CHECK (log in works, but the app opens only after the email link is tapped) =================
+function showVerify(){
+  const e = esc((state.user && state.user.email) || '');
+  $('app').innerHTML = `<div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div style="font-size:54px;margin:18px 0 6px">📧</div>
+    <h1 style="font-size:24px;margin:0 0 8px">${t('v_title')}</h1>
+    <p class="muted" style="margin:0">${t('v_note').replace('{e}', '<b>' + e + '</b>')}</p>
+    <div id="vMsg" class="err-text" style="min-height:0"></div>
+    <div class="actions" style="display:grid;gap:10px;margin-top:16px">
+      <button class="btn" id="vSend" onclick="A.sendVerify()">📧 ${t('v_send')}</button>
+      <button class="btn ghost" onclick="A.checkVerify()">✅ ${t('v_done')}</button>
+      <button class="link" onclick="A.logout()">${t('logout')}</button>
+    </div>
+    <p class="muted" style="font-size:13px;margin-top:10px">${t('v_wrong')}</p></div>`;
+  if (state.justSignedUp){ state.justSignedUp = false; setTimeout(() => A.sendVerify(), 300); }
+}
+const needVerify = p => !!(state.user && p && p.email_verified === false && !/@rider\.wanharmart\.app$/i.test(state.user.email || ''));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && $('vSend')) A.checkVerify(true); });
 async function afterLogin(user){
-  state.user = user; await loadRestaurant();
-  if (!state.restaurant) return showUnlinked();
+  state.user = user;
+  { const { data:pf } = await sb.from('profiles').select('email_verified').eq('id', user.id).maybeSingle();
+    if (needVerify(pf)){ let ok = false; try { ok = (await sb.rpc('mark_email_verified')).data; } catch (e) {} if (!ok) return showVerify(); } }
+  await loadRestaurant();
+  if (!state.restaurant){ await loadMyRequest(); return showShopRequest(); }
   await startApp();
 }
 // ================= CHAT (same code in all four apps) =================
