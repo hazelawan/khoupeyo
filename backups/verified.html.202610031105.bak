@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F6F4A">
+<title>Wanhar Mart · Email verified</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4F6F1;--surface:#FFFFFF;--ink:#1E2B25;--muted:#66746C;--line:#DDE3DB;--green:#1F6F4A;--green-dark:#175539;--marigold:#F2A900;--danger:#B3261E;color-scheme:light dark}
+@media (prefers-color-scheme: dark){:root{--paper:#111A16;--surface:#1A2620;--ink:#E7EFE9;--muted:#93A59A;--line:#2B3A32;--green:#3FA774;--green-dark:#2F8F60;--danger:#F08A82}}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);line-height:1.45}
+html[lang=ur] body{font-family:"Noto Naskh Arabic","Bricolage Grotesque",system-ui,sans-serif;line-height:1.8}
+.wrap{max-width:480px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 18px 32px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.brand{font-weight:800;font-size:26px;letter-spacing:-.02em;font-family:"Bricolage Grotesque",sans-serif}
+.brand b{color:var(--marigold)}
+.lang{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-weight:600;cursor:pointer}
+.hero{position:relative;border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#1F6F4A 0%,#0F766E 55%,#F2A900 140%);height:210px;display:grid;place-items:center}
+.hero .bag{width:120px;height:120px;border-radius:30px;background:rgba(255,255,255,.95);display:grid;place-items:center;box-shadow:0 18px 40px rgba(0,0,0,.25);transform:rotate(-8deg)}
+.hero .bag svg{width:70px;height:70px}
+.hero .dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.18)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:26px 22px;margin-top:14px;text-align:center}
+.icon{width:74px;height:74px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:38px;background:rgba(31,111,74,.12);color:var(--green)}
+.icon.bad{background:rgba(179,38,30,.12);color:var(--danger)}
+h1{margin:0 0 10px;font-size:32px;letter-spacing:-.02em;color:var(--green)}
+h1.bad{color:var(--danger)}
+p{margin:0 0 6px;font-size:18px}
+.muted{color:var(--muted);font-size:15px}
+.btns{display:grid;gap:10px;margin-top:20px}
+.btn{display:block;text-decoration:none;text-align:center;border-radius:14px;padding:16px;font-weight:800;font-size:17px;background:var(--green);color:#fff}
+.btn:active{background:var(--green-dark)}
+.btn.ghost{background:transparent;color:var(--green);border:2px solid var(--green)}
+.steps{text-align:start;margin:18px 0 0;padding:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:15px}
+.steps li::before{content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;background:var(--marigold);color:#1E2B25;font-weight:800;display:grid;place-items:center;font-size:13px}
+.foot{text-align:center;color:var(--muted);font-size:13px;margin-top:18px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.icon{animation:pop .5s ease-out both}
+@media (prefers-reduced-motion:reduce){.icon{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Wanhar Mart<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
+  <div class="hero" aria-hidden="true">
+    <span class="dot" style="width:90px;height:90px;top:-20px;left:-10px"></span>
+    <span class="dot" style="width:60px;height:60px;bottom:14px;right:30px"></span>
+    <span class="dot" style="width:34px;height:34px;top:30px;right:70px"></span>
+    <div class="bag"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6F4A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9.5 13.5l2 2 3.5-4" stroke="#F2A900" stroke-width="2.2"/></svg></div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="foot">Wanhar Mart · Kallar Kahar</div>
+</div>
+<script>
+const T = {
+  en:{ ok_t:'Email verified 🎉', ok_p:'Your email has been verified. You are all set.', ok_s:'Go back to the app and log in with your email and password.',
+       bad_t:'Link expired', bad_p:'This verification link has expired or was already used.', bad_s:'Open the app and log in. If it says the email is not confirmed, sign up again to get a new link.',
+       open_customer:'Open Wanhar Mart', open_rider:'Open Rider app', open_shop:'Open Shop app', other:'Other apps',
+       s1:'Open the Wanhar Mart app', s2:'Tap Log in', s3:'Enter your email and password', lang:'اردو' },
+  ur:{ ok_t:'ای میل کی تصدیق ہو گئی 🎉', ok_p:'آپ کی ای میل کی تصدیق ہو گئی ہے۔ سب تیار ہے۔', ok_s:'اب ایپ پر واپس جائیں اور اپنی ای میل اور پاس ورڈ سے لاگ اِن کریں۔',
+       bad_t:'لنک کی مدت ختم', bad_p:'یہ تصدیقی لنک پرانا ہو گیا ہے یا پہلے استعمال ہو چکا ہے۔', bad_s:'ایپ کھول کر لاگ اِن کریں۔ اگر ای میل کی تصدیق باقی ہو تو دوبارہ اکاؤنٹ بنا کر نیا لنک لیں۔',
+       open_customer:'Wanhar Mart کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', other:'دوسری ایپس',
+       s1:'Wanhar Mart ایپ کھولیں', s2:'لاگ اِن دبائیں', s3:'اپنی ای میل اور پاس ورڈ لکھیں', lang:'English' }
+};
+const APPS = { customer:'customer.html', rider:'rider.html', shop:'restaurant.html' };
+let lang = 'en';
+try { lang = JSON.parse(localStorage.getItem('kh_lang')) || 'en'; } catch (e) {}
+const params = new URLSearchParams(location.search);
+const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+const failed = !!(hash.get('error') || hash.get('error_code') || params.get('error'));
+const app = APPS[params.get('app')] ? params.get('app') : 'customer';
+// Remove login tokens from the address bar so they are not shared by mistake
+try { history.replaceState(null, '', location.pathname + (params.get('app') ? '?app=' + app : '')); } catch (e) {}
+function render(){
+  const t = T[lang];
+  document.documentElement.lang = lang; document.documentElement.dir = lang === 'ur' ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = t.lang;
+  const others = Object.keys(APPS).filter(k => k !== app).map(k => `<a class="btn ghost" href="${APPS[k]}">${t['open_' + k]}</a>`).join('');
+  document.getElementById('card').innerHTML = `
+    <div class="icon ${failed ? 'bad' : ''}">${failed ? '!' : '✓'}</div>
+    <h1 class="${failed ? 'bad' : ''}">${failed ? t.bad_t : t.ok_t}</h1>
+    <p>${failed ? t.bad_p : t.ok_p}</p>
+    <div class="muted">${failed ? t.bad_s : t.ok_s}</div>
+    ${failed ? '' : `<ol class="steps"><li>${t.s1}</li><li>${t.s2}</li><li>${t.s3}</li></ol>`}
+    <div class="btns"><a class="btn" href="${APPS[app]}">${t['open_' + app]}</a></div>
+    <details style="margin-top:14px"><summary class="muted" style="cursor:pointer">${t.other}</summary><div class="btns">${others}</div></details>`;
+}
+function toggleLang(){ lang = lang === 'ur' ? 'en' : 'ur'; try { localStorage.setItem('kh_lang', JSON.stringify(lang)); } catch (e) {} render(); }
+render();
+</script>
+</body>
+</html>
