@@ -309,6 +309,8 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 
 /* payments, photos */
 .paycard{border:1.5px solid var(--green);margin-top:10px}
+.card.sos{border:2px solid #B4161B;background:rgba(210,59,46,.08);animation:sosb 1.2s ease-in-out infinite alternate}
+@keyframes sosb{to{background:rgba(210,59,46,.18)}}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px}
 .pgrid:empty{display:none}
 .pth{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
@@ -494,6 +496,50 @@ main{padding-bottom:130px!important}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ================= THEME: LIGHT / DARK / AUTO (same code in all apps) =================
+// The apps already have dark colours inside "@media (prefers-color-scheme: dark)". This switch turns
+// those blocks always-on (Dark), always-off (Light) or back to following the phone (Auto).
+const Theme = (() => {
+  const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
+  const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
+  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  function walk(rules, mode){
+    for (const r of rules){
+      if (r.media && r.cssRules){
+        if (!known.has(r)) known.set(r, r.media.mediaText); const orig = known.get(r);
+        const want = DARK_Q.test(orig) ? (mode === 'dark' ? 'all' : mode === 'light' ? 'not all' : orig)
+                   : LIGHT_Q.test(orig) ? (mode === 'light' ? 'all' : mode === 'dark' ? 'not all' : orig) : null;
+        if (want !== null && r.media.mediaText !== want){ try { r.media.mediaText = want; } catch (e) {} }
+        if (r.cssRules) walk(r.cssRules, mode);
+      }
+    }
+  }
+  function apply(mode){
+    mode = mode || get();
+    for (const sh of document.styleSheets){ try { walk(sh.cssRules, mode); } catch (e) {} }
+    const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    const m = document.querySelector('meta[name=theme-color]'); if (m){ if (!m.dataset.light) m.dataset.light = m.content; m.content = dark ? '#0E1A14' : m.dataset.light; }
+  }
+  function set(mode){ try { localStorage.setItem(KEY, mode); } catch (e) {} apply(mode); document.querySelectorAll('.themesw button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); }
+  function picker(lang){
+    const ur = lang === 'ur'; const cur = get();
+    const L = ur ? { t:'ایپ کا رنگ', light:'☀️ روشن', dark:'🌙 گہرا', auto:'📱 فون جیسا' } : { t:'App theme', light:'☀️ Light', dark:'🌙 Dark', auto:'📱 Auto' };
+    return `<div class="themebox"><b>${L.t}</b><div class="themesw">${['light', 'dark', 'auto'].map(m => `<button type="button" data-m="${m}" class="${cur === m ? 'on' : ''}" onclick="Theme.set('${m}')">${L[m]}</button>`).join('')}</div></div>`;
+  }
+  // new <style> tags (chat, dialogs) get the same treatment
+  try { new MutationObserver(ms => { if (get() !== 'auto' && ms.some(m => [...m.addedNodes].some(n => n.tagName === 'STYLE'))) apply(); }).observe(document.head, { childList:true }); } catch (e) {}
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (get() === 'auto') apply('auto'); }); } catch (e) {}
+  const st = document.createElement('style');
+  st.textContent = `.themebox{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0}
+.themesw{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--field,#F1F4F0);border-radius:12px;padding:4px}
+.themesw button{border:0;background:transparent;color:var(--ink);border-radius:9px;padding:9px 4px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.themesw button.on{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.15)}`;
+  document.head.appendChild(st);
+  apply();
+  return { apply, set, get, picker };
+})();
 // ================= APP DIALOGS + SHOW PASSWORD (same code in all apps) =================
 // uiConfirm / uiPrompt look like the app instead of the browser's grey "site says" box.
 const UI = (() => {
@@ -575,7 +621,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.1';
+const APP_VERSION = '6.3';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -591,7 +637,7 @@ const KIND = { customer_unreachable:'Customer not answering calls', customer_abs
 const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
+const TAB_PERM = { plus:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -747,7 +793,7 @@ async function loadSettings(){
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
   state.regionSet = {};
   if (scope()){ const rr = need(await sb.from('region_settings').select('key,value').eq('region_id', scope())) || []; rr.forEach(r => { state.settings[r.key] = r.value; state.regionSet[r.key] = true; }); }
-  else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
+  else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes', 'plus']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
   state.tierEdit = null; state.wtEdit = null; state.ladEdit = null; state.vehOn = null;
 }
 let channel;
@@ -791,7 +837,10 @@ async function go(tab){
   const m = $('main'); if (!m) return;
   m.innerHTML = '<div class="empty">Loading…</div>';
   await run(async () => {
-    if (tab === 'home') await loadDash();
+    if (tab === 'home'){ await loadDash(); try { const { data } = await sb.from('sos_alerts').select('*, rider:riders(profile:profiles(full_name,phone))').is('resolved_at', null).order('created_at', { ascending:false }).limit(10); state.sos = data || []; } catch (e) { state.sos = []; } }
+    if (tab === 'plus'){ const { data } = await sb.from('plus_subs').select('*, user:profiles!user_id(full_name,phone)').order('created_at', { ascending:false }).limit(200); state.plusSubs = data || []; await loadSettings(); }
+    if (tab === 'omap'){ const days = state.omapDays || 7; const { data } = await sb.from('orders').select('address_lat,address_lng,status,total,created_at').gte('created_at', new Date(Date.now() - days * 864e5).toISOString()).not('address_lat', 'is', null).limit(5000); state.omap = data || []; if (!state.restaurants.length) await loadRestaurants(); }
+    if (tab === 'campaign'){ const { data } = await sb.from('push_campaigns').select('*').order('created_at', { ascending:false }).limit(20); state.campaigns = data || []; }
     if (tab === 'orders') await Promise.all([loadOrders(), loadRiders()]);
     if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport(), loadShopRequests()]);
     if (tab === 'menu') await loadProducts();
@@ -819,7 +868,7 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -851,7 +900,10 @@ function viewHome(){
   const chart = days.length > 1 ? `<h3>Sales by day</h3><div class="chart">${days.slice(-31).map(x => `<div class="c" title="${esc(x.day)}: ${money(x.sales)}"><i style="height:${Math.max(2, num(x.sales) / max * 100)}%"></i><small>${esc(String(x.day).slice(8))}</small></div>`).join('')}</div>` : '';
   const topShops = state.shopReport.filter(r => num(r.orders)).slice(0, 5).map(r => `<button class="row" onclick="A.openShop('${r.restaurant_id}')"><div class="row-main"><div class="row-title">${esc(r.name)}</div><div class="row-sub">${r.delivered} delivered, commission ${money(r.commission)}</div></div><div class="row-side">${money(r.food_sales)}</div></button>`).join('');
   const topProd = state.topProducts.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${p.qty} sold</div></div><div class="row-side">${money(p.rev)}</div></div>`).join('');
-  return `<h2>Dashboard</h2>${periodChips()}
+  return `<h2>Dashboard</h2>
+    ${(state.sos || []).map(x => `<div class="card sos"><div class="row-title">🆘 SOS · ${esc(x.rider?.profile?.full_name || 'Rider')} <span class="muted" style="font-weight:600">${timeAgo(x.created_at)}</span></div>
+      ${x.note ? `<div>${esc(x.note)}</div>` : ''}<div class="bar" style="margin-top:8px">${x.rider?.profile?.phone ? `<a class="btn small" href="tel:${esc(x.rider.profile.phone)}">📞 Call</a>` : ''}${x.lat != null ? `<a class="btn ghost small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}">📍 Map</a>` : ''}<button class="btn ghost small" onclick="A.sosDone('${x.id}')">✓ Solved</button></div></div>`).join('')}
+    ${periodChips()}
     <div class="tiles">
       ${tile(money(n('gmv')), 'Total sales (collected)', true)}
       ${tile(money(platform), 'Wanhar Mart earning', true)}
@@ -943,7 +995,7 @@ function viewOrders(){
     return `<button class="row" onclick="A.openOrder('${o.id}')">
       <div class="row-main">
         <div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || 'Shop')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span>${payPill(o)}</div>
-        <div class="row-sub">${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
+        <div class="row-sub">${o.order_type === 'pickup' ? '🛍️ Pickup · ' : ''}${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
         ${FINAL.includes(o.status) ? '' : `<div class="steps">${STEPS.map((s, i) => `<i class="${i <= idx ? 'on' : ''}"></i>`).join('')}</div>`}
       </div>
       <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div></button>`;
@@ -968,7 +1020,7 @@ function orderPayPanel(o){
   if (['checking', 'unpaid'].includes(st) && canPay) h += `<div class="muted" style="font-size:13px;margin-top:8px">Open your JazzCash / Easypaisa / bank app and find ${money(o.total)} with this TID. Approve only when the money is really there.</div>
     <div class="two" style="margin-top:8px"><button class="btn warn" onclick="A.payCheck('${o.id}', false)">Not received</button><button class="btn" onclick="A.payCheck('${o.id}', true)">✅ Money received</button></div>`;
   if (st === 'refund_due' && can('money')) h += `<div class="muted" style="font-size:13px;margin-top:8px">This order was cancelled after the customer paid. Send ${money(o.total)} back to the customer, then tap the button.</div>
-    <button class="btn block" style="margin-top:8px" onclick="A.refundDone('${o.id}')">↩️ I sent the money back</button>`;
+    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.refundWallet('${o.id}')">💰 Put in customer wallet</button><button class="btn" onclick="A.refundDone('${o.id}')">↩️ I sent the money back</button></div>`;
   return h + '</div>';
 }
 function accBox(acc){
@@ -1661,10 +1713,13 @@ async function callFn(body){
 function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
   const it = (tab, title, sub) => can(TAB_PERM[tab]) ? item(tab, title, sub) : '';
-  return `<h2>More</h2>${can('owner') ? '' : `<div class="note">You are staff. You can use: ${esc((state.perms || []).join(', '))}.</div>`}<div class="list">
+  return `<h2>More</h2>${Theme.picker('en')}${can('owner') ? '' : `<div class="note">You are staff. You can use: ${esc((state.perms || []).join(', '))}.</div>`}<div class="list">
     ${can('chat') ? `<button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>` : ''}
     ${it('reports', '📊 Reports', 'Download monthly reports, shop statements and rider pay slips (Excel or PDF)')}
     ${it('customers', 'Customers', 'See every customer, their orders, block or unblock')}
+    ${it('plus', '⭐ Wanhar Plus', 'Monthly membership with free delivery: price, members, payments to check')}
+    ${it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there')}
+    ${it('campaign', '📣 Send notification', 'Message on the phones of all customers, riders or shops in your area')}
     ${it('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
     ${it('banners', 'Home banners', 'Big pictures at the top of the customer app')}
     ${it('zones', 'Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')}
@@ -1679,6 +1734,72 @@ function viewMore(){
   </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
 
+// ---- Wanhar Plus ----
+function viewPlus(){
+  const rid = payRegion(); const p = Object.assign({ on:false, price:299, days:30, cap:0, min:0 }, state.settings.plus || {});
+  const now = new Date(); const all = state.plusSubs || [];
+  const pending = all.filter(x => x.status === 'pending'), active = all.filter(x => x.status === 'active' && new Date(x.ends_at) > now);
+  const money30 = all.filter(x => x.status === 'active' && new Date(x.created_at) > new Date(Date.now() - 30 * 864e5)).reduce((n, x) => n + num(x.amount), 0);
+  return `${backLink()}<h2>⭐ Wanhar Plus</h2>
+    <div class="note">Customers pay a monthly fee and get free delivery. Wanhar Mart pays the delivery fee for them (the rider is still paid normally). It brings fixed monthly income and makes customers order more often.</div>
+    <div class="tiles"><div class="tile hi"><b>${active.length}</b><span>Members now</span></div><div class="tile"><b>${money(money30)}</b><span>Plus income (30 days)</span></div></div>
+    ${pending.length ? `<h3>💳 Payments to check (${pending.length})</h3>${pending.map(x => `<div class="card paycard"><div class="kv"><b>${esc(x.user?.full_name || 'Customer')}</b><span>${money(x.amount)}</span></div>
+      <div class="kv"><span class="muted">TID</span><b style="user-select:all">${esc(x.pay_ref || '')}</b></div><div class="muted" style="font-size:13px">${esc(x.user?.phone || '')} · ${when(x.created_at)}</div>
+      <div class="two" style="margin-top:8px"><button class="btn warn" onclick="A.plusAct('${x.id}', false)">Not received</button><button class="btn" onclick="A.plusAct('${x.id}', true)">✅ Money received</button></div></div>`).join('')}` : ''}
+    ${rid ? `<div class="card"><b>Settings for ${esc(regionName(rid))}</b>
+      <label class="check"><input id="pl_on" type="checkbox" ${p.on ? 'checked' : ''}> Wanhar Plus is on</label>
+      <div class="two"><div><label class="f" for="pl_price">Price (Rs)</label><input id="pl_price" type="number" min="1" value="${num(p.price)}"></div><div><label class="f" for="pl_days">Days</label><input id="pl_days" type="number" min="1" max="365" value="${num(p.days)}"></div></div>
+      <div class="two"><div><label class="f" for="pl_min">Free delivery above (Rs, 0 = all)</label><input id="pl_min" type="number" min="0" value="${num(p.min)}"></div><div><label class="f" for="pl_cap">Max free per order (Rs, 0 = full fee)</label><input id="pl_cap" type="number" min="0" value="${num(p.cap)}"></div></div>
+      <div class="muted" style="font-size:13px">Customers pay with their wallet or with JazzCash / Easypaisa / Raast to your accounts in Settings → Online payment.</div>
+      <div class="actions"><button class="btn ghost block" onclick="A.savePlus()">Save</button></div></div>` : '<div class="note">Choose a region at the top to change Plus settings.</div>'}
+    <h3>Members</h3><div class="list">${active.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">⭐ ${esc(x.user?.full_name || 'Customer')}</div><div class="row-sub">${esc(x.user?.phone || '')} · until ${dayName(x.ends_at)} · ${esc(x.method || '')}</div></div><div class="row-side">${money(x.amount)}</div></div>`).join('') || '<div class="empty">No members yet.</div>'}</div>`;
+}
+// ---- Order map ----
+function loadLeafletA(){
+  if (window.L && window.L.map) return Promise.resolve(window.L);
+  if (!document.getElementById('lfcss')){ const l = document.createElement('link'); l.id = 'lfcss'; l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
+  return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload = () => res(window.L); sc.onerror = () => rej(new Error('Map could not load')); document.head.appendChild(sc); });
+}
+function viewOmap(){
+  const pts = state.omap || []; const cells = {};
+  pts.forEach(o => { const k = (Math.round(o.address_lat * 100) / 100) + ',' + (Math.round(o.address_lng * 100) / 100); cells[k] = (cells[k] || 0) + 1; });
+  const top = Object.entries(cells).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  setTimeout(drawOmap, 50);
+  return `${backLink()}<h2>🗺️ Order map</h2>
+    <div class="chips">${[7, 30, 90].map(d => `<button class="chip ${(state.omapDays || 7) === d ? 'on' : ''}" onclick="state.omapDays=${d};go('omap')">${d} days</button>`).join('')}</div>
+    <div class="muted" style="font-size:13px;margin:6px 0">${pts.length} orders. Red = customers (darker = more orders). Green = shops.</div>
+    <div id="omap" style="height:420px;border-radius:16px;overflow:hidden;border:1px solid var(--line)"></div>
+    <h3>Busiest areas</h3><div class="list">${top.map(([k, n], i) => `<a class="row" style="text-decoration:none;color:inherit" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${k}"><div class="row-main"><div class="row-title">${i + 1}. ${k}</div><div class="row-sub">Open in Google Maps</div></div><div class="row-side">${n}<small>orders</small></div></a>`).join('') || '<div class="empty">No orders with a location yet.</div>'}</div>`;
+}
+async function drawOmap(){
+  const el = $('omap'); if (!el) return;
+  try {
+    const L = await loadLeafletA(); const pts = state.omap || [];
+    const shops = (state.restaurants || []).filter(r => r.lat != null);
+    const c = pts[0] ? [pts[0].address_lat, pts[0].address_lng] : shops[0] ? [shops[0].lat, shops[0].lng] : [32.78, 72.7];
+    const m = L.map(el).setView(c, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(m);
+    if (L.circleMarker){
+      pts.forEach(o => L.circleMarker([o.address_lat, o.address_lng], { radius:9, stroke:false, fillColor:'#D23B2E', fillOpacity:.18 }).addTo(m));
+      shops.forEach(r => L.circleMarker([r.lat, r.lng], { radius:7, color:'#fff', weight:2, fillColor:'#0B7D4F', fillOpacity:1 }).addTo(m).bindTooltip(r.name));
+      const all = pts.map(o => [o.address_lat, o.address_lng]).concat(shops.map(r => [r.lat, r.lng]));
+      if (all.length > 1 && m.fitBounds) m.fitBounds(all, { padding:[20, 20], maxZoom:15 });
+    }
+  } catch (e) { el.innerHTML = `<div class="empty">${esc(e.message || 'Map could not load')}</div>`; }
+}
+// ---- Push campaigns ----
+function viewCampaign(){
+  const rows = (state.campaigns || []).map(c => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(c.title)}</div><div class="row-sub">${esc(c.body || '')}<br>${{ customers:'👥 Customers', riders:'🛵 Riders', shops:'🏪 Shops' }[c.target] || c.target} · ${c.sent_count} phones · ${when(c.created_at)}</div></div></div>`).join('');
+  return `${backLink()}<h2>📣 Send notification</h2>
+    <div class="note">${scope() ? `Goes to people in <b>${esc(regionName(scope()))}</b>.` : (state.regions || []).length > 1 ? '🌍 No region chosen: this goes to <b>everyone in all regions</b>.' : ''} Only phones that allowed notifications get it. Keep it short. Do not send more than 1–2 a day.</div>
+    <div class="card">
+      <label class="f" for="cp_to" style="margin-top:0">Send to</label><select id="cp_to"><option value="customers">👥 All customers</option><option value="riders">🛵 All riders</option><option value="shops">🏪 All shop owners</option></select>
+      <label class="f" for="cp_t">Title</label><input id="cp_t" type="text" maxlength="60" placeholder="🎉 Free delivery today!">
+      <label class="f" for="cp_b">Message</label><textarea id="cp_b" rows="3" maxlength="180" placeholder="Order anything above Rs 500 — delivery is on us till 10 PM."></textarea>
+      <div class="bar" style="margin-top:8px">${[['🎉 Free delivery today!', 'Order above Rs 500 and pay no delivery fee till 10 PM.'], ['🍔 Hungry?', 'Your favourite food is a few taps away. Order now on Wanhar Mart.'], ['🛒 Weekly grocery', 'Atta, ghee, sugar and more — delivered to your door today.']].map(([a, b]) => `<button class="chip" onclick="$('cp_t').value=${esc(JSON.stringify(a))};$('cp_b').value=${esc(JSON.stringify(b))}">${esc(a)}</button>`).join('')}</div>
+      <div class="actions"><button class="btn block" id="cpSend" onclick="A.sendCampaign()">📣 Send now</button></div></div>
+    <h3>Sent before</h3><div class="list">${rows || '<div class="empty">Nothing sent yet.</div>'}</div>`;
+}
 // ---- Customers ----
 async function loadCustomers(){ state.customers = need(await sb.rpc('admin_customers')) || []; }
 function viewCustomers(){
@@ -1955,6 +2076,16 @@ function viewSettings(){
     ${sc ? `<div class="note" style="border-color:var(--green)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Wanhar Mart settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
       : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : ''}
     ${payAccCard()}
+    <div class="card">
+      <b>🛡️ Safety: fake orders and delivery code</b>
+      <div class="muted" style="font-size:14px">Stops people who order with cash and then do not take the order.</div>
+      ${(() => { const c = Object.assign({ first_max:3000, max_fails:2 }, s.cod_rules || {}); return `
+      <div class="two"><div><label class="f" for="cr_first">First order cash limit (Rs, 0 = none)</label><input id="cr_first" type="number" min="0" value="${num(c.first_max)}"></div>
+        <div><label class="f" for="cr_fail">Cash off after this many refused orders (0 = never)</label><input id="cr_fail" type="number" min="0" max="10" value="${num(c.max_fails)}"></div></div>`; })()}
+      <label class="check"><input id="dc_on" type="checkbox" ${s.delivery_code === false ? '' : 'checked'}> Rider must enter the customer's 4-digit code to finish a delivery</label>
+      <div class="muted" style="font-size:13px">The customer sees the code in their app. It stops riders marking “delivered” without giving the order. You can block a customer or turn cash off for one customer in More → Customers.</div>
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSafety()">Save</button></div>
+    </div>
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div><b>Selfie face check at duty start</b><div class="muted" style="font-size:14px">When on, a rider must take a selfie that matches their registered face before going online. Turn this on after the new Rider app is published.</div></div>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${req ? 'checked' : ''} onchange="A.saveSetting('require_selfie', this.checked)"><span></span></label><small>${req ? 'On' : 'Off'}</small></div>
@@ -2084,12 +2215,18 @@ const A = {
         ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}</div>
       ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
       ${o.rider && o.rider.profile ? `<div style="margin-bottom:8px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : ''}
+      ${o.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : ''}
       ${o.customer_note ? `<div class="note"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
+      ${o.sub_pref ? `<div class="muted" style="font-size:13px">🔁 If out of stock: ${esc({ similar:'give something similar', call:'call the customer', remove:'remove it' }[o.sub_pref] || o.sub_pref)}</div>` : ''}
+      ${o.rx_path ? `<button class="btn ghost small" onclick="A.seeFile(${esc(JSON.stringify(o.rx_path))})">💊 See prescription</button>` : ''}
       ${items}
       <div class="kv"><span class="muted">Subtotal</span><span>${money(o.subtotal)}</span></div>
       ${num(o.weight_kg) ? `<div class="kv"><span class="muted">⚖️ Order weight</span><span>${Math.round(num(o.weight_kg) * 100) / 100} kg${num(o.weight_fee) ? ' · +' + money(o.weight_fee) : ''}</span></div>` : ''}
       <div class="kv"><span class="muted">Delivery${num(o.bulk_fee) || num(o.heavy_fee) ? ` (incl. ${num(o.bulk_fee) ? 'big order ' + money(o.bulk_fee) : ''}${num(o.bulk_fee) && num(o.heavy_fee) ? ', ' : ''}${num(o.heavy_fee) ? 'heavy items ' + money(o.heavy_fee) : ''})` : ''}</span><span>${money(o.delivery_fee)}</span></div>
+      ${num(o.shop_discount) ? `<div class="kv"><span class="muted">🏷️ Shop offer (paid by shop)</span><span>-${money(o.shop_discount)}</span></div>` : ''}
       ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
+      ${num(o.plus_saved) ? `<div class="kv"><span class="muted">⭐ Plus free delivery (Wanhar pays)</span><span>-${money(o.plus_saved)}</span></div>` : ''}
+      ${num(o.wallet_used) ? `<div class="kv"><span class="muted">💰 Paid from wallet</span><span>-${money(o.wallet_used)}</span></div>` : ''}
       ${num(o.tip) ? `<div class="kv"><span class="muted">Rider tip (goes to rider)</span><span>${money(o.tip)}</span></div>` : ''}
       <div class="kv total"><span>${o.payment_method === 'wallet' ? 'Paid online' + (o.pay_label ? ' (' + esc(o.pay_label) + ')' : '') : o.payment_method === 'qr_door' ? 'Paid by QR at the door' : 'Cash on delivery'}</span><span>${money(o.total)}</span></div>
       ${orderPayPanel(o)}
@@ -2148,6 +2285,47 @@ const A = {
   },
   morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast('Up to 5 photos', true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
   rmPhoto(w, k){ if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); },
+  async plusAct(id, ok){
+    let note = null; if (!ok){ note = await uiPrompt('What should the customer know?', 'Payment not found. Check the TID and try again.'); if (note === null) return; }
+    else if (!await uiConfirm('Is the money really in your account?')) return;
+    await run(async () => { need(await sb.rpc('admin_plus_action', { p_id:id, p_ok:ok, p_note:note })); await go('plus'); toast(ok ? 'Plus is on for this customer' : 'Customer told'); });
+  },
+  async savePlus(){
+    const rid = payRegion(); if (!rid) return toast('Choose a region first', true);
+    const v = { on:$('pl_on').checked, price:Math.max(1, Math.round(num($('pl_price').value))), days:Math.max(1, Math.round(num($('pl_days').value))), min:Math.max(0, Math.round(num($('pl_min').value))), cap:Math.max(0, Math.round(num($('pl_cap').value))) };
+    await run(async () => { need(await sb.from('region_settings').upsert([{ region_id:rid, key:'plus', value:v, updated_at:new Date().toISOString() }])); await go('plus'); toast('Saved'); });
+  },
+  async sendCampaign(){
+    const title = $('cp_t').value.trim(), body = $('cp_b').value.trim(), target = $('cp_to').value;
+    if (title.length < 3) return toast('Write a title', true);
+    if (!await uiConfirm(`Send “${title}” to all ${target} now?`)) return;
+    const b = $('cpSend'); b.disabled = true;
+    await run(async () => { const n = need(await sb.rpc('admin_send_campaign', { p_title:title, p_body:body, p_target:target })); toast(`Sent to ${n} phones`); await go('campaign'); });
+    const b2 = $('cpSend'); if (b2) b2.disabled = false;
+  },
+  async sosDone(id){ await run(async () => { need(await sb.rpc('admin_sos_resolve', { p_id:id })); state.sos = (state.sos || []).filter(x => x.id !== id); renderTab(); toast('Marked solved'); }); },
+  async codOff(id, v){ await run(async () => { need(await sb.rpc('admin_customer_flags', { p_user:id, p_blocked:null, p_cod_off:v })); toast(v ? 'Cash is off for this customer' : 'Cash allowed'); await A.openCustomer(id); }); },
+  async walletCredit(id){
+    const v = await uiPrompt('How much to add to the wallet? (Rs) Use minus to take back, e.g. -100', '', { type:'number' }); if (v === null) return;
+    const amt = Math.round(num(v)); if (!amt) return;
+    const note = await uiPrompt('Reason (the customer sees it)', amt > 0 ? 'Sorry for the trouble' : ''); if (note === null) return;
+    await run(async () => { const bal = need(await sb.rpc('admin_wallet_credit', { p_user:id, p_amount:amt, p_note:note })); toast('Wallet now ' + money(bal)); await A.openCustomer(id); });
+  },
+  async refundWallet(id){
+    if (!await uiConfirm('Put the money in the customer’s Wanhar wallet? They can use it on their next order.')) return;
+    await run(async () => { need(await sb.rpc('admin_refund_wallet', { p_order:id })); closeSheet(); await loadOrders(); renderTab(); toast('Added to wallet'); });
+  },
+  async sponsor(id, days){
+    const r = state.restaurants.find(x => x.id === id) || {};
+    const base = r.sponsored_until && new Date(r.sponsored_until) > new Date() ? new Date(r.sponsored_until) : new Date();
+    const until = days ? new Date(base.getTime() + days * 864e5).toISOString() : null;
+    await run(async () => { need(await sb.from('restaurants').update({ sponsored_until:until }).eq('id', id)); r.sponsored_until = until; toast(days ? 'Sponsored until ' + dayName(until) : 'Stopped'); await A.openShop(id); });
+  },
+  async seeFile(path){ await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); }); },
+  async saveSafety(){
+    const v = { first_max:Math.max(0, Math.round(num($('cr_first').value))), max_fails:Math.max(0, Math.round(num($('cr_fail').value))) };
+    await run(async () => { need(await putSettings([{ key:'cod_rules', value:v }, { key:'delivery_code', value:$('dc_on').checked }])); await loadSettings(); renderTab(); toast('Saved'); });
+  },
   async setStatus(id, status){
     let reason = null;
     if (status === 'rejected'){ reason = await uiPrompt('Reason for rejecting (optional)'); if (reason === null) return; }
@@ -2196,6 +2374,9 @@ const A = {
       <div class="kv"><span class="muted">Shop earning</span><span>${money(s.shop_earning)}</span></div>
       <div class="kv total"><span>Unpaid to shop (all time)</span><span>${money(s.unpaid)}</span></div>
       ${s.last_paid ? `<div class="muted" style="font-size:13px">Last paid ${when(s.last_paid)}</div>` : ''}
+      <div class="card" style="margin-top:10px"><b>📢 Sponsored (shown first, with an “Ad” tag)</b>
+        <div class="muted" style="font-size:13px">${r.sponsored_until && new Date(r.sponsored_until) > new Date() ? '✅ Until ' + esc(dayName(r.sponsored_until)) : 'Not sponsored now. Charge the shop for this — it is extra income for you.'}</div>
+        <div class="bar" style="margin-top:8px">${[7, 15, 30].map(d => `<button class="chip" onclick="A.sponsor('${id}', ${d})">+${d} days</button>`).join('')}${r.sponsored_until && new Date(r.sponsored_until) > new Date() ? `<button class="chip" onclick="A.sponsor('${id}', 0)">Stop</button>` : ''}</div></div>
       <div id="feeBox"></div>
       <div class="actions" id="shopActs">
         ${num(s.unpaid) && can('money') ? `<button class="btn block" id="payShopBtn" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
@@ -2587,8 +2768,15 @@ const A = {
       <div class="kv"><span class="muted">Delivered</span><span>${c.delivered}</span></div>
       <div class="kv"><span class="muted">Cancelled by customer</span><span>${c.cancelled}</span></div>
       <div class="kv total"><span>Total spent</span><span>${money(c.spent)}</span></div>
+      <div id="custExtra"></div>
       <div class="actions">${c.is_blocked ? `<button class="btn block" onclick="A.blockCustomer('${id}', false)">Unblock customer</button>` : `<button class="btn warn block" onclick="A.blockCustomer('${id}', true)">Block customer (cannot order)</button>`}</div>
       <h3>Recent orders</h3><div class="list" id="custOrders"><div class="empty">Loading…</div></div>`);
+    Promise.all([sb.from('profiles').select('cod_off').eq('id', id).maybeSingle(), sb.from('wallet_tx').select('amount').eq('user_id', id)]).then(([p, w]) => {
+      const ce = $('custExtra'); if (!ce) return; const off = !!(p.data && p.data.cod_off); const bal = (w.data || []).reduce((n, x) => n + num(x.amount), 0);
+      ce.innerHTML = `<div class="kv"><span class="muted">💰 Wallet</span><b>${money(bal)}</b></div>
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px"><div><b>💵 Cash on delivery</b><div class="muted" style="font-size:13px">${off ? 'OFF — this customer must pay online' : 'Allowed'}</div></div>
+          <button class="btn small ${off ? '' : 'warn'}" onclick="A.codOff('${id}', ${!off})">${off ? 'Allow cash' : 'Turn cash off'}</button></div>
+        ${can('money') ? `<button class="btn ghost block" style="margin-top:8px" onclick="A.walletCredit('${id}')">💰 Add money to wallet</button>` : ''}`; }, () => {});
     const { data } = await sb.from('orders').select('id,status,total,created_at,restaurant:restaurants(name)').eq('customer_id', id).order('created_at', { ascending:false }).limit(15);
     const el = $('custOrders'); if (el) el.innerHTML = (data || []).map(o => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || '')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span></div><div class="row-sub">${when(o.created_at)}</div></div><div class="row-side">${money(o.total)}</div></div>`).join('') || '<div class="empty">No orders.</div>';
   },
