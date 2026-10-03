@@ -1997,6 +1997,7 @@ async function showOrder(id){
 // ---- Delivery time and complaints about the rider ----
 const tAt = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 function arriveLine(o){
+  if (o.order_type === 'pickup') return '';
   if (o.status === 'picked_up' && o.rider_due_at) return `<span style="display:block;opacity:.95;font-weight:700;margin-top:4px">🛵 ${t('arrive_by', { t:tAt(o.rider_due_at) })}</span>`;
   if (o.deliver_by && !FINAL.includes(o.status)) return `<span style="display:block;opacity:.9;margin-top:4px">🕒 ${t('deliver_around', { t:tAt(o.deliver_by) })}</span>`;
   return '';
@@ -2954,8 +2955,8 @@ const Push = (() => {
   function hide(){ const el = document.getElementById('pushCard'); if (el) el.remove(); }
   function show(){
     hide();
-    if (!cfg || !cfg.me() || snoozed()) return;
-    const needPush = supported() && Notification.permission === 'default';
+    if (!cfg || snoozed()) return;
+    const needPush = !!cfg.me() && supported() && Notification.permission === 'default';
     const iosHint = isIOS() && !standalone();
     if (!needPush && !deferred && !iosHint) return;
     const el = document.createElement('div'); el.id = 'pushCard';
