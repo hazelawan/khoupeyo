@@ -1039,6 +1039,7 @@ const t = (k, v) => {
 };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
 function toast(msg, isErr){
+  if (isErr && /failed to fetch|networkerror|load failed|network request failed/i.test(String(msg))) msg = (() => { try { return state.lang === 'ur'; } catch (e) { return false; } })() ? 'انٹرنیٹ کا مسئلہ ہے۔ انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔' : 'Internet problem. Check your internet and try again.';
   const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
   document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
 }
@@ -1309,7 +1310,8 @@ async function route(soft){
   }
   if (!soft) window.scrollTo(0, 0);
 }
-window.addEventListener('hashchange', () => { closeSheet(); route(); });
+let hashT = null;
+window.addEventListener('hashchange', () => { clearTimeout(hashT); hashT = setTimeout(() => { closeSheet(); route(); }, 80); });
 
 // ================= DATA =================
 // Shop timings (Pakistan time). Same rule as the server: no time or same time = open all day.
@@ -1914,6 +1916,7 @@ function payBox(o, acc){
 }
 async function showOrder(id){
   const o = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone,lat,lng), order_items(menu_item_id,name,quantity,price,options)').eq('id', id).single());
+  if (currentRoute !== 'order' || !location.hash.includes(id)) return;
   state.curOrder = o;
   let payAcc = null, code = null;
   if (!FINAL.includes(o.status)){ try { const { data } = await sb.from('order_codes').select('code').eq('order_id', id).maybeSingle(); code = data && data.code; } catch (e) {} }
@@ -1946,6 +1949,7 @@ async function showOrder(id){
     <div style="display:grid;gap:10px;margin-top:10px">${rider.phone ? `<a class="btn ghost" href="tel:${esc(rider.phone)}">${t('call_rider')} ${esc(rider.phone)}</a>` : ''}
     ${rider.lat ? `<a class="btn gold" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${rider.lat},${rider.lng}">${t('track_rider')}</a>` : ''}</div></div>` : '';
   const items = o.order_items.map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
+  if (currentRoute !== 'order' || !location.hash.includes(id)) return;
   const heroKey = o.order_type === 'pickup' && o.status === 'ready' ? 'hero_ready_pick' : o.payment_method === 'wallet' && o.status === 'placed' && ['unpaid', 'checking'].includes(o.payment_status) ? (o.payment_status === 'unpaid' ? 'hero_pay' : 'hero_paycheck') : 'hero_' + o.status;
   $('view').innerHTML = `
     ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}${arriveLine(o)}${o.scheduled_for && !FINAL.includes(o.status) ? `<span style="display:block;margin-top:6px"><span class="schedpill">🗓️ ${esc(t('sched_for', { d:schedLabel(o.scheduled_for) }))}</span></span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
@@ -1983,6 +1987,7 @@ async function showOrder(id){
       ${FINAL.includes(o.status) ? `<button class="btn" onclick="A.reorder()">${t('reorder')}</button>` : ''}
     </div>${o.status === 'delivered' ? ratingHtml(o, review) + complainHtml(o, cmp) : ''}`;
   if (showTrackMap(o)) mountTrackMap(o, rider);
+  if (currentRoute !== 'order' || !location.hash.includes(id)) return;
   if (!FINAL.includes(o.status)) pollTimer = setInterval(() => { const f = $('payTid'); if (f && (f.value || state.payFile || document.activeElement === f)) return; route(true); }, 15000);
   if (showTrackMap(o) && ['rider_assigned', 'picked_up'].includes(o.status)){
     clearInterval(riderTimer);
