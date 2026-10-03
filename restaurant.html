@@ -821,6 +821,7 @@ const state = {
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
 function toast(msg, isErr){
+  if (isErr && /failed to fetch|networkerror|load failed|network request failed/i.test(String(msg))) msg = (() => { try { return state.lang === 'ur'; } catch (e) { return false; } })() ? 'انٹرنیٹ کا مسئلہ ہے۔ انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔' : 'Internet problem. Check your internet and try again.';
   const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
   document.body.appendChild(el); setTimeout(() => el.remove(), 3400);
 }
