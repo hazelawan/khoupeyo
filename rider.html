@@ -317,6 +317,10 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 
 /* online payment + whatsapp */
 .paidok{margin-top:10px;background:rgba(31,111,74,.12);color:var(--green);border-radius:12px;padding:10px 12px;font-weight:800}
+.batchtag{background:rgba(11,125,79,.12);color:var(--green);border-radius:10px;padding:8px 10px;font-weight:800;font-size:13px;margin-bottom:8px}
+.hotrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none}
+.hotrow:last-child{border-bottom:0}
+.sosbtn{background:#B4161B!important;color:#fff!important;border:0!important;font-weight:800}
 .paidok.wait{background:rgba(232,160,40,.14);color:#9A5B00}
 .wabtn{display:flex!important;width:100%;margin-top:8px;background:#25D366!important;color:#fff!important;border:0!important;justify-content:center;text-decoration:none}
 /* ===== Wanhar Mart design system v3 ===== */
@@ -471,6 +475,50 @@ main{padding-bottom:130px!important}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ================= THEME: LIGHT / DARK / AUTO (same code in all apps) =================
+// The apps already have dark colours inside "@media (prefers-color-scheme: dark)". This switch turns
+// those blocks always-on (Dark), always-off (Light) or back to following the phone (Auto).
+const Theme = (() => {
+  const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
+  const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
+  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  function walk(rules, mode){
+    for (const r of rules){
+      if (r.media && r.cssRules){
+        if (!known.has(r)) known.set(r, r.media.mediaText); const orig = known.get(r);
+        const want = DARK_Q.test(orig) ? (mode === 'dark' ? 'all' : mode === 'light' ? 'not all' : orig)
+                   : LIGHT_Q.test(orig) ? (mode === 'light' ? 'all' : mode === 'dark' ? 'not all' : orig) : null;
+        if (want !== null && r.media.mediaText !== want){ try { r.media.mediaText = want; } catch (e) {} }
+        if (r.cssRules) walk(r.cssRules, mode);
+      }
+    }
+  }
+  function apply(mode){
+    mode = mode || get();
+    for (const sh of document.styleSheets){ try { walk(sh.cssRules, mode); } catch (e) {} }
+    const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    const m = document.querySelector('meta[name=theme-color]'); if (m){ if (!m.dataset.light) m.dataset.light = m.content; m.content = dark ? '#0E1A14' : m.dataset.light; }
+  }
+  function set(mode){ try { localStorage.setItem(KEY, mode); } catch (e) {} apply(mode); document.querySelectorAll('.themesw button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); }
+  function picker(lang){
+    const ur = lang === 'ur'; const cur = get();
+    const L = ur ? { t:'ایپ کا رنگ', light:'☀️ روشن', dark:'🌙 گہرا', auto:'📱 فون جیسا' } : { t:'App theme', light:'☀️ Light', dark:'🌙 Dark', auto:'📱 Auto' };
+    return `<div class="themebox"><b>${L.t}</b><div class="themesw">${['light', 'dark', 'auto'].map(m => `<button type="button" data-m="${m}" class="${cur === m ? 'on' : ''}" onclick="Theme.set('${m}')">${L[m]}</button>`).join('')}</div></div>`;
+  }
+  // new <style> tags (chat, dialogs) get the same treatment
+  try { new MutationObserver(ms => { if (get() !== 'auto' && ms.some(m => [...m.addedNodes].some(n => n.tagName === 'STYLE'))) apply(); }).observe(document.head, { childList:true }); } catch (e) {}
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (get() === 'auto') apply('auto'); }); } catch (e) {}
+  const st = document.createElement('style');
+  st.textContent = `.themebox{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0}
+.themesw{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--field,#F1F4F0);border-radius:12px;padding:4px}
+.themesw button{border:0;background:transparent;color:var(--ink);border-radius:9px;padding:9px 4px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.themesw button.on{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.15)}`;
+  document.head.appendChild(st);
+  apply();
+  return { apply, set, get, picker };
+})();
 // ================= APP DIALOGS + SHOW PASSWORD (same code in all apps) =================
 // uiConfirm / uiPrompt look like the app instead of the browser's grey "site says" box.
 const UI = (() => {
@@ -552,7 +600,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.1';
+const APP_VERSION = '5.3';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -617,7 +665,7 @@ const I18N = {
     accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
     slide_picked:'Slide when you have the order', slide_delivered:'Slide when delivered and cash collected',
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call',
-    cash_collect:'Collect cash', paid_short:'Paid online', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
+    cash_collect:'Collect cash', paid_short:'Paid online', batch_same:'➕ Same shop as your order — take both in one trip', batch_near:'➕ Shop next to your order — take both in one trip', hot_t:'🔥 Busy areas at this time', hot_n:'{n} orders', hot_s:'Wait near these places to get orders faster.', code_q:'Ask the customer for the 4-digit delivery code (it is in their app)', sos:'🆘 SOS — I need help', sos_q:'Send an emergency alert to Wanhar Mart with your location?', sos_sent:'Alert sent. Wanhar Mart will call you now.', code_pick_note:'Customer has the code in their app', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
     qr_btn:'📲 Customer wants to pay by QR', qr_t:'Pay by QR', qr_s:'Ask the customer to scan this QR and pay {n}. Then type the Transaction ID (TID) from their phone.', qr_none:'QR payment is not set up in your area. Take cash.', tid:'Transaction ID (TID)', qr_send:'Payment done — send for check',
     payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Wanhar Mart rider for order #{n}.', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
@@ -696,7 +744,7 @@ const I18N = {
     accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
     slide_picked:'آرڈر لینے کے بعد سلائیڈ کریں', slide_delivered:'پہنچا کر رقم لینے کے بعد سلائیڈ کریں',
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال',
-    cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
+    cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', batch_same:'➕ آپ کے آرڈر والی دکان — ایک چکر میں دونوں لے جائیں', batch_near:'➕ آپ کے آرڈر کے ساتھ والی دکان — ایک چکر میں دونوں لے جائیں', hot_t:'🔥 اس وقت مصروف علاقے', hot_n:'{n} آرڈر', hot_s:'زیادہ آرڈر کے لیے ان جگہوں کے قریب رہیں۔', code_q:'گاہک سے 4 ہندسوں کا ڈیلیوری کوڈ پوچھیں (اس کی ایپ میں ہے)', sos:'🆘 SOS — مجھے مدد چاہیے', sos_q:'اپنی لوکیشن کے ساتھ وانہار مارٹ کو ایمرجنسی الرٹ بھیجیں؟', sos_sent:'الرٹ بھیج دیا گیا۔ وانہار مارٹ ابھی آپ کو کال کرے گا۔', code_pick_note:'گاہک کی ایپ میں کوڈ ہے', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
     qr_btn:'📲 گاہک QR سے ادائیگی کرنا چاہتا ہے', qr_t:'QR سے ادائیگی', qr_s:'گاہک سے کہیں یہ QR اسکین کر کے {n} ادا کرے۔ پھر اس کے فون سے ٹرانزیکشن آئی ڈی (TID) لکھیں۔', qr_none:'آپ کے علاقے میں QR ادائیگی سیٹ نہیں۔ نقد لیں۔', tid:'ٹرانزیکشن آئی ڈی (TID)', qr_send:'ادائیگی ہو گئی — چیک کے لیے بھیجیں',
     payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
@@ -1030,6 +1078,9 @@ async function loadMine(){
 async function loadAvailable(){
   if (!onDuty()){ state.available = []; return; }
   state.available = need(await sb.rpc('available_deliveries')) || [];
+  // a 2nd order from the same (or next door) shop going the same way: show it first
+  if (state.mine.some(o => o.status === 'rider_assigned')){ try { const { data } = await sb.rpc('batch_suggestions'); const m = {}; (data || []).forEach(x => { m[x.order_id] = x.reason; }); state.available.forEach(j => { j.batch = m[j.order_id] || null; }); state.available.sort((a, b) => (b.batch ? 1 : 0) - (a.batch ? 1 : 0)); } catch (e) {} }
+  if (!state.mine.length && (!state.hotAt || Date.now() - state.hotAt > 600000)){ state.hotAt = Date.now(); sb.rpc('rider_hot_areas').then(({ data }) => { state.hot = data || []; }, () => {}); }
   // A delivery offered only to me (nearest rider): always pop up, with its own timer
   const offer = state.available.find(j => j.offered_to_me && j.offer_expires_at && !state.seenOffer.has(j.order_id + j.offer_expires_at));
   if (offer && state.mine.length < 2){ state.seenOffer.add(offer.order_id + offer.offer_expires_at); state.seen.add(offer.order_id); closeJobPopup(); showJobPopup(offer); state.firstLoadDone = true; return; }
@@ -1239,7 +1290,7 @@ function activeCard(o){
       ${waNum(c.phone) ? `<a class="btn small wabtn" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent(t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : ''}</div></div>`;
   const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
-  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
+  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
   const action = picked
     ? arrived + issueBlock(o) + slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
@@ -1250,7 +1301,7 @@ function activeCard(o){
 }
 function jobCard(j){
   const d = jobDistances(j);
-  return `<div class="card" ${j.offered_to_me ? 'style="border:2px solid var(--marigold,#F2A900)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
+  return `<div class="card" ${j.offered_to_me ? 'style="border:2px solid var(--marigold,#F2A900)"' : j.batch ? 'style="border:2px solid var(--green)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
     <div class="muted">${esc(j.restaurant_address || '')}</div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
@@ -1479,7 +1530,8 @@ function viewJobs(){
   if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
-  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + jobs;
+  const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
+  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + hot + jobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -1710,9 +1762,11 @@ function viewAcct(){
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
       <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
+    ${Theme.picker(state.lang)}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
     <button class="btn ghost" style="margin-bottom:10px" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
+    <button class="btn small sosbtn" style="margin-bottom:10px;width:100%" onclick="A.sos()">${t('sos')}</button>
     ${state.settings.support_phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(state.settings.support_phone)}">${t('call_support')}</a>` : ''}
     ${Legal.links(state.lang)}
     <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
@@ -2041,8 +2095,16 @@ const A = {
     const b2 = $('qrSend'); if (b2) b2.disabled = false;
   },
   async markDelivered(id){
-    await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'delivered' })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
+    let code = '';
+    if (state.settings.delivery_code !== false){ code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' }); if (code === null){ renderTab(); return; } }
+    await run(async () => { need(await sb.rpc('rider_deliver', { p_order:id, p_code:String(code).trim() })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
     renderTab();
+  },
+  async sos(){
+    if (!await uiConfirm(t('sos_q'), { danger:true, icon:'🆘' })) return;
+    const p = state.pos || await new Promise(res => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition(x => res({ lat:x.coords.latitude, lng:x.coords.longitude }), () => res(null), { enableHighAccuracy:true, timeout:6000 }); });
+    await run(async () => { need(await sb.rpc('rider_sos', { p_lat:p ? p.lat : null, p_lng:p ? p.lng : null, p_note:null })); toast(t('sos_sent'));
+      if (state.settings.support_phone) setTimeout(() => { location.href = 'tel:' + state.settings.support_phone; }, 800); });
   },
   async giveBack(id){
     if (!await uiConfirm(t('confirm_giveback'))) return;
