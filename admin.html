@@ -670,6 +670,7 @@ function range(p){
 }
 const PERIODS = [['today','Today'],['7d','7 days'],['month','This month'],['last','Last month'],['30d','30 days']];
 function toast(msg, isErr){
+  if (isErr && /failed to fetch|networkerror|load failed|network request failed/i.test(String(msg))) msg = false ? 'انٹرنیٹ کا مسئلہ ہے۔ انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔' : 'Internet problem. Check your internet and try again.';
   const t = document.createElement('div'); t.className = 'toast' + (isErr ? ' err' : ''); t.textContent = msg;
   document.body.appendChild(t); setTimeout(() => t.remove(), 3400);
 }
