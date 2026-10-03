@@ -58,11 +58,11 @@ p{margin:0 0 6px;font-size:18px}
 </div>
 <script>
 const T = {
-  en:{ ok_t:'Email verified 🎉', ok_p:'Your email has been verified. You are all set.', ok_s:'Go back to the app and log in with your email and password.',
+  en:{ ok_t:'Email verified 🎉', ok_p:'Your email has been verified. You are all set.', ok_s:'Go back to the app. If it still asks, tap “I have confirmed”.',
        bad_t:'Link expired', bad_p:'This verification link has expired or was already used.', bad_s:'Open the app and log in. If it says the email is not confirmed, sign up again to get a new link.',
        open_customer:'Open Wanhar Mart', open_rider:'Open Rider app', open_shop:'Open Shop app', other:'Other apps',
        s1:'Open the Wanhar Mart app', s2:'Tap Log in', s3:'Enter your email and password', lang:'اردو' },
-  ur:{ ok_t:'ای میل کی تصدیق ہو گئی 🎉', ok_p:'آپ کی ای میل کی تصدیق ہو گئی ہے۔ سب تیار ہے۔', ok_s:'اب ایپ پر واپس جائیں اور اپنی ای میل اور پاس ورڈ سے لاگ اِن کریں۔',
+  ur:{ ok_t:'ای میل کی تصدیق ہو گئی 🎉', ok_p:'آپ کی ای میل کی تصدیق ہو گئی ہے۔ سب تیار ہے۔', ok_s:'اب ایپ پر واپس جائیں۔ اگر وہ پھر بھی پوچھے تو “میں نے تصدیق کر لی” دبائیں۔',
        bad_t:'لنک کی مدت ختم', bad_p:'یہ تصدیقی لنک پرانا ہو گیا ہے یا پہلے استعمال ہو چکا ہے۔', bad_s:'ایپ کھول کر لاگ اِن کریں۔ اگر ای میل کی تصدیق باقی ہو تو دوبارہ اکاؤنٹ بنا کر نیا لنک لیں۔',
        open_customer:'Wanhar Mart کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', other:'دوسری ایپس',
        s1:'Wanhar Mart ایپ کھولیں', s2:'لاگ اِن دبائیں', s3:'اپنی ای میل اور پاس ورڈ لکھیں', lang:'English' }
@@ -74,6 +74,10 @@ const params = new URLSearchParams(location.search);
 const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
 const failed = !!(hash.get('error') || hash.get('error_code') || params.get('error'));
 const app = APPS[params.get('app')] ? params.get('app') : 'customer';
+// The link from the email logs the person in: tell the server their email is confirmed
+const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co", SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
+const accessToken = hash.get('access_token');
+if (accessToken) fetch(SUPABASE_URL + '/rest/v1/rpc/mark_email_verified', { method:'POST', headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer ' + accessToken, 'Content-Type':'application/json' }, body:'{}' }).catch(() => {});
 // Remove login tokens from the address bar so they are not shared by mistake
 try { history.replaceState(null, '', location.pathname + (params.get('app') ? '?app=' + app : '')); } catch (e) {}
 function render(){
