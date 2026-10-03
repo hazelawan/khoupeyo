@@ -29,3 +29,9 @@ self.addEventListener('notificationclick', e => {
     await self.clients.openWindow(target);
   })());
 });
+
+// Pass page requests to the network; if the phone is offline show a short message instead of an error page.
+self.addEventListener('fetch', e => {
+  if (e.request.mode !== 'navigate') return;
+  e.respondWith(fetch(e.request).catch(() => new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:sans-serif;text-align:center;padding:40px 20px;color:#1E2B25"><h2>No internet</h2><p>Please check your internet and try again.</p><p dir="rtl">انٹرنیٹ نہیں ہے۔ براہ کرم انٹرنیٹ چیک کریں۔</p><button onclick="location.reload()" style="padding:12px 20px;border:0;border-radius:12px;background:#1F6F4A;color:#fff;font-size:16px">Try again</button></body>', { headers:{ 'Content-Type':'text/html; charset=utf-8' } })));
+});
