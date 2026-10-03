@@ -317,6 +317,32 @@ html[dir=rtl] .sec .chev{transform:scaleX(-1)} html[dir=rtl] .sec.open .chev{tra
 .bkprog i b,.pmbar b{display:block;height:100%;background:var(--green);transition:width .3s}
 .pm{text-align:center}
 .pmname{font-size:22px;font-weight:800;margin-top:14px;overflow-wrap:anywhere}
+
+/* timings v2 + many shops */
+.htimes select,.hbrk select{min-width:0;margin:0;padding:10px 8px;font-size:15px}
+.h24{margin-top:6px;font-size:13px;font-weight:700;color:var(--green)}
+.hbrk{display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px;font-size:13px;color:var(--muted)}
+.hbrk .hx{border:0;background:var(--field,#F1F4F0);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--ink)}
+.hbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.hadd{border:1px dashed var(--line);background:none;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;color:var(--green);cursor:pointer}
+.shopsw{background:none;border:0;padding:0;text-align:start;cursor:pointer;font:inherit;position:relative;max-width:62vw}
+.sbadge{display:inline-block;margin-inline-start:6px;background:var(--danger,#D23B2E);color:#fff;border-radius:999px;font-size:12px;padding:1px 7px;vertical-align:middle}
+.shoprow{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font:inherit;color:var(--ink);text-align:start}
+.shoprow.on{border-color:var(--green);box-shadow:0 0 0 3px rgba(11,125,79,.12)}
+.shoprow .thumb{width:44px;height:44px;border-radius:12px;overflow:hidden;flex:none}
+.shoprow .thumb img{width:100%;height:100%;object-fit:cover}
+.shoprow .nm{flex:1;min-width:0}.shoprow .nm small{display:block;color:var(--muted);font-size:13px}
+.otheralert{position:fixed;left:12px;right:12px;top:76px;z-index:9500;background:#B4161B;color:#fff;border-radius:16px;padding:12px 12px 12px 16px;display:flex;align-items:center;gap:10px;font-weight:800;box-shadow:0 12px 30px rgba(0,0,0,.3);animation:oa 1s ease-in-out infinite alternate}
+.otheralert span{flex:1}
+.otheralert button{border:0;background:#fff;color:#B4161B;border-radius:10px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer}
+.otheralert button.x{background:transparent;color:#fff;padding:4px 8px;font-size:20px}
+@keyframes oa{to{background:#D23B2E}}
+
+/* busy, pickup */
+.busybtn{display:block;width:100%;margin:0 0 10px;border:1.5px dashed var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:10px;font:inherit;font-weight:800;cursor:pointer}
+.busybar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(232,160,40,.16);border:1px solid rgba(232,160,40,.5);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-weight:800}
+.busybar .btn{width:auto;flex:none}
+.picktag{margin:6px 0;background:#E8F0FE;color:#1A4FB0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:14px}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -469,6 +495,50 @@ main{padding-bottom:130px!important}
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ================= THEME: LIGHT / DARK / AUTO (same code in all apps) =================
+// The apps already have dark colours inside "@media (prefers-color-scheme: dark)". This switch turns
+// those blocks always-on (Dark), always-off (Light) or back to following the phone (Auto).
+const Theme = (() => {
+  const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
+  const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
+  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  function walk(rules, mode){
+    for (const r of rules){
+      if (r.media && r.cssRules){
+        if (!known.has(r)) known.set(r, r.media.mediaText); const orig = known.get(r);
+        const want = DARK_Q.test(orig) ? (mode === 'dark' ? 'all' : mode === 'light' ? 'not all' : orig)
+                   : LIGHT_Q.test(orig) ? (mode === 'light' ? 'all' : mode === 'dark' ? 'not all' : orig) : null;
+        if (want !== null && r.media.mediaText !== want){ try { r.media.mediaText = want; } catch (e) {} }
+        if (r.cssRules) walk(r.cssRules, mode);
+      }
+    }
+  }
+  function apply(mode){
+    mode = mode || get();
+    for (const sh of document.styleSheets){ try { walk(sh.cssRules, mode); } catch (e) {} }
+    const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    const m = document.querySelector('meta[name=theme-color]'); if (m){ if (!m.dataset.light) m.dataset.light = m.content; m.content = dark ? '#0E1A14' : m.dataset.light; }
+  }
+  function set(mode){ try { localStorage.setItem(KEY, mode); } catch (e) {} apply(mode); document.querySelectorAll('.themesw button').forEach(b => b.classList.toggle('on', b.dataset.m === mode)); }
+  function picker(lang){
+    const ur = lang === 'ur'; const cur = get();
+    const L = ur ? { t:'ایپ کا رنگ', light:'☀️ روشن', dark:'🌙 گہرا', auto:'📱 فون جیسا' } : { t:'App theme', light:'☀️ Light', dark:'🌙 Dark', auto:'📱 Auto' };
+    return `<div class="themebox"><b>${L.t}</b><div class="themesw">${['light', 'dark', 'auto'].map(m => `<button type="button" data-m="${m}" class="${cur === m ? 'on' : ''}" onclick="Theme.set('${m}')">${L[m]}</button>`).join('')}</div></div>`;
+  }
+  // new <style> tags (chat, dialogs) get the same treatment
+  try { new MutationObserver(ms => { if (get() !== 'auto' && ms.some(m => [...m.addedNodes].some(n => n.tagName === 'STYLE'))) apply(); }).observe(document.head, { childList:true }); } catch (e) {}
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (get() === 'auto') apply('auto'); }); } catch (e) {}
+  const st = document.createElement('style');
+  st.textContent = `.themebox{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0}
+.themesw{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--field,#F1F4F0);border-radius:12px;padding:4px}
+.themesw button{border:0;background:transparent;color:var(--ink);border-radius:9px;padding:9px 4px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.themesw button.on{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.15)}`;
+  document.head.appendChild(st);
+  apply();
+  return { apply, set, get, picker };
+})();
 // ================= APP DIALOGS + SHOW PASSWORD (same code in all apps) =================
 // uiConfirm / uiPrompt look like the app instead of the browser's grey "site says" box.
 const UI = (() => {
@@ -550,7 +620,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.7';
+const APP_VERSION = '4.9';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -574,18 +644,37 @@ const PKW = new Intl.DateTimeFormat('en-US', { timeZone:'Asia/Karachi', weekday:
 const WD = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
 const hasWeek = r => !!(r && r.hours && typeof r.hours === 'object' && Object.keys(r.hours).length);
 const todayDw = () => WD[PKW.format(new Date())];
+// shift we are inside now (today's, or yesterday's that runs past midnight), or null
+function curShift(r, n){
+  const dw = todayDw(), x = r.hours[dw], y = r.hours[(dw + 6) % 7];
+  if (x && !x.off){ const o = hhmm(x.o), c = hhmm(x.c); if (!o || !c || o === c || (o < c && n >= o && n < c) || (o > c && n >= o)) return x; }
+  if (y && !y.off){ const o = hhmm(y.o), c = hhmm(y.c); if (o && c && o > c && n < c) return y; }
+  return null;
+}
+const breakNow = (sh, n) => (Array.isArray(sh && sh.b) ? sh.b : []).find(b => b.s && b.e && b.s < b.e && n >= hhmm(b.s) && n < hhmm(b.e)) || null;
 function withinHours(r){
   const n = pkNow();
   if (!hasWeek(r)){ const o = hhmm(r.open_time), c = hhmm(r.close_time); if (!o || !c || o === c) return true; return o < c ? (n >= o && n < c) : (n >= o || n < c); }
-  const dw = todayDw(), x = r.hours[dw], y = r.hours[(dw + 6) % 7];
-  if (x && !x.off){ const o = hhmm(x.o), c = hhmm(x.c); if (!o || !c || o === c) return true; if (o < c && n >= o && n < c) return true; if (o > c && n >= o) return true; }
-  if (y && !y.off){ const o = hhmm(y.o), c = hhmm(y.c); if (o && c && o > c && n < c) return true; }
-  return false;
+  const sh = curShift(r, n); return !!sh && !breakNow(sh, n);
 }
 const DAYN = d => new Date(Date.UTC(2024, 0, 7 + d)).toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { weekday:'long', timeZone:'UTC' });
-function weekHours(r){ const out = {}; for (let d = 0; d < 7; d++){ const x = hasWeek(r) ? r.hours[d] : null; out[d] = x ? { o:hhmm(x.o), c:hhmm(x.c), off:!!x.off } : { o:hhmm(r.open_time), c:hhmm(r.close_time), off:hasWeek(r) }; } return out; }
+function weekHours(r){ const out = {}; for (let d = 0; d < 7; d++){ const x = hasWeek(r) ? r.hours[d] : null; out[d] = x ? { o:hhmm(x.o), c:hhmm(x.c), off:!!x.off, b:(Array.isArray(x.b) ? x.b : []).map(b => ({ s:hhmm(b.s), e:hhmm(b.e) })) } : { o:hhmm(r.open_time) || '09:00', c:hhmm(r.close_time) || '22:00', off:hasWeek(r), b:[] }; } return out; }
 function time12(v){ const x = hhmm(v); if (!x) return ''; const [h, m] = x.split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); }
-function hoursText(r){ const x = weekHours(r)[todayDw()]; if (x.off) return t('closed_bar'); return t('outside_hours').replace(/\{o\}/g, time12(x.o)).replace(/\{c\}/g, time12(x.c)); }
+function hoursText(r){ if (hasWeek(r)){ const n = pkNow(), sh = curShift(r, n), b = sh && breakNow(sh, n); if (b) return t('in_break').replace('{t}', time12(b.e)); } const x = weekHours(r)[todayDw()]; if (x.off) return t('closed_bar'); return t('outside_hours').replace(/\{o\}/g, time12(x.o)).replace(/\{c\}/g, time12(x.c)); }
+// ---- timings editor: a draft kept in state until Save ----
+const TSLOTS = (() => { const a = []; for (let m = 0; m < 1440; m += 15) a.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0')); return a; })();
+const tSel = (val, on) => { const v = hhmm(val) || ''; const list = TSLOTS.includes(v) || !v ? TSLOTS : TSLOTS.concat(v).sort(); return `<select onchange="${on}">${list.map(x => `<option value="${x}" ${x === v ? 'selected' : ''}>${time12(x)}</option>`).join('')}</select>`; };
+function hrsDraft(r){ if (!state.hrs || state.hrsFor !== r.id){ state.hrs = weekHours(r); state.hrsFor = r.id; } return state.hrs; }
+function hoursEd(r){
+  const w = hrsDraft(r);
+  return [1, 2, 3, 4, 5, 6, 0].map(d => { const x = w[d]; return `<div class="hday ${x.off ? 'off' : ''}">
+    <div class="hhead"><b>${DAYN(d)}</b><label class="hsw"><span class="hst">${x.off ? t('day_closed') : t('day_open')}</span><label class="switch" style="margin:0"><input type="checkbox" ${x.off ? '' : 'checked'} onchange="A.hrsSet(${d},'off',!this.checked)" aria-label="${DAYN(d)}"><span></span></label></label></div>
+    ${x.off ? '' : `<div class="htimes">${tSel(x.o, `A.hrsSet(${d},'o',this.value)`)}<span>–</span>${tSel(x.c, `A.hrsSet(${d},'c',this.value)`)}</div>
+    ${x.o === x.c ? `<div class="h24">${t('open24')}</div>` : ''}
+    ${x.b.map((b, i) => `<div class="hbrk"><span>☕ ${t('brk')}</span>${tSel(b.s, `A.brkSet(${d},${i},'s',this.value)`)}<span>–</span>${tSel(b.e, `A.brkSet(${d},${i},'e',this.value)`)}<button type="button" class="hx" onclick="A.brkDel(${d},${i})" aria-label="×">×</button></div>`).join('')}
+    <div class="hbtns">${x.b.length < 3 ? `<button type="button" class="hadd" onclick="A.brkAdd(${d})">${t('add_brk')}</button>` : ''}${d === 5 && !x.b.some(b => b.s === '13:00') ? `<button type="button" class="hadd" onclick="A.brkAdd(5,'13:00','14:30')">${t('jumma')}</button>` : ''}</div>`}</div>`; }).join('');
+}
+const redrawHrs = () => { const el = $('hrsed'); if (el && state.restaurant) el.innerHTML = hoursEd(state.restaurant); };
 function timeAgo(ts){
   const m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
   if (m < 1) return '0 min'; if (m < 60) return m + ' min';
@@ -629,7 +718,12 @@ const I18N = {
     sec_switch:'Whole section on or off', sec_all_on:'All in stock', sec_all_off:'Section is off', sec_some_on:'{a} of {b} in stock', sec_empty:'No products', sec_off_q:'Turn off the whole section “{s}”? Customers will not see its {n} products until you turn it on.', sec_on_done:'Section is on', sec_off_done:'Section is off',
     add_product:'Add product', add_section:'Add section', edit_section:'Edit section', section:'Section', section_name:'Section name',
     product_name:'Product name', description:'Description', price:'Selling price (Rs)', compare:'Price before discount (optional)',
-    bulk_btn:'Excel sheet', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
+    bulk_btn:'Excel sheet', busy_b:'⏸ Busy', busy_t:'Too many orders? Stop new orders for a while', busy_on:'⏸ Busy — no new orders till {t}', busy_end:'Take orders again', mins:'{n} min', busy_set:'New orders stopped till {t}',
+    pickup_tag:'🛍️ PICKUP — customer will collect', collected_b:'✅ Customer collected — enter code', code_ask:'Ask the customer for the 4-digit code from their app', wait_collect:'Waiting for the customer to collect',
+    sub_lbl:'If out of stock', sub_similar:'give something similar', sub_call:'call the customer', sub_remove:'remove it', rx_see:'💊 See prescription', print_b:'🖨️ Print',
+    offer_t:'Your shop offer', offer_s:'Give a discount on your shop. You pay it (it is taken from your earning). Customers see it on your shop.', offer_on:'Offer is on', offer_pct:'Discount %', offer_min:'Minimum order (Rs)', offer_max:'Max discount (Rs, 0 = no limit)', save_offer:'Save offer',
+    pick_on:'Customers can collect orders themselves (pickup)', pick_s:'No rider. Customer comes to your shop and shows a code.', shop_disc:'Shop offer', brk:'Break', add_brk:'+ Add break', jumma:'🕌 Jumma break', brk_from:'Break from', brk_to:'to', open24:'⏰ Open 24 hours', in_break:'On break now. Customers can order again at {t}.', hrs_bad:'{d}: the break must be inside the open time',
+    my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', back_shop:'‹ Back to my shop', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
@@ -685,7 +779,12 @@ const I18N = {
     sec_switch:'پورا سیکشن آن یا آف', sec_all_on:'سب دستیاب', sec_all_off:'سیکشن بند ہے', sec_some_on:'{b} میں سے {a} دستیاب', sec_empty:'کوئی پروڈکٹ نہیں', sec_off_q:'پورا سیکشن “{s}” بند کریں؟ جب تک آپ دوبارہ نہ کھولیں، گاہک اس کی {n} پروڈکٹس نہیں دیکھیں گے۔', sec_on_done:'سیکشن کھل گیا', sec_off_done:'سیکشن بند ہو گیا',
     add_product:'پروڈکٹ شامل کریں', add_section:'سیکشن شامل کریں', edit_section:'سیکشن تبدیل کریں', section:'سیکشن', section_name:'سیکشن کا نام',
     product_name:'پروڈکٹ کا نام', description:'تفصیل', price:'قیمت (Rs)', compare:'رعایت سے پہلے کی قیمت (اختیاری)',
-    bulk_btn:'Excel شیٹ', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
+    bulk_btn:'Excel شیٹ', busy_b:'⏸ مصروف', busy_t:'بہت آرڈر ہیں؟ کچھ دیر نئے آرڈر روک دیں', busy_on:'⏸ مصروف — {t} تک نئے آرڈر نہیں', busy_end:'دوبارہ آرڈر لیں', mins:'{n} منٹ', busy_set:'{t} تک نئے آرڈر بند',
+    pickup_tag:'🛍️ خود لے جائے گا — گاہک دکان سے لے گا', collected_b:'✅ گاہک نے لے لیا — کوڈ لکھیں', code_ask:'گاہک سے اس کی ایپ والا 4 ہندسوں کا کوڈ پوچھیں', wait_collect:'گاہک کے آنے کا انتظار',
+    sub_lbl:'چیز ختم ہو تو', sub_similar:'ملتی جلتی دے دیں', sub_call:'گاہک کو کال کریں', sub_remove:'ہٹا دیں', rx_see:'💊 نسخہ دیکھیں', print_b:'🖨️ پرنٹ',
+    offer_t:'آپ کی دکان کی آفر', offer_s:'اپنی دکان پر رعایت دیں۔ یہ آپ دیں گے (آپ کی کمائی سے کٹے گی)۔ گاہک کو دکان پر نظر آئے گی۔', offer_on:'آفر چالو ہے', offer_pct:'رعایت %', offer_min:'کم از کم آرڈر (روپے)', offer_max:'زیادہ سے زیادہ رعایت (0 = کوئی حد نہیں)', save_offer:'آفر محفوظ کریں',
+    pick_on:'گاہک خود آرڈر لے جا سکتے ہیں (پک اپ)', pick_s:'رائیڈر نہیں۔ گاہک دکان پر آ کر کوڈ دکھائے گا۔', shop_disc:'دکان کی آفر', brk:'وقفہ', add_brk:'+ وقفہ شامل کریں', jumma:'🕌 جمعہ کا وقفہ', brk_from:'وقفہ', brk_to:'سے', open24:'⏰ 24 گھنٹے کھلی', in_break:'ابھی وقفہ ہے۔ گاہک {t} سے دوبارہ آرڈر کر سکیں گے۔', hrs_bad:'{d}: وقفہ کھلنے کے وقت کے اندر ہونا چاہیے',
+    my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', back_shop:'‹ اپنی دکان پر واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
@@ -794,15 +893,16 @@ async function loadMyRequest(){
   if (!state.rqForm){
     const p = (await sb.from('profiles').select('full_name,phone').eq('id', state.user.id).maybeSingle()).data || {};
     const old = state.sreq && state.sreq.status !== 'pending' ? state.sreq : {};
+    const fresh = state.addMode && old.status === 'approved';   // adding another shop: keep the owner details, start the shop details empty
     state.rqForm = { region_id:old.region_id || (state.regionsList.length === 1 ? state.regionsList[0].id : ''), cnic:old.cnic || '', owner_name:old.owner_name || p.full_name || '', phone:old.phone || p.phone || '',
-      shop_name:old.shop_name || '', categories:old.categories || [], other_category:old.other_category || '', address:old.address || '', lat:old.lat ?? null, lng:old.lng ?? null, note:'', shop_photo_path:null, cnic_photo_path:null };
+      shop_name:fresh ? '' : old.shop_name || '', categories:fresh ? [] : old.categories || [], other_category:fresh ? '' : old.other_category || '', address:fresh ? '' : old.address || '', lat:fresh ? null : old.lat ?? null, lng:fresh ? null : old.lng ?? null, note:'', shop_photo_path:null, cnic_photo_path:fresh ? old.cnic_photo_path || null : null };
   }
 }
 function agoText(ts){ const m = Math.max(0, Math.round((Date.now() - new Date(ts)) / 60000));
   return m < 1 ? t('ago_now') : m < 60 ? t('ago_min').replace('{n}', m) : m < 1440 ? t('ago_h').replace('{n}', Math.floor(m / 60)) : t('ago_d').replace('{n}', Math.floor(m / 1440)); }
 function showShopRequest(){
   const q = state.sreq;
-  const top = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
+  const top = `${state.addMode ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToShop()">${t('back_shop')}</button>` : ''}<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
   if (q && q.status === 'pending'){
     const city = (state.regionsList.find(r => r.id === q.region_id) || {}).name || '';
     clearInterval(state.rqPoll); state.rqPoll = setInterval(() => { if (!document.hidden && $('rqWait')) A.recheck(); else if (!$('rqWait')) clearInterval(state.rqPoll); }, 30000);
@@ -817,7 +917,7 @@ function showShopRequest(){
         <div class="muted" style="font-size:13px;margin-top:10px">🕘 ${t('rq_usual')}</div>
         ${Date.now() - new Date(q.created_at) > 24 * 3600000 ? `<div class="note" style="margin-top:8px">${t('rq_long')}</div>` : ''}</div>
       <div class="actions" style="display:grid;gap:10px;margin-top:12px"><button class="btn" onclick="A.recheck(true)">${t('check_again')}</button>
-        <button class="btn ghost" onclick="A.cancelShopReq()">${t('rq_cancel')}</button><button class="link" onclick="A.logout()">${t('logout')}</button></div>
+        <button class="btn ghost" onclick="A.cancelShopReq()">${t('rq_cancel')}</button>${state.addMode ? '' : `<button class="link" onclick="A.logout()">${t('logout')}</button>`}</div>
       <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
     return;
   }
@@ -844,7 +944,7 @@ function showShopRequest(){
       <label class="btn ghost small" style="cursor:pointer">🪪 ${t('rq_cnic_photo')} <span id="ok_cnic_photo_path">${f.cnic_photo_path ? '✅' : ''}</span><input type="file" accept="image/*" hidden onchange="A.rqPhoto(this,'cnic_photo_path')"></label></div>
     <label class="f" for="rq_note">${t('rq_note2')}</label><textarea id="rq_note" rows="2">${esc(f.note)}</textarea>
     <div id="rqMsg" class="err-text"></div>
-    <div class="actions" style="display:grid;gap:10px"><button class="btn" id="rqSend" onclick="A.sendShopReq()">${t('rq_send')}</button><button class="link" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="actions" style="display:grid;gap:10px"><button class="btn" id="rqSend" onclick="A.sendShopReq()">${t('rq_send')}</button>${state.addMode ? `<button class="btn ghost" onclick="A.backToShop()">${t('back_shop')}</button>` : `<button class="link" onclick="A.logout()">${t('logout')}</button>`}</div>
     <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
 }
 function cnicFmt(v){ const d = String(v || '').replace(/\D/g, '').slice(0, 13); return d.length > 12 ? d.slice(0, 5) + '-' + d.slice(5, 12) + '-' + d.slice(12) : d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; }
@@ -870,7 +970,7 @@ function renderShell(){
   const r = state.restaurant;
   $('app').innerHTML = `
     <header class="top">
-      <div class="brand">${esc(r.name)}<small>Wanhar Mart Shop</small></div>
+      <button type="button" class="brand shopsw" onclick="shopMenu()" aria-label="${t('switch_shop')}">${esc(r.name)}${(state.shops || []).length > 1 ? ' ▾' : ''}<span id="shopBadge" class="sbadge" style="display:none">0</span><small>Wanhar Mart Shop</small></button>
       <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button></div>
     </header>
     <main id="view"></main>
@@ -894,7 +994,7 @@ async function go(tab){
     if (tab === 'orders') await loadOrders();
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
-    if (tab === 'shop') await loadReviews();
+    if (tab === 'shop'){ await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
 }
@@ -967,6 +1067,7 @@ function orderCard(o){
   if (o.status === 'placed') actions = `<div class="two"><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button></div>`;
   else if (o.status === 'accepted') actions = `<div class="two"><button class="btn ghost" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
   else if (o.status === 'preparing') actions = `<button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button>`;
+  else if (o.status === 'ready' && o.order_type === 'pickup') actions = `<div class="muted" style="margin-top:8px">${t('wait_collect')}</div><button class="btn" style="margin-top:8px" onclick="A.collected('${o.id}')">${t('collected_b')}</button>`;
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
@@ -979,14 +1080,19 @@ function orderCard(o){
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
+    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
     ${schedBox(o)}
     ${itemsHtml(o)}
+    ${o.sub_pref ? `<div class="note">🔁 <b>${t('sub_lbl')}:</b> ${t('sub_' + o.sub_pref)}</div>` : ''}
+    ${o.rx_path ? `<button type="button" class="btn ghost small" style="width:100%;margin-top:6px" onclick="A.seeRx('${o.id}')">${t('rx_see')}</button>` : ''}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
     ${countdown(o)}
     ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}${i.wait_until && i.status === 'open' ? `<br><span class="muted">${t('waiting_until', { t:new Date(i.wait_until).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</span>` : ''}</div>`).join('')}
     <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>${waNum(cust.phone) && !['delivered','cancelled','rejected'].includes(o.status) ? ` <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(cust.phone)}?text=${encodeURIComponent(t('wa_hi', { s:state.restaurant.name, n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : `<span class="muted">${t('no_phone')}</span>`}</div>
     ${['wallet', 'qr_door'].includes(o.payment_method) && o.payment_status === 'paid' ? `<div class="paidtag">${t('paid_online')}</div>` : ''}
+    ${num(o.shop_discount) ? `<div class="line"><span class="muted">🏷️ ${t('shop_disc')}</span><span>−${money(o.shop_discount)}</span></div>` : ''}
     <div class="line" style="font-weight:800"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
+    ${!['cancelled','rejected'].includes(o.status) ? `<button type="button" class="link" style="margin-top:2px" onclick="A.printSlip('${o.id}')">${t('print_b')}</button>` : ''}
     <div class="actions">${actions}</div></div>`;
 }
 function pastRow(o){
@@ -1010,7 +1116,10 @@ function viewOrders(){
       ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>
       ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}</div>`).join('') || (o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : '')}
       <button class="btn" onclick="A.receivedBack('${o.id}')">${t('received_back')}</button></div>`).join('')}` : '';
-  return `${sound}${closed}${backHtml}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+  const busy = r.busy_until && new Date(r.busy_until) > new Date();
+  const busyHtml = busy ? `<div class="busybar"><span>${esc(t('busy_on').replace('{t}', new Date(r.busy_until).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'Asia/Karachi' })))}</span><button class="btn small" onclick="A.setBusy(0)">${t('busy_end')}</button></div>`
+    : (r.is_open ? `<button type="button" class="busybtn" onclick="A.busyMenu()">${t('busy_b')}</button>` : '');
+  return `${sound}${closed}${busyHtml}${backHtml}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
 }
@@ -1019,8 +1128,11 @@ function showNewOrder(o){
   const opts = prepOptions();
   openSheet(t('new_order'), `
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><b style="font-size:20px">${money(o.subtotal)}</b></div>
+    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
     ${schedBox(o)}
     ${itemsHtml(o)}
+    ${o.sub_pref ? `<div class="note">🔁 <b>${t('sub_lbl')}:</b> ${t('sub_' + o.sub_pref)}</div>` : ''}
+    ${o.rx_path ? `<button type="button" class="btn ghost small" style="width:100%;margin-top:6px" onclick="A.seeRx('${o.id}')">${t('rx_see')}</button>` : ''}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
     <div class="muted">${t('prep_q')}</div>
     <div class="chips" id="prepChips">${opts.map(m => `<button class="chip ${m === state.prep ? 'on' : ''}" onclick="A.pickPrep(${m})">${m} ${t('min')}</button>`).join('')}</div>
@@ -1200,9 +1312,7 @@ function viewShop(){
       <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
       <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
       <label class="f">${t('hours_t')}</label>
-      <div class="hrsed">${(() => { const w = weekHours(r); return [1, 2, 3, 4, 5, 6, 0].map(d => `<div class="hday ${w[d].off ? 'off' : ''}" id="hd_${d}">
-        <div class="hhead"><b>${DAYN(d)}</b><label class="hsw"><span class="hst">${w[d].off ? t('day_closed') : t('day_open')}</span><label class="switch" style="margin:0"><input type="checkbox" id="h_on_${d}" ${w[d].off ? '' : 'checked'} onchange="A.hrsOn(${d}, this.checked)" aria-label="${DAYN(d)}"><span></span></label></label></div>
-        <div class="htimes"><input type="time" id="h_o_${d}" value="${w[d].o}" aria-label="${t('opens')}"><span>–</span><input type="time" id="h_c_${d}" value="${w[d].c}" aria-label="${t('closes')}"></div></div>`).join(''); })()}</div>
+      <div class="hrsed" id="hrsed">${hoursEd(r)}</div>
       <div class="muted" style="font-size:13px;margin-top:4px">${t('all_day_note')}</div>
       <button class="btn ghost small" type="button" style="margin-top:8px" onclick="A.hrsCopy()">${t('same_all')}</button>
       <label class="f">${t('shop_loc')}</label>
@@ -1213,6 +1323,19 @@ function viewShop(){
       <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
       <div class="actions"><button class="btn" id="shopSave" onclick="A.saveShop()">${t('save')}</button></div>
     </div>
+    <h2>${t('offer_t')}</h2>
+    <div class="card">${(() => { const f = r.offer || {}; return `<div class="muted" style="font-size:14px">${t('offer_s')}</div>
+      <label class="check"><input id="of_on" type="checkbox" ${f.on ? 'checked' : ''}> ${t('offer_on')}</label>
+      <div class="two"><div><label class="f" for="of_pct">${t('offer_pct')}</label><input id="of_pct" type="number" min="1" max="90" inputmode="numeric" value="${num(f.pct) || ''}" placeholder="10"></div>
+        <div><label class="f" for="of_min">${t('offer_min')}</label><input id="of_min" type="number" min="0" inputmode="numeric" value="${num(f.min) || ''}" placeholder="0"></div></div>
+      <label class="f" for="of_max">${t('offer_max')}</label><input id="of_max" type="number" min="0" inputmode="numeric" value="${num(f.max) || ''}" placeholder="0">
+      <div class="actions"><button class="btn" onclick="A.saveOffer()">${t('save_offer')}</button></div>`; })()}</div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>🛍️ ${t('pick_on')}</b><div class="muted" style="font-size:13px">${t('pick_s')}</div></div>
+      <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.allow_pickup !== false ? 'checked' : ''} onchange="A.setPickup(this.checked)" aria-label="${t('pick_on')}"><span></span></label></div>
+    <h2>${t('my_shops')}</h2>
+    <div class="card">${(state.shops || []).length > 1 ? `<div class="muted" style="font-size:14px;margin-bottom:8px">${(state.shops || []).map(x => esc(x.name)).join(' · ')}</div><button type="button" class="btn ghost small" style="width:100%;margin-bottom:8px" onclick="shopMenu()">🔁 ${t('switch_shop')}</button>` : ''}
+      ${state.sreqPending ? `<div class="note" style="margin:0 0 8px">⏳ ${esc(t('shop_pending').replace('{s}', state.sreqPending.shop_name))} <button type="button" class="link" onclick="A.addShop()">${t('see_req')}</button></div>` : ''}
+      <button type="button" class="btn ghost small" style="width:100%" onclick="A.addShop()">${t('add_shop')}</button></div>
     <h2>${t('payout_t')}</h2>
     <div class="card">${(() => { const p = r.payout || {}; const m = p.method || 'jazzcash'; return `<div class="muted" style="font-size:14px;margin-bottom:6px">${t('payout_s')}</div>
       <label class="f" for="po_m" style="margin-top:0">${t('pay_method')}</label><select id="po_m" onchange="A.poMethod(this.value)">${[['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['bank','Bank / Raast']].map(([k, l]) => `<option value="${k}" ${m === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
@@ -1221,6 +1344,7 @@ function viewShop(){
       <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
       <div class="actions"><button class="btn" id="poSave" onclick="A.savePayout()">${t('save_acc')}</button></div>`; })()}</div>
     <h2>${t('reviews')}</h2>${revs || `<div class="empty">${t('no_reviews')}</div>`}
+    ${Theme.picker(state.lang)}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b>${t('sound')}</b>
       <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label></div>
     <div class="actions">
@@ -1362,7 +1486,12 @@ const A = {
     if (!await uiConfirm(t('rq_cancel_q'))) return;
     await run(async () => { need(await sb.rpc('cancel_shop_request')); state.rqForm = null; await loadMyRequest(); showShopRequest(); });
   },
-  async recheck(manual){ await run(async () => { await loadRestaurant(); if (state.restaurant) await startApp(); else { await loadMyRequest(); showShopRequest();
+  async addShop(){ closeSheet(); state.addMode = true; state.rqForm = null; await run(async () => { await loadMyRequest(); showShopRequest(); window.scrollTo(0, 0); }); },
+  async backToShop(){ state.addMode = false; clearInterval(state.rqPoll); renderShell(); await go(state.tab || 'orders'); checkOtherShops(true); },
+  async recheck(manual){ await run(async () => {
+    if (state.addMode){ const before = (state.shops || []).map(x => x.id); const cur = state.restaurant; await loadRestaurant(); const added = state.shops.find(x => !before.includes(x.id));
+      if (added){ state.restaurant = cur; await switchShop(added.id); return; } state.restaurant = cur || state.restaurant; }
+    if (state.restaurant && !state.addMode) await startApp(); else { await loadMyRequest(); showShopRequest();
     const q = state.sreq; if (manual === true && q && q.status === 'pending') uiAlert(t('rq_still_t') + '\n\n' + (q.seen_at ? t('rq_still_seen').replace('{a}', agoText(q.seen_at)) : t('rq_still_unseen').replace('{a}', agoText(q.created_at))), { icon:q.seen_at ? '👀' : '⏳' }); } }); },
   enableSound(){ unlockAudio(); setTimeout(() => { beep(); renderTab(); }, 200); },
   statement(kind){
@@ -1449,8 +1578,11 @@ const A = {
       const x = $('locBtn'); if (x){ x.disabled = false; x.textContent = t('set_loc'); }
     }, () => { const x = $('locBtn'); if (x){ x.disabled = false; x.textContent = t('set_loc'); } toast(t('loc_denied'), true); }, { enableHighAccuracy:true, timeout:15000 });
   },
-  hrsOn(d, v){ const el = $('hd_' + d); if (el){ el.classList.toggle('off', !v); el.querySelector('.hst').textContent = v ? t('day_open') : t('day_closed'); } },
-  hrsCopy(){ const o = $('h_o_1').value, c = $('h_c_1').value, on = $('h_on_1').checked; for (let d = 0; d < 7; d++){ $('h_o_' + d).value = o; $('h_c_' + d).value = c; $('h_on_' + d).checked = on; A.hrsOn(d, on); } toast('✓'); },
+  hrsSet(d, k, v){ const w = hrsDraft(state.restaurant); w[d][k] = v; redrawHrs(); },
+  brkSet(d, i, k, v){ hrsDraft(state.restaurant)[d].b[i][k] = v; redrawHrs(); },
+  brkDel(d, i){ hrsDraft(state.restaurant)[d].b.splice(i, 1); redrawHrs(); },
+  brkAdd(d, s0, e0){ const x = hrsDraft(state.restaurant)[d]; x.b.push({ s:s0 || '14:00', e:e0 || '15:00' }); redrawHrs(); },
+  hrsCopy(){ const w = hrsDraft(state.restaurant), m = w[1]; for (let d = 0; d < 7; d++) if (d !== 1) w[d] = { o:m.o, c:m.c, off:m.off, b:m.b.map(b => Object.assign({}, b)).concat(d === 5 ? w[5].b.filter(b => b.s === '13:00' && !m.b.some(x => x.s === b.s)) : []) }; redrawHrs(); toast('✓'); },
   poMethod(m){ $('po_bank').style.display = m === 'bank' ? 'block' : 'none'; $('po_nl').textContent = m === 'bank' ? t('iban_l') : t('acc_number'); const n = $('po_n'); n.placeholder = m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'; n.inputMode = m === 'bank' ? 'text' : 'tel'; },
   async savePayout(){
     const m = $('po_m').value, title = $('po_t').value.trim(); let n = $('po_n').value.replace(/[\s-]/g, '').toUpperCase();
@@ -1465,7 +1597,12 @@ const A = {
     const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
     const btn = $('shopSave'); btn.disabled = true; btn.textContent = t('loading');
     await run(async () => {
-      const hours = {}; for (let d = 0; d < 7; d++) hours[d] = { o:$('h_o_' + d).value || '', c:$('h_c_' + d).value || '', off:!$('h_on_' + d).checked };
+      const w = hrsDraft(state.restaurant); const hours = {};
+      for (let d = 0; d < 7; d++){
+        const x = w[d]; const b = x.b.filter(y => y.s && y.e && y.s < y.e);
+        for (const y of b){ const inside = x.o === x.c || (x.o < x.c ? (y.s >= x.o && y.e <= x.c) : (y.s >= x.o || y.e <= x.c)); if (!inside) throw new Error(t('hrs_bad').replace('{d}', DAYN(d))); }
+        hours[d] = { o:x.o || '', c:x.c || '', off:!!x.off }; if (b.length) hours[d].b = b;
+      }
       const mon = hours[1];
       const row = { description:$('s_desc').value.trim() || null, address:$('s_addr').value.trim() || null, phone:$('s_phone').value.trim() || null,
         hours, open_time:mon.o || null, close_time:mon.c || null, prep_time_minutes:prep };
@@ -1487,6 +1624,42 @@ const A = {
   },
   morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
   rmPhoto(w, k){ if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); },
+  busyMenu(){ openSheet(t('busy_b'), `<div class="muted" style="margin-bottom:10px">${t('busy_t')}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">${[15, 30, 60].map(m => `<button class="btn ghost" onclick="A.setBusy(${m})">${t('mins').replace('{n}', m)}</button>`).join('')}</div>`); },
+  async setBusy(m){
+    const until = m ? new Date(Date.now() + m * 60000).toISOString() : null;
+    await run(async () => { need(await sb.from('restaurants').update({ busy_until:until }).eq('id', state.restaurant.id)); state.restaurant.busy_until = until; closeSheet(); renderTab();
+      toast(m ? t('busy_set').replace('{t}', new Date(until).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'Asia/Karachi' })) : t('saved')); });
+  },
+  async collected(id){
+    const code = await uiPrompt(t('code_ask'), '', { type:'number' }); if (code === null) return;
+    await run(async () => { need(await sb.rpc('shop_pickup_done', { p_order:id, p_code:String(code).trim() })); await loadOrders(); renderTab(); toast(t('saved')); });
+  },
+  async seeRx(id){
+    const o = state.orders.find(x => x.id === id); if (!o || !o.rx_path) return;
+    await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(o.rx_path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); });
+  },
+  async saveOffer(){
+    const pct = Math.round(num($('of_pct').value)), on = $('of_on').checked;
+    if (on && (pct < 1 || pct > 90)) return toast('1 – 90 %', true);
+    const offer = { on, pct, min:Math.max(0, Math.round(num($('of_min').value))), max:Math.max(0, Math.round(num($('of_max').value))) };
+    await run(async () => { need(await sb.from('restaurants').update({ offer }).eq('id', state.restaurant.id)); state.restaurant.offer = offer; toast(t('saved')); });
+  },
+  async setPickup(v){ await run(async () => { need(await sb.from('restaurants').update({ allow_pickup:v }).eq('id', state.restaurant.id)); state.restaurant.allow_pickup = v; toast(t('saved')); }); },
+  printSlip(id){
+    const o = state.orders.find(x => x.id === id); if (!o) return; const r = state.restaurant; const c = o.customer || {};
+    const w = window.open('', '_blank', 'width=380,height=640'); if (!w) return toast('Allow pop-ups to print', true);
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>#${esc(o.id.slice(-4).toUpperCase())}</title><style>@page{size:58mm auto;margin:3mm}body{font:13px/1.35 monospace;width:52mm;margin:0 auto;color:#000}h1{font-size:16px;text-align:center;margin:0 0 4px}.c{text-align:center}.r{display:flex;justify-content:space-between;gap:6px}hr{border:0;border-top:1px dashed #000;margin:6px 0}b{font-weight:800}</style></head><body>
+      <h1>${esc(r.name)}</h1><div class="c">Wanhar Mart</div><hr>
+      <div class="r"><b>#${esc(o.id.slice(-4).toUpperCase())}</b><span>${esc(new Date(o.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Karachi' }))}</span></div>
+      ${o.order_type === 'pickup' ? '<div class="c"><b>** PICKUP **</b></div>' : ''}${o.scheduled_for ? `<div>Deliver at: ${esc(new Date(o.scheduled_for).toLocaleString('en-GB', { weekday:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Karachi' }))}</div>` : ''}
+      <div>${esc(c.full_name || '')} ${esc(c.phone || '')}</div><hr>
+      ${(o.order_items || []).map(i => `<div class="r"><span>${i.quantity} x ${esc(i.name)}</span><span>${Math.round(i.price * i.quantity)}</span></div>${i.note ? `<div>  (${esc(i.note)})</div>` : ''}`).join('')}<hr>
+      ${num(o.shop_discount) ? `<div class="r"><span>Shop offer</span><span>-${Math.round(o.shop_discount)}</span></div>` : ''}
+      <div class="r"><b>Items total</b><b>Rs ${Math.round(num(o.subtotal) - num(o.shop_discount))}</b></div>
+      ${o.customer_note ? `<hr><div>Note: ${esc(o.customer_note)}</div>` : ''}${o.sub_pref ? `<div>Out of stock: ${esc(o.sub_pref)}</div>` : ''}
+      <hr><div class="c">Thank you!</div><script>window.onload=()=>{window.print();}<\/script></body></html>`);
+    w.document.close();
+  },
   async toggleItem(id, v){ await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('id', id)); await loadMenu(); renderTab(); }); },
   editCategory(id){
     const c = state.cats.find(x => x.id === id);
@@ -1569,18 +1742,61 @@ function subscribeOrders(){
       async payload => { if (payload.eventType === 'INSERT' && !(payload.new && payload.new.payment_method === 'wallet')){ unlockAudio(); beep(); } await refreshOrders(); }
     ).on('postgres_changes', { event:'INSERT', schema:'public', table:'order_issues', filter:'restaurant_id=eq.' + state.restaurant.id },
       async () => { unlockAudio(); await refreshOrders(); }
-    ).subscribe();
+    );
+    const others = (state.shops || []).filter(x => x.id !== state.restaurant.id).map(x => x.id);
+    if (others.length) channel.on('postgres_changes', { event:'*', schema:'public', table:'orders', filter:'restaurant_id=in.(' + others.join(',') + ')' }, () => checkOtherShops(false));
+    channel.subscribe();
   } catch (e) { console.warn('Live updates are off', e); }
   if (!pollTimer) pollTimer = setInterval(() => { if (state.user) refreshOrders(); }, 15000);
 }
 
 // ================= START =================
 async function loadRestaurant(){
-  const data = need(await sb.from('restaurants').select('*').eq('owner_id', state.user.id).order('created_at').limit(1));
-  state.restaurant = data[0] || null;
+  const data = need(await sb.from('restaurants').select('*').eq('owner_id', state.user.id).order('created_at').limit(20));
+  state.shops = data || [];
+  const want = ls.get('kh_shop', null);
+  state.restaurant = state.shops.find(x => x.id === want) || state.shops[0] || null;
+}
+// ---- more than one shop on one login ----
+function resetShopState(){ Object.assign(state, { orders:[], issues:{}, acceptedAt:{}, cats:[], items:[], earn:null, earnOrders:null, fees:null, reviews:null, hrs:null, loadedOnce:false, productQ:'', secOpen:null }); }
+async function switchShop(id){
+  const r = (state.shops || []).find(x => x.id === id); if (!r) return;
+  closeSheet(); state.addMode = false; ls.set('kh_shop', id); state.restaurant = r; resetShopState();
+  renderShell(); subscribeOrders(); await go('orders'); checkOtherShops(true);
+}
+let otherTimer = null;
+async function checkOtherShops(silent){
+  const others = (state.shops || []).filter(x => state.restaurant && x.id !== state.restaurant.id);
+  if (!others.length){ state.otherNew = {}; markShopBadge(); return; }
+  try {
+    const { data } = await sb.from('orders').select('id,restaurant_id,payment_method,payment_status').in('restaurant_id', others.map(x => x.id)).eq('status', 'placed').limit(100);
+    const list = (data || []).filter(o => !(o.payment_method === 'wallet' && ['unpaid', 'checking'].includes(o.payment_status)));
+    const cnt = {}; list.forEach(o => { cnt[o.restaurant_id] = (cnt[o.restaurant_id] || 0) + 1; });
+    state.otherNew = cnt; state.otherSeen = state.otherSeen || new Set();
+    const fresh = list.filter(o => !state.otherSeen.has(o.id)); list.forEach(o => state.otherSeen.add(o.id));
+    markShopBadge();
+    if (list.length && !silent){ unlockAudio(); beep(); }
+    if (fresh.length && !silent){ const sh = others.find(x => x.id === fresh[0].restaurant_id); showOtherAlert(sh); }
+  } catch (e) { logErr(e); }
+}
+function markShopBadge(){ const n = Object.values(state.otherNew || {}).reduce((a, b) => a + b, 0); const el = $('shopBadge'); if (el){ el.textContent = n; el.style.display = n ? '' : 'none'; } }
+function showOtherAlert(sh){
+  if (!sh) return; const old = $('otherAlert'); if (old) old.remove();
+  const d = document.createElement('div'); d.id = 'otherAlert'; d.className = 'otheralert';
+  d.innerHTML = `<span>${esc(t('new_at').replace('{s}', sh.name))}</span><button type="button" onclick="switchShop('${sh.id}')">${t('open_it2')}</button><button type="button" class="x" onclick="this.parentNode.remove()" aria-label="×">×</button>`;
+  document.body.appendChild(d); setTimeout(() => { if (d.parentNode) d.remove(); }, 60000);
+}
+function shopMenu(){
+  const list = (state.shops || []).map(x => `<button type="button" class="shoprow ${x.id === state.restaurant.id ? 'on' : ''}" onclick="switchShop('${x.id}')">
+      <span class="thumb">${x.logo_url ? `<img src="${esc(x.logo_url)}" alt="">` : noImg(x.name)}</span>
+      <span class="nm"><b>${esc(x.name)}</b><small>${x.is_open ? t('open_now') : t('closed_now')}</small></span>
+      ${(state.otherNew || {})[x.id] ? `<span class="pill r">${state.otherNew[x.id]} 🛎️</span>` : x.id === state.restaurant.id ? '<span>✓</span>' : '<span class="muted">›</span>'}</button>`).join('');
+  openSheet(t('my_shops'), `${list}<button type="button" class="btn ghost" style="margin-top:12px" onclick="A.addShop()">${t('add_shop')}</button>`);
 }
 async function startApp(){
+  state.addMode = false;
   renderShell(); subscribeOrders(); startAlertLoop(); keepAwake();
+  clearInterval(otherTimer); otherTimer = setInterval(() => { if (state.user && !state.addMode) checkOtherShops(false); }, 20000); checkOtherShops(true);
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'shop', ding:() => beep(), toast:(m, err) => toast(m, err) });
   Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'shop', me:() => state.user && state.user.id, lang:() => state.lang, toast:(m, err) => toast(m, err) });
