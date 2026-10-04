@@ -621,7 +621,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.3';
+const APP_VERSION = '6.4';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -633,7 +633,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKe
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
-const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received' };
+const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
 const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
@@ -939,9 +939,12 @@ function viewHome(){
 // ================= ORDERS =================
 async function loadIssues(){
   state.issues = need(await sb.from('order_issues')
-    .select('*, order:orders(id,status,total,address_text,address_lat,address_lng,failed_delivery,return_status,customer:profiles!customer_id(full_name,phone),restaurant:restaurants(name,phone)), rider:riders(profile:profiles(full_name,phone))')
+    .select('*, order:orders(id,status,total,subtotal,picked_up_at,address_text,address_lat,address_lng,failed_delivery,return_status,customer:profiles!customer_id(full_name,phone),restaurant:restaurants(name,phone)), rider:riders(profile:profiles(full_name,phone))')
     .in('status', ['open','returning']).order('created_at', { ascending:false }).limit(100));
   if (state.dash) state.dash.issues_open = state.issues.length;
+  const lr = [...new Set(state.issues.filter(i => i.kind === 'order_lost' && i.rider_id).map(i => i.rider_id))];
+  state.lostCount = {};
+  if (lr.length){ const { data } = await sb.from('order_issues').select('rider_id').eq('kind', 'order_lost').in('rider_id', lr).gte('created_at', new Date(Date.now() - 90 * 864e5).toISOString()); (data || []).forEach(x => { state.lostCount[x.rider_id] = (state.lostCount[x.rider_id] || 0) + 1; }); }
 }
 async function loadOrders(){
   await loadIssues();
@@ -970,6 +973,13 @@ function issueCard(i){
     ${i.note ? `<div class="note" style="margin:8px 0">${esc(i.note)}</div>` : ''}
     ${i.kind === 'chat_help' ? `<div class="kv"><span class="muted">Chat</span><b>${esc({ cr:'Customer and rider', cs:'Customer and shop', rs:'Rider and shop' }[i.thread] || i.thread)}</b></div>
       <button class="btn block" style="margin:8px 0" onclick='A.joinChat(${JSON.stringify(o.id)}, ${JSON.stringify(i.thread)})'>🛟 Join the chat</button>` : ''}
+    ${i.kind === 'order_lost' ? `<div class="kv"><span class="muted">Picked up</span><b>${o.picked_up_at ? timeAgo(o.picked_up_at) : '—'}</b></div>
+      <div class="kv"><span class="muted">Reported</span><b>${timeAgo(i.created_at)}</b></div>
+      <div class="kv"><span class="muted">Lost reports by this rider (90 days)</span><b class="${(state.lostCount || {})[i.rider_id] > 1 ? 'red' : ''}">${(state.lostCount || {})[i.rider_id] || 1}</b></div>
+      <div class="bar" style="margin:8px 0 0">${i.lat != null ? `<a class="btn ghost small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${i.lat},${i.lng}">📍 Where rider was</a>` : '<span class="muted" style="font-size:13px">No location sent</span>'}
+      ${i.photo_path ? `<button class="btn ghost small" onclick='A.lostPhoto(${JSON.stringify(i.photo_path)})'>🖼️ See photo</button>` : '<span class="muted" style="font-size:13px">No photo</span>'}</div>
+      ${i.status === 'open' ? `<div class="note" style="margin:8px 0">Check: did the rider report at once? Is the place on the way? Is there a police report? Call the rider and the customer.</div>
+      <div class="two"><button class="btn warn" onclick="A.lostDecide('${i.id}', 'rider', ${Math.round(Number(o.subtotal || o.total || 0))})">💸 Rider pays</button><button class="btn" onclick="A.lostDecide('${i.id}', 'company', 0)">🛡️ Wanhar Mart pays</button></div>` : ''}` : ''}
     ${i.status === 'open' && left != null ? `<div class="kv"><span class="muted">Customer waiting time</span><b class="${left > 0 ? 'red' : ''}">${left > 0 ? left + ' min left' : 'Over, rider can return'}</b></div>` : ''}
     <div class="kv"><span class="muted">Customer</span><span>${esc(c.full_name || '')}</span></div>
     <div class="kv"><span class="muted">Rider</span><span>${esc(rd ? rd.full_name : '')}</span></div>
@@ -1083,7 +1093,7 @@ function viewShops(){
     <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
     <div class="list">${rows || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
 }
-const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
 const catName = k => { const c = SHOP_CATS.find(x => x.k === k); return c ? c.i + ' ' + c.en : k; };
 async function loadShopRequests(){
   try { state.shopReqs = need(await sb.from('shop_requests').select('*').eq('status', 'pending').order('created_at')) || []; } catch (e) { state.shopReqs = []; }
@@ -2078,6 +2088,12 @@ function viewSettings(){
       : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : ''}
     ${payAccCard()}
     <div class="card">
+      <b>📅 Bookings commission (barber, salon, services)</b>
+      <div class="muted" style="font-size:14px">Wanhar Mart's percent on every booking that is done. 0 = free. Shops see this percent in their app before they take bookings. A new percent is used only for new bookings.</div>
+      <label class="f" for="bkc_pct">Commission on bookings (%)</label><input id="bkc_pct" type="number" min="0" max="50" step="0.5" value="${num((s.booking || {}).pct)}">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveBookingPct()">Save</button></div>
+    </div>
+    <div class="card">
       <b>🛡️ Safety: fake orders and delivery code</b>
       <div class="muted" style="font-size:14px">Stops people who order with cash and then do not take the order.</div>
       ${(() => { const c = Object.assign({ first_max:3000, max_fails:2 }, s.cod_rules || {}); return `
@@ -2323,6 +2339,11 @@ const A = {
     await run(async () => { need(await sb.from('restaurants').update({ sponsored_until:until }).eq('id', id)); r.sponsored_until = until; toast(days ? 'Sponsored until ' + dayName(until) : 'Stopped'); await A.openShop(id); });
   },
   async seeFile(path){ await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); }); },
+  async saveBookingPct(){
+    const pct = Math.max(0, Math.min(50, Math.round(num($('bkc_pct').value) * 2) / 2));
+    if (!await uiConfirm(pct ? `Shops will pay ${pct}% on every new booking. Shops see this in their app. Save?` : 'Bookings will be free (0%). Save?')) return;
+    await run(async () => { need(await putSettings([{ key:'booking', value:{ pct } }])); await loadSettings(); renderTab(); toast('Saved'); });
+  },
   async saveSafety(){
     const v = { first_max:Math.max(0, Math.round(num($('cr_first').value))), max_fails:Math.max(0, Math.round(num($('cr_fail').value))) };
     await run(async () => { need(await putSettings([{ key:'cod_rules', value:v }, { key:'delivery_code', value:$('dc_on').checked }])); await loadSettings(); renderTab(); toast('Saved'); });
@@ -2335,6 +2356,21 @@ const A = {
       need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status, p_reason:reason }));
       closeSheet(); await loadOrders(); renderTab(); toast('Order updated');
     });
+  },
+  async lostPhoto(path){
+    await run(async () => { const { data, error } = await sb.storage.from('rider-selfies').createSignedUrl(path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); });
+  },
+  async lostDecide(id, payer, def){
+    let amount = 0, months = 1;
+    if (payer === 'rider'){
+      const a = await uiPrompt('How much does the rider pay? (Rs) — order price, you can add a fine', String(def || '')); if (a === null) return;
+      amount = Math.round(num(a)); if (!(amount > 0)) return toast('Write the amount', true);
+      const m = await uiPrompt('Cut in how many months? (1 = all at once, up to 12)', '1'); if (m === null) return;
+      months = Math.max(1, Math.min(12, Math.round(num(m)) || 1));
+    }
+    const note = await uiPrompt('Note for the rider (optional)', payer === 'rider' ? 'No proof that the order was stolen' : 'Police report checked'); if (note === null) return;
+    if (!await uiConfirm(payer === 'rider' ? `Cancel this order and cut Rs ${amount}${months > 1 ? ' in ' + months + ' months' : ''} from the rider's pay?` : 'Cancel this order. Wanhar Mart pays, no charge to the rider?')) return;
+    await run(async () => { need(await sb.rpc('admin_lost_decision', { p_issue:id, p_payer:payer, p_amount:amount, p_months:months, p_note:note || null })); await loadOrders(); renderTab(); toast('Done. Order cancelled.'); });
   },
   async issueAction(id, action){
     let note = null;
