@@ -600,7 +600,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.4';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -702,7 +702,7 @@ const I18N = {
     problem_open:'Problem reported', k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
     k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
-    k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
+    k_order_lost:'🚨 Order stolen or lost', lost_btn:'🚨 Order stolen or lost', lost_title:'Order stolen or lost', lost_what:'What happened?', lr_stolen:'Stolen (taken when I was not looking)', lr_robbed:'Robbed (snatched by force)', lr_lost:'Lost or fell on the way', lost_note_l:'Write clearly: where, what time, how it happened', lost_photo_l:'Photo: police report (roznamcha), the place, or your bike', lost_warn:'⚠️ The office will check your location and the times. If the report is false, the full order price and a fine are cut from your pay and your ID can be closed. If it is true, you pay nothing.', lost_send:'Send report to the office', lost_need_what:'Choose what happened', lost_need_note:'Write clearly what happened', lost_sent:'Report sent. Wait for the office. Do not deliver this order.', lost_open:'Lost report sent · waiting for the office', k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
     shop_word:'Shop', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat',
     tab_duty:'Duty', susp_title:'Your rider ID is paused', susp_back:'Active again at {t}', susp_note:'You cannot take deliveries now. Duty time does not count while paused.', susp_left:'left',
     deliver_by:'Deliver by {t}', due_left:'{m} min left', due_late:'Late by {m} min', cust_expects:'Customer expects the order by {t}',
@@ -781,7 +781,7 @@ const I18N = {
     problem_open:'مسئلہ بتایا گیا', k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'دکان پر آرڈر تیار نہیں',
     k_shop_closed:'دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'حادثہ یا گاڑی کا مسئلہ',
-    k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں',
+    k_order_lost:'🚨 آرڈر چوری ہو گیا یا گم ہو گیا', lost_btn:'🚨 آرڈر چوری یا گم ہو گیا', lost_title:'آرڈر چوری یا گم ہو گیا', lost_what:'کیا ہوا؟', lr_stolen:'چوری ہو گیا (میری غیر موجودگی میں)', lr_robbed:'چھین لیا گیا (زبردستی)', lr_lost:'راستے میں گر گیا یا گم ہو گیا', lost_note_l:'صاف لکھیں: کہاں، کس وقت، کیسے ہوا', lost_photo_l:'تصویر: پولیس رپورٹ (روزنامچہ)، جگہ، یا اپنی بائیک', lost_warn:'⚠️ دفتر آپ کی لوکیشن اور وقت چیک کرے گا۔ اگر رپورٹ جھوٹی نکلی تو آرڈر کی پوری قیمت اور جرمانہ آپ کی تنخواہ سے کٹے گا اور آئی ڈی بند ہو سکتی ہے۔ اگر سچ ہے تو آپ کو کچھ نہیں دینا۔', lost_send:'رپورٹ دفتر کو بھیجیں', lost_need_what:'چنیں کیا ہوا', lost_need_note:'صاف لکھیں کیا ہوا', lost_sent:'رپورٹ بھیج دی گئی۔ دفتر کا انتظار کریں۔ یہ آرڈر ڈیلیور نہ کریں۔', lost_open:'گمشدگی کی رپورٹ بھیج دی · دفتر کا انتظار', k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں',
     shop_word:'دکان', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا',
     tab_duty:'ڈیوٹی', susp_title:'آپ کی رائیڈر آئی ڈی روک دی گئی ہے', susp_back:'{t} پر دوبارہ چالو ہوگی', susp_note:'ابھی آپ ڈیلیوری نہیں لے سکتے۔ رکنے کے دوران ڈیوٹی کا وقت نہیں گنا جاتا۔', susp_left:'باقی',
     deliver_by:'{t} تک پہنچائیں', due_left:'{m} منٹ باقی', due_late:'{m} منٹ دیر', cust_expects:'گاہک کو {t} تک آرڈر چاہیے',
@@ -851,9 +851,9 @@ function startGeo(){
   if (geoWatch !== null || !navigator.geolocation) return;
   geoWatch = navigator.geolocation.watchPosition(pos => {
     state.pos = { lat:pos.coords.latitude, lng:pos.coords.longitude };
-    const now = Date.now(); if (now - lastSent < 30000 || !onDuty()) return; lastSent = now;
+    const now = Date.now(); const busy = (state.mine || []).some(o => ['rider_assigned','picked_up'].includes(o.status)); if (now - lastSent < (busy ? 10000 : 30000) || !onDuty()) return; lastSent = now;
     sb.from('riders').update({ current_lat:state.pos.lat, current_lng:state.pos.lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
-  }, () => {}, { enableHighAccuracy:true, maximumAge:15000, timeout:20000 });
+  }, () => {}, { enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
 }
 function stopGeo(){ if (geoWatch !== null){ navigator.geolocation.clearWatch(geoWatch); geoWatch = null; } }
 function getPosOnce(){
@@ -1293,7 +1293,7 @@ function activeCard(o){
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
   const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
   const action = picked
-    ? arrived + issueBlock(o) + slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`
+    ? arrived + issueBlock(o) + ((state.issues[o.id] || []).some(i => i.kind === 'order_lost' && i.status === 'open') ? `<div class="issuebox"><b>${t('lost_open')}</b></div>` : slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`)
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
     <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${bigHtml}${restBlock}${custBlock}
@@ -2032,7 +2032,8 @@ const A = {
       <div class="probs" id="probs">${kinds.map(k => `<button onclick="A.pickKind('${k}', this)">${t('k_' + k)}</button>`).join('')}</div>
       <label class="f" for="pnote">${t('note_opt')}</label><textarea id="pnote" rows="2"></textarea>
       <div class="actions"><button class="btn" onclick="A.sendReport('${id}')">${t('send_report')}</button>
-      ${sup ? `<a class="btn ghost" href="tel:${esc(sup)}">${t('call_support')}</a>` : ''}</div></div>`;
+      ${sup ? `<a class="btn ghost" href="tel:${esc(sup)}">${t('call_support')}</a>` : ''}</div>
+      ${o.status === 'picked_up' ? `<button class="btn sosbtn" style="margin-top:14px;width:100%" onclick="A.lostForm('${id}')">${t('lost_btn')}</button>` : ''}</div>`;
     document.body.appendChild(el);
   },
   pickKind(k, btn){ state.pickKind = k; document.querySelectorAll('#probs button').forEach(b => b.classList.toggle('on', b === btn)); },
@@ -2041,6 +2042,42 @@ const A = {
     await run(async () => {
       need(await sb.rpc('report_issue', { p_order_id:id, p_kind:state.pickKind, p_note:($('pnote').value || '').trim() || null }));
       closeOverlay(); await loadJobs(); renderTab(); toast(t('reported'));
+    });
+  },
+  lostForm(id){
+    state.lostWhy = null; state.lostFile = null;
+    closeOverlay();
+    const el = document.createElement('div'); el.className = 'over'; el.id = 'overlay';
+    el.addEventListener('click', e => { if (e.target === el) closeOverlay(); });
+    el.innerHTML = `<div class="panel" role="dialog" aria-modal="true">
+      <div class="ch"><h1 style="margin:0">${t('lost_title')}</h1><button class="pillbtn" onclick="closeOverlay()">✕</button></div>
+      <label class="f">${t('lost_what')}</label>
+      <div class="probs" id="lostWhy">${['stolen','robbed','lost'].map(k => `<button onclick="A.pickLost('${k}', this)">${t('lr_' + k)}</button>`).join('')}</div>
+      <label class="f" for="lnote">${t('lost_note_l')}</label><textarea id="lnote" rows="3"></textarea>
+      <label class="f" for="lphoto">${t('lost_photo_l')}</label><input id="lphoto" type="file" accept="image/*" onchange="state.lostFile = this.files && this.files[0] || null">
+      <div class="issuebox" style="margin-top:12px">${t('lost_warn')}</div>
+      <div class="actions"><button class="btn sosbtn" id="lostSend" onclick="A.sendLost('${id}')">${t('lost_send')}</button></div></div>`;
+    document.body.appendChild(el);
+  },
+  pickLost(k, btn){ state.lostWhy = k; document.querySelectorAll('#lostWhy button').forEach(b => b.classList.toggle('on', b === btn)); },
+  async sendLost(id){
+    if (!state.lostWhy) return toast(t('lost_need_what'), true);
+    const note = ($('lnote').value || '').trim();
+    if (note.length < 10) return toast(t('lost_need_note'), true);
+    const btn = $('lostSend'); if (btn) btn.disabled = true;
+    await run(async () => {
+      try {
+        let path = null;
+        if (state.lostFile){
+          const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Could not read the photo')); i.src = URL.createObjectURL(state.lostFile); });
+          const k = Math.min(1, 1400 / Math.max(img.width, img.height)); const cv = document.createElement('canvas');
+          cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+          path = await uploadSelfie(cv, 'lost-' + id.slice(0, 8));
+        }
+        const p = state.pos || await getPosOnce();
+        need(await sb.rpc('rider_report_lost', { p_order:id, p_reason:state.lostWhy, p_note:note, p_photo:path, p_lat:p ? p.lat : null, p_lng:p ? p.lng : null }));
+        closeOverlay(); await loadJobs(); renderTab(); toast(t('lost_sent'));
+      } finally { if (btn) btn.disabled = false; }
     });
   },
   async returnOrder(id){
