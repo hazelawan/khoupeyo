@@ -621,7 +621,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.4';
+const APP_VERSION = '6.6';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -637,7 +637,7 @@ const KIND = { customer_unreachable:'Customer not answering calls', customer_abs
 const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { plus:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -839,6 +839,7 @@ async function go(tab){
   m.innerHTML = '<div class="empty">Loading…</div>';
   await run(async () => {
     if (tab === 'home'){ await loadDash(); try { const { data } = await sb.from('sos_alerts').select('*, rider:riders(profile:profiles(full_name,phone))').is('resolved_at', null).order('created_at', { ascending:false }).limit(10); state.sos = data || []; } catch (e) { state.sos = []; } }
+    if (tab === 'misses'){ const { data } = await sb.rpc('admin_search_misses', { p_days:state.missDays || 30 }); state.misses = data || []; }
     if (tab === 'plus'){ const { data } = await sb.from('plus_subs').select('*, user:profiles!user_id(full_name,phone)').order('created_at', { ascending:false }).limit(200); state.plusSubs = data || []; await loadSettings(); }
     if (tab === 'omap'){ const days = state.omapDays || 7; const { data } = await sb.from('orders').select('address_lat,address_lng,status,total,created_at').gte('created_at', new Date(Date.now() - days * 864e5).toISOString()).not('address_lat', 'is', null).limit(5000); state.omap = data || []; if (!state.restaurants.length) await loadRestaurants(); }
     if (tab === 'campaign'){ const { data } = await sb.from('push_campaigns').select('*').order('created_at', { ascending:false }).limit(20); state.campaigns = data || []; }
@@ -869,7 +870,7 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, campaign:viewCampaign, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -1089,7 +1090,7 @@ function viewShops(){
       <div class="tile"><b>${money(totUnpaid)}</b><span>To pay shops (all time)</span></div>
       <div class="tile"><b>${state.restaurants.filter(r => r.is_open && r.is_active).length} / ${state.restaurants.length}</b><span>Open now</span></div>
     </div>
-    ${shopReqBlock()}
+    ${shopReqBlock()}${staffReqBlock()}
     <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
     <div class="list">${rows || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
 }
@@ -1097,6 +1098,14 @@ const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورن�
 const catName = k => { const c = SHOP_CATS.find(x => x.k === k); return c ? c.i + ' ' + c.en : k; };
 async function loadShopRequests(){
   try { state.shopReqs = need(await sb.from('shop_requests').select('*').eq('status', 'pending').order('created_at')) || []; } catch (e) { state.shopReqs = []; }
+  try { state.staffReqs = need(await sb.from('shop_staff').select('*, shop:restaurants(name)').eq('status', 'pending').order('created_at')) || []; } catch (e) { state.staffReqs = []; }
+}
+function staffReqBlock(){
+  const l = state.staffReqs || []; if (!l.length) return '';
+  return `<div class="card" style="border:1.5px solid var(--marigold)"><div class="row-title">👥 Shop staff login requests <span class="pill y">${l.length}</span></div>
+    <div class="muted" style="font-size:13px">A shop owner wants to give a login to a worker. Call the shop owner to confirm, then approve. The worker logs in to the Shop app with this email after verifying it.</div>
+    ${l.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:0"><b>${esc(x.name)}</b> · ${esc(x.shop ? x.shop.name : '')}<div class="muted" style="font-size:13px">${esc(x.email)}${x.phone ? ' · ' + esc(x.phone) : ''} · ${when(x.created_at)}</div></div>
+      <div style="display:flex;gap:6px;flex:none"><button class="btn warn small" onclick="A.staffReq('${x.id}','reject')">✕</button><button class="btn small" onclick="A.staffReq('${x.id}','approve')">✓</button></div></div>`).join('')}</div>`;
 }
 function shopReqBlock(){
   const l = state.shopReqs || []; if (!l.length) return '';
@@ -1110,7 +1119,7 @@ function restaurantForm(r){
   r = r || { is_active:true, is_open:false, commission_percent:15, prep_time_minutes:25, zone_id: state.zones[0]?.id };
   const zoneOpts = state.zones.map(z => `<option value="${z.id}" ${r.zone_id === z.id ? 'selected' : ''}>${esc(z.name)}</option>`).join('');
   return `
-    <label class="f" for="r_name">Shop name</label><input id="r_name" type="text" value="${esc(r.name)}">
+    <label class="f" for="r_name">Shop name</label><input type="text" id="r_name" type="text" value="${esc(r.name)}">
     <label class="f" for="r_desc">Short description</label><input id="r_desc" type="text" value="${esc(r.description)}" placeholder="Burgers, fries and shakes">
     <label class="f" for="r_addr">Address</label><input id="r_addr" type="text" value="${esc(r.address)}">
     <label class="f" for="r_phone">Phone</label><input id="r_phone" type="text" inputmode="tel" value="${esc(r.phone)}">
@@ -1200,6 +1209,8 @@ function itemForm(i){
   return `
     <label class="f" for="i_name">Product name</label><input id="i_name" type="text" value="${esc(i.name)}">
     <label class="f" for="i_desc">Description</label><textarea id="i_desc">${esc(i.description)}</textarea>
+    <label class="f" for="i_kw">Search words (keywords)</label><input type="text" id="i_kw" maxlength="300" value="${esc(i.keywords || '')}" placeholder="doodh, milk, دودھ">
+    <div class="muted" style="font-size:13px">Other names customers search, with commas. Example: doodh, milk, دودھ</div>
     <div class="two">
       <div><label class="f" for="i_price">Selling price (Rs)</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
       <div><label class="f" for="i_cmp">Price before discount</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}" placeholder="Optional"></div>
@@ -1729,6 +1740,8 @@ function viewMore(){
     ${it('reports', '📊 Reports', 'Download monthly reports, shop statements and rider pay slips (Excel or PDF)')}
     ${it('customers', 'Customers', 'See every customer, their orders, block or unblock')}
     ${it('plus', '⭐ Wanhar Plus', 'Monthly membership with free delivery: price, members, payments to check')}
+    ${it('misses', '🔍 Searched but not found', 'What customers search for but cannot find — add these shops and products')}
+    ${it('backup', '💾 Data backup', 'Download all orders, shops, products, customers and riders in Excel')}
     ${it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there')}
     ${it('campaign', '📣 Send notification', 'Message on the phones of all customers, riders or shops in your area')}
     ${it('promos', 'Promo codes', 'Discounts, first order offer, free delivery')}
@@ -1745,6 +1758,22 @@ function viewMore(){
   </div><p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
 
+// ---- Searched but not found ----
+function viewMisses(){
+  const l = state.misses || [];
+  return `${backLink()}<h2>🔍 Searched but not found</h2>
+    <div class="note">Customers searched for these words and found nothing. Bring shops that sell them, or ask shops to add these products (or add them as keywords).</div>
+    <div class="chips">${[7, 30, 90].map(d => `<button class="chip ${(state.missDays || 30) === d ? 'on' : ''}" onclick="state.missDays=${d};go('misses')">${d} days</button>`).join('')}</div>
+    <div class="list">${l.map((x, i) => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${i + 1}. ${esc(x.q)}</div><div class="row-sub">${x.people} people · last ${when(x.last_at)}</div></div><div class="row-side">${x.times}<small>times</small></div></div>`).join('') || '<div class="empty">Nothing yet. Words appear here when customers search and find nothing.</div>'}</div>`;
+}
+// ---- Data backup ----
+function viewBackup(){
+  return `${backLink()}<h2>💾 Data backup</h2>
+    <div class="note">Download your data as an Excel file and keep it safe on your computer or Google Drive. Do it every week. Passwords and secret keys are never in the file.</div>
+    <div class="card"><label class="f" for="bk_days">Orders from the last</label><select id="bk_days"><option value="30">30 days</option><option value="90" selected>90 days</option><option value="365">1 year</option><option value="3650">All</option></select>
+      <div class="actions"><button class="btn block" id="bkBtn" onclick="A.backup()">⬇️ Download backup (Excel)</button></div>
+      <div class="muted" style="font-size:13px" id="bkMsg"></div></div>`;
+}
 // ---- Wanhar Plus ----
 function viewPlus(){
   const rid = payRegion(); const p = Object.assign({ on:false, price:299, days:30, cap:0, min:0 }, state.settings.plus || {});
@@ -2100,6 +2129,7 @@ function viewSettings(){
       <div class="two"><div><label class="f" for="cr_first">First order cash limit (Rs, 0 = none)</label><input id="cr_first" type="number" min="0" value="${num(c.first_max)}"></div>
         <div><label class="f" for="cr_fail">Cash off after this many refused orders (0 = never)</label><input id="cr_fail" type="number" min="0" max="10" value="${num(c.max_fails)}"></div></div>`; })()}
       <label class="check"><input id="dc_on" type="checkbox" ${s.delivery_code === false ? '' : 'checked'}> Rider must enter the customer's 4-digit code to finish a delivery</label>
+      <label class="check"><input id="dp_on" type="checkbox" ${s.delivery_photo === true ? 'checked' : ''}> Rider must take a photo of every delivery (proof if the customer says “not received”)</label>
       <div class="muted" style="font-size:13px">The customer sees the code in their app. It stops riders marking “delivered” without giving the order. You can block a customer or turn cash off for one customer in More → Customers.</div>
       <div class="actions"><button class="btn ghost block" onclick="A.saveSafety()">Save</button></div>
     </div>
@@ -2229,6 +2259,8 @@ const A = {
       ${o.scheduled_for ? `<div class="note"><b>🗓️ Scheduled for ${esc(new Date(o.scheduled_for).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' }))}</b></div>` : ''}
       <div class="card"><b>${esc(o.customer?.full_name || 'Customer')}</b>${o.customer?.phone ? ` <a href="tel:${esc(o.customer.phone)}">${esc(o.customer.phone)}</a>` : ''}
         <div class="muted" style="margin-top:4px">${esc(o.address_text || 'No address')}</div>
+        ${o.receiver_name ? `<div style="margin-top:4px">👤 Receiver: <b>${esc(o.receiver_name)}</b> · <a href="tel:${esc(o.receiver_phone || '')}">${esc(o.receiver_phone || '')}</a></div>` : ''}
+        ${o.delivery_photo ? `<button class="btn ghost small" style="margin-top:6px" onclick='A.lostPhoto(${JSON.stringify(o.delivery_photo)})'>📷 Delivery photo</button>` : ''}
         ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}</div>
       ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
       ${o.rider && o.rider.profile ? `<div style="margin-bottom:8px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : ''}
@@ -2339,6 +2371,43 @@ const A = {
     await run(async () => { need(await sb.from('restaurants').update({ sponsored_until:until }).eq('id', id)); r.sponsored_until = until; toast(days ? 'Sponsored until ' + dayName(until) : 'Stopped'); await A.openShop(id); });
   },
   async seeFile(path){ await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); }); },
+  async staffReq(id, action){
+    let note = null;
+    if (action === 'reject'){ note = await uiPrompt('Reason for the shop owner (optional)', ''); if (note === null) return; }
+    else if (!await uiConfirm('Approve this staff login? The worker can then see this shop\'s orders and products.')) return;
+    await run(async () => { need(await sb.rpc('admin_staff_action', { p_id:id, p_action:action, p_note:note || null })); await loadShopRequests(); renderTab(); toast(action === 'approve' ? 'Approved' : 'Rejected'); });
+  },
+  async backup(){
+    const days = Number($('bk_days').value) || 90; const btn = $('bkBtn'); const msg = $('bkMsg');
+    btn.disabled = true; const say = x => { if (msg) msg.textContent = x; };
+    await run(async () => {
+      try {
+        const since = new Date(Date.now() - days * 864e5).toISOString();
+        const page = async (q, max) => { let out = [], from = 0; while (true){ const { data, error } = await q().range(from, from + 999); if (error) throw error; out = out.concat(data || []); if (!data || data.length < 1000 || out.length >= max) break; from += 1000; } return out; };
+        say('Orders…');
+        const ords = await page(() => sb.from('orders').select('id,created_at,delivered_at,status,order_type,payment_method,payment_status,subtotal,delivery_fee,discount,tip,total,commission_amount,restaurant_earning,rider_pay,address_text,receiver_name,receiver_phone,restaurant:restaurants(name),customer:profiles!customer_id(full_name,phone),rider:riders!rider_id(profile:profiles(full_name))').gte('created_at', since).order('created_at'), 50000);
+        say('Shops…');
+        const shops = await page(() => sb.from('restaurants').select('id,name,phone,address,categories,is_active,is_open,commission_percent,monthly_fee,created_at').order('name'), 5000);
+        say('Products…');
+        const items = await page(() => sb.from('menu_items').select('id,name,price,compare_price,stock_qty,is_available,keywords,barcode,restaurant:restaurants(name),category:menu_categories(name)').order('name'), 100000);
+        say('Customers…');
+        const custs = await page(() => sb.from('profiles').select('id,full_name,phone,email,role,created_at').eq('role', 'customer').order('created_at'), 100000);
+        say('Riders…');
+        const riders = await page(() => sb.from('riders').select('id,rider_code,vehicle,contract_type,is_approved,blocked,created_at,profile:profiles(full_name,phone)').order('created_at'), 5000);
+        const d = x => x ? new Date(x).toLocaleString('en-GB', { timeZone:'Asia/Karachi' }) : '';
+        say('Making the file…');
+        await Report.excel('WanharMart-backup-' + new Date().toISOString().slice(0, 10), [
+          { name:'Orders', rows:[['Order', 'Date', 'Delivered', 'Status', 'Type', 'Payment', 'Pay status', 'Items', 'Delivery fee', 'Discount', 'Tip', 'Total', 'Commission', 'Shop gets', 'Rider pay', 'Shop', 'Customer', 'Phone', 'Rider', 'Address', 'Receiver', 'Receiver phone']]
+            .concat(ords.map(o => ['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), d(o.delivered_at), o.status, o.order_type, o.payment_method, o.payment_status, num(o.subtotal), num(o.delivery_fee), num(o.discount), num(o.tip), num(o.total), num(o.commission_amount), num(o.restaurant_earning), num(o.rider_pay), o.restaurant?.name || '', o.customer?.full_name || '', o.customer?.phone || '', o.rider?.profile?.full_name || '', o.address_text || '', o.receiver_name || '', o.receiver_phone || ''])) },
+          { name:'Shops', rows:[['Name', 'Phone', 'Address', 'Type', 'Active', 'Open', 'Commission %', 'Monthly fee', 'Joined']].concat(shops.map(r => [r.name, r.phone || '', r.address || '', (r.categories || []).join(', '), r.is_active ? 'yes' : 'no', r.is_open ? 'yes' : 'no', num(r.commission_percent), num(r.monthly_fee), d(r.created_at)])) },
+          { name:'Products', rows:[['Shop', 'Section', 'Name', 'Price', 'Old price', 'Stock', 'Available', 'Keywords', 'Barcode']].concat(items.map(i => [i.restaurant?.name || '', i.category?.name || '', i.name, num(i.price), i.compare_price ?? '', i.stock_qty ?? '', i.is_available ? 'yes' : 'no', i.keywords || '', i.barcode || ''])) },
+          { name:'Customers', rows:[['Name', 'Phone', 'Email', 'Joined']].concat(custs.map(c => [c.full_name || '', c.phone || '', c.email || '', d(c.created_at)])) },
+          { name:'Riders', rows:[['Rider ID', 'Name', 'Phone', 'Vehicle', 'Contract', 'Approved', 'Blocked', 'Joined']].concat(riders.map(r => [r.rider_code || '', r.profile?.full_name || '', r.profile?.phone || '', r.vehicle || '', r.contract_type || '', r.is_approved ? 'yes' : 'no', r.blocked ? 'yes' : 'no', d(r.created_at)])) }
+        ]);
+        say(`Done: ${ords.length} orders, ${shops.length} shops, ${items.length} products, ${custs.length} customers, ${riders.length} riders.`);
+      } finally { btn.disabled = false; }
+    });
+  },
   async saveBookingPct(){
     const pct = Math.max(0, Math.min(50, Math.round(num($('bkc_pct').value) * 2) / 2));
     if (!await uiConfirm(pct ? `Shops will pay ${pct}% on every new booking. Shops see this in their app. Save?` : 'Bookings will be free (0%). Save?')) return;
@@ -2346,7 +2415,7 @@ const A = {
   },
   async saveSafety(){
     const v = { first_max:Math.max(0, Math.round(num($('cr_first').value))), max_fails:Math.max(0, Math.round(num($('cr_fail').value))) };
-    await run(async () => { need(await putSettings([{ key:'cod_rules', value:v }, { key:'delivery_code', value:$('dc_on').checked }])); await loadSettings(); renderTab(); toast('Saved'); });
+    await run(async () => { need(await putSettings([{ key:'cod_rules', value:v }, { key:'delivery_code', value:$('dc_on').checked }, { key:'delivery_photo', value:$('dp_on').checked }])); await loadSettings(); renderTab(); toast('Saved'); });
   },
   async setStatus(id, status){
     let reason = null;
@@ -2566,7 +2635,7 @@ const A = {
     if (!$('i_cat').value) return toast('Choose a section', true);
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
     await run(async () => {
-      const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
+      const row = { name, description:$('i_desc').value.trim() || null, keywords:($('i_kw').value || '').trim().slice(0, 300) || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
         category_id:$('i_cat').value, is_available:$('i_avail').checked, is_approved:$('i_appr').checked, is_featured:$('i_feat').checked, restaurant_id:shop, heavy_fee:Math.max(0, num($('i_heavy').value)), weight_kg:Math.round(Math.max(0, num($('i_kg').value)) / ($('i_kgu').value === 'g' ? 1000 : 1) * 1000) / 1000 };
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
       const st = $('i_stock').value.trim(); row.stock_qty = st === '' ? null : Math.max(0, Math.round(num(st)));
@@ -4150,10 +4219,10 @@ const Bulk = (() => {
   function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
 
   // ---------- columns ----------
-  const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Photo'];
+  const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Keywords', 'Barcode', 'Photo'];
   const ALIAS = { id:['id','productid'], name:['name','product','productname','item','itemname','naam'], price:['price','rate','saleprice','sellingprice','qeemat','priceRs'.toLowerCase()],
     old:['oldprice','mrp','compareprice','pricebeforediscount','originalprice','retailprice','cutprice'], section:['section','category','group','department'], stock:['stock','qty','quantity','stockqty'],
-    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
+    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], kw:['keywords','keyword','tags','tag','searchwords','search','otherwords'], bc:['barcode','ean','upc','barcodeno','sku'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
   const key = h => String(h ?? '').toLowerCase().replace(/[^a-z]/g, '');
   function headerMap(row){ const m = {}; row.forEach((h, i) => { const k = key(h); for (const f in ALIAS) if (m[f] === undefined && ALIAS[f].includes(k)) m[f] = i; }); return m.name !== undefined && m.price !== undefined ? m : null; }
   const numv = v => { const s = String(v ?? '').replace(/rs\.?|pkr|,|\s/gi, ''); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : NaN; };
@@ -4163,7 +4232,7 @@ const Bulk = (() => {
   async function loadShop(){
     const id = C.shopId(); if (!id || id === 'all') throw new Error(t('choose_shop'));
     const [c, i] = await Promise.all([C.sb.from('menu_categories').select('id,name,sort_order').eq('restaurant_id', id).order('sort_order'),
-      C.sb.from('menu_items').select('id,name,price,compare_price,category_id,stock_qty,weight_kg,description,photo_url,sort_order').eq('restaurant_id', id).order('sort_order').order('name').limit(5000)]);
+      C.sb.from('menu_items').select('id,name,price,compare_price,category_id,stock_qty,weight_kg,description,keywords,barcode,photo_url,sort_order').eq('restaurant_id', id).order('sort_order').order('name').limit(5000)]);
     if (c.error) throw c.error; if (i.error) throw i.error;
     return { id, cats:c.data || [], items:i.data || [] };
   }
@@ -4184,10 +4253,10 @@ const Bulk = (() => {
     const b = $('bkDl'); if (b) b.disabled = true;
     try {
       const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
-      let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', '']);
+      let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', i.keywords || '', i.barcode || '', '']);
       if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
-      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
-        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
       download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
         'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     } catch (e) { C.toast(e.message || 'Error', true); }
@@ -4232,6 +4301,8 @@ const Bulk = (() => {
       let st = numv(g('stock')); it.stock = m.stock === undefined ? undefined : (st === null || isNaN(st) ? null : Math.max(0, Math.round(st)));
       const kg = kgv(g('weight')); it.kg = m.weight === undefined ? undefined : (kg === null || isNaN(kg) ? 0 : kg);
       it.desc = m.desc === undefined ? undefined : (g('desc') || null);
+      it.kw = m.kw === undefined ? undefined : (String(g('kw') || '').slice(0, 300) || null);
+      it.bc = m.bc === undefined ? undefined : (String(g('bc') || '').replace(/\.0+$/, '').trim().slice(0, 64) || null);
       it.section = g('section') || (ex ? catName(ex.category_id) : '') || '';
       if (!it.section){ it.section = t('other'); it.warns.push(t('w_sec')); }
       it.cat = catByName.get(norm(it.section)) || null;
@@ -4243,7 +4314,7 @@ const Bulk = (() => {
       else {
         const ch = Number(ex.price) !== price || (it.old !== undefined && (ex.compare_price == null ? null : Number(ex.compare_price)) !== it.old)
           || (it.stock !== undefined && (ex.stock_qty == null ? null : Number(ex.stock_qty)) !== it.stock) || (it.kg !== undefined && Number(ex.weight_kg || 0) !== it.kg)
-          || (it.desc !== undefined && (ex.description || null) !== it.desc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
+          || (it.desc !== undefined && (ex.description || null) !== it.desc) || (it.kw !== undefined && (ex.keywords || null) !== it.kw) || (it.bc !== undefined && (ex.barcode || null) !== it.bc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
         it.status = ch ? 'upd' : 'same';
       }
       out.push(it);
@@ -4287,7 +4358,7 @@ const Bulk = (() => {
       const news = R.filter(r => r.status === 'new');
       for (let i = 0; i < news.length; i += 100){
         const part = news.slice(i, i + 100);
-        const rows = part.map(r => { const o = { restaurant_id:sh.id, category_id:r.cat ? r.cat.id : null, name:r.name.slice(0, 120), price:r.price, compare_price:r.old ?? null, stock_qty:r.stock ?? null, weight_kg:r.kg || 0, description:r.desc ?? null, photo_url:r.photoUrl || null, is_available:r.stock !== 0, sort_order:++so }; if (C.isAdmin) o.is_approved = true; return o; });
+        const rows = part.map(r => { const o = { restaurant_id:sh.id, category_id:r.cat ? r.cat.id : null, name:r.name.slice(0, 120), price:r.price, compare_price:r.old ?? null, stock_qty:r.stock ?? null, weight_kg:r.kg || 0, description:r.desc ?? null, keywords:r.kw ?? null, barcode:r.bc ?? null, photo_url:r.photoUrl || null, is_available:r.stock !== 0, sort_order:++so }; if (C.isAdmin) o.is_approved = true; return o; });
         const { error } = await C.sb.from('menu_items').insert(rows);
         if (error){ for (const r of part){ const one = rows[part.indexOf(r)]; const x = await C.sb.from('menu_items').insert(one); if (x.error) fails.push([r, x.error.message]); } }
         done += part.length; prog(done, total);
@@ -4300,6 +4371,8 @@ const Bulk = (() => {
         if (r.stock !== undefined) o.stock_qty = r.stock;
         if (r.kg !== undefined) o.weight_kg = r.kg || 0;
         if (r.desc !== undefined) o.description = r.desc;
+        if (r.kw !== undefined) o.keywords = r.kw;
+        if (r.bc !== undefined) o.barcode = r.bc;
         if (r.photoUrl) o.photo_url = r.photoUrl;
         const { error } = await C.sb.from('menu_items').update(o).eq('id', r.ex.id);
         if (error) fails.push([r, error.message]);
