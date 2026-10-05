@@ -164,6 +164,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .promo button{flex:none;width:auto;padding:0 18px}
 .progress{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:8px 0}
 .progress i{display:block;height:100%;background:var(--marigold)}
+.micbtn{position:absolute;top:50%;right:6px;transform:translateY(-50%);border:0;background:transparent;font-size:20px;cursor:pointer;padding:4px 6px;z-index:2}html[dir=rtl] .micbtn{right:auto;left:6px}.searchbox input#q{padding-right:44px}html[dir=rtl] .searchbox input#q{padding-left:44px;padding-right:40px}.micbtn.on{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.35}}.sugg{background:var(--surface,#fff);color:var(--ink);border-radius:16px;margin-top:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18)}.sg-h{display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px;font-size:14px}.sg-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.add.bell{margin-top:6px;min-width:0;padding:6px 10px}.add.bell.on{background:var(--green);color:#fff}.sharebtn{flex:none;color:var(--green)!important;border-color:var(--line)!important;background:var(--surface)!important}.faqq{border-bottom:1px solid var(--line);padding:10px 0}.faqq summary{font-weight:700;cursor:pointer}.faqq div{margin-top:6px;color:var(--muted)}
 .revrow{border-bottom:1px solid var(--line);padding:8px 0}.stars.small button{font-size:22px;padding:0 1px}
 .bkcard{background:var(--surface,#fff);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px}.bkcard.on{border:2px solid var(--green)}.bkslots{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow:auto}.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.chip{flex:none;border-radius:999px;padding:8px 14px;cursor:pointer;font-family:inherit}
 .pill{font-size:12px;font-weight:700;padding:2px 10px;border-radius:999px;color:#fff;background:var(--green)}
@@ -801,7 +802,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '4.8';
+const APP_VERSION = '5.0';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -827,6 +828,7 @@ const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
+    voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Wanhar Mart:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
     rate_items_t:'Rate the products (optional)', rate_bk:'How was the service?', rate_bk_send:'Send rating', rate_bk_thanks:'Thank you for your rating!', reviews_t:'Customer reviews', no_reviews:'No reviews yet.', rev_n:'{n} reviews',
     book:'📅 Book', book_title:'Book a time', bk_day:'Choose a day', bk_time:'Choose a time', bk_none:'No free time on this day. Try another day.', bk_note:'Note for the shop (optional)', bk_confirm:'Book this time', bk_ok:'Booked! Please reach on time.', bk_login:'Please log in to book', my_bookings:'My bookings', bk_booked:'Booked', bk_arrived:'At the shop', bk_done:'Done', bk_cancelled:'Cancelled', bk_no_show:'Cancelled — late', bk_rule:'Please be on time. If you are more than {m} min late, the booking is cancelled by itself.', bk_wait_till:'The shop waits for you until {t}', bk_cancel:'Cancel booking', bk_cancel_q:'Cancel this booking?', bk_cancel_ok:'Booking cancelled', bk_free:'{n} free', bk_pay:'Pay at the shop', today:'Today', tomorrow:'Tomorrow', min_s:'min', bk_loading:'Loading times…',
     login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password',
@@ -928,6 +930,7 @@ const I18N = {
     tag_Late:'Late', tag_Rude:'Rude', 'tag_Did not call':'Did not call', 'tag_Food spilled':'Food spilled', 'tag_Asked for extra money':'Asked for extra money'
   },
   ur: {
+    voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Wanhar Mart پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
     rate_items_t:'پروڈکٹس کو ریٹ کریں (اختیاری)', rate_bk:'سروس کیسی رہی؟', rate_bk_send:'ریٹنگ بھیجیں', rate_bk_thanks:'ریٹنگ کا شکریہ!', reviews_t:'گاہکوں کے ریویوز', no_reviews:'ابھی کوئی ریویو نہیں۔', rev_n:'{n} ریویوز',
     book:'📅 بُک کریں', book_title:'وقت بُک کریں', bk_day:'دن چنیں', bk_time:'وقت چنیں', bk_none:'اس دن کوئی وقت خالی نہیں۔ کوئی اور دن دیکھیں۔', bk_note:'دکان کے لیے نوٹ (اختیاری)', bk_confirm:'یہ وقت بُک کریں', bk_ok:'بُک ہو گیا! وقت پر پہنچیں۔', bk_login:'بُک کرنے کے لیے لاگ اِن کریں', my_bookings:'میری بُکنگز', bk_booked:'بُک ہے', bk_arrived:'دکان پر پہنچ گئے', bk_done:'مکمل', bk_cancelled:'منسوخ', bk_no_show:'منسوخ — دیر ہو گئی', bk_rule:'وقت پر پہنچیں۔ اگر آپ {m} منٹ سے زیادہ لیٹ ہوئے تو بُکنگ خود منسوخ ہو جائے گی۔', bk_wait_till:'دکان {t} تک آپ کا انتظار کرے گی', bk_cancel:'بُکنگ منسوخ کریں', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟', bk_cancel_ok:'بُکنگ منسوخ ہو گئی', bk_free:'{n} خالی', bk_pay:'پیسے دکان پر دیں', today:'آج', tomorrow:'کل', min_s:'منٹ', bk_loading:'وقت لوڈ ہو رہے ہیں…',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -1221,7 +1224,8 @@ function renderShell(){
       </div>
       ${state.user ? `<button class="addrchip" id="addrChip" onclick="A.pickAddr()">${addrChipHtml()}</button>` : ''}
       <div class="hello" id="hello">${helloHtml()}</div>
-      <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" autocomplete="off"></div>
+      <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" onfocus="A.suggShow()" onblur="setTimeout(A.suggHide, 250)" autocomplete="off"><button type="button" class="micbtn" onclick="A.voice()" aria-label="Voice search">🎤</button></div>
+      <div id="sugg" class="sugg" style="display:none"></div>
     </header>
     <main id="view"></main>
     <div class="cartbar" id="cartbar"></div>
@@ -1381,7 +1385,7 @@ function syncShopOpen(p){
 }
 async function loadProducts(){
   const [items, stats] = await Promise.all([
-    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,stock_qty,photos,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
+    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,keywords,duration_min,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,stock_qty,photos,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
       .eq('is_available', true).eq('restaurants.is_active', true).eq('restaurants.region_id', state.region || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending:false }).limit(400),
     sb.rpc('public_stats')
   ]);
@@ -1438,14 +1442,15 @@ function restaurantCard(r){
     </div></a>`;
 }
 function sortProducts(list){
-  const l = list.slice();
+  const l = state.priceMax ? list.filter(p => num(p.price) <= state.priceMax) : list.slice();
   if (state.sort === 'best') l.sort((a, b) => sold(b.id) - sold(a.id) || (b.is_featured - a.is_featured));
   if (state.sort === 'new') l.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   if (state.sort === 'low') l.sort((a, b) => num(a.price) - num(b.price));
   if (state.sort === 'high') l.sort((a, b) => num(b.price) - num(a.price));
   return l;
 }
-function sortBar(){ return `<div class="sortbar">${[['best','sort_best'],['new','sort_new'],['low','sort_low'],['high','sort_high']].map(([k, l]) => `<button class="chip2 ${state.sort === k ? 'on' : ''}" onclick="A.setSort('${k}')">${t(l)}</button>`).join('')}</div>`; }
+function sortBar(){ return `<div class="sortbar">${[['best','sort_best'],['new','sort_new'],['low','sort_low'],['high','sort_high']].map(([k, l]) => `<button class="chip2 ${state.sort === k ? 'on' : ''}" onclick="A.setSort('${k}')">${t(l)}</button>`).join('')}</div>
+  <div class="sortbar">${[0, 200, 500, 1000, 2000].map(p => `<button class="chip2 ${(state.priceMax || 0) === p ? 'on' : ''}" onclick="A.setPrice(${p})">${p ? t('price_under', { p:money(p) }) : t('price_any')}</button>`).join('')}</div>`; }
 function categories(list){
   const map = {};
   (list || state.products).forEach(p => { const n = p.category && p.category.name; if (!n) return; const k = n.trim().toLowerCase(); (map[k] = map[k] || { name:n.trim(), n:0, img:null }).n++; if (!map[k].img && p.photo_url) map[k].img = p.photo_url; });
@@ -1453,10 +1458,33 @@ function categories(list){
 }
 
 // ================= HOME =================
+// ---- Search: other names for the same thing (Roman Urdu, English, Urdu) ----
+const SYN = [['doodh','dudh','milk','دودھ','dairy'],['dahi','dahee','yogurt','yoghurt','دہی'],['anday','anda','ande','egg','eggs','انڈے','انڈا'],['cheeni','chini','sugar','چینی'],
+  ['atta','aata','flour','آٹا'],['chawal','chaawal','rice','چاول'],['ghee','ghi','oil','tel','cooking oil','گھی','تیل'],['chai','chaye','chaey','tea','چائے','patti'],['namak','salt','نمک'],
+  ['daal','dal','lentil','lentils','دال'],['aloo','alu','potato','potatoes','آلو'],['pyaz','piyaz','onion','onions','پیاز'],['tamatar','tomato','tomatoes','ٹماٹر'],['sabzi','sabzee','vegetable','vegetables','سبزی'],
+  ['phal','fruit','fruits','پھل'],['kela','banana','کیلا'],['saib','seb','apple','سیب'],['murgi','murghi','chicken','مرغی'],['gosht','meat','mutton','beef','گوشت'],['roti','naan','bread','روٹی','نان','double roti'],
+  ['pani','paani','water','پانی'],['makhan','makkhan','butter','مکھن'],['sabun','soap','صابن'],['dawai','dawa','medicine','tablet','syrup','دوائی','دوا'],['biscuit','biscuits','biskut','بسکٹ'],
+  ['cold drink','soft drink','coke','pepsi','sprite','7up','botal','بوتل'],['mithai','sweets','sweet','مٹھائی'],['pizza','پیزا'],['burger','برگر'],['shawarma','shawerma','شوارما'],
+  ['kapray','kapde','clothes','shirt','suit','کپڑے'],['joota','jota','shoes','shoe','جوتا','جوتے'],['baal','hair','haircut','cutting','کٹنگ'],['shave','shaving','darhi','daarhi','beard','شیو','داڑھی'],
+  ['masala','spice','spices','مصالحہ'],['cake','کیک'],['ice cream','icecream','qulfi','kulfi','آئس کریم'],['pampers','diaper','diapers'],['shampoo','شیمپو'],['toothpaste','manjan','ٹوتھ پیسٹ'],
+  ['mobile','phone','موبائل'],['charger','چارجر'],['karahi','karhai','کڑاہی'],['tikka','ٹکہ'],['chips','crisps','lays','چپس'],['juice','جوس'],['sauce','ketchup','چٹنی'],['bachay','baby','kids','بچے']];
+const normQ = x => String(x || '').toLowerCase().replace(/[ً-ٟ]/g, '').replace(/\s+/g, ' ').trim();
+function searchTerms(q){
+  q = normQ(q); if (!q) return [];
+  const out = new Set([q]); const parts = q.split(' ').filter(w => w.length >= 2);
+  parts.forEach(w => out.add(w));
+  [q].concat(parts).forEach(w => { if (w.length < 3) return; SYN.forEach(g => { if (g.some(m => m === w || (m.length >= 3 && (m.startsWith(w) || w.startsWith(m))))) g.forEach(m => out.add(m)); }); });
+  return Array.from(out).slice(0, 25);
+}
+const hayOf = p => normQ([p.name, p.keywords, p.description, p.category && p.category.name, p.restaurants && p.restaurants.name].filter(Boolean).join(' | '));
+const matchTerms = (p, terms) => { const h = hayOf(p); return terms.some(x => h.includes(x)); };
 function searchResults(q){
-  q = q.toLowerCase();
-  const prods = sortProducts(state.products.filter(p => p.name.toLowerCase().includes(q) || (p.restaurants && p.restaurants.name.toLowerCase().includes(q)) || (p.category && p.category.name.toLowerCase().includes(q))));
+  const terms = searchTerms(q); q = normQ(q);
+  const seen = new Set(); const pool = state.products.concat((state.searchExtra && state.searchExtra.q === q) ? state.searchExtra.items : []).filter(p => !seen.has(p.id) && seen.add(p.id));
+  const prods = sortProducts(pool.filter(p => matchTerms(p, terms)));
+  state.lastSearch = { q, n:prods.length };
   const shops = state.restaurants.filter(r => (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
+  state.lastSearch.n += shops.length;
   return `<h2 style="margin-top:4px">${t('results_for', { q:esc(state.homeQuery.trim()) })}</h2>
     ${shops.length ? shops.map(restaurantCard).join('') : ''}
     ${prods.length ? sortBar() + `<div class="grid2">${prods.map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty">${t('no_results')}</div>`)}`;
@@ -1538,7 +1566,7 @@ async function showRestaurant(id){
       <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
       ${offerText(r) ? `<div class="offtag big">🏷️ ${esc(t('shop_offer'))}: ${esc(offerText(r))}</div>` : ''}${r.allow_pickup !== false ? `<div class="muted" style="font-size:13px;margin-top:6px">🛍️ ${t('o_pickup').replace('🛍️ ', '')} ✓</div>` : ''}
       ${hoursHtml(r)}
-      ${waNum(r.phone) ? `<a class="wabtn" target="_blank" rel="noopener" href="${waHref(r.phone, '')}">${WA_IC} ${t('wa_shop')}</a>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${waNum(r.phone) ? `<a class="wabtn" target="_blank" rel="noopener" href="${waHref(r.phone, '')}">${WA_IC} ${t('wa_shop')}</a>` : ''}<button class="pillbtn sharebtn" onclick="A.share('r','${r.id}')">${t('share')}</button></div>
     </div>
     ${r.is_open ? '' : `<div class="closed-note">${esc(closedText(r))}</div>`}
     <input type="search" id="sq" placeholder="${t('search_shop')}" oninput="A.shopSearch(this.value)" style="margin-top:12px">
@@ -1548,13 +1576,13 @@ async function showRestaurant(id){
 function menuBody(){
   const { cats, items } = state.curMenu; const q = state.shopQuery.trim().toLowerCase();
   if (!items.length) return `<div class="empty">${t('menu_empty')}</div>`;
-  if (q){ const l = items.filter(x => x.name.toLowerCase().includes(q)); return l.map(itemHtml).join('') || `<div class="empty">${t('no_results')}</div>`; }
+  if (q){ const terms = searchTerms(q); const l = items.filter(x => matchTerms(x, terms)); return l.map(itemHtml).join('') || `<div class="empty">${t('no_results')}</div>`; }
   const blocks = cats.map(cat => { const l = items.filter(x => x.category_id === cat.id); return l.length ? `<div class="cat" id="cat-${cat.id}">${esc(cat.name)}</div>${l.map(itemHtml).join('')}` : ''; }).join('');
   const loose = items.filter(x => !cats.some(cat => cat.id === x.category_id));
   return blocks + loose.map(itemHtml).join('');
 }
 function ctlHtml(i){
-  if (!i.is_available) return `<span class="soldout">${t('sold_out')}</span>`;
+  if (!i.is_available) return `<span class="soldout">${t('sold_out')}</span><button class="add bell ${(state.alerts || new Set()).has(i.id) ? 'on' : ''}" onclick="A.notifyMe('${i.id}')" aria-label="${t('notify_me')}">🔔</button>`;
   if (!state.curRest) return '';
   if (i.duration_min && state.curRest.booking_on) return `<button class="add" onclick="A.bookOpen('${i.id}')">${t('book')}</button>`;
   if (hasOpts(i.id)){ const n = state.cart.rid === i.restaurant_id ? cartQtyOf(i.id) : 0; return `<button class="add" onclick="A.add('${i.id}')">${t('add')}${n ? ' · ' + n : ''}</button>`; }
@@ -1602,14 +1630,14 @@ async function showProduct(id){
     <div class="dimg">${galHtml(item)}${off ? `<span class="off" style="font-size:15px">-${off}%</span>` : ''}
       <button class="heart ${isFav(item.id) ? 'on' : ''}" onclick="A.fav('${item.id}', this)" aria-label="Save">${isFav(item.id) ? '♥' : '♡'}</button></div>
     <div class="dprice ${off ? '' : 'plain'}">${money(item.price)}${off ? `<span class="strike" style="font-size:16px">${money(item.compare_price)}</span><span class="save">${t('you_save', { n:money(num(item.compare_price) - num(item.price)) })}</span>` : ''}</div>
-    <h1 style="margin:6px 0 4px">${esc(item.name)}</h1>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h1 style="margin:6px 0 4px">${esc(item.name)}</h1><button class="pillbtn sharebtn" onclick="A.share('p','${item.id}')">${t('share')}</button></div>
     ${s || itemRate(item.id) ? `<div class="muted">${itemRate(item.id) ? `<span class="star">★ ${itemRate(item.id).avg}</span> · ${t('rev_n', { n:itemRate(item.id).n })}${s ? ' · ' : ''}` : ''}${s ? t('sold_n', { n:s }) : ''}</div>` : ''}
     ${item.duration_min ? `<div class="muted" style="font-size:14px">⏱️ ${item.duration_min} ${t('min_s')}</div>` : ''}
     ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
     ${num(item.weight_kg) ? `<div class="muted" style="font-size:14px">⚖️ ${kgText(item.weight_kg)}</div>` : ''}
     ${leftBadge(item)}
     ${hasOpts(item.id) ? `<div class="custom" style="font-size:14px">${t('customizable')}: ${esc((state.optCache[item.id] || []).map(g => g.name).join(', '))}</div>` : ''}
-    ${item.is_available ? '' : `<div class="closed-note">${t('sold_out')}</div>`}
+    ${item.is_available ? '' : `<div class="closed-note">${t('sold_out')}</div><button class="btn ghost" id="nmBtn" style="margin:8px 0" onclick="A.notifyMe('${item.id}')">${(state.alerts || new Set()).has(item.id) ? t('notify_on') : t('notify_me')}</button>`}
     ${full.is_open === false ? `<div class="closed-note">${esc(closedText(full))}</div>` : ''}
     <a class="shopstrip" href="#/r/${shop.id}">
       <div class="thumb">${shop.logo_url ? `<img src="${esc(shop.logo_url)}" alt="">` : noImg(shop.name)}</div>
@@ -1810,7 +1838,11 @@ function drawCheckout(){
     ${r.allow_pickup !== false ? `<div class="seg big">${['delivery', 'pickup'].map(k => `<button class="${(state.otype || 'delivery') === k ? 'on' : ''}" onclick="A.setOtype('${k}')">${t('o_' + k)}</button>`).join('')}</div>` : ''}
     <div class="box"><b>${t('your_details')}</b>${needsDetails ? `<div class="muted" style="font-size:14px">${t('need_details')}</div>` : ''}
       <label class="f" for="d_name">${t('name')}</label><input id="d_name" type="text" value="${esc(pr.full_name)}">
-      <label class="f" for="d_phone">${t('phone')}</label><input id="d_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(pr.phone)}"></div>
+      <label class="f" for="d_phone">${t('phone')}</label><input id="d_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(pr.phone)}">
+      ${state.cart && cartRestaurant() ? `<label class="check" style="margin-top:12px"><input type="checkbox" ${state.forOther ? 'checked' : ''} onchange="A.forOther(this.checked)"> ${t('for_other')}</label>
+      ${state.forOther ? `<div class="muted" style="font-size:13px">${t('for_other_s')}</div>
+        <label class="f" for="r_name">${t('rcv_name')}</label><input type="text" id="r_name" value="${esc(state.rcvName || '')}" oninput="state.rcvName=this.value" maxlength="60">
+        <label class="f" for="r_phone">${t('rcv_phone')}</label><input id="r_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(state.rcvPhone || '')}" oninput="state.rcvPhone=this.value">` : ''}` : ''}</div>
     ${pick ? `<div class="box"><b>🛍️ ${t('pick_from')}: ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${esc(r.address || '')}</div><div class="muted" style="font-size:13px;margin-top:6px">${t('pick_note')}</div>
       ${r.lat != null ? `<a class="link" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}">${t('pick_dir')}</a>` : ''}</div>`
     : `<h2 style="margin-top:8px">${t('address')}</h2>
@@ -1860,6 +1892,28 @@ async function showOrders(){
   state.myBookings = bk;
   $('view').innerHTML = `${bookingsHtml(bk)}<h1>${t('history')}</h1>${rows || `<div class="empty"><div style="font-size:72px;line-height:1;margin-bottom:10px">📦</div>${t('no_orders')}</div>`}`;
 }
+const FAQ = {
+  en:[['How do I order?','Open a shop, add items to the cart, tap Checkout, choose your address and payment, then tap Place order.'],
+      ['How long does delivery take?','Each shop shows its time. Your order page shows when the rider will reach you, and you can see the rider on the map.'],
+      ['Can I cancel my order?','Yes, while the shop has not accepted it. Open the order and tap Cancel. After that, chat with Wanhar Mart support.'],
+      ['How do I pay?','Cash on delivery, or JazzCash / Easypaisa / bank (Raast) to the account shown, or with your Wanhar wallet.'],
+      ['What is the delivery code?','A 4-digit code in your order. Give it to the rider only when you have your order.'],
+      ['I paid online but the order was cancelled.','The money comes back to your Wanhar wallet. You can use it on your next order.'],
+      ['Something is missing or damaged.','Open the order and tap that you did not receive it, or chat with support. Send a photo if you can.'],
+      ['Can I order for someone else?','Yes. At checkout tick "Order for someone else" and write their name and phone.'],
+      ['How do I book a barber or salon?','Open the shop, tap Book on a service, choose a day and time. Please be on time.'],
+      ['How do I get free delivery?','Look for offers and promo codes, or join Wanhar Plus.']],
+  ur:[['آرڈر کیسے کروں؟','دکان کھولیں، چیزیں کارٹ میں ڈالیں، چیک آؤٹ دبائیں، پتا اور ادائیگی چنیں، پھر آرڈر کریں دبائیں۔'],
+      ['ڈیلیوری میں کتنا وقت لگتا ہے؟','ہر دکان اپنا وقت دکھاتی ہے۔ آرڈر کے صفحے پر رائیڈر کے پہنچنے کا وقت اور نقشے پر رائیڈر نظر آتا ہے۔'],
+      ['کیا میں آرڈر منسوخ کر سکتا ہوں؟','ہاں، جب تک دکان نے قبول نہیں کیا۔ آرڈر کھول کر منسوخ دبائیں۔ اس کے بعد Wanhar Mart سپورٹ سے بات کریں۔'],
+      ['ادائیگی کیسے کروں؟','کیش آن ڈیلیوری، یا دکھائے گئے اکاؤنٹ میں JazzCash / Easypaisa / بینک (Raast)، یا Wanhar والٹ سے۔'],
+      ['ڈیلیوری کوڈ کیا ہے؟','آرڈر میں 4 ہندسوں کا کوڈ۔ سامان ملنے کے بعد ہی رائیڈر کو بتائیں۔'],
+      ['آن لائن پیسے دیے مگر آرڈر منسوخ ہو گیا۔','پیسے آپ کے Wanhar والٹ میں واپس آ جاتے ہیں۔ اگلے آرڈر میں استعمال کریں۔'],
+      ['کوئی چیز کم یا خراب ہے۔','آرڈر کھول کر بتائیں کہ نہیں ملا، یا سپورٹ سے بات کریں۔ ہو سکے تو تصویر بھیجیں۔'],
+      ['کیا کسی اور کے لیے آرڈر کر سکتا ہوں؟','ہاں۔ چیک آؤٹ پر "کسی اور کے لیے آرڈر" پر ٹک کریں اور ان کا نام اور فون لکھیں۔'],
+      ['حجام یا سیلون کیسے بُک کروں؟','دکان کھولیں، سروس پر بُک دبائیں، دن اور وقت چنیں۔ وقت پر پہنچیں۔'],
+      ['مفت ڈیلیوری کیسے ملے؟','آفرز اور پرومو کوڈ دیکھیں، یا Wanhar Plus لیں۔']]
+};
 const tKar = ts => new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 function bookingsHtml(list){
   const live = list.filter(b => ['booked','arrived'].includes(b.status)), old = list.filter(b => !['booked','arrived'].includes(b.status)).slice(0, 5);
@@ -1873,7 +1927,7 @@ function bookingsHtml(list){
       ${b.cancel_reason && !on ? `<div class="muted" style="font-size:13px;margin-top:4px">${esc(b.cancel_reason)}</div>` : ''}
       ${b.status === 'done' ? (b.rating ? `<div style="margin-top:6px"><b class="star">${'★'.repeat(b.rating)}</b>${b.rating_comment ? ' · ' + esc(b.rating_comment) : ''}</div>`
         : `<div style="margin-top:8px"><b>${t('rate_bk')}</b><div class="stars" id="stars-bk${esc(b.id.slice(0, 8))}" style="text-align:center">${starsHtml('bk' + b.id.slice(0, 8), 0)}</div>
-          <input id="bkc-${esc(b.id)}" placeholder="${t('rate_comment')}" maxlength="300" style="width:100%"><button class="btn" style="margin-top:8px" onclick="A.rateBooking('${b.id}')">${t('rate_bk_send')}</button></div>`) : ''}</div>`; };
+          <input type="text" id="bkc-${esc(b.id)}" placeholder="${t('rate_comment')}" maxlength="300" style="width:100%"><button class="btn" style="margin-top:8px" onclick="A.rateBooking('${b.id}')">${t('rate_bk_send')}</button></div>`) : ''}</div>`; };
   return `<h1>${t('my_bookings')}</h1>${live.map(card).join('')}${old.map(card).join('')}`;
 }
 const TRACK = ['placed','accepted','preparing','ready','picked_up','delivered'];
@@ -2006,7 +2060,7 @@ async function showOrder(id){
       <div class="line total"><span>${t('total')}</span><span>${money(o.total)}</span></div>
       <div class="muted">${o.payment_method === 'wallet' ? t('pay_online') + (o.pay_label ? ' · ' + esc(o.pay_label) : '') : o.payment_method === 'qr_door' ? t('paid_qr') : t('cod')}</div>
       <button class="btn ghost" style="margin-top:10px" onclick="A.receipt()">${t('receipt')}</button></div>
-    <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
+    <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.receiver_name ? `<div style="margin-top:4px">👤 ${t('receiver')}: <b>${esc(o.receiver_name)}</b> · ${esc(o.receiver_phone || '')}</div>` : ''}${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
     <div style="display:grid;gap:10px;margin-top:10px">
       ${o.rider_id ? `<button class="btn ghost" onclick='Chat.open(${JSON.stringify(o.id)}, "cr", null)'>💬 ${t('chat_rider')}</button>` : ''}
       <button class="btn ghost" onclick='Chat.open(${JSON.stringify(o.id)}, "cs", null)'>💬 ${t('chat_shop')}</button>
@@ -2109,6 +2163,7 @@ async function showAccount(){
     <div style="display:grid;gap:10px;margin-top:16px">
       ${Theme.picker(state.lang)}
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+      <button class="btn ghost" style="margin-bottom:10px" onclick="A.faq()">${t('faq_link')}</button>
       ${Legal.links(state.lang)}
       <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
     </div>
@@ -2298,7 +2353,25 @@ const A = {
       if (currentRoute === 'shops'){ showShops(); return; }
       if (currentRoute !== 'home'){ nav('/'); return; }
       const el = $('homeBody'); if (el) el.innerHTML = homeBody();
-    }, 200);
+      const q = normQ(v);
+      if (q.length >= 2 && !(state.searchExtra && state.searchExtra.q === q)){
+        sb.rpc('search_items', { p_terms:searchTerms(q), p_region:state.region || null }).then(({ data }) => {
+          if (!data || normQ(state.homeQuery) !== q) return;
+          data.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = Object.assign(state.itemsCache[p.id] || {}, p); });
+          state.searchExtra = { q, items:data };
+          const el2 = $('homeBody'); if (el2 && currentRoute === 'home') el2.innerHTML = homeBody();
+        }, () => {});
+      }
+      A.suggHide();
+      clearTimeout(state.logT);
+      if (q.length >= 2) state.logT = setTimeout(() => {
+        if (normQ(state.homeQuery) !== q) return;
+        const n = state.lastSearch && state.lastSearch.q === q ? state.lastSearch.n : 0;
+        try { const r = ls.get('kh_recent', []).filter(x => x !== q); r.unshift(q); ls.set('kh_recent', r.slice(0, 8)); } catch (e) {}
+        state.logged = state.logged || new Set(); if (state.logged.has(q)) return; state.logged.add(q);
+        sb.rpc('log_search', { p_q:q, p_results:n, p_region:state.region || null }).then(() => {}, () => {});
+      }, 1500);
+    }, 250);
   },
   setSort(s){
     state.sort = s;
@@ -2503,6 +2576,7 @@ const A = {
     const pick = state.otype === 'pickup';
     if (!pick && !state.selAddr) return toast(t('pick_address'), true);
     const newName = $('d_name').value.trim(), newPhone = normalizePhone($('d_phone').value);
+    if (state.forOther && ((state.rcvName || '').trim().length < 2 || !normalizePhone(state.rcvPhone || ''))) return toast(t('rcv_name') + ' / ' + t('rcv_phone'), true);
     if (!newName) return toast(t('enter_all'), true);
     if (!newPhone) return toast(t('bad_phone'), true);
     const btn = $('placeBtn'); btn.disabled = true; btn.textContent = t('loading');
@@ -2519,6 +2593,8 @@ const A = {
         p_tip:pick ? 0 : num(state.tip), p_scheduled_for:state.when === 'later' ? state.schedAt : null,
         p_extra:{ type:pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet }
       }));
+      if (state.forOther){ try { need(await sb.rpc('set_order_receiver', { p_order:data, p_name:(state.rcvName || '').trim(), p_phone:normalizePhone(state.rcvPhone || '') })); } catch (e) { logErr(e); toast(niceErr(e), true); } }
+      state.forOther = false; state.rcvName = ''; state.rcvPhone = '';
       state.walletBal = undefined; state.rxPath = null; state.useWallet = false;
       state.cart = { rid:null, items:[], note:'' }; state.promo = ''; state.tip = 0; state.when = 'asap'; state.schedAt = null; state.promos = null; saveCart();
       toast(pm === 'wallet' ? t('order_placed_pay') : t('order_placed')); askNotify(); nav('/order/' + data);
@@ -2533,6 +2609,55 @@ const A = {
     const tg = $('tags-' + kind); if (tg) tg.innerHTML = tagsHtml(kind);
   },
   tag(kind, x){ const s = state.tags[kind]; if (s.has(x)) s.delete(x); else s.add(x); const tg = $('tags-' + kind); if (tg) tg.innerHTML = tagsHtml(kind); },
+  suggShow(){
+    const box = $('sugg'); if (!box || normQ(state.homeQuery)) return;
+    const rec = ls.get('kh_recent', []);
+    const draw = () => { const pop = (state.popular || []).filter(x => !rec.includes(x)).slice(0, 8);
+      if (!rec.length && !pop.length){ box.style.display = 'none'; return; }
+      box.innerHTML = `${rec.length ? `<div class="sg-h"><b>${t('recent_s')}</b><button type="button" class="link" onmousedown="event.preventDefault();A.clearRecent()">${t('clear_s')}</button></div><div class="sg-c">${rec.map(x => `<button type="button" class="chip" onmousedown="event.preventDefault();A.pickSearch(${esc(JSON.stringify(x))})">🕘 ${esc(x)}</button>`).join('')}</div>` : ''}
+        ${pop.length ? `<div class="sg-h"><b>${t('popular_s')}</b></div><div class="sg-c">${pop.map(x => `<button type="button" class="chip" onmousedown="event.preventDefault();A.pickSearch(${esc(JSON.stringify(x))})">🔥 ${esc(x)}</button>`).join('')}</div>` : ''}`;
+      box.style.display = 'block'; };
+    draw();
+    if (!state.popular){ state.popular = []; sb.rpc('popular_searches', { p_region:state.region || null }).then(({ data }) => { state.popular = data || []; if (document.activeElement && document.activeElement.id === 'q' && !normQ(state.homeQuery)) draw(); }, () => {}); }
+  },
+  suggHide(){ const b = $('sugg'); if (b) b.style.display = 'none'; },
+  pickSearch(x){ const q = $('q'); if (q){ q.value = x; q.blur(); } A.suggHide(); A.search(x); },
+  clearRecent(){ ls.set('kh_recent', []); A.suggShow(); },
+  voice(){
+    const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!R) return toast(t('voice_no'), true);
+    try {
+      const r = new R(); r.lang = state.lang === 'ur' ? 'ur-PK' : 'en-IN'; r.interimResults = false; r.maxAlternatives = 1;
+      const mb = document.querySelector('.micbtn'); if (mb) mb.classList.add('on'); toast(t('voice_listen'));
+      r.onresult = e => { const x = (e.results[0][0].transcript || '').replace(/[.۔?؟!]+$/, '').trim(); if (x) A.pickSearch(x); };
+      r.onerror = ev => { if (ev && ev.error === 'not-allowed') toast(t('voice_no'), true); };
+      r.onend = () => { const b = document.querySelector('.micbtn'); if (b) b.classList.remove('on'); };
+      r.start();
+    } catch (e) { toast(t('voice_no'), true); }
+  },
+  setPrice(p){ state.priceMax = p || 0; if (currentRoute === 'c') route(true); else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); } },
+  async notifyMe(id){
+    if (!state.user){ state.pending = location.hash; return showAuth(); }
+    await run(async () => {
+      const on = need(await sb.rpc('stock_alert_toggle', { p_item:id }));
+      state.alerts = state.alerts || new Set(); if (on) state.alerts.add(id); else state.alerts.delete(id);
+      toast(on ? t('notify_on') : t('notify_off'));
+      const b = $('nmBtn'); if (b) b.textContent = on ? t('notify_on') : t('notify_me');
+      const c = $('ctl-' + id); if (c) c.innerHTML = ctlHtml(state.itemsCache[id] || { id, is_available:false });
+    });
+  },
+  async share(kind, id){
+    const url = location.origin + location.pathname + '#/' + kind + '/' + id;
+    const name = kind === 'p' ? ((state.itemsCache[id] || {}).name || '') : ((state.restaurants.find(r => r.id === id) || {}).name || '');
+    const text = t('share_txt') + ' ' + name;
+    if (navigator.share){ try { await navigator.share({ title:'Wanhar Mart', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    window.open('https://wa.me/?text=' + encodeURIComponent(text + '\n' + url), '_blank', 'noopener');
+  },
+  forOther(v){ state.forOther = !!v; if (typeof drawCheckout === 'function') drawCheckout(); },
+  faq(){
+    const L = FAQ[state.lang === 'ur' ? 'ur' : 'en'];
+    openSheet(t('faq_t'), L.map(([q, a]) => `<details class="faqq"><summary>${esc(q)}</summary><div>${esc(a)}</div></details>`).join('') + `<button class="btn ghost" style="margin-top:12px" onclick='closeSheet();if(state.user)Chat.open(null, "sup", state.user.id);else showAuth()'>💬 ${t('chat_support')}</button>`);
+  },
   bookItem(itemId, shopId){
     const sh = state.restaurants.find(r => r.id === shopId); if (!sh) return;
     state.curRest = sh; const it = state.itemsCache[itemId]; if (it && !it.duration_min) return;
@@ -2554,7 +2679,7 @@ const A = {
       <label class="f" style="margin-top:10px">${t('bk_day')}</label><div class="chips" id="bkDays">${days.map(d => `<button class="chip ${d.k ? '' : 'on'}" onclick="A.bookDay(${d.k})">${esc(d.label)}</button>`).join('')}</div>
       <label class="f">${t('bk_time')}</label><div id="bkSlots" class="bkslots"><div class="muted">${t('bk_loading')}</div></div>
       <div class="muted" style="font-size:13px;margin:8px 0">${t('bk_rule', { m:r.grace_min })}</div>
-      <label class="f" for="bkNote">${t('bk_note')}</label><input id="bkNote" maxlength="200" style="width:100%">
+      <label class="f" for="bkNote">${t('bk_note')}</label><input type="text" id="bkNote" maxlength="200" style="width:100%">
       <button class="btn" id="bkGo" style="margin-top:12px" disabled onclick="A.bookGo()">${t('bk_confirm')}</button>`);
     A.bookDay(0);
   },
@@ -2787,6 +2912,7 @@ async function afterLogin(user){
   saveHomeRegion();
   if (needVerify(state.profile)){ try { if (await sb.rpc('mark_email_verified').then(r => r.data)) state.profile.email_verified = true; } catch (e) {} if (needVerify(state.profile)) return showVerify(); }
   subscribeOrders();
+  sb.rpc('my_stock_alerts').then(({ data }) => { state.alerts = new Set(data || []); }, () => {});
   loadAddresses().then(refreshChip, () => {});
   Chat.init({ me:() => state.user && state.user.id, lang:() => state.lang, role:'customer', ding:() => ring(), toast:(m, err) => toast(m, err) });
   Legal.init({ sb, lang:() => state.lang, toast:(m, err) => toast(m, err) });
