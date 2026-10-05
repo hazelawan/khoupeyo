@@ -621,7 +621,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.0';
+const APP_VERSION = '5.2';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -693,6 +693,8 @@ function range(p){
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
+    sf_send:'Send for approval', receiver:'Receiver', aa_t:'⚡ Accept orders by itself', aa_s:'New orders are accepted at once with your normal ready time. Turn it off when you are busy.', staff_t:'👥 Staff logins', staff_s:'Give your workers their own login. Write their Gmail. Wanhar Mart checks and approves it. Then they log in with that Gmail (after verifying it). Staff can see orders and products, not your money or settings.', staff_add:'+ Add staff', staff_email:'Staff Gmail', staff_name:'Staff name', staff_phone:'Phone (optional)', staff_sent:'Sent to Wanhar Mart for approval', staff_pending:'Waiting for approval', staff_approved:'Approved · waiting for first login', staff_active:'Active', staff_rejected:'Not approved', staff_remove_q:'Remove this staff login?', staff_none:'No staff yet.', staff_mode:'Staff login', bp_btn:'💲 Change prices', bp_t:'Change many prices at once', bp_sec:'Which products', bp_all:'All products', bp_pct:'Change by percent (%)', bp_add:'Or add / remove rupees', bp_pct_ph:'10 = 10% more, -10 = 10% less', bp_add_ph:'20 = Rs 20 more, -20 = Rs 20 less', bp_round:'Round the new price to', bp_ex:'Example: {a} becomes {b}', bp_apply:'Change prices', bp_q:'Change the price of {n} products?', bp_done:'{n} prices changed', scan_btn:'📷 Scan barcode', barcode:'Barcode', scan_t:'Point the camera at the barcode', scan_no:'Camera scanning does not work here. Type the barcode.', scan_found:'Found: {n}', scan_new:'New barcode — add the product',
+    kw_l:'Search words (keywords)', kw_note:'Other names customers may search, with commas. Example: doodh, milk, dairy, دودھ. This helps customers find the product.',
     bk_fee:'Wanhar Mart commission on bookings: {p}%', bk_free_now:'Free for now — no commission on bookings.', bk_fee_note:'The commission is taken only on bookings that are done. If it changes, you see it here first. A new percent is used only for new bookings.', bk_month:'This month: {n} done · sales {s} · commission {c}', bk_rating:'Customer rating: ★ {a} ({n})',
     bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
@@ -756,6 +758,8 @@ const I18N = {
     k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat'
   },
   ur: {
+    sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Wanhar Mart چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Wanhar Mart کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
+    kw_l:'تلاش کے الفاظ (کی ورڈز)', kw_note:'وہ دوسرے نام جن سے گاہک ڈھونڈ سکتے ہیں، کومے سے الگ۔ مثال: doodh, milk, دودھ۔ اس سے گاہک کو پروڈکٹ آسانی سے ملتی ہے۔',
     bk_fee:'بُکنگ پر Wanhar Mart کمیشن: {p}%', bk_free_now:'ابھی مفت ہے — بُکنگ پر کوئی کمیشن نہیں۔', bk_fee_note:'کمیشن صرف مکمل ہونے والی بُکنگ پر لگتا ہے۔ اگر بدلا تو آپ کو پہلے یہاں نظر آئے گا۔ نیا فیصد صرف نئی بُکنگز پر لگے گا۔', bk_month:'اس مہینے: {n} مکمل · سیل {s} · کمیشن {c}', bk_rating:'گاہکوں کی ریٹنگ: ★ {a} ({n})',
     bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
@@ -983,8 +987,8 @@ function renderShell(){
     <nav class="nav"><div class="nav-in">
       <button id="t_orders" onclick="go('orders')">${t('orders')}</button>
       <button id="t_menu" onclick="go('menu')">${t('products')}</button>
-      <button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
-      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>
+      ${state.staffMode ? '' : `<button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
+      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>`}
     </div></nav>`;
 }
 function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
@@ -993,6 +997,7 @@ function markTab(){
   const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = t('orders') + (n ? `<span class="dot">${n}</span>` : ''); }
 }
 async function go(tab){
+  if (state.staffMode && (tab === 'earn' || tab === 'shop')) tab = 'orders';
   state.tab = tab; markTab();
   const v = $('view'); if (!v) return;
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
@@ -1000,7 +1005,7 @@ async function go(tab){
     if (tab === 'orders') await loadOrders();
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
-    if (tab === 'shop'){ await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
+    if (tab === 'shop'){ loadStaff(); await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
 }
@@ -1095,6 +1100,7 @@ function orderCard(o){
     ${o.sub_pref ? `<div class="note">🔁 <b>${t('sub_lbl')}:</b> ${t('sub_' + o.sub_pref)}</div>` : ''}
     ${o.rx_path ? `<button type="button" class="btn ghost small" style="width:100%;margin-top:6px" onclick="A.seeRx('${o.id}')">${t('rx_see')}</button>` : ''}
     ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
+    ${o.receiver_name ? `<div class="note">👤 <b>${t('receiver')}:</b> ${esc(o.receiver_name)} · <a href="tel:${esc(o.receiver_phone || '')}">${esc(o.receiver_phone || '')}</a></div>` : ''}
     ${countdown(o)}
     ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}${i.wait_until && i.status === 'open' ? `<br><span class="muted">${t('waiting_until', { t:new Date(i.wait_until).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</span>` : ''}</div>`).join('')}
     <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>${waNum(cust.phone) && !['delivered','cancelled','rejected'].includes(o.status) ? ` <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(cust.phone)}?text=${encodeURIComponent(t('wa_hi', { s:state.restaurant.name, n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : `<span class="muted">${t('no_phone')}</span>`}</div>
@@ -1107,6 +1113,17 @@ function orderCard(o){
 function pastRow(o){
   return `<div class="row"><div class="row-main" style="cursor:default"><b>#${esc(o.id.slice(-4).toUpperCase())}</b> <span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span>
     <div class="muted" style="font-size:13px">${when(o.created_at)} · ${(o.order_items || []).reduce((n, i) => n + i.quantity, 0)} ${t('products').toLowerCase()}</div></div><b>${money(o.subtotal)}</b></div>`;
+}
+function staffListHtml(){
+  const l = state.staff; if (!l) return '<div class="muted">…</div>';
+  if (!l.length) return `<div class="muted">${t('staff_none')}</div>`;
+  return l.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:0"><b>${esc(x.name)}</b><div class="muted" style="font-size:13px;overflow:hidden;text-overflow:ellipsis">${esc(x.email)} · ${t('staff_' + x.status)}</div></div>
+    <button class="btn warn small" style="width:auto;flex:none" onclick="A.staffRemove('${x.id}')">✕</button></div>`).join('');
+}
+async function loadStaff(){
+  if (!state.restaurant || state.staffMode) return;
+  try { const { data } = await sb.from('shop_staff').select('id,name,email,status').eq('restaurant_id', state.restaurant.id).in('status', ['pending','approved','active','rejected']).order('created_at'); state.staff = data || []; } catch (e) { state.staff = []; }
+  const el = $('staffList'); if (el) el.innerHTML = staffListHtml();
 }
 function apptsHtml(){
   const r = state.restaurant; if (!r || !r.booking_on) return '';
@@ -1228,6 +1245,7 @@ function viewMenu(){
     <div class="chips">${chips}</div>
     <div class="two"><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${t('add_product')}</button></div>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="Bulk.open()">📊 ${t('bulk_btn')}</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 ${t('photo_mode')}</button></div>
+    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.scanFind()">${t('scan_btn')}</button>${state.staffMode ? '' : `<button class="btn ghost" onclick="A.bulkPrice()">${t('bp_btn')}</button>`}</div>
     ${pending ? `<div class="note" style="margin-top:12px">${t('pending_note')}</div>` : ''}
     <div id="menuBody">${body}</div>`;
 }
@@ -1238,6 +1256,9 @@ function itemForm(i){
     ${i.id && i.is_approved === false ? `<div class="note">${t('pending')}</div>` : ''}
     <label class="f" for="i_name" style="margin-top:0">${t('product_name')}</label><input id="i_name" type="text" value="${esc(i.name)}">
     <label class="f" for="i_desc">${t('description')}</label><textarea id="i_desc">${esc(i.description)}</textarea>
+    <label class="f" for="i_bc">${t('barcode')}</label><div style="display:flex;gap:6px"><input type="text" id="i_bc" maxlength="64" inputmode="numeric" value="${esc(i.barcode || '')}" style="flex:1"><button type="button" class="btn ghost small" style="width:auto;flex:none" onclick="A.scanInto()">📷</button></div>
+    <label class="f" for="i_kw">${t('kw_l')}</label><input type="text" id="i_kw" maxlength="300" value="${esc(i.keywords || '')}" placeholder="doodh, milk, دودھ">
+    <div class="muted" style="font-size:13px">${t('kw_note')}</div>
     <div class="two">
       <div><label class="f" for="i_price">${t('price')}</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
       <div><label class="f" for="i_cmp">${t('compare')}</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}"></div>
@@ -1356,6 +1377,11 @@ function viewShop(){
       <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
       <div class="actions"><button class="btn" id="shopSave" onclick="A.saveShop()">${t('save')}</button></div>
     </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${t('aa_t')}</b><div class="muted" style="font-size:13px">${t('aa_s')}</div></div>
+      <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.auto_accept ? 'checked' : ''} onchange="A.setAutoAccept(this.checked)" aria-label="${t('aa_t')}"><span></span></label></div>
+    <h2>${t('staff_t')}</h2>
+    <div class="card"><div class="muted" style="font-size:14px">${t('staff_s')}</div><div id="staffList" style="margin-top:8px">${staffListHtml()}</div>
+      <button class="btn ghost small" style="width:100%;margin-top:8px" onclick="A.staffAdd()">${t('staff_add')}</button></div>
     <h2>${t('bk_set')}</h2>
     <div class="card"><div class="muted" style="font-size:14px">${t('bk_set_s')}</div>
       ${(() => { const k = state.bkTerms || { pct:0 }; const p = num(k.pct); return `<div class="note" style="margin:10px 0 0"><b>${p > 0 ? t('bk_fee').replace('{p}', p) : '🎁 ' + t('bk_free_now')}</b><div style="font-size:13px;margin-top:4px">${t('bk_fee_note')}</div>
@@ -1680,6 +1706,40 @@ const A = {
     const o = state.orders.find(x => x.id === id); if (!o || !o.rx_path) return;
     await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(o.rx_path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); });
   },
+  async setAutoAccept(v){ await run(async () => { need(await sb.from('restaurants').update({ auto_accept:v }).eq('id', state.restaurant.id)); state.restaurant.auto_accept = v; toast(t('saved')); }); },
+  staffAdd(){
+    openSheet(t('staff_add'), `<label class="f" for="sf_e">${t('staff_email')}</label><input id="sf_e" type="email" inputmode="email" placeholder="name@gmail.com">
+      <label class="f" for="sf_n">${t('staff_name')}</label><input type="text" id="sf_n" maxlength="60"><label class="f" for="sf_p">${t('staff_phone')}</label><input id="sf_p" type="tel" inputmode="tel">
+      <div class="actions"><button class="btn" onclick="A.staffSend()">${t('sf_send')}</button></div>`);
+  },
+  async staffSend(){
+    await run(async () => { need(await sb.rpc('shop_staff_add', { p_shop:state.restaurant.id, p_email:$('sf_e').value.trim(), p_name:$('sf_n').value.trim(), p_phone:$('sf_p').value.trim() || null })); closeSheet(); toast(t('staff_sent')); await loadStaff(); });
+  },
+  async staffRemove(id){ if (!await uiConfirm(t('staff_remove_q'))) return; await run(async () => { need(await sb.rpc('shop_staff_remove', { p_id:id })); await loadStaff(); toast(t('saved')); }); },
+  bulkPrice(){
+    const ex = (state.items[0] || { price:500 }).price;
+    openSheet(t('bp_t'), `<label class="f" for="bp_c">${t('bp_sec')}</label><select id="bp_c" onchange="A.bpEx()"><option value="">${t('bp_all')} (${state.items.length})</option>${state.cats.map(c => `<option value="${c.id}">${esc(c.name)} (${state.items.filter(i => i.category_id === c.id).length})</option>`).join('')}</select>
+      <label class="f" for="bp_p">${t('bp_pct')}</label><input id="bp_p" type="number" step="0.5" placeholder="${t('bp_pct_ph')}" oninput="A.bpEx()">
+      <label class="f" for="bp_a">${t('bp_add')}</label><input id="bp_a" type="number" step="1" placeholder="${t('bp_add_ph')}" oninput="A.bpEx()">
+      <label class="f" for="bp_r">${t('bp_round')}</label><select id="bp_r" onchange="A.bpEx()"><option value="1">Rs 1</option><option value="5" selected>Rs 5</option><option value="10">Rs 10</option></select>
+      <div class="note" id="bp_ex" style="margin-top:10px" data-p="${num(ex)}"></div>
+      <div class="actions"><button class="btn" onclick="A.bpGo()">${t('bp_apply')}</button></div>`); A.bpEx();
+  },
+  bpEx(){ const el = $('bp_ex'); if (!el) return; const a = num(el.dataset.p), p = num($('bp_p').value), ad = num($('bp_a').value), rd = num($('bp_r').value) || 1;
+    const b = Math.max(1, Math.round((a * (1 + p / 100) + ad) / rd) * rd); el.textContent = t('bp_ex').replace('{a}', money(a)).replace('{b}', money(b)); },
+  async bpGo(){
+    const cat = $('bp_c').value || null, p = num($('bp_p').value), ad = num($('bp_a').value), rd = num($('bp_r').value) || 1;
+    const n = cat ? state.items.filter(i => i.category_id === cat).length : state.items.length;
+    if (!p && !ad) return toast(t('enter_all'), true);
+    if (!await uiConfirm(t('bp_q').replace('{n}', n))) return;
+    await run(async () => { const c = need(await sb.rpc('shop_bulk_price', { p_shop:state.restaurant.id, p_category:cat, p_pct:p, p_add:ad, p_round:rd })); closeSheet(); await loadMenu(); renderTab(); toast(t('bp_done').replace('{n}', c)); });
+  },
+  scanFind(){
+    Scan.open(code => { const it = state.items.find(i => (i.barcode || '') === code);
+      if (it){ toast(t('scan_found').replace('{n}', it.name)); A.editItem(it.id); }
+      else { if (state.staffMode) return toast(t('scan_new'), true); toast(t('scan_new')); state.newBarcode = code; A.editItem(null); } });
+  },
+  scanInto(){ const keep = $('i_bc'); Scan.open(code => { const f = $('i_bc') || keep; if (f) f.value = code; }); },
   async saveBooking(){
     const v = { booking_on:$('bk_on').checked, chairs:Math.max(1, Math.min(20, Math.round(num($('bk_ch').value)) || 1)), grace_min:Math.round(num($('bk_gr').value)) || 10 };
     await run(async () => { need(await sb.from('restaurants').update(v).eq('id', state.restaurant.id)); Object.assign(state.restaurant, v); toast(t('saved')); });
@@ -1754,7 +1814,7 @@ const A = {
     if (!state.cats.length) return toast(t('no_sections'), true);
     const i = state.items.find(x => x.id === id);
     state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
-    openSheet(i ? i.name : t('add_product'), itemForm(i || (catId ? { is_available:true, category_id:catId } : null))); drawPics();
+    openSheet(i ? i.name : t('add_product'), itemForm(i || (catId || state.newBarcode ? { is_available:true, category_id:catId || (state.cats[0] || {}).id, barcode:state.newBarcode || null } : null))); drawPics(); state.newBarcode = null;
     OE.init({ sb, lang:() => state.lang }); OE.load(i ? i.id : null).catch(e => toast(e.message || t('error'), true));
   },
   async saveItem(id){
@@ -1762,7 +1822,7 @@ const A = {
     if (!name || price === '' || num(price) < 0 || !$('i_cat').value) return toast(t('enter_all'), true);
     const btn = $('saveBtn'); btn.disabled = true; btn.textContent = t('loading');
     await run(async () => {
-      const row = { name, description:$('i_desc').value.trim() || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
+      const row = { name, description:$('i_desc').value.trim() || null, keywords:($('i_kw').value || '').trim().slice(0, 300) || null, barcode:($('i_bc').value || '').trim().slice(0, 64) || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
         category_id:$('i_cat').value, is_available:$('i_avail').checked, weight_kg:Math.round(Math.max(0, num($('i_kg').value)) / ($('i_kgu').value === 'g' ? 1000 : 1) * 1000) / 1000 };
       const dur = Math.round(num($('i_dur').value)); row.duration_min = dur >= 5 ? Math.min(480, dur) : null;
       const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
@@ -1805,7 +1865,8 @@ function subscribeOrders(){
 // ================= START =================
 async function loadRestaurant(){
   const data = need(await sb.from('restaurants').select('*').eq('owner_id', state.user.id).order('created_at').limit(20));
-  state.shops = data || [];
+  state.shops = data || []; state.staffMode = false;
+  if (!state.shops.length){ try { const { data:st } = await sb.rpc('my_staff_shops'); if (st && st.length){ state.shops = st; state.staffMode = true; } } catch (e) { logErr(e); } }
   const want = ls.get('kh_shop', null);
   state.restaurant = state.shops.find(x => x.id === want) || state.shops[0] || null;
 }
@@ -2173,6 +2234,35 @@ const Push = (() => {
 
 // ================= BULK PRODUCTS: EXCEL SHEET + PHOTO MODE (same code in shop and admin apps) =================
 // Reads .xlsx (Excel / Google Sheets) and .csv right on the phone. No extra library, nothing to download.
+// ---- Barcode scanner (camera). Uses the phone's built-in detector, or a small library as backup ----
+const Scan = (() => {
+  let stream = null, timer = null, lib = null;
+  function stop(){ clearInterval(timer); timer = null; if (stream){ stream.getTracks().forEach(x => x.stop()); stream = null; } if (lib){ try { lib.stop().catch(() => {}); } catch (e) {} lib = null; } const o = $('scanWrap'); if (o) o.remove(); }
+  function shell(){ stop(); const el = document.createElement('div'); el.id = 'scanWrap'; el.className = 'over';
+    el.innerHTML = `<div class="panel" role="dialog" aria-modal="true"><div class="ch"><b>${t('scan_t')}</b><button class="pillbtn" onclick="Scan.stop()">✕</button></div><div id="scanBox" style="position:relative;border-radius:14px;overflow:hidden;background:#000;min-height:240px"><video id="scanVid" playsinline muted style="width:100%;display:block"></video><div style="position:absolute;left:10%;right:10%;top:45%;height:2px;background:#e33"></div></div>
+      <div class="two" style="margin-top:10px"><input type="text" id="scanType" inputmode="numeric" placeholder="${t('barcode')}"><button class="btn" onclick="Scan.typed()">OK</button></div></div>`;
+    document.body.appendChild(el); }
+  let done = null;
+  function found(code){ const cb = done; stop(); if (cb && code) cb(String(code).trim()); }
+  async function open(cb){
+    done = cb; shell();
+    try {
+      if ('BarcodeDetector' in window){
+        const det = new window.BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code','itf'] });
+        stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
+        const v = $('scanVid'); v.srcObject = stream; await v.play();
+        timer = setInterval(async () => { try { const r = await det.detect(v); if (r && r[0]) found(r[0].rawValue); } catch (e) {} }, 300);
+        return;
+      }
+      await new Promise((res, rej) => { if (window.Html5Qrcode) return res(); const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+      const box = $('scanBox'); if (!box) return; box.innerHTML = '<div id="scanLib"></div>';
+      lib = new window.Html5Qrcode('scanLib');
+      await lib.start({ facingMode:'environment' }, { fps:10, qrbox:{ width:250, height:120 } }, txt => found(txt), () => {});
+    } catch (e) { toast(t('scan_no'), true); const b = $('scanBox'); if (b) b.style.display = 'none'; }
+  }
+  function typed(){ const v = ($('scanType') || {}).value || ''; if (v.trim()) found(v); }
+  return { open, stop, typed };
+})();
 const Bulk = (() => {
   let C = null, S = null, PM = null;
   const L = () => (C && C.lang && C.lang() === 'ur') ? 'ur' : 'en';
@@ -2301,10 +2391,10 @@ const Bulk = (() => {
   function download(blob, name){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000); }
 
   // ---------- columns ----------
-  const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Photo'];
+  const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Keywords', 'Barcode', 'Photo'];
   const ALIAS = { id:['id','productid'], name:['name','product','productname','item','itemname','naam'], price:['price','rate','saleprice','sellingprice','qeemat','priceRs'.toLowerCase()],
     old:['oldprice','mrp','compareprice','pricebeforediscount','originalprice','retailprice','cutprice'], section:['section','category','group','department'], stock:['stock','qty','quantity','stockqty'],
-    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
+    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], kw:['keywords','keyword','tags','tag','searchwords','search','otherwords'], bc:['barcode','ean','upc','barcodeno','sku'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
   const key = h => String(h ?? '').toLowerCase().replace(/[^a-z]/g, '');
   function headerMap(row){ const m = {}; row.forEach((h, i) => { const k = key(h); for (const f in ALIAS) if (m[f] === undefined && ALIAS[f].includes(k)) m[f] = i; }); return m.name !== undefined && m.price !== undefined ? m : null; }
   const numv = v => { const s = String(v ?? '').replace(/rs\.?|pkr|,|\s/gi, ''); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : NaN; };
@@ -2314,7 +2404,7 @@ const Bulk = (() => {
   async function loadShop(){
     const id = C.shopId(); if (!id || id === 'all') throw new Error(t('choose_shop'));
     const [c, i] = await Promise.all([C.sb.from('menu_categories').select('id,name,sort_order').eq('restaurant_id', id).order('sort_order'),
-      C.sb.from('menu_items').select('id,name,price,compare_price,category_id,stock_qty,weight_kg,description,photo_url,sort_order').eq('restaurant_id', id).order('sort_order').order('name').limit(5000)]);
+      C.sb.from('menu_items').select('id,name,price,compare_price,category_id,stock_qty,weight_kg,description,keywords,barcode,photo_url,sort_order').eq('restaurant_id', id).order('sort_order').order('name').limit(5000)]);
     if (c.error) throw c.error; if (i.error) throw i.error;
     return { id, cats:c.data || [], items:i.data || [] };
   }
@@ -2335,10 +2425,10 @@ const Bulk = (() => {
     const b = $('bkDl'); if (b) b.disabled = true;
     try {
       const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
-      let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', '']);
+      let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', i.keywords || '', i.barcode || '', '']);
       if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
-      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
-        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
       download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
         'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     } catch (e) { C.toast(e.message || 'Error', true); }
@@ -2383,6 +2473,8 @@ const Bulk = (() => {
       let st = numv(g('stock')); it.stock = m.stock === undefined ? undefined : (st === null || isNaN(st) ? null : Math.max(0, Math.round(st)));
       const kg = kgv(g('weight')); it.kg = m.weight === undefined ? undefined : (kg === null || isNaN(kg) ? 0 : kg);
       it.desc = m.desc === undefined ? undefined : (g('desc') || null);
+      it.kw = m.kw === undefined ? undefined : (String(g('kw') || '').slice(0, 300) || null);
+      it.bc = m.bc === undefined ? undefined : (String(g('bc') || '').replace(/\.0+$/, '').trim().slice(0, 64) || null);
       it.section = g('section') || (ex ? catName(ex.category_id) : '') || '';
       if (!it.section){ it.section = t('other'); it.warns.push(t('w_sec')); }
       it.cat = catByName.get(norm(it.section)) || null;
@@ -2394,7 +2486,7 @@ const Bulk = (() => {
       else {
         const ch = Number(ex.price) !== price || (it.old !== undefined && (ex.compare_price == null ? null : Number(ex.compare_price)) !== it.old)
           || (it.stock !== undefined && (ex.stock_qty == null ? null : Number(ex.stock_qty)) !== it.stock) || (it.kg !== undefined && Number(ex.weight_kg || 0) !== it.kg)
-          || (it.desc !== undefined && (ex.description || null) !== it.desc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
+          || (it.desc !== undefined && (ex.description || null) !== it.desc) || (it.kw !== undefined && (ex.keywords || null) !== it.kw) || (it.bc !== undefined && (ex.barcode || null) !== it.bc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
         it.status = ch ? 'upd' : 'same';
       }
       out.push(it);
@@ -2438,7 +2530,7 @@ const Bulk = (() => {
       const news = R.filter(r => r.status === 'new');
       for (let i = 0; i < news.length; i += 100){
         const part = news.slice(i, i + 100);
-        const rows = part.map(r => { const o = { restaurant_id:sh.id, category_id:r.cat ? r.cat.id : null, name:r.name.slice(0, 120), price:r.price, compare_price:r.old ?? null, stock_qty:r.stock ?? null, weight_kg:r.kg || 0, description:r.desc ?? null, photo_url:r.photoUrl || null, is_available:r.stock !== 0, sort_order:++so }; if (C.isAdmin) o.is_approved = true; return o; });
+        const rows = part.map(r => { const o = { restaurant_id:sh.id, category_id:r.cat ? r.cat.id : null, name:r.name.slice(0, 120), price:r.price, compare_price:r.old ?? null, stock_qty:r.stock ?? null, weight_kg:r.kg || 0, description:r.desc ?? null, keywords:r.kw ?? null, barcode:r.bc ?? null, photo_url:r.photoUrl || null, is_available:r.stock !== 0, sort_order:++so }; if (C.isAdmin) o.is_approved = true; return o; });
         const { error } = await C.sb.from('menu_items').insert(rows);
         if (error){ for (const r of part){ const one = rows[part.indexOf(r)]; const x = await C.sb.from('menu_items').insert(one); if (x.error) fails.push([r, x.error.message]); } }
         done += part.length; prog(done, total);
@@ -2451,6 +2543,8 @@ const Bulk = (() => {
         if (r.stock !== undefined) o.stock_qty = r.stock;
         if (r.kg !== undefined) o.weight_kg = r.kg || 0;
         if (r.desc !== undefined) o.description = r.desc;
+        if (r.kw !== undefined) o.keywords = r.kw;
+        if (r.bc !== undefined) o.barcode = r.bc;
         if (r.photoUrl) o.photo_url = r.photoUrl;
         const { error } = await C.sb.from('menu_items').update(o).eq('id', r.ex.id);
         if (error) fails.push([r, error.message]);
