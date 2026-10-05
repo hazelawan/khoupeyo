@@ -600,7 +600,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.4';
+const APP_VERSION = '5.5';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -650,6 +650,7 @@ const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
+    rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
@@ -729,6 +730,7 @@ const I18N = {
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
+    rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
@@ -1270,7 +1272,8 @@ setInterval(() => {
 }, 1000);
 function activeCard(o){
   if (o.return_status === 'returning') return returnCard(o);
-  const r = o.restaurant || {}, c = o.customer || {};
+  const r = o.restaurant || {}, c0 = o.customer || {};
+  const c = o.receiver_name ? { full_name:o.receiver_name, phone:o.receiver_phone || c0.phone } : c0;
   const items = (o.order_items || []).map(i => `<div>${i.quantity} × ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('');
   const picked = o.status === 'picked_up';
   const bigHtml = bigBadges(num(o.bulk_fee) > 0, num(o.heavy_fee) > 0 || num(o.weight_fee) > 0, (o.order_items || []).reduce((n, i) => n + i.quantity, 0), o.weight_kg) + (num(o.heavy_fee) > 0 || num(o.weight_fee) > 0 ? `<div class="note">🏋️ ${t('heavy_note')}</div>` : '');
@@ -1284,6 +1287,7 @@ function activeCard(o){
       <div class="muted" style="margin-top:8px;font-size:14px">${t('items')}:</div><div style="font-size:15px">${items}</div>`}</div></div>`;
   const custBlock = `<div class="step ${picked ? '' : 'todo'}"><div class="n">2</div><div style="flex:1">
       <div class="muted" style="font-size:13px">${t('deliver_to')}${picked && dCust != null ? ' · ' + fmtKm(dCust) : ''}</div><b>${esc(c.full_name || t('customer'))}</b>
+      ${o.receiver_name ? `<div class="note" style="margin:4px 0">👤 ${esc(t('rcv_for', { n:o.receiver_name, c:c0.full_name || '' }))}</div>` : ''}
       <div class="muted">${esc(o.address_text || '')}</div>
       ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
       ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')}</a>` : `<span class="muted">${t('no_phone')}</span>`}
@@ -1293,7 +1297,7 @@ function activeCard(o){
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
   const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
   const action = picked
-    ? arrived + issueBlock(o) + ((state.issues[o.id] || []).some(i => i.kind === 'order_lost' && i.status === 'open') ? `<div class="issuebox"><b>${t('lost_open')}</b></div>` : slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`)
+    ? arrived + issueBlock(o) + ((state.issues[o.id] || []).some(i => i.kind === 'order_lost' && i.status === 'open') ? `<div class="issuebox"><b>${t('lost_open')}</b></div>` : `<label class="btn ghost small" style="width:100%;margin:8px 0;display:block;text-align:center;cursor:pointer">${o.delivery_photo ? t('dphoto_ok') : t('dphoto')}<input type="file" accept="image/*" capture="environment" style="display:none" onchange="A.deliveryPhoto('${o.id}', this)"></label>` + slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`)
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
     <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${bigHtml}${restBlock}${custBlock}
@@ -2133,10 +2137,24 @@ const A = {
     const b2 = $('qrSend'); if (b2) b2.disabled = false;
   },
   async markDelivered(id){
+    const od = (state.mine || []).find(x => x.id === id);
+    if (state.settings.delivery_photo === true && od && !od.delivery_photo){ toast(t('dphoto_need'), true); renderTab(); return; }
     let code = '';
     if (state.settings.delivery_code !== false){ code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' }); if (code === null){ renderTab(); return; } }
     await run(async () => { need(await sb.rpc('rider_deliver', { p_order:id, p_code:String(code).trim() })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
     renderTab();
+  },
+  async deliveryPhoto(id, input){
+    const f = input.files && input.files[0]; if (!f) return;
+    await run(async () => {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Could not read the photo')); i.src = URL.createObjectURL(f); });
+      const k = Math.min(1, 1280 / Math.max(img.width, img.height)); const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      const path = await uploadSelfie(cv, 'deliv-' + id.slice(0, 8));
+      need(await sb.rpc('rider_set_delivery_photo', { p_order:id, p_path:path }));
+      const od = (state.mine || []).find(x => x.id === id); if (od) od.delivery_photo = path;
+      renderTab(); toast(t('dphoto_saved'));
+    });
   },
   async sos(){
     if (!await uiConfirm(t('sos_q'), { danger:true, icon:'🆘' })) return;
