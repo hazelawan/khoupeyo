@@ -627,7 +627,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.6';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -705,7 +705,7 @@ const I18N = {
     bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
     kind_title:'What kind of shop is this?', kind_lock:'Choose once — after this you will only see this side.', kind_shop:'Shop: {s}',
     kind_products:'🛍️ Products', kind_products_s:'Sell products from your shop — grocery, food, garments and more.',
-    kind_services:'💈 Services', kind_services_s:'Salon, care, foot care, doctors — customers book appointments.',
+    kind_services:'💈 Services', kind_services_s:'Salon, barber, doctors — customers book appointments.',
     add_service:'+ Add service',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
@@ -774,7 +774,7 @@ const I18N = {
     bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
     kind_title:'یہ کس قسم کی دکان ہے؟', kind_lock:'ایک بار منتخب کریں — اس کے بعد آپ کو صرف یہی حصہ نظر آئے گا۔', kind_shop:'دکان: {s}',
     kind_products:'🛍️ پروڈکٹس', kind_products_s:'اپنی دکان کے پروڈکٹس بیچیں — کریانہ، کھانا، کپڑے وغیرہ۔',
-    kind_services:'💈 سروسز', kind_services_s:'سیلون، کیئر، فٹ کیئر، ڈاکٹر — گاہک اپائنٹمنٹ بک کریں۔',
+    kind_services:'💈 سروسز', kind_services_s:'سیلون، حجام، ڈاکٹر — گاہک اپائنٹمنٹ بک کریں۔',
     add_service:'+ سروس شامل کریں',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
@@ -1574,9 +1574,11 @@ const A = {
     await run(async () => { need(await sb.rpc('cancel_shop_request')); state.rqForm = null; await loadMyRequest(); showShopRequest(); });
   },
   async addShop(){ closeSheet(); state.addMode = true; state.rqForm = null; await run(async () => { await loadMyRequest(); showShopRequest(); window.scrollTo(0, 0); }); },
-  async pickKind(kind){
+  async chooseKind(kind){
     if (kind !== 'services') kind = 'products';
-    ls.set(kindKey(), kind);
+    const { error } = await sb.from('restaurants').update({ shop_kind:kind }).eq('id', state.restaurant.id);
+    if (error){ logErr(error); toast(t('error'), true); return; }
+    state.restaurant.shop_kind = kind;
     await startApp();
   },
   async backToShop(){ state.addMode = false; clearInterval(state.rqPoll); if (!shopKind()) return showKindPicker(); renderShell(); await go(state.tab || 'orders'); checkOtherShops(true); },
@@ -1932,9 +1934,8 @@ function shopMenu(){
       ${(state.otherNew || {})[x.id] ? `<span class="pill r">${state.otherNew[x.id]} 🛎️</span>` : x.id === state.restaurant.id ? '<span>✓</span>' : '<span class="muted">›</span>'}</button>`).join('');
   openSheet(t('my_shops'), `${list}<button type="button" class="btn ghost" style="margin-top:12px" onclick="A.addShop()">${t('add_shop')}</button>`);
 }
-// ---- shop kind: products vs services (chosen once after shop login, then locked) ----
-const kindKey = () => 'kh_shop_kind_' + (state.restaurant && state.restaurant.id);
-const shopKind = () => ls.get(kindKey(), null);
+// ---- shop kind: products vs services (stored in the backend, chosen once after login, then locked) ----
+const shopKind = () => (state.restaurant && state.restaurant.shop_kind) || null;
 const isServices = () => shopKind() === 'services';
 function showKindPicker(){
   const r = state.restaurant || {};
@@ -1945,10 +1946,10 @@ function showKindPicker(){
     <p class="muted" style="margin:0 0 4px">${t('kind_shop', { s:esc(r.name || '') })}</p>
     <p class="muted" style="margin:0 0 18px;font-size:13px">🔒 ${t('kind_lock')}</p>
     <div class="kindgrid">
-      <button type="button" class="kindcard" onclick="A.pickKind('products')">
+      <button type="button" class="kindcard" onclick="A.chooseKind('products')">
         <span class="kemoji">🛍️</span><span><b>${t('kind_products')}</b><small>${t('kind_products_s')}</small></span>
       </button>
-      <button type="button" class="kindcard" onclick="A.pickKind('services')">
+      <button type="button" class="kindcard" onclick="A.chooseKind('services')">
         <span class="kemoji">💈</span><span><b>${t('kind_services')}</b><small>${t('kind_services_s')}</small></span>
       </button>
     </div></div>`;
