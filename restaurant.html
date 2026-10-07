@@ -627,7 +627,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.7';
+const APP_VERSION = '5.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -703,10 +703,11 @@ const I18N = {
     kw_l:'Search words (keywords)', kw_note:'Other names customers may search, with commas. Example: doodh, milk, dairy, دودھ. This helps customers find the product.',
     bk_fee:'Wanhar Mart commission on bookings: {p}%', bk_free_now:'Free for now — no commission on bookings.', bk_fee_note:'The commission is taken only on bookings that are done. If it changes, you see it here first. A new percent is used only for new bookings.', bk_month:'This month: {n} done · sales {s} · commission {c}', bk_rating:'Customer rating: ★ {a} ({n})',
     bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
-    kind_title:'What kind of shop is this?', kind_lock:'Choose once — after this you will only see this side.', kind_shop:'Shop: {s}',
+    kind_title:'What kind of shop is this?', kind_lock:'You can change this later in Shop settings.', kind_shop:'Shop: {s}',
     kind_products:'🛍️ Products', kind_products_s:'Sell products from your shop — grocery, food, garments and more.',
     kind_services:'💈 Services', kind_services_s:'Salon, barber, doctors — customers book appointments.',
     add_service:'+ Add service',
+    kind_cur:'Shop type', kind_change:'Change', kind_change_q:'Change the shop type? The app will switch to the other side.',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
     orders:'Orders', products:'Products', earnings:'Earnings', shop:'Shop',
@@ -772,10 +773,11 @@ const I18N = {
     kw_l:'تلاش کے الفاظ (کی ورڈز)', kw_note:'وہ دوسرے نام جن سے گاہک ڈھونڈ سکتے ہیں، کومے سے الگ۔ مثال: doodh, milk, دودھ۔ اس سے گاہک کو پروڈکٹ آسانی سے ملتی ہے۔',
     bk_fee:'بُکنگ پر Wanhar Mart کمیشن: {p}%', bk_free_now:'ابھی مفت ہے — بُکنگ پر کوئی کمیشن نہیں۔', bk_fee_note:'کمیشن صرف مکمل ہونے والی بُکنگ پر لگتا ہے۔ اگر بدلا تو آپ کو پہلے یہاں نظر آئے گا۔ نیا فیصد صرف نئی بُکنگز پر لگے گا۔', bk_month:'اس مہینے: {n} مکمل · سیل {s} · کمیشن {c}', bk_rating:'گاہکوں کی ریٹنگ: ★ {a} ({n})',
     bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
-    kind_title:'یہ کس قسم کی دکان ہے؟', kind_lock:'ایک بار منتخب کریں — اس کے بعد آپ کو صرف یہی حصہ نظر آئے گا۔', kind_shop:'دکان: {s}',
+    kind_title:'یہ کس قسم کی دکان ہے؟', kind_lock:'بعد میں دکان کی سیٹنگ سے تبدیل کر سکتے ہیں۔', kind_shop:'دکان: {s}',
     kind_products:'🛍️ پروڈکٹس', kind_products_s:'اپنی دکان کے پروڈکٹس بیچیں — کریانہ، کھانا، کپڑے وغیرہ۔',
     kind_services:'💈 سروسز', kind_services_s:'سیلون، حجام، ڈاکٹر — گاہک اپائنٹمنٹ بک کریں۔',
     add_service:'+ سروس شامل کریں',
+    kind_cur:'دکان کی قسم', kind_change:'تبدیل کریں', kind_change_q:'دکان کی قسم تبدیل کریں؟ ایپ دوسری طرف منتقل ہو جائے گی۔',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
     orders:'آرڈرز', products:'پروڈکٹس', earnings:'کمائی', shop:'دکان',
@@ -1391,6 +1393,10 @@ function viewShop(){
       <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? (withinHours(r) ? t('is_open_msg') : esc(hoursText(r))) : t('is_closed_msg')}</div></div>
       <label class="switch" style="margin:0"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen(this.checked)" aria-label="${t('open_now')}"><span></span></label>
     </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div><b>${isServices() ? t('kind_services') : t('kind_products')}</b><div class="muted" style="font-size:13px">${t('kind_cur')}</div></div>
+      <button class="btn ghost small" type="button" style="width:auto;flex:none" onclick="A.changeKind()">${t('kind_change')}</button>
+    </div>
     <div class="tiles" style="margin-bottom:12px">
       <div class="tile hi"><b>${avg ? '★ ' + avg : '—'}</b><span>${t('rating')} (${rv.length})</span></div>
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
@@ -1597,6 +1603,10 @@ const A = {
     if (error){ logErr(error); toast(t('error'), true); return; }
     state.restaurant.shop_kind = kind;
     await startApp();
+  },
+  async changeKind(){
+    if (!await uiConfirm(t('kind_change_q'))) return;
+    showKindPicker();
   },
   async preChooseKind(kind){
     if (kind !== 'services') kind = 'products';
