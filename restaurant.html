@@ -627,7 +627,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.6';
+const APP_VERSION = '5.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1314,13 +1314,21 @@ async function loadEarn(){
   ]);
   try { state.fees = need(await sb.from('shop_fees').select('*').eq('restaurant_id', id).order('month', { ascending:false }).limit(12)) || []; } catch (e) { state.fees = []; }
   const orders = need(o); const del = orders.filter(x => x.status === 'delivered');
-  state.earnOrders = orders;
   const sum = (l, f) => l.reduce((n, x) => n + num(f(x)), 0);
+  // services revenue: appointments are paid cash at the shop, so done ones count in
+  // sales/earning/delivered — but not in "to receive" (Wanhar Mart owes nothing for them)
+  let appts = [];
+  try { appts = need(await sb.from('appointments').select('id,item_name,price,commission_amount,status,starts_at').eq('restaurant_id', id).in('status', ['done','cancelled','no_show']).gte('starts_at', from.toISOString()).limit(1000)) || []; } catch (e) { logErr(e); }
+  const doneAp = appts.filter(x => x.status === 'done');
+  const cxAp = appts.filter(x => x.status !== 'done');
+  const apSales = sum(doneAp, x => x.price), apComm = sum(doneAp, x => x.commission_amount);
   const by = {};
   del.forEach(x => (x.order_items || []).forEach(i => { const p = by[i.name] || (by[i.name] = { qty:0, rev:0 }); p.qty += i.quantity; p.rev += num(i.price) * i.quantity; }));
+  doneAp.forEach(x => { const p = by[x.item_name] || (by[x.item_name] = { qty:0, rev:0 }); p.qty += 1; p.rev += num(x.price); });
+  state.earnOrders = orders.concat(appts.map(x => ({ id:x.id, created_at:x.starts_at, status:x.status, order_items:[{ name:x.item_name, quantity:1, price:x.price }], subtotal:x.status === 'done' ? x.price : 0, commission_amount:x.status === 'done' ? x.commission_amount : 0, restaurant_earning:x.status === 'done' ? num(x.price) - num(x.commission_amount) : 0 })));
   state.earn = {
-    orders:orders.length, delivered:del.length, cancelled:orders.filter(x => ['cancelled','rejected'].includes(x.status)).length,
-    sales:sum(del, x => x.subtotal), commission:sum(del, x => x.commission_amount), earning:sum(del, x => x.restaurant_earning),
+    orders:orders.length + appts.length, delivered:del.length + doneAp.length, cancelled:orders.filter(x => ['cancelled','rejected'].includes(x.status)).length + cxAp.length,
+    sales:sum(del, x => x.subtotal) + apSales, commission:sum(del, x => x.commission_amount) + apComm, earning:sum(del, x => x.restaurant_earning) + (apSales - apComm),
     unpaid:sum(need(un), x => x.restaurant_earning), payouts:need(pay),
     top:Object.entries(by).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty).slice(0, 8)
   };
