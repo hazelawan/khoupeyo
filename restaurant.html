@@ -627,7 +627,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.8';
+const APP_VERSION = '5.9';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -739,7 +739,7 @@ const I18N = {
     sub_lbl:'If out of stock', sub_similar:'give something similar', sub_call:'call the customer', sub_remove:'remove it', rx_see:'💊 See prescription', print_b:'🖨️ Print',
     offer_t:'Your shop offer', offer_s:'Give a discount on your shop. You pay it (it is taken from your earning). Customers see it on your shop.', offer_on:'Offer is on', offer_pct:'Discount %', offer_min:'Minimum order (Rs)', offer_max:'Max discount (Rs, 0 = no limit)', save_offer:'Save offer',
     pick_on:'Customers can collect orders themselves (pickup)', pick_s:'No rider. Customer comes to your shop and shows a code.', shop_disc:'Shop offer', brk:'Break', add_brk:'+ Add break', jumma:'🕌 Jumma break', brk_from:'Break from', brk_to:'to', open24:'⏰ Open 24 hours', in_break:'On break now. Customers can order again at {t}.', hrs_bad:'{d}: the break must be inside the open time',
-    my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', back_shop:'‹ Back to my shop', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
+    my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', back_shop:'‹ Back to my shop', back_kind:'‹ Back', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
@@ -809,7 +809,7 @@ const I18N = {
     sub_lbl:'چیز ختم ہو تو', sub_similar:'ملتی جلتی دے دیں', sub_call:'گاہک کو کال کریں', sub_remove:'ہٹا دیں', rx_see:'💊 نسخہ دیکھیں', print_b:'🖨️ پرنٹ',
     offer_t:'آپ کی دکان کی آفر', offer_s:'اپنی دکان پر رعایت دیں۔ یہ آپ دیں گے (آپ کی کمائی سے کٹے گی)۔ گاہک کو دکان پر نظر آئے گی۔', offer_on:'آفر چالو ہے', offer_pct:'رعایت %', offer_min:'کم از کم آرڈر (روپے)', offer_max:'زیادہ سے زیادہ رعایت (0 = کوئی حد نہیں)', save_offer:'آفر محفوظ کریں',
     pick_on:'گاہک خود آرڈر لے جا سکتے ہیں (پک اپ)', pick_s:'رائیڈر نہیں۔ گاہک دکان پر آ کر کوڈ دکھائے گا۔', shop_disc:'دکان کی آفر', brk:'وقفہ', add_brk:'+ وقفہ شامل کریں', jumma:'🕌 جمعہ کا وقفہ', brk_from:'وقفہ', brk_to:'سے', open24:'⏰ 24 گھنٹے کھلی', in_break:'ابھی وقفہ ہے۔ گاہک {t} سے دوبارہ آرڈر کر سکیں گے۔', hrs_bad:'{d}: وقفہ کھلنے کے وقت کے اندر ہونا چاہیے',
-    my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', back_shop:'‹ اپنی دکان پر واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
+    my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', back_shop:'‹ اپنی دکان پر واپس', back_kind:'‹ واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
@@ -932,7 +932,8 @@ function agoText(ts){ const m = Math.max(0, Math.round((Date.now() - new Date(ts
   return m < 1 ? t('ago_now') : m < 60 ? t('ago_min').replace('{n}', m) : m < 1440 ? t('ago_h').replace('{n}', Math.floor(m / 60)) : t('ago_d').replace('{n}', Math.floor(m / 1440)); }
 function showShopRequest(){
   const q = state.sreq;
-  const top = `${state.addMode ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToShop()">${t('back_shop')}</button>` : ''}<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
+  const canBackKind = !state.addMode && !state.restaurant && !(q && q.status === 'pending');
+  const top = `${state.addMode ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToShop()">${t('back_shop')}</button>` : (canBackKind ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToKindPicker()">${t('back_kind')}</button>` : '')}<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
   if (q && q.status === 'pending'){
     const city = (state.regionsList.find(r => r.id === q.region_id) || {}).name || '';
     clearInterval(state.rqPoll); state.rqPoll = setInterval(() => { if (!document.hidden && $('rqWait')) A.recheck(); else if (!$('rqWait')) clearInterval(state.rqPoll); }, 30000);
@@ -1615,6 +1616,7 @@ const A = {
     await run(async () => { await loadMyRequest(); if (oldKind && oldKind !== kind) state.rqForm.categories = []; showShopRequest(); window.scrollTo(0, 0); });
   },
   async backToShop(){ state.addMode = false; clearInterval(state.rqPoll); if (!shopKind()) return showKindPicker(); renderShell(); await go(state.tab || 'orders'); checkOtherShops(true); },
+  backToKindPicker(){ state.pendingKind = null; showPreKindPicker(); window.scrollTo(0, 0); },
   async recheck(manual){ await run(async () => {
     if (state.addMode){ const before = (state.shops || []).map(x => x.id); const cur = state.restaurant; await loadRestaurant(); const added = state.shops.find(x => !before.includes(x.id));
       if (added){ state.restaurant = cur; await switchShop(added.id); return; } state.restaurant = cur || state.restaurant; }
