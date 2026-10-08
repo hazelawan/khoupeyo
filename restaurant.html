@@ -631,7 +631,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.0';
+const APP_VERSION = '6.1';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1036,26 +1036,26 @@ function noImg(name, cat){
   for (const [re, e] of EMOJI_KEYS){ if (re.test(t)){ em = e; break; } }
   const n = String(name || '?').trim() || '?'; let h = 0; for (const c of n) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
-// ================= CARDS =================
-function itemRate(id){ const r = state.stats && state.stats.ritems && state.stats.ritems[id]; return r && r.n ? r : null; }
-function productCard(p){
-  const shop = p.restaurants || p._shop || {}; const off = pctOff(p); const s = sold(p.id);
-  const canAdd = p.is_available !== false;
-  return `<div class="gcard">
-    <button class="heart ${isFav(p.id) ? 'on' : ''}" onclick="A.fav('${p.id}', this)" aria-label="Save">${isFav(p.id) ? '♥' : '♡'}</button>
-    <a href="#/p/${p.id}">
-      <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}</div>
-      <div class="gname">${esc(p.name)}</div>
-      <div class="gprice ${off ? '' : 'plain'}">${money(p.price)}${off ? `<span class="strike">${money(p.compare_price)}</span>` : ''}</div>
-      <div class="gmeta"><span>${esc(shop.name || '')}</span>${itemRate(p.id) ? `<span class="star">★ ${itemRate(p.id).avg}</span>` : s ? `<span>${t('sold_n', { n:s })}</span>` : ''}</div>${leftBadge(p)}${hasOpts(p.id) ? `<div class="custom">${t('customizable')}</div>` : ''}
-    </a>
-    ${canAdd ? `<button class="qadd" onclick="A.quickAdd('${p.id}')" aria-label="${t('add')}">+</button>` : ''}
-  </div>`;
-}
 function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
 function markTab(){
   ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k); });
   const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = (isServices() ? t('bk_title') : t('orders')) + (n ? `<span class="dot">${n}</span>` : ''); }
+}
+// ================= SHELL =================
+function renderShell(){
+  const r = state.restaurant;
+  $('app').innerHTML = `
+    <header class="top">
+      <button type="button" class="brand shopsw" onclick="shopMenu()" aria-label="${t('switch_shop')}">${esc(r.name)}${(state.shops || []).length > 1 ? ' ▾' : ''}<span id="shopBadge" class="sbadge" style="display:none">0</span><small>Wanhar Mart Shop</small></button>
+      <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button></div>
+    </header>
+    <main id="view"></main>
+    <nav class="nav"><div class="nav-in">
+      <button id="t_orders" onclick="go('orders')">${isServices() ? t('bk_title') : t('orders')}</button>
+      <button id="t_menu" onclick="go('menu')">${isServices() ? t('kind_services') : t('products')}</button>
+      ${state.staffMode ? '' : `<button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
+      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>`}
+    </div></nav>`;
 }
 async function go(tab){
   if (state.staffMode && (tab === 'earn' || tab === 'shop')) tab = 'orders';
