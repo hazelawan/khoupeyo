@@ -14,6 +14,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+/* ===== Splash launch screen ===== */
+#splash{position:fixed;inset:0;z-index:10000;background:linear-gradient(160deg,#FFF9F2 0%,#FFEDDD 55%,#FFE3CB 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .45s ease;overflow:hidden}
+#splash.out{opacity:0;pointer-events:none}
+.sp-blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:spDrift 5s ease-in-out infinite alternate}
+.sp-blob.b1{width:340px;height:340px;background:#FFD9B8;top:-90px;right:-90px}
+.sp-blob.b2{width:300px;height:300px;background:#FFE9D2;bottom:-80px;left:-80px;animation-delay:-2.5s;animation-direction:alternate-reverse}
+@keyframes spDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(24px,20px) scale(1.08)}}
+.sp-icon{width:118px;height:118px;border-radius:32px;background:linear-gradient(140deg,#F08A3C,#D95F16);display:flex;align-items:center;justify-content:center;font-size:58px;box-shadow:0 18px 44px rgba(217,95,22,.38);position:relative;z-index:2;opacity:0;transform:scale(.4);animation:spPop .7s cubic-bezier(.34,1.56,.64,1) .25s forwards}
+@keyframes spPop{to{opacity:1;transform:scale(1)}}
+.sp-word{margin-top:26px;font-size:38px;font-weight:800;color:#20242b;letter-spacing:-.5px;z-index:2;display:flex}
+.sp-word span{opacity:0;transform:translateY(26px);display:inline-block;animation:spRise .55s cubic-bezier(.22,1,.36,1) forwards}
+.sp-word span.dot{color:#E8722A}
+@keyframes spRise{to{opacity:1;transform:none}}
+.sp-tag{margin-top:10px;font-size:13px;color:#8a7a68;letter-spacing:2.5px;text-transform:uppercase;z-index:2;opacity:0;animation:spFade .8s ease 1.5s forwards}
+@keyframes spFade{to{opacity:1}}
+.sp-load{position:absolute;bottom:84px;width:150px;height:5px;border-radius:4px;background:rgba(232,114,42,.16);z-index:2;overflow:hidden;opacity:0;animation:spFade .5s ease 1.7s forwards}
+.sp-load i{display:block;height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#F08A3C,#E8722A);animation:spSlide 1.1s ease-in-out infinite}
+@keyframes spSlide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+.sp-hills{position:absolute;bottom:-2px;left:0;width:100%;height:120px;z-index:1;opacity:0;animation:spFade 1s ease .9s forwards}
+@media (prefers-color-scheme:dark){#splash{background:linear-gradient(160deg,#211912,#2A1F13)}.sp-word{color:#F5EDE2}.sp-tag{color:#A89880}}
+@media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important}}
+
 :root{
   --paper:#F4F6F1; --surface:#FFFFFF; --ink:#1E2B25; --muted:#66746C; --line:#DDE3DB; --soft:#EAF1EC;
   --green:#1F6F4A; --green-dark:#175539; --marigold:#F2A900; --danger:#B3261E; --deal:#D1432F;
@@ -618,7 +640,7 @@ html[dir=rtl] .btn.bike-load .bl-bike{left:auto;right:-52px;transform:none;anima
 /* search suggestions + empty states + toast polish */
 .sg-c .chip{background:var(--soft);border:1px solid var(--line);font-size:13px;transition:transform .12s ease}
 .sg-c .chip:active{transform:scale(.94)}
-.empty{padding:48px 16px}
+.empty{padding:48px 16px}.empty .eic{font-size:60px;line-height:1;margin-bottom:14px;animation:wmPop .35s ease}
 .toast{border:1px solid rgba(255,255,255,.14)!important}
 /* sheets */
 .sheet-back,.over{background:rgba(6,18,12,.5)}
@@ -686,7 +708,7 @@ h2 a,h2 button{background:none!important;color:var(--brand)!important;padding:4p
 .gcard:active{transform:scale(.97)}
 .stepper{background:var(--soft)}
 /* product page */
-.dimg{border-radius:22px;box-shadow:none;border:1px solid var(--line);position:relative}
+.dimg{border-radius:22px;box-shadow:none;border:1px solid var(--line);position:relative}.dimg{cursor:zoom-in}.zoomover{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:9999;display:flex;align-items:center;justify-content:center;animation:wmPop .25s ease}.zoomrow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;max-width:100%;padding:0 18px}.zoomrow img{max-width:calc(100vw - 36px);max-height:84vh;object-fit:contain;border-radius:14px;scroll-snap-align:center;flex:none}.zoox{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:18px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;font-size:18px;border:0}.obover{position:fixed;inset:0;z-index:9998;background:var(--bg);display:flex;flex-direction:column;animation:wmUp .3s ease}.obskip{align-self:flex-end;margin:calc(14px + env(safe-area-inset-top,0px)) 18px 0;background:none;border:0;color:var(--muted);font-size:15px}.obbody{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.obbody::-webkit-scrollbar{display:none}.obslide{min-width:100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 36px}.obemo{font-size:110px;line-height:1;margin-bottom:28px;animation:wmPop .45s ease}.obslide h2{margin:0 0 12px;font-size:26px}.obslide p{margin:0;color:var(--muted);font-size:16px;line-height:1.6;max-width:300px}.obfoot{padding:20px 24px calc(30px + env(safe-area-inset-bottom,0px))}.obdots{display:flex;gap:8px;justify-content:center;margin-bottom:20px}.obdots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .25s}.obdots i.on{width:26px;border-radius:6px;background:var(--brand)}
 .dimg .ph{padding:0}
 .shopstrip{border:1px solid var(--line);box-shadow:none}
 .thumb{position:relative;overflow:hidden}
@@ -728,6 +750,8 @@ h2 a,h2 button{background:none!important;color:var(--brand)!important;padding:4p
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
+<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🛍️</div><div class="sp-word"><span style="animation-delay:0.65s">W</span><span style="animation-delay:0.70s">a</span><span style="animation-delay:0.74s">n</span><span style="animation-delay:0.79s">h</span><span style="animation-delay:0.83s">a</span><span style="animation-delay:0.88s">r</span><span style="width:10px;animation-delay:0.92s"> </span><span style="animation-delay:0.97s">M</span><span style="animation-delay:1.01s">a</span><span style="animation-delay:1.05s">r</span><span style="animation-delay:1.10s">t</span><span class="dot" style="animation-delay:1.15s">.</span></div><div class="sp-tag">Products • Services • Appointments</div><div class="sp-load"><i></i></div></div>
+<script>window.__splashT=Date.now();</script>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -856,7 +880,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.1';
+const APP_VERSION = '5.3';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -963,6 +987,10 @@ const I18N = {
     categories:'Categories', deals:'Deals', featured:'Featured', top_shops:'Shops', all_products:'All products', see_all:'See all',
     sort_best:'Best selling', sort_new:'Newest', sort_low:'Price: low to high', sort_high:'Price: high to low',
     sold_n:'{n} sold', off:'OFF', you_save:'You save {n}', qty:'Quantity', favourites:'Saved items', no_favs:'Tap the heart on a product to save it here.',
+    ob1t:'Everything in one app', ob1d:'Products, services and appointments from shops near you.',
+    ob2t:'Book in seconds', ob2d:'Barber, clinic, car wash — pick a time and book instantly.',
+    ob3t:'Track your order live', ob3d:'Watch your rider on the way. Pay cash when it arrives.',
+    ob_next:'Next', ob_skip:'Skip', ob_start:'Get started',
     banner_t:'Everything delivered to your door', banner_s:'Order from local shops. Pay cash on delivery.', minutes:'min',
     search_shop:'Search in this shop', results_for:'Results for "{q}"', blocked:'Your account is blocked. Please contact Wanhar Mart.',
     rider_here:'Your rider has arrived. Please come to the door.', rider_waiting:'Your rider is waiting for you', wait_warn:'Please pick up the phone or come to the door. If you do not respond before the time ends, your order will be cancelled.', failed:'The rider could not deliver your order and it was cancelled.',
@@ -1065,6 +1093,10 @@ const I18N = {
     categories:'کیٹیگریز', deals:'آفرز', featured:'خاص چیزیں', top_shops:'دکانیں', all_products:'تمام پروڈکٹس', see_all:'سب دیکھیں',
     sort_best:'سب سے زیادہ بکنے والی', sort_new:'نئی', sort_low:'قیمت: کم سے زیادہ', sort_high:'قیمت: زیادہ سے کم',
     sold_n:'{n} بکے', off:'رعایت', you_save:'آپ کی بچت {n}', qty:'تعداد', favourites:'محفوظ چیزیں', no_favs:'کسی پروڈکٹ پر دل دبائیں، وہ یہاں محفوظ ہو جائے گی۔',
+    ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز اور اپائنٹمنٹس۔',
+    ob2t:'سیکنڈوں میں بُک کریں', ob2d:'حجام، کلینک، کار واش — وقت چنیں اور فوراً بُک کریں۔',
+    ob3t:'آرڈر لائیو دیکھیں', ob3d:'رائیڈر کو آتے ہوئے دیکھیں۔ چیز ملے تو کیش دیں۔',
+    ob_next:'آگے', ob_skip:'چھوڑیں', ob_start:'شروع کریں',
     banner_t:'ہر چیز آپ کے دروازے پر', banner_s:'مقامی دکانوں سے آرڈر کریں۔ ادائیگی ڈیلیوری پر نقد۔', minutes:'منٹ',
     search_shop:'اس دکان میں تلاش کریں', results_for:'"{q}" کے نتائج', blocked:'آپ کا اکاؤنٹ بلاک ہے۔ براہ کرم Wanhar Mart سے رابطہ کریں۔',
     rider_here:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', rider_waiting:'آپ کا رائیڈر آپ کا انتظار کر رہا ہے', wait_warn:'براہ کرم فون اٹھائیں یا دروازے پر آئیں۔ وقت ختم ہونے تک جواب نہ دیا تو آرڈر منسوخ ہو جائے گا۔', failed:'رائیڈر آپ کا آرڈر نہیں پہنچا سکا اور یہ منسوخ ہو گیا۔',
@@ -1575,11 +1607,11 @@ function searchResults(q){
   state.lastSearch.n += shops.length;
   return `<h2 style="margin-top:4px">${t('results_for', { q:esc(state.homeQuery.trim()) })}</h2>
     ${shops.length ? shops.map(restaurantCard).join('') : ''}
-    ${prods.length ? sortBar() + `<div class="grid2">${prods.map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty">${t('no_results')}</div>`)}`;
+    ${prods.length ? sortBar() + `<div class="grid2">${prods.map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
 }
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
-  if (!state.products.length && !state.restaurants.length) return `<div class="empty">${t('no_shops')}</div>`;
+  if (!state.products.length && !state.restaurants.length) return `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
   const PR = typeProducts(), RS = typeShops();
   const cats = categories(PR);
   const deals = PR.filter(p => pctOff(p) > 0).sort((a, b) => pctOff(b) - pctOff(a)).slice(0, 12);
@@ -1600,7 +1632,7 @@ function homeBody(){
     ${feat.length ? `<h2>${t('featured')}</h2><div class="hscroll">${feat.map(productCard).join('')}</div>` : ''}
     ${RS.length ? `<h2>${t('top_shops')} <a href="#/shops">${t('see_all')}</a></h2><div class="hscroll">${RS.slice(0, 12).map(shopMini).join('')}</div>` : ''}
     <h2>${t('all_products')}</h2>${sortBar()}
-    <div class="grid2">${sortProducts(PR).map(productCard).join('') || `<div class="empty">${t('no_results')}</div>`}</div>`;
+    <div class="grid2">${sortProducts(PR).map(productCard).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}</div>`;
 }
 async function showHome(){ await ensureData(); $('view').innerHTML = `<div id="homeBody">${homeBody()}</div>`; startBannerAuto();
   if (state.user && !state.againShops){ state.againShops = []; try { const { data } = await sb.from('orders').select('restaurant_id').eq('customer_id', state.user.id).eq('status', 'delivered').order('created_at', { ascending:false }).limit(30); state.againShops = [...new Set((data || []).map(x => x.restaurant_id))].slice(0, 8); if (state.againShops.length && currentRoute === 'home' && !state.homeQuery.trim()){ const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } } catch (e) {} } }
@@ -1616,18 +1648,18 @@ async function showShops(){
   await ensureData();
   const q = state.homeQuery.trim().toLowerCase();
   const f = SHOP_F[state.shopF]; const list = typeShops().filter(r => (!q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q)) && (!f || f(r)));
-  $('view').innerHTML = `<h1>${t('shops')}</h1>${typeChips()}${filterChips()}<div id="homeBody">${list.map(restaurantCard).join('') || `<div class="empty">${t('no_shops')}</div>`}</div>`;
+  $('view').innerHTML = `<h1>${t('shops')}</h1>${typeChips()}${filterChips()}<div id="homeBody">${list.map(restaurantCard).join('') || `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`}</div>`;
 }
 async function showCategory(name){
   await ensureData();
   const k = name.trim().toLowerCase();
   const list = sortProducts(state.products.filter(p => p.category && p.category.name.trim().toLowerCase() === k));
-  $('view').innerHTML = `<h1>${esc(name)}</h1>${sortBar()}<div class="grid2">${list.map(productCard).join('') || `<div class="empty">${t('no_results')}</div>`}</div>`;
+  $('view').innerHTML = `<h1>${esc(name)}</h1>${sortBar()}<div class="grid2">${list.map(productCard).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}</div>`;
 }
 async function showSaved(){
   await ensureData();
   const list = state.favs.map(id => state.itemsCache[id]).filter(Boolean);
-  $('view').innerHTML = `<h1>${t('favourites')}</h1>${list.length ? `<div class="grid2">${list.map(productCard).join('')}</div>` : `<div class="empty">${t('no_favs')}</div>`}`;
+  $('view').innerHTML = `<h1>${t('favourites')}</h1>${list.length ? `<div class="grid2">${list.map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}`;
 }
 
 // ================= SHOP PAGE =================
@@ -1663,8 +1695,8 @@ async function showRestaurant(id){
 }
 function menuBody(){
   const { cats, items } = state.curMenu; const q = state.shopQuery.trim().toLowerCase();
-  if (!items.length) return `<div class="empty">${t('menu_empty')}</div>`;
-  if (q){ const terms = searchTerms(q); const l = items.filter(x => matchTerms(x, terms)); return l.map(itemHtml).join('') || `<div class="empty">${t('no_results')}</div>`; }
+  if (!items.length) return `<div class="empty"><div class="eic">📋</div>${t('menu_empty')}</div>`;
+  if (q){ const terms = searchTerms(q); const l = items.filter(x => matchTerms(x, terms)); return l.map(itemHtml).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`; }
   const blocks = cats.map(cat => { const l = items.filter(x => x.category_id === cat.id); return l.length ? `<div class="cat" id="cat-${cat.id}">${esc(cat.name)}</div>${l.map(itemHtml).join('')}` : ''; }).join('');
   const loose = items.filter(x => !cats.some(cat => cat.id === x.category_id));
   return blocks + loose.map(itemHtml).join('');
@@ -1696,6 +1728,16 @@ function galHtml(item){
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
   if (pics.length === 1) return `<img src="${esc(pics[0])}" alt="">`;
   return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
+}
+function zoomOpen(){
+  const dz = document.querySelector('.dimg'); if (!dz) return;
+  const imgs = [...dz.querySelectorAll('img')].map(i => i.currentSrc || i.src).filter(Boolean);
+  if (!imgs.length) return;
+  const ov = document.createElement('div');
+  ov.className = 'zoomover';
+  ov.innerHTML = '<button class="zoox" aria-label="Close">\u2715</button><div class="zoomrow">' + imgs.map(u => '<img src="' + u.replace(/"/g, '&quot;') + '" alt="">').join('') + '</div>';
+  ov.onclick = () => { ov.remove(); document.body.style.overflow = ''; };
+  document.body.appendChild(ov); document.body.style.overflow = 'hidden';
 }
 function galDots(){ const c = $('dgal'), d = $('gdots'); if (!c || !d) return; const i = Math.round(Math.abs(c.scrollLeft) / Math.max(1, c.clientWidth)); [...d.children].forEach((x, k) => x.classList.toggle('on', k === i)); }
 async function showProduct(id){
@@ -1738,6 +1780,8 @@ async function showProduct(id){
     ${item.duration_min && full.booking_on && item.is_available ? `<div class="buybar"><div class="in"><button class="btn" style="flex:1" onclick="A.bookItem('${item.id}','${shop.id}')">${t('book')} · ${money(item.price)}</button></div></div>` : canBuy ? `<div class="buybar"><div class="in">
       <div class="stepper"><button onclick="A.qty(-1)" aria-label="-">−</button><b id="qtyN">1</b><button onclick="A.qty(1)" aria-label="+">+</button></div>
       <button class="btn" onclick="A.addQty('${item.id}')">${t('add_to_cart')}</button></div></div>` : ''}`;
+  const dz = document.querySelector('.dimg');
+  if (dz) dz.addEventListener('click', e => { if (e.target.closest('.heart')) return; zoomOpen(); });
   if (itemRate(item.id)) sb.rpc('item_reviews_list', { p_item:item.id }).then(({ data }) => { const box = $('revBox'); if (!box) return;
     box.innerHTML = (data || []).map(v => `<div class="revrow"><div><b class="star">${'★'.repeat(v.rating)}</b> <span class="muted" style="font-size:13px">${esc(v.name)} · ${esc(new Date(v.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }))}</span></div>${v.comment ? `<div>${esc(v.comment)}</div>` : ''}</div>`).join('') || `<div class="muted">${t('no_reviews')}</div>`; }, () => {});
 }
@@ -3376,13 +3420,46 @@ const BackNav = (() => {
   return { init };
 })();
 
-(async function boot(){
-  applyLang();
+let obIdx = 0;
+function showOnboard(){
+  hideSplash();
+  const slides = [['🛍️','ob1t','ob1d'],['📅','ob2t','ob2d'],['🛵','ob3t','ob3d']];
+  const ov = document.createElement('div');
+  ov.className = 'obover'; ov.id = 'obover';
+  const paint = () => {
+    ov.innerHTML = `<button class="obskip" onclick="obGo(-1)">${t('ob_skip')}</button>
+    <div class="obbody" id="obbody">${slides.map(([e,tk,dk],i) => `<div class="obslide"><div class="obemo">${e}</div><h2>${t(tk)}</h2><p>${t(dk)}</p></div>`).join('')}</div>
+    <div class="obfoot"><div class="obdots">${slides.map((_,i) => `<i class="${i===obIdx?'on':''}"></i>`).join('')}</div>
+    <button class="btn" onclick="obGo(1)">${t(obIdx === slides.length-1 ? 'ob_start' : 'ob_next')}</button></div>`;
+    const bb = document.getElementById('obbody');
+    bb.scrollLeft = obIdx * bb.clientWidth;
+    bb.addEventListener('scroll', () => { const i = Math.round(bb.scrollLeft / Math.max(1, bb.clientWidth)); if (i !== obIdx){ obIdx = i; paint(); } }, { passive:true });
+  };
+  window.obGo = d => {
+    if (d < 0 || obIdx === slides.length-1){ try { ls.set('kh_onboard', 1); } catch(e){} document.getElementById('obover').remove(); bootMain(); return; }
+    obIdx++; paint();
+  };
+  document.body.appendChild(ov); paint();
+}
+function hideSplash(){
+  const sp = document.getElementById('splash');
+  if (!sp || sp.dataset.done) return;
+  sp.dataset.done = '1';
+  const t0 = window.__splashT || Date.now();
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 1900 - (Date.now() - t0)));
+}
+async function bootMain(){
   try {
     const { data:{ session } } = await sb.auth.getSession();
     if (session) await afterLogin(session.user);
     else { if (!location.hash || location.hash === '#') replaceHash('#/'); renderShell(); route(); }
   } catch (e) { logErr(e); showAuth(t('error')); }
+  hideSplash();
+}
+(async function boot(){
+  applyLang();
+  let seen = 0; try { seen = ls.get('kh_onboard', 0); } catch(e){}
+  if (!seen) showOnboard(); else bootMain();
 })();
 </script>
 </body>
