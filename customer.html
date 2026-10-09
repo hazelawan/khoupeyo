@@ -88,7 +88,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .catchip span{font-size:12px;font-weight:600;text-align:center;line-height:1.2;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hscroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 .hscroll .gcard{flex:none;width:150px}
-.banner{border-radius:18px;background:linear-gradient(135deg,var(--brand),#0F766E);color:#fff;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;overflow:hidden}
+.banner{border-radius:18px;background:linear-gradient(135deg,var(--brand),#D95F16);color:#fff;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;overflow:hidden}
 .banner b{font-size:22px;display:block;line-height:1.2}
 .banner .big{font-size:42px;font-weight:800;color:var(--marigold);flex:none}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px}
@@ -237,6 +237,47 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .stars button.on{color:var(--marigold)}
 .toast{position:fixed;left:50%;bottom:140px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:60;max-width:90%;font-weight:600;text-align:center}
 .toast.err{background:var(--danger);color:#fff}
+/* ===== Farm-style auth ===== */
+/* ===== Order success celebration ===== */
+.osucc{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:26px;background:linear-gradient(165deg,#FFF9F2,#FFEEDD);overflow:hidden;animation:ofade .35s ease}
+@keyframes ofade{from{opacity:0}to{opacity:1}}
+.osucc .cfetti{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;opacity:0;animation:cfall linear forwards;pointer-events:none}
+@keyframes cfall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:.9;transform:translateY(110vh) rotate(720deg)}}
+.ocheck{width:130px;height:130px;border-radius:50%;background:#fff;box-shadow:0 16px 44px rgba(31,111,74,.22);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.4);animation:pop .6s cubic-bezier(.34,1.56,.64,1) .3s forwards}
+@keyframes pop{to{opacity:1;transform:scale(1)}}
+.ocheck svg{width:64px;height:64px}
+.ocheck .ocir{stroke:#1F6F4A;stroke-width:5;fill:none;stroke-dasharray:290;stroke-dashoffset:290;animation:draw .7s ease .7s forwards}
+.ocheck .otick{stroke:#1F6F4A;stroke-width:9;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:80;stroke-dashoffset:80;animation:draw .45s ease 1.15s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.osucc h1{margin-top:26px;font-size:29px;color:var(--ink);letter-spacing:-.02em;text-align:center;opacity:0;transform:translateY(18px);animation:rise .5s cubic-bezier(.22,1,.36,1) 1.35s forwards}
+.osucc .osub{margin-top:8px;color:var(--muted);font-size:15px;text-align:center;opacity:0;transform:translateY(18px);animation:rise .5s cubic-bezier(.22,1,.36,1) 1.5s forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.osucc .ono{margin-top:16px;background:var(--surface);border:1.5px dashed var(--brand);color:var(--brand);font-weight:800;font-size:15px;padding:10px 22px;border-radius:14px;opacity:0;transform:translateY(18px);animation:rise .5s cubic-bezier(.22,1,.36,1) 1.65s forwards}
+.osucc .otrack{margin-top:30px;border-radius:18px!important;padding:17px 16px!important;font-size:17.5px!important;width:min(320px,100%);opacity:0;transform:translateY(18px);animation:rise .5s cubic-bezier(.22,1,.36,1) 1.8s forwards}
+.osucc .olink{background:none;border:0;color:var(--muted);font-size:15px;font-weight:600;margin-top:16px;padding:10px;opacity:0;animation:fadein .6s ease 2s forwards}
+@keyframes fadein{to{opacity:1}}
+.auth{min-height:100dvh;max-width:none;margin:0;padding:0;display:flex;flex-direction:column;background:var(--bg)}
+.auth-hero{position:relative;height:36dvh;min-height:250px;flex:none;overflow:hidden;background:linear-gradient(165deg,#FFEFD9 0%,#FFDCAE 48%,#F7BE78 100%)}
+.auth-hero svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.auth-lang{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;z-index:3}
+.auth-card{position:relative;flex:1;background:var(--surface);border-radius:34px 34px 0 0;margin-top:-34px;padding:30px 26px 40px;box-shadow:0 -14px 44px rgba(217,95,22,.14);animation:authUp .55s cubic-bezier(.22,1,.36,1)}
+@keyframes authUp{from{transform:translateY(70px);opacity:0}to{transform:none;opacity:1}}
+.auth-card h1{font-size:27px;margin:0 0 6px;letter-spacing:-.02em}
+.auth-card .sub{color:var(--muted);font-size:14.5px;margin:0 0 22px;line-height:1.55}
+.afield{margin-bottom:14px;animation:authUp .55s cubic-bezier(.22,1,.36,1) backwards}
+.auth-card label.f{display:block;font-size:13.5px;font-weight:700;margin-bottom:7px;color:var(--ink)}
+.inpwrap{position:relative}
+.auth-card input{width:100%;border:2px solid var(--line);background:var(--bg);border-radius:16px;padding:15px 16px;font-size:16px;color:var(--ink);transition:border-color .2s,box-shadow .2s;font-family:inherit}
+.auth-card input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(232,114,42,.15)}
+.inpwrap .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;font-size:19px;padding:10px;cursor:pointer;line-height:1}
+.arow{display:flex;justify-content:flex-end;margin:2px 0 16px}
+.auth-go{border-radius:18px!important;padding:17px 16px!important;font-size:17.5px!important}
+.auth-go .arr{margin-left:6px}
+.alinks{display:flex;flex-direction:column;align-items:center;gap:0;margin-top:20px}
+.alinks .link{padding:9px 0}
+.auth-card .ver{margin-top:14px;text-align:center}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes driftx{0%,100%{transform:translateX(0)}50%{transform:translateX(16px)}}
 .auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
 .auth .brand{font-size:44px;color:var(--ink)}
 .err-text{color:var(--danger);margin-top:12px;min-height:22px;font-weight:600}
@@ -288,7 +329,7 @@ html[dir=rtl] .costeps span+span::before{content:"←"}
 .offer .code{font-family:ui-monospace,monospace;font-weight:800;font-size:17px;letter-spacing:.05em;color:var(--brand)}
 .offer .ic{font-size:26px;flex:none}
 .offer .body{flex:1;min-width:0}
-.refcard{border-radius:18px;background:linear-gradient(135deg,#0F766E,var(--brand));color:#fff;padding:18px;margin:12px 0}
+.refcard{border-radius:18px;background:linear-gradient(135deg,#D95F16,var(--brand));color:#fff;padding:18px;margin:12px 0}
 .refcard .code{font-family:ui-monospace,monospace;font-size:26px;font-weight:800;letter-spacing:.08em;background:rgba(255,255,255,.15);border-radius:12px;padding:8px 12px;display:inline-block;margin:8px 0}
 .offchips{display:flex;gap:8px;overflow-x:auto;margin-top:8px}
 .offchips button{flex:none;border:1px dashed var(--brand);background:var(--surface);color:var(--brand);border-radius:999px;padding:7px 12px;font-weight:800;cursor:pointer;font-size:13px}
@@ -318,7 +359,7 @@ html[dir=rtl] .costeps span+span::before{content:"←"}
   --sh-1:0 1px 2px rgba(19,40,28,.06),0 1px 1px rgba(19,40,28,.03);
   --sh-2:0 8px 22px rgba(19,40,28,.08),0 2px 6px rgba(19,40,28,.05);
   --sh-3:0 18px 44px rgba(19,40,28,.20),0 4px 12px rgba(19,40,28,.08);
-  --grad:linear-gradient(135deg,#0B6B44 0%,#11905B 55%,#19A86E 100%);
+  --grad:linear-gradient(135deg,#F08A3C 0%,#E8722A 55%,#D95F16 100%);
   --grad-gold:linear-gradient(135deg,#FFC23A,#FFA400);
   --ease:cubic-bezier(.2,.8,.2,1);
 }
@@ -326,7 +367,7 @@ html[dir=rtl] .costeps span+span::before{content:"←"}
   :root{ --paper:#0C1511; --surface:#16211B; --ink:#E8F0EA; --muted:#93A59A; --line:#243229; --soft:#18291F; --field:#1C2922;
     --green:#34B27A; --green-dark:#23915F; --green-2:#46C489; --danger:#FF8A7E; --deal:#FF8A70;
     --sh-1:0 1px 2px rgba(0,0,0,.4); --sh-2:0 8px 22px rgba(0,0,0,.35); --sh-3:0 18px 44px rgba(0,0,0,.55);
-    --grad:linear-gradient(135deg,#0B4F33 0%,#0F6E46 60%,#138556 100%); }
+    --grad:linear-gradient(135deg,#7A3F14 0%,#96541C 60%,#B0621F 100%); }
 }
 body{background:var(--paper);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 ::selection{background:rgba(232,114,42,.25)}
@@ -539,7 +580,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 .seg.big button{font-size:15px;padding:12px}
 .walletrow{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:var(--surface);cursor:pointer}
 .walletrow input{width:20px;height:20px;accent-color:var(--brand)}
-.walletcard{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#0B7D4F,#0A5E3C);color:#fff;border-radius:18px;padding:16px 18px;margin:6px 0 12px}
+.walletcard{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(135deg,#F08A3C,#D95F16);color:#fff;border-radius:18px;padding:16px 18px;margin:6px 0 12px}
 .walletcard small{display:block;opacity:.85;font-size:13px;font-weight:600}
 .walletcard b{font-size:26px}
 .walletcard span{font-size:34px}
@@ -618,7 +659,7 @@ label.f{color:var(--ink);opacity:.72;font-weight:700;font-size:13px}
 .toast.err{background:var(--danger)!important;color:#fff!important}
 /* chips */
 .chip,.chip2{background:var(--surface);border:1px solid var(--line)!important;box-shadow:none;font-weight:600;font-size:14px;color:var(--ink)}
-.chip.on,.chip2.on{background:var(--ink)!important;border-color:var(--ink)!important;color:var(--paper)!important}
+.chip.on,.chip2.on{background:var(--brand)!important;border-color:var(--brand)!important;color:#fff!important}
 /* filter tabs: animated underline style */
 .typerow .chip2{position:relative;background:transparent!important;border:0!important;box-shadow:none;border-radius:0;padding:10px 6px;margin:0 6px;font-weight:700;font-size:15px;color:var(--muted)}
 .typerow .chip2::after{content:"";position:absolute;left:6px;right:6px;bottom:3px;height:3px;border-radius:2px;background:var(--marigold);transform:scaleX(0);transform-origin:left center;transition:transform .28s ease}
@@ -816,12 +857,12 @@ const UI = (() => {
 .uidlg .ic.d{background:rgba(210,59,46,.12)}
 .uidlg .msg{font-size:16px;line-height:1.5;font-weight:600;white-space:pre-line;overflow-wrap:anywhere}
 .uidlg input,.uidlg textarea{width:100%;margin-top:12px;border:1.5px solid var(--line,#E1E6E1);background:var(--surface,#fff);color:inherit;border-radius:12px;padding:12px;font:inherit;font-size:16px;outline:none}
-.uidlg input:focus{border-color:var(--green,#0B7D4F);box-shadow:0 0 0 4px rgba(232,114,42,.14)}
+.uidlg input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(232,114,42,.14)}
 .uidlg .bt{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
 .uidlg .bt.one{grid-template-columns:1fr}
 .uidlg button{border:0;border-radius:12px;min-height:48px;font:inherit;font-weight:700;font-size:15.5px;cursor:pointer}
 .uidlg .no{background:var(--field,#F1F4F0);color:var(--ink,#12201A)}
-.uidlg .yes{background:var(--green,#0B7D4F);color:#fff}
+.uidlg .yes{background:var(--brand);color:#fff}
 .uidlg .yes.d{background:var(--danger,#D23B2E)}
 html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.8}
 @keyframes uiF{from{opacity:0}} @keyframes uiP{from{transform:translateY(12px) scale(.97);opacity:0}}
@@ -880,7 +921,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -964,6 +1005,7 @@ const I18N = {
     other_rest_msg:'Your cart has items from another shop. Clear it and add this item?',
     min_order_msg:'Add {n} more to reach the minimum order', closed_msg:'This shop is closed right now.', opens_at:'Opens {t}.', hours:'Timings',
     order_placed:'Order placed. The shop will confirm shortly.',
+    succ_title:'Order placed! 🎉', succ_sub:'The shop will confirm shortly.', succ_track:'Track my order', succ_home:'Back to home', succ_book:'Booking confirmed! 🎉', succ_view:'View bookings',
     v_title:'Confirm your email to continue', v_note:'We send a link to {e}. Open the email (look in Spam too) and tap the link. Then come back here.', v_send:'Send confirmation email', v_sent:'Email sent to {e}. Open it and tap the link.', v_done:'I have confirmed', v_not_yet:'Not confirmed yet. Open the email and tap the link first.', v_ok:'Email confirmed. Welcome! 🎉', v_wrong:'Wrong email? Log out and sign up again.',
     not_confirmed:'Your email is not confirmed yet. Open the email from Wanhar Mart (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
     confirm_email:'Account created. We sent you an email: open it (look in Spam too) and tap the link, then log in.',
@@ -987,6 +1029,7 @@ const I18N = {
     categories:'Categories', deals:'Deals', featured:'Featured', top_shops:'Shops', all_products:'All products', see_all:'See all',
     sort_best:'Best selling', sort_new:'Newest', sort_low:'Price: low to high', sort_high:'Price: high to low',
     sold_n:'{n} sold', off:'OFF', you_save:'You save {n}', qty:'Quantity', favourites:'Saved items', no_favs:'Tap the heart on a product to save it here.',
+    login_sub:'Welcome back! Log in to order from shops near you.', signup_sub:'Join Wanhar Mart — order, book and track in seconds.',
     ob1t:'Everything in one app', ob1d:'Products, services and appointments from shops near you.',
     ob2t:'Book in seconds', ob2d:'Barber, clinic, car wash — pick a time and book instantly.',
     ob3t:'Track your order live', ob3d:'Watch your rider on the way. Pay cash when it arrives.',
@@ -1070,6 +1113,7 @@ const I18N = {
     other_rest_msg:'آپ کے کارٹ میں دوسری دکان کی چیزیں ہیں۔ انہیں ہٹا کر یہ شامل کریں؟',
     min_order_msg:'کم از کم آرڈر کے لیے {n} مزید شامل کریں', closed_msg:'یہ دکان ابھی بند ہے۔', opens_at:'{t} کھلے گی۔', hours:'اوقات',
     order_placed:'آرڈر بھیج دیا گیا۔ دکان جلد تصدیق کرے گی۔',
+    succ_title:'آرڈر ہو گیا! 🎉', succ_sub:'دکان جلد تصدیق کرے گی۔', succ_track:'آرڈر ٹریک کریں', succ_home:'ہوم پر واپس', succ_book:'بُکنگ پکی ہو گئی! 🎉', succ_view:'بُکنگز دیکھیں',
     v_title:'جاری رکھنے کے لیے ای میل کی تصدیق کریں', v_note:'ہم {e} پر ایک لنک بھیجتے ہیں۔ ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر یہاں واپس آئیں۔', v_send:'تصدیقی ای میل بھیجیں', v_sent:'{e} پر ای میل بھیج دی گئی۔ اسے کھول کر لنک دبائیں۔', v_done:'میں نے تصدیق کر لی', v_not_yet:'ابھی تصدیق نہیں ہوئی۔ پہلے ای میل کھول کر لنک دبائیں۔', v_ok:'ای میل کی تصدیق ہو گئی۔ خوش آمدید! 🎉', v_wrong:'غلط ای میل؟ لاگ آؤٹ کر کے دوبارہ اکاؤنٹ بنائیں۔',
     not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Wanhar Mart کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
     confirm_email:'اکاؤنٹ بن گیا۔ ہم نے آپ کو ای میل بھیجی ہے: اسے کھولیں (Spam میں بھی دیکھیں)، لنک دبائیں، پھر لاگ اِن کریں۔',
@@ -1093,6 +1137,7 @@ const I18N = {
     categories:'کیٹیگریز', deals:'آفرز', featured:'خاص چیزیں', top_shops:'دکانیں', all_products:'تمام پروڈکٹس', see_all:'سب دیکھیں',
     sort_best:'سب سے زیادہ بکنے والی', sort_new:'نئی', sort_low:'قیمت: کم سے زیادہ', sort_high:'قیمت: زیادہ سے کم',
     sold_n:'{n} بکے', off:'رعایت', you_save:'آپ کی بچت {n}', qty:'تعداد', favourites:'محفوظ چیزیں', no_favs:'کسی پروڈکٹ پر دل دبائیں، وہ یہاں محفوظ ہو جائے گی۔',
+    login_sub:'خوش آمدید! آس پاس کی دکانوں سے آرڈر کے لیے لاگ اِن کریں۔', signup_sub:'ونہر مارٹ جوائن کریں — سیکنڈوں میں آرڈر، بُکنگ اور ٹریکنگ۔',
     ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز اور اپائنٹمنٹس۔',
     ob2t:'سیکنڈوں میں بُک کریں', ob2d:'حجام، کلینک، کار واش — وقت چنیں اور فوراً بُک کریں۔',
     ob3t:'آرڈر لائیو دیکھیں', ob3d:'رائیڈر کو آتے ہوئے دیکھیں۔ چیز ملے تو کیش دیں۔',
@@ -1270,27 +1315,89 @@ function stockOk(it, add){
 }
 
 // ================= AUTH =================
+function showOrderSuccess(data, kind){
+  const book = kind === 'book';
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="osucc" id="osucc">
+    <div class="ocheck"><svg viewBox="0 0 100 100"><circle class="ocir" cx="50" cy="50" r="46"/><path class="otick" d="M32 51 L45 64 L69 38"/></svg></div>
+    <h1>${book ? t('succ_book') : t('succ_title')}</h1>
+    <p class="osub">${book ? t('bk_ok') : t('succ_sub')}</p>
+    ${book ? '' : `<div class="ono">Order #${esc(String(data))}</div>`}
+    <button class="btn otrack" onclick="A.succGo('${book ? '/orders' : '/order/' + encodeURIComponent(data)}')">${book ? t('succ_view') : t('succ_track')}</button>
+    <button class="olink" onclick="A.succGo('/')">${t('succ_home')}</button>
+  </div>`);
+  const box = document.getElementById('osucc');
+  const colors = ['#E8722A','#F2A900','#1F6F4A','#2A6F97','#C85A1A','#FF8A5C'];
+  for (let i = 0; i < 70; i++){
+    const c = document.createElement('i');
+    c.className = 'cfetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2.2 + Math.random() * 1.8) + 's';
+    c.style.animationDelay = (0.5 + Math.random() * 0.9) + 's';
+    if (Math.random() > .5) c.style.borderRadius = '50%';
+    box.appendChild(c);
+  }
+}
+
 function showAuth(msg, ok){
   const signup = state.authMode === 'signup';
+  const fields = [];
+  if (signup){
+    fields.push(`<div class="afield" style="animation-delay:.15s"><label class="f" for="a_name">${t('name')}</label><div class="inpwrap"><input id="a_name" type="text" autocomplete="name"></div></div>`);
+    fields.push(`<div class="afield" style="animation-delay:.22s"><label class="f" for="a_phone">${t('phone')}</label><div class="inpwrap"><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567"></div></div>`);
+  }
+  fields.push(`<div class="afield" style="animation-delay:.29s"><label class="f" for="a_email">${t('email')}</label><div class="inpwrap"><input id="a_email" type="email" autocomplete="username" autocapitalize="off"></div></div>`);
+  fields.push(`<div class="afield" style="animation-delay:.36s"><label class="f" for="a_pw">${t('password')}</label><div class="inpwrap"><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}"><button type="button" class="eye" onclick="A.togglePw()" aria-label="show">👁️</button></div></div>`);
   $('app').innerHTML = `
   <div class="auth">
-    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Wanhar Mart<b>.</b></div>
-    <h1 style="font-size:22px;margin-top:8px">${signup ? t('signup') : t('login')}</h1>
-    ${state.pending && state.pending.indexOf('checkout') > -1 ? `<p class="muted">${t('login_to_order')}</p>` : ''}
-    <form onsubmit="A.submitAuth(event)">
-      ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
-      <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567">` : ''}
-      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
-      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
-      <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
-      <div class="err-text" id="authMsg" style="${ok ? 'color:var(--brand)' : ''}">${esc(msg || '')}</div>
-    </form>
-    ${signup ? Legal.agree(state.lang) : ''}
-    ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
-    <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button><br>
-    <button class="link" onclick="A.guestBack()">${t('browse_guest')}</button>
-    <div class="ver">v${APP_VERSION}</div>
+    <div class="auth-hero"><svg class="scene" viewBox="0 0 390 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<circle cx="318" cy="58" r="30" fill="#FFD98A"/><circle cx="318" cy="58" r="44" fill="#FFD98A" opacity=".35"/>
+<g fill="#FFFFFF" opacity=".92" style="animation:driftx 8s ease-in-out infinite"><ellipse cx="86" cy="52" rx="36" ry="14"/><ellipse cx="114" cy="44" rx="26" ry="12"/><ellipse cx="62" cy="46" rx="20" ry="10"/></g>
+<g fill="#FFFFFF" opacity=".7" style="animation:driftx 11s ease-in-out infinite reverse"><ellipse cx="250" cy="92" rx="26" ry="10"/><ellipse cx="270" cy="86" rx="18" ry="8"/></g>
+<path d="M0,218 Q100,178 200,208 T390,198 L390,300 L0,300 Z" fill="#F7C98B"/>
+<path d="M0,244 Q120,214 230,238 T390,232 L390,300 L0,300 Z" fill="#EFAE62"/>
+<g style="animation:floaty 6s ease-in-out infinite">
+<rect x="58" y="128" width="134" height="98" rx="10" fill="#FFF8EC" stroke="#E0A055" stroke-width="3"/>
+<rect x="52" y="104" width="146" height="26" rx="8" fill="#E8722A"/>
+<g fill="#FFFFFF" opacity=".85"><rect x="62" y="104" width="14" height="26"/><rect x="90" y="104" width="14" height="26"/><rect x="118" y="104" width="14" height="26"/><rect x="146" y="104" width="14" height="26"/><rect x="174" y="104" width="14" height="26"/></g>
+<rect x="70" y="148" width="30" height="30" rx="5" fill="#BFE3F0" stroke="#7FB6CC" stroke-width="2.5"/>
+<rect x="106" y="168" width="38" height="58" rx="5" fill="#B4622A"/><circle cx="136" cy="198" r="3.5" fill="#FFD98A"/>
+<rect x="150" y="148" width="30" height="30" rx="5" fill="#BFE3F0" stroke="#7FB6CC" stroke-width="2.5"/>
+<text x="125" y="152" font-size="15" text-anchor="middle">🛍️</text>
+</g>
+<g style="animation:floaty 5s ease-in-out infinite reverse">
+<circle cx="272" cy="238" r="14" fill="#3A3A3A"/><circle cx="272" cy="238" r="6" fill="#999"/>
+<circle cx="322" cy="238" r="14" fill="#3A3A3A"/><circle cx="322" cy="238" r="6" fill="#999"/>
+<rect x="282" y="206" width="34" height="26" rx="6" fill="#E8722A"/>
+<rect x="286" y="196" width="26" height="14" rx="4" fill="#C85A1A"/>
+<rect x="258" y="212" width="22" height="8" rx="4" fill="#7A4A22"/>
+<text x="299" y="224" font-size="13" text-anchor="middle">📦</text>
+</g>
+<g style="animation:driftx 9s ease-in-out infinite"><text x="30" y="120" font-size="26">🎈</text></g>
+<text x="352" y="150" font-size="22" style="animation:floaty 7s ease-in-out infinite">🛒</text>
+</svg>
+      <button class="pillbtn auth-lang" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button>
+    </div>
+    <div class="auth-card">
+      <h1>${signup ? t('signup') : t('login')}</h1>
+      <p class="sub">${signup ? t('signup_sub') : t('login_sub')}</p>
+      ${state.pending && state.pending.indexOf('checkout') > -1 ? `<p class="sub" style="margin-top:-14px">🛒 ${t('login_to_order')}</p>` : ''}
+      <form onsubmit="A.submitAuth(event)">
+        ${fields.join('')}
+        <div class="afield" style="animation-delay:.43s">
+          ${signup ? '' : `<div class="arow"><button type="button" class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button></div>`}
+          <button class="btn auth-go" id="authBtn" type="submit">${signup ? t('signup') : t('login')}<span class="arr">→</span></button>
+          <div class="err-text" id="authMsg" style="${ok ? 'color:var(--brand)' : ''}">${esc(msg || '')}</div>
+        </div>
+      </form>
+      ${signup ? Legal.agree(state.lang) : ''}
+      <div class="alinks afield" style="animation-delay:.5s">
+        <button class="link" onclick="A.switchAuth()">${signup ? t('have_account') : t('no_account')}</button>
+        <button class="link" onclick="A.guestBack()">${t('browse_guest')}</button>
+        <div class="ver">v${APP_VERSION}</div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -2437,6 +2544,8 @@ const A = {
     msg.style.color = 'var(--brand)'; msg.textContent = t('reset_sent');
   },
   switchAuth(){ state.authMode = state.authMode === 'signup' ? 'login' : 'signup'; showAuth(); },
+  succGo(path){ const el = $('osucc'); if (el) el.remove(); nav(path); },
+  togglePw(){ const i = $('a_pw'); if (!i) return; const show = i.type === 'password'; i.type = show ? 'text' : 'password'; const b = i.parentElement.querySelector('.eye'); if (b) b.textContent = show ? '🙈' : '👁️'; },
   async submitAuth(e){
     e.preventDefault();
     const signup = state.authMode === 'signup';
@@ -2730,7 +2839,7 @@ const A = {
       state.forOther = false; state.rcvName = ''; state.rcvPhone = '';
       state.walletBal = undefined; state.rxPath = null; state.useWallet = false;
       state.cart = { rid:null, items:[], note:'' }; state.promo = ''; state.tip = 0; state.when = 'asap'; state.schedAt = null; state.promos = null; saveCart();
-      toast(pm === 'wallet' ? t('order_placed_pay') : t('order_placed')); askNotify(); nav('/order/' + data);
+      askNotify(); showOrderSuccess(data, 'order');
     });
     const b = $('placeBtn'); if (b){ b.disabled = false; drawCheckout(); }
   },
@@ -2834,7 +2943,7 @@ const A = {
     await run(async () => {
       try { need(await sb.rpc('book_appointment', { p_shop:state.curRest.id, p_item:b.item, p_start:b.slot, p_note:($('bkNote').value || '').trim() || null })); }
       catch (e) { if (/not free/i.test(e.message || '')) A.bookDay(b.day); throw e; }
-      closeSheet(); state.bk = null; toast(t('bk_ok')); nav('/orders');
+      closeSheet(); state.bk = null; askNotify(); showOrderSuccess(null, 'book');
     });
     if (go){ go.classList.remove('bike-load'); go.innerHTML = oldGo; go.disabled = !(state.bk && state.bk.slot); }
   },
@@ -3321,7 +3430,7 @@ const Push = (() => {
       <b style="font-size:16px">${needPush ? tt('title') : tt('install_t')}</b>
       <div style="color:var(--muted,#66746C);margin-top:2px">${iosHint ? tt('ios') : tt('text')}</div></div></div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--green,#1F6F4A);color:#fff;flex:1">${tt('on')}</button>` : ''}
+        ${needPush && !iosHint ? `<button data-a="on" style="${btn};background:var(--brand);color:#fff;flex:1">${tt('on')}</button>` : ''}
         ${deferred ? `<button data-a="inst" style="${btn};background:var(--marigold,#F2A900);color:#1E2B25;flex:1">${tt('install')}</button>` : ''}
         <button data-a="later" style="${btn};background:transparent;color:var(--muted,#66746C)">${tt('later')}</button></div>`;
     el.addEventListener('click', ev => { const a = ev.target.closest('button') && ev.target.closest('button').dataset.a; if (a === 'on') turnOn(); else if (a === 'inst') install(); else if (a === 'later') later(); });
