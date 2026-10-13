@@ -671,6 +671,13 @@ const TAB_PERM = { misses:'shops', backup:'money', plus:'money', omap:'orders', 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => 'Rs ' + Math.round(Number(n || 0)).toLocaleString('en-PK');
+function distKmA(aLat, aLng, bLat, bLng){
+  if (![aLat, aLng, bLat, bLng].every(x => typeof x === 'number')) return null;
+  const R = 6371, r = x => x * Math.PI / 180;
+  const d = Math.sin(r(bLat - aLat) / 2) ** 2 + Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(d));
+}
+const fmtKmA = d => d == null ? '' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
 const num = n => Number(n || 0);
 const hhmm = t => t ? String(t).slice(0, 5) : '';
 const pad = n => String(n).padStart(2, '0');
@@ -1000,7 +1007,7 @@ function viewHome(){
 // ================= ORDERS =================
 async function loadIssues(){
   state.issues = need(await sb.from('order_issues')
-    .select('*, order:orders(id,status,total,subtotal,picked_up_at,address_text,address_lat,address_lng,failed_delivery,return_status,customer:profiles!customer_id(full_name,phone),restaurant:restaurants(name,phone)), rider:riders(profile:profiles(full_name,phone))')
+    .select('*, order:orders(id,status,total,subtotal,picked_up_at,address_text,address_lat,address_lng,failed_delivery,return_status,customer:profiles!customer_id(full_name,phone),restaurant:restaurants(name,phone,lat,lng)), rider:riders(profile:profiles(full_name,phone))')
     .in('status', ['open','returning']).order('created_at', { ascending:false }).limit(100));
   if (state.dash) state.dash.issues_open = state.issues.length;
   const lr = [...new Set(state.issues.filter(i => i.kind === 'order_lost' && i.rider_id).map(i => i.rider_id))];
@@ -1010,7 +1017,7 @@ async function loadIssues(){
 async function loadOrders(){
   await loadIssues();
   state.orders = need(await sb.from('orders')
-    .select('*, restaurant:restaurants(name,phone), customer:profiles!customer_id(full_name,phone), rider:riders!rider_id(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
+    .select('*, restaurant:restaurants(name,phone,lat,lng), customer:profiles!customer_id(full_name,phone), rider:riders!rider_id(profile:profiles(full_name,phone)), order_items(name,quantity,price)')
     .order('created_at', { ascending:false }).limit(300));
 }
 const ORDER_FILTERS = [
@@ -2039,7 +2046,7 @@ function viewBanners(){
 function viewZones(){
   const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
       <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
-      <div class="row-side">${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${num(z.bulk_fee) && num(z.bulk_items) ? `, +${money(z.bulk_fee)}/item after ${num(z.bulk_items)} items` : ''}${Array.isArray(z.weight_tiers) ? `, own weight charges (${z.weight_tiers.length})` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
+      <div class="row-side"><b>${num(z.per_km_fee) ? 'Per km' : 'Fixed'}</b> · ${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${num(z.bulk_fee) && num(z.bulk_items) ? `, +${money(z.bulk_fee)}/item after ${num(z.bulk_items)} items` : ''}${Array.isArray(z.weight_tiers) ? `, own weight charges (${z.weight_tiers.length})` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
   return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
 }
@@ -2053,6 +2060,7 @@ function zoneWeightEditor(){
 }
 function zoneForm(z){
   z = z || { delivery_fee:100, min_order:0, rider_pay:60, is_active:true };
+  const feeMode = num(z.per_km_fee) > 0 ? 'perkm' : 'fixed';
   state.zwt = (Array.isArray(z.weight_tiers) ? z.weight_tiers : (Array.isArray(state.settings && state.settings.weight_tiers) ? state.settings.weight_tiers : [])).map(x => ({ above:num(x.above), fee:num(x.fee) }));
   return `<label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
     <label class="f" for="z_city">City</label><input id="z_city" type="text" value="${esc(z.city)}">
@@ -2060,12 +2068,19 @@ function zoneForm(z){
       <div><label class="f" for="z_fee">Delivery fee (Rs)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
       <div><label class="f" for="z_min">Minimum order (Rs)</label><input id="z_min" type="number" min="0" value="${z.min_order}"></div>
     </div>
-    <div class="note" style="margin-top:14px"><b>Fee by distance.</b> Customer pays the delivery fee above for the first km, then extra for every km after that. Needs the shop location (Shops → shop → Location) and the customer's address location.</div>
+    <label class="f">Delivery fee type</label>
+    <div class="two" style="margin-bottom:4px">
+      <label class="check"><input type="radio" name="z_fmode" value="fixed" ${feeMode === 'fixed' ? 'checked' : ''} onchange="document.getElementById('z_perkmBox').style.display='none'"> Fixed fee</label>
+      <label class="check"><input type="radio" name="z_fmode" value="perkm" ${feeMode === 'perkm' ? 'checked' : ''} onchange="document.getElementById('z_perkmBox').style.display='block'"> Per km</label>
+    </div>
+    <div id="z_perkmBox" style="display:${feeMode === 'perkm' ? 'block' : 'none'}">
+    <div class="note" style="margin-top:6px"><b>Per km.</b> Customer pays the delivery fee above for the first included km, then extra for every km after that. Needs the shop location (Shops → shop → Location) and the customer's address location.</div>
     <div class="two">
       <div><label class="f" for="z_base">Included km</label><input id="z_base" type="number" min="0" step="0.5" value="${z.base_km ?? 3}"></div>
       <div><label class="f" for="z_perkm">Extra per km (Rs)</label><input id="z_perkm" type="number" min="0" value="${z.per_km_fee ?? 0}"></div>
     </div>
     <label class="f" for="z_max">Farthest delivery (km, empty = no limit)</label><input id="z_max" type="number" min="0" step="0.5" value="${z.max_km ?? ''}">
+    </div>
     <div class="note" style="margin-top:14px"><b>Big orders.</b> Charge more when a customer orders many items. Example: first 5 items included, then Rs 10 for each extra item, at most Rs 100. Leave 0 to turn off.</div>
     <div class="two">
       <div><label class="f" for="z_bitems">Items included</label><input id="z_bitems" type="number" min="0" value="${z.bulk_items ?? 0}"></div>
@@ -2323,7 +2338,8 @@ const A = {
         <div class="muted" style="margin-top:4px">${esc(o.address_text || 'No address')}</div>
         ${o.receiver_name ? `<div style="margin-top:4px">👤 Receiver: <b>${esc(o.receiver_name)}</b> · <a href="tel:${esc(o.receiver_phone || '')}">${esc(o.receiver_phone || '')}</a></div>` : ''}
         ${o.delivery_photo ? `<button class="btn ghost small" style="margin-top:6px" onclick='A.lostPhoto(${JSON.stringify(o.delivery_photo)})'>📷 Delivery photo</button>` : ''}
-        ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}</div>
+        ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}
+        ${o.order_type !== 'pickup' && o.address_lat && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:4px">📍 Shop → customer: <b>${fmtKmA(distKmA(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng))}</b></div>` : ''}</div>
       ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
       ${o.rider && o.rider.profile ? `<div style="margin-bottom:8px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : ''}
       ${o.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : ''}
@@ -3204,8 +3220,9 @@ const A = {
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
       const maxV = $('z_max').value.trim();
+      const fmode = (document.querySelector('input[name="z_fmode"]:checked') || {}).value || 'fixed';
       const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
-        base_km:num($('z_base').value), per_km_fee:num($('z_perkm').value), max_km:maxV === '' ? null : num(maxV),
+        base_km:num($('z_base').value), per_km_fee:fmode === 'perkm' ? num($('z_perkm').value) : 0, max_km:fmode === 'perkm' && maxV !== '' ? num(maxV) : null,
         bulk_items:Math.max(0, Math.round(num($('z_bitems').value))), bulk_fee:num($('z_bfee').value), bulk_max:$('z_bmax').value.trim() === '' ? null : num($('z_bmax').value),
         weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null };
       need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
