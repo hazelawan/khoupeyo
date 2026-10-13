@@ -670,6 +670,19 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = n => Number(n || 0);
 const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
+function distKm(aLat, aLng, bLat, bLng){
+  if (![aLat, aLng, bLat, bLng].every(x => typeof x === 'number')) return null;
+  const R = 6371, r = x => x * Math.PI / 180;
+  const d = Math.sin(r(bLat - aLat) / 2) ** 2 + Math.cos(r(aLat)) * Math.cos(r(bLat)) * Math.sin(r(bLng - aLng) / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(d));
+}
+const fmtDist = d => d == null ? '' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
+function shopCustKm(o){
+  const r = state.restaurant;
+  if (!r || o.order_type === 'pickup' || r.lat == null || o.address_lat == null) return '';
+  const d = distKm(r.lat, r.lng, o.address_lat, o.address_lng);
+  return d == null ? '' : `<div class="muted" style="margin-top:4px">${t('cust_km', { km:fmtDist(d) })}</div>`;
+}
 const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 const hhmm = v => v ? String(v).slice(0, 5) : '';
 const waNum = p => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('92') && d.length === 12) d = '0' + d.slice(2); if (d.startsWith('3') && d.length === 10) d = '0' + d; return /^03\d{9}$/.test(d) ? '92' + d.slice(1) : null; };
@@ -747,7 +760,7 @@ const I18N = {
     waiting_rider:'Waiting for a rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider',
     st_placed:'New', st_accepted:'Accepted', st_preparing:'Preparing', st_ready:'Ready', st_rider_assigned:'Rider coming',
     st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
-    order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider',
+    order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider', cust_km:'📍 Customer {km} away', low_stock_n:'⚠️ {n} items low on stock — tap to restock',
     ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
     open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
     closed_bar:'Your shop is closed. Customers cannot order.', weight_kg:'Weight of one item (grams or kg)', weight_note:'Used for the delivery charge of heavy orders. Leave empty for light items.', statement:'Statement', statement_note:'Download the statement for the period chosen above.', print_pdf:'Print or save as PDF', close_word:'Close', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
@@ -817,7 +830,7 @@ const I18N = {
     waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا',
     st_placed:'نیا', st_accepted:'قبول', st_preparing:'تیاری میں', st_ready:'تیار', st_rider_assigned:'رائیڈر آ رہا ہے',
     st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
-    order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر',
+    order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر', cust_km:'📍 گاہک {km} دور', low_stock_n:'⚠️ {n} چیزوں کا اسٹاک ختم ہونے والا ہے — دیکھیں',
     ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
     open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
     closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', weight_kg:'ایک چیز کا وزن (گرام یا کلو)', weight_note:'بھاری آرڈر کے ڈیلیوری چارج کے لیے۔ ہلکی چیز ہو تو خالی چھوڑ دیں۔', statement:'اسٹیٹمنٹ', statement_note:'اوپر چنے گئے وقت کی اسٹیٹمنٹ ڈاؤن لوڈ کریں۔', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
@@ -1087,7 +1100,7 @@ async function go(tab){
   const v = $('view'); if (!v) return;
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
   await run(async () => {
-    if (tab === 'orders') await loadOrders();
+    if (tab === 'orders'){ await loadOrders(); if (!state.items) loadMenu().then(() => { if (state.tab === 'orders') renderTab(); }, () => {}); }
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
     if (tab === 'shop'){ loadStaff(); await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
@@ -1189,6 +1202,7 @@ function orderCard(o){
     ${countdown(o)}
     ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}${i.wait_until && i.status === 'open' ? `<br><span class="muted">${t('waiting_until', { t:new Date(i.wait_until).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</span>` : ''}</div>`).join('')}
     <div class="cust"><b>${esc(cust.full_name || t('customer'))}</b> ${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>${waNum(cust.phone) && !['delivered','cancelled','rejected'].includes(o.status) ? ` <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(cust.phone)}?text=${encodeURIComponent(t('wa_hi', { s:state.restaurant.name, n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : `<span class="muted">${t('no_phone')}</span>`}</div>
+    ${shopCustKm(o)}
     ${['wallet', 'qr_door'].includes(o.payment_method) && o.payment_status === 'paid' ? `<div class="paidtag">${t('paid_online')}</div>` : ''}
     ${num(o.shop_discount) ? `<div class="line"><span class="muted">🏷️ ${t('shop_disc')}</span><span>−${money(o.shop_discount)}</span></div>` : ''}
     <div class="line" style="font-weight:800"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
@@ -1257,7 +1271,9 @@ function viewOrders(){
   const busy = r.busy_until && new Date(r.busy_until) > new Date();
   const busyHtml = busy ? `<div class="busybar"><span>${esc(t('busy_on').replace('{t}', new Date(r.busy_until).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'Asia/Karachi' })))}</span><button class="btn small" onclick="A.setBusy(0)">${t('busy_end')}</button></div>`
     : (r.is_open ? `<button type="button" class="busybtn" onclick="A.busyMenu()">${t('busy_b')}</button>` : '');
-  return `${sound}${closed}${busyHtml}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+  const lowN = (state.items || []).filter(i => i.stock_qty != null && num(i.stock_qty) <= 3).length;
+  const lowHtml = lowN ? `<button class="note" style="width:100%;text-align:start;border-color:#E2A400;cursor:pointer;margin-bottom:10px" onclick="go('menu')">${t('low_stock_n', { n:lowN })} ›</button>` : '';
+  return `${sound}${closed}${busyHtml}${lowHtml}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
 }
@@ -1267,6 +1283,7 @@ function showNewOrder(o){
   openSheet(t('new_order'), `
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><b style="font-size:20px">${money(o.subtotal)}</b></div>
     ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
+    ${shopCustKm(o)}
     ${schedBox(o)}
     ${itemsHtml(o)}
     ${o.sub_pref ? `<div class="note">🔁 <b>${t('sub_lbl')}:</b> ${t('sub_' + o.sub_pref)}</div>` : ''}
