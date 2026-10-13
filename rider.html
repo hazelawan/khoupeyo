@@ -723,7 +723,7 @@ const I18N = {
     face_saved:'Face registered', cam_denied:'Camera is blocked. Allow the camera for this site in your browser settings.',
     face_ok:'Face registered', face_missing:'Face not registered', register_face:'Register face',
     duty_started:'Duty started. Good luck!', duty_ended:'Duty ended', getting_loc:'Getting your location…',
-    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready',
+    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready', gps_hint:'📍 Turn on GPS — your location is needed to show pickup distances', no_loc:'no location', km_today:'KM today',
     arrived_btn:'I have arrived at the customer', arrived_at:'Arrived at {t}', report:'Report a problem', report_title:'What is the problem?',
     note_opt:'More details (optional)', send_report:'Send to Wanhar Mart', reported:'Wanhar Mart and the shop have been informed',
     waiting_cust:'Waiting for the customer', wait_note:'Call the customer again. When the time ends you can take the order back to the shop.',
@@ -803,7 +803,7 @@ const I18N = {
     face_saved:'چہرہ رجسٹر ہو گیا', cam_denied:'کیمرہ بند ہے۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے کیمرہ کی اجازت دیں۔',
     face_ok:'چہرہ رجسٹر ہے', face_missing:'چہرہ رجسٹر نہیں', register_face:'چہرہ رجسٹر کریں',
     duty_started:'ڈیوٹی شروع ہو گئی۔ کامیابی ہو!', duty_ended:'ڈیوٹی ختم ہو گئی', getting_loc:'لوکیشن لی جا رہی ہے…',
-    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار',
+    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار', gps_hint:'📍 GPS آن کریں — دکان کا فاصلہ دیکھنے کے لیے آپ کی لوکیشن چاہیے', no_loc:'لوکیشن نہیں', km_today:'آج کے کلومیٹر',
     arrived_btn:'میں گاہک کے پاس پہنچ گیا', arrived_at:'{t} پر پہنچے', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟',
     note_opt:'مزید تفصیل (اختیاری)', send_report:'Wanhar Mart کو بھیجیں', reported:'Wanhar Mart اور دکان کو اطلاع دے دی گئی',
     waiting_cust:'گاہک کا انتظار', wait_note:'گاہک کو دوبارہ کال کریں۔ وقت ختم ہونے پر آپ آرڈر دکان واپس لے جا سکتے ہیں۔',
@@ -1112,7 +1112,10 @@ async function loadAvailable(){
   if (!onDuty()){ state.available = []; return; }
   state.available = need(await sb.rpc('available_deliveries')) || [];
   // a 2nd order from the same (or next door) shop going the same way: show it first
-  if (state.mine.some(o => o.status === 'rider_assigned')){ try { const { data } = await sb.rpc('batch_suggestions'); const m = {}; (data || []).forEach(x => { m[x.order_id] = x.reason; }); state.available.forEach(j => { j.batch = m[j.order_id] || null; }); state.available.sort((a, b) => (b.batch ? 1 : 0) - (a.batch ? 1 : 0)); } catch (e) {} }
+  if (state.mine.some(o => o.status === 'rider_assigned')){ try { const { data } = await sb.rpc('batch_suggestions'); const m = {}; (data || []).forEach(x => { m[x.order_id] = x.reason; }); state.available.forEach(j => { j.batch = m[j.order_id] || null; }); } catch (e) {} }
+  // nearest jobs first (batch matches stay on top)
+  state.available.forEach(j => { j._tripKm = km(j.restaurant_lat, j.restaurant_lng, j.drop_lat, j.drop_lng); });
+  state.available.sort((a, b) => ((b.batch ? 1 : 0) - (a.batch ? 1 : 0)) || ((a._tripKm == null ? 1e9 : a._tripKm) - (b._tripKm == null ? 1e9 : b._tripKm)));
   if (!state.mine.length && (!state.hotAt || Date.now() - state.hotAt > 600000)){ state.hotAt = Date.now(); sb.rpc('rider_hot_areas').then(({ data }) => { state.hot = data || []; }, () => {}); }
   // A delivery offered only to me (nearest rider): always pop up, with its own timer
   const offer = state.available.find(j => j.offered_to_me && j.offer_expires_at && !state.seenOffer.has(j.order_id + j.offer_expires_at));
@@ -1141,7 +1144,7 @@ async function loadJobs(){ heartbeat(); await loadStatus(); await loadMine(); aw
 async function loadMoney(){
   const m = monthStart();
   const [done, unsettled, fines, pays, hand] = await Promise.all([
-    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,boost_pay,rider_settled,restaurant:restaurants(name)')
+    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,boost_pay,rider_settled,address_lat,address_lng,restaurant:restaurants(name,lat,lng)')
       .eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', m.toISOString()).order('delivered_at', { ascending:false }),
     sb.from('orders').select('total').eq('rider_id', state.rider.id).eq('status', 'delivered').eq('rider_settled', false),
     sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', m.toISOString()).order('fined_at', { ascending:false }),
@@ -1223,7 +1226,7 @@ function showJobPopup(j){
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="line" style="align-items:flex-end"><div><div class="muted">${t('your_pay')}</div><div class="big">${money(j.rider_pay)}</div>${payNote(j.extra_pay, j.tip)}</div>
       <div style="text-align:end"><div class="muted">${num(j.total) ? t('cash_collect') : '&nbsp;'}</div><b style="font-size:20px">${cashTxt(j.total)}</b></div></div>
-    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
+    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
     <div class="two" style="margin-top:14px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', ${j.offered_to_me ? 'true' : 'false'})">${j.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>
@@ -1339,7 +1342,7 @@ function jobCard(j){
   return `<div class="card" ${j.offered_to_me ? 'style="border:2px solid var(--marigold,#F2A900)"' : j.batch ? 'style="border:2px solid var(--brand)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
     <div class="muted">${esc(j.restaurant_address || '')}</div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
-    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
+    <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="cash"><span>${t('your_pay')}${payNote(j.extra_pay, j.tip)}</span><b>${money(j.rider_pay)}</b></div>
     <button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>`;
@@ -1550,9 +1553,11 @@ function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const today = state.done.filter(o => new Date(o.delivered_at) >= todayStart);
+  const todayKm = today.reduce((n, o) => n + (o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) || 0 : 0), 0);
   const stats = `<div class="tiles" style="margin-bottom:12px">
     <div class="tile"><b>${today.length}</b><span>${t('deliveries_n')} · ${t('today')}</span></div>
-    <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div></div>`;
+    <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div>
+    <div class="tile"><b>🛣️ ${todayKm.toFixed(1)} km</b><span>${t('km_today')}</span></div></div>`;
   const boost = boostBanner();
   if (suspended() && !state.mine.length) return suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
@@ -1566,7 +1571,8 @@ function viewJobs(){
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
-  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + hot + jobs;
+  const gpsHint = onDuty() && !state.pos ? `<div class="note" style="border-color:#E2A400;margin-bottom:10px">${t('gps_hint')}</div>` : '';
+  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + hot + gpsHint + jobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -1723,8 +1729,8 @@ function viewEarn(){
   const paid = sum(state.payouts.filter(p => p.period_start === ms), p => p.amount);
   const lim = num(r.cash_limit), cash = num(state.cash);
   const pct = lim ? Math.min(100, cash / lim * 100) : 0;
-  const rows = state.done.slice(0, 25).map(o => `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}</div></div>
-    <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`).join('');
+  const rows = state.done.slice(0, 25).map(o => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}</div></div>
+    <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`; }).join('');
   const rname = r.full_name || (state.profile && state.profile.full_name) || '';
   const dep = state.handovers.map(h => Receipt.row(h, { kind:'handover', ur:state.lang === 'ur', to:rname })).join('');
   const pay = state.payouts.map(p => Receipt.row(p, { kind:'payout', ur:state.lang === 'ur', to:rname })).join('');
