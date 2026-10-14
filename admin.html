@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.4';
+const APP_VERSION = '7.5';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2254,6 +2254,12 @@ function viewSettings(){
       <div class="muted" style="font-size:14px">Used by every zone that does not have its own weight charges (Delivery zones → zone). Set the weight of products (Products → product, or the shop sets it). When the whole order is heavier than a level, the extra charge is added to the delivery fee. Example: above 10 kg + Rs 50, above 20 kg + Rs 100.</div>
       <div id="wtBox">${weightEditor()}</div>
       <div class="actions"><button class="btn ghost block" onclick="A.saveWeight()">Save weight charges</button></div>
+    </div>
+    <div class="card">
+      <b>🗺️ Multi-zone delivery surcharge</b>
+      <div class="muted" style="font-size:14px">When a customer orders from shops in different zones in one cart, add this extra delivery charge. 0 = no extra charge.</div>
+      <label class="f" for="s_mzf" style="margin-top:8px">Extra charge for multi-zone order (Rs)</label><input id="s_mzf" type="number" min="0" value="${num(s.multi_zone_fee ?? 0)}">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('multi_zone_fee', Math.max(0, Number($('s_mzf').value || 0)))">Save</button></div>
     </div>
     <div class="card">
       <b>📦 Big and heavy orders: rider share</b>
