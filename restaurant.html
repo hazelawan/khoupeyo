@@ -378,6 +378,10 @@ html[dir=rtl] .sec .chev{transform:scaleX(-1)} html[dir=rtl] .sec.open .chev{tra
 .busybar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(232,160,40,.16);border:1px solid rgba(232,160,40,.5);border-radius:14px;padding:10px 12px;margin-bottom:10px;font-weight:800}
 .busybar .btn{width:auto;flex:none}
 .picktag{margin:6px 0;background:#E8F0FE;color:#1A4FB0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:14px}
+.pickcode{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0;background:linear-gradient(135deg,#0B3A2B,#14532D);color:#fff;border-radius:14px;padding:12px 14px}
+.pickcode b{display:block;font-size:14px}
+.pickcode small{opacity:.8;font-size:12px}
+.pickcode .code{font-size:28px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,.15);padding:6px 14px;border-radius:10px;font-variant-numeric:tabular-nums}
 /* ===== Wanhar Mart design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -661,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.6';
+const APP_VERSION = '6.7';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -763,7 +767,7 @@ const I18N = {
     accept:'Accept order', reject:'Reject', start_prep:'Start preparing', mark_ready:'Order is ready',
     prep_q:'Ready in how many minutes?', min:'min', reject_q:'Why are you rejecting this order?',
     r1:'Item not available', r2:'Too busy right now', r3:'Closing soon', r4:'Other reason',
-    waiting_rider:'Waiting for a rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider',
+    waiting_rider:'Waiting for a rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider', pickup_code_t:'🔐 Pickup code', pickup_code_s:'Tell this code to the rider at pickup',
     st_placed:'New', st_accepted:'Accepted', st_preparing:'Preparing', st_ready:'Ready', st_rider_assigned:'Rider coming',
     st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
     order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider', cust_km:'📍 Customer {km} away', low_stock_n:'⚠️ {n} items low on stock — tap to restock',
@@ -834,7 +838,7 @@ const I18N = {
     accept:'آرڈر قبول کریں', reject:'مسترد کریں', start_prep:'تیاری شروع کریں', mark_ready:'آرڈر تیار ہے',
     prep_q:'کتنے منٹ میں تیار ہوگا؟', min:'منٹ', reject_q:'آرڈر مسترد کرنے کی وجہ کیا ہے؟',
     r1:'آئٹم دستیاب نہیں', r2:'ابھی بہت رش ہے', r3:'دکان بند ہونے والی ہے', r4:'کوئی اور وجہ',
-    waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا',
+    waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا', pickup_code_t:'🔐 پک اپ کوڈ', pickup_code_s:'رائیڈر کو یہ کوڈ بتائیں',
     st_placed:'نیا', st_accepted:'قبول', st_preparing:'تیاری میں', st_ready:'تیار', st_rider_assigned:'رائیڈر آ رہا ہے',
     st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
     order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر', cust_km:'📍 گاہک {km} دور', low_stock_n:'⚠️ {n} چیزوں کا اسٹاک ختم ہونے والا ہے — دیکھیں',
@@ -1197,9 +1201,11 @@ function orderCard(o){
     ${o.rider_id ? `<button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "rs", null)'>💬 ${t('rider_label')}</button>` : ''}
     <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "sup_s", null)'>💬 ${t('help_word')}</button></div>`;
   if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
+  const pickupBox = o.pickup_code && ['ready','rider_assigned'].includes(o.status) ? `<div class="pickcode"><div><b>🔐 ${t('pickup_code_t')}</b><small>${t('pickup_code_s')}</small></div><span class="code">${esc(o.pickup_code)}</span></div>` : '';
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
+    ${pickupBox}
     ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
     ${schedBox(o)}
     ${itemsHtml(o)}
