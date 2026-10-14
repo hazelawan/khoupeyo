@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.1';
+const APP_VERSION = '7.4';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1255,6 +1255,7 @@ function itemRow(i){
       <div class="row-sub">${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}${all && i.restaurant ? ' · ' + esc(i.restaurant.name) : ''}</div>
     </button>
     ${i.is_approved ? '' : `<button class="btn small" onclick="A.approveItem('${i.id}')">Approve</button>`}
+    <button class="btn small ghost" onclick="A.flashNew('${i.id}')" title="Flash sale">⚡</button>
     <div class="side-sw"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="In stock"><span></span></label><small>${i.is_available ? 'In stock' : 'Out'}</small></div>
   </div>`;
 }
@@ -1281,6 +1282,7 @@ function viewProducts(){
     <div class="bar">
       ${state.menuRestaurant !== 'all' ? `<button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
       ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve all ${pending}</button>` : ''}
+      <button class="btn ghost" onclick="A.flashList()">⚡ Flash sales</button>
     </div>
     <div id="prodBody">${body}</div>`;
 }
@@ -2742,6 +2744,47 @@ const A = {
   },
   async toggleItem(id, val){ await run(async () => { need(await sb.from('menu_items').update({ is_available:val }).eq('id', id)); await loadProducts(); renderTab(); }); },
   async approveItem(id){ await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).eq('id', id)); await loadProducts(); renderTab(); toast('Approved'); }); },
+  // ---- Flash sales ----
+  async flashList(){
+    const [sales, reqs] = await Promise.all([
+      sb.from('flash_sales').select('*, menu_items!inner(name,price)').eq('is_active', true).gte('ends_at', new Date().toISOString()).order('ends_at'),
+      sb.from('flash_requests').select('*, menu_items!inner(name,price), restaurants!inner(name)').eq('status', 'pending').order('created_at', { ascending:false })
+    ]);
+    const reqRows = (reqs.data || []).map(q => `<div class="row"><div class="row-main"><div class="row-title">⚡ ${esc(q.menu_items.name)}</div><div class="row-sub">${esc(q.restaurants.name)} · ${money(q.flash_price)} <span class="strike">${money(q.menu_items.price)}</span> · ${q.hours}h</div></div><button class="btn small" onclick="A.flashApprove('${q.id}')">Approve</button><button class="btn small ghost" onclick="A.flashReject('${q.id}')">✕</button></div>`).join('');
+    const rows = (sales.data || []).map(f => `<div class="row"><div class="row-main"><div class="row-title">⚡ ${esc(f.menu_items.name)}</div><div class="row-sub">${money(f.flash_price)} <span class="strike">${money(f.menu_items.price)}</span> · ends ${new Date(f.ends_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</div></div><button class="btn small warn" onclick="A.flashDel('${f.id}')">Stop</button></div>`).join('');
+    openSheet('⚡ Flash Sales', `<h4 style="margin:0 0 8px">Pending requests (${(reqs.data || []).length})</h4>${reqRows || '<div class="empty">No pending requests.</div>'}<h4 style="margin:14px 0 8px">Active (${(sales.data || []).length})</h4>${rows || '<div class="empty">No active flash sales.</div>'}`);
+  },
+  async flashApprove(id){
+    await run(async () => {
+      const q = need(await sb.from('flash_requests').select('*').eq('id', id).single());
+      need(await sb.from('flash_sales').insert({ menu_item_id:q.menu_item_id, flash_price:q.flash_price, starts_at:new Date().toISOString(), ends_at:new Date(Date.now() + q.hours * 3600000).toISOString(), max_qty:q.max_qty, is_active:true }));
+      need(await sb.from('flash_requests').update({ status:'approved' }).eq('id', id));
+      toast('⚡ Flash sale live!'); A.flashList();
+    });
+  },
+  async flashReject(id){ await run(async () => { need(await sb.from('flash_requests').update({ status:'rejected' }).eq('id', id)); toast('Rejected'); A.flashList(); }); },
+  async flashDel(id){ if (!await uiConfirm('Stop this flash sale?')) return; await run(async () => { need(await sb.from('flash_sales').update({ is_active:false }).eq('id', id)); closeSheet(); toast('Flash sale stopped'); }); },
+  flashNew(itemId){
+    const i = (state.items || []).find(x => x.id === itemId);
+    if (!i) return;
+    openSheet('⚡ Flash Sale — ' + i.name, `
+      <div class="box">
+        <label class="f">Regular price</label><div><b>${money(i.price)}</b></div>
+        <label class="f" for="fl_price" style="margin-top:10px">Flash price (Rs)</label><input id="fl_price" type="number" min="1" max="${num(i.price) - 1}" value="${Math.max(1, Math.round(num(i.price) * 0.8))}">
+        <label class="f" for="fl_hours" style="margin-top:10px">Duration (hours)</label><input id="fl_hours" type="number" min="1" max="72" value="6">
+        <label class="f" for="fl_qty" style="margin-top:10px">Max quantity (optional)</label><input id="fl_qty" type="number" min="1" placeholder="No limit">
+        <div style="margin-top:14px"><button class="btn" onclick="A.flashSave('${itemId}')">Start flash sale</button></div>
+      </div>`);
+  },
+  async flashSave(itemId){
+    const price = num($('fl_price').value), hours = num($('fl_hours').value), qty = num($('fl_qty').value);
+    if (!price || price <= 0) return toast('Enter a valid flash price', true);
+    if (!hours || hours < 1) return toast('Enter duration in hours', true);
+    await run(async () => {
+      need(await sb.from('flash_sales').insert({ menu_item_id:itemId, flash_price:price, starts_at:new Date().toISOString(), ends_at:new Date(Date.now() + hours * 3600000).toISOString(), max_qty:qty || null, is_active:true }));
+      closeSheet(); toast('⚡ Flash sale started!');
+    });
+  },
   async approveAll(){
     const ids = state.items.filter(i => !i.is_approved).map(i => i.id); if (!ids.length) return;
     if (!await uiConfirm(`Approve ${ids.length} products?`)) return;
