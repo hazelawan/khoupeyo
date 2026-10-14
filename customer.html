@@ -427,7 +427,20 @@ main{padding-bottom:140px!important}
 .pillbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:var(--sh-1)}
 .actions-top{display:flex;gap:8px;align-items:center;flex:none}
 .walletpill{display:flex;align-items:center;gap:7px;background:#FFF3D6;border:1px solid #F0D48A;color:#7A5200;border-radius:999px;padding:8px 14px;font-weight:800;font-size:14px;box-shadow:var(--sh-1);white-space:nowrap}
-.walletpill .wp-ic{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--marigold);color:#3D2E00;font-size:12px;font-weight:900}
+.walletpill .wp-ic{font-size:17px;line-height:1}
+/* Recommendations */
+.recowhy{position:absolute;bottom:6px;left:6px;z-index:2;font-size:10px;font-weight:800;background:rgba(11,58,43,.92);color:#fff;border-radius:7px;padding:3px 8px;white-space:nowrap;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis}
+.matchtag{display:inline-block;font-size:10px;font-weight:800;background:var(--forest);color:#fff;border-radius:6px;padding:2px 7px}
+/* Flash sales */
+.flashwrap{background:linear-gradient(135deg,#3D1410,#6B1F12);border-radius:18px;padding:14px;margin:10px 0;color:#fff}
+.flashhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.flashhead b{font-size:17px}
+.flashcd{font-size:13px;font-weight:800;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
+.flashwrap .hscroll{padding-bottom:4px}
+.flashwrap .gcard{background:rgba(255,255,255,.97)}
+.walletcard.pts{background:linear-gradient(135deg,#2A1E3F,#4A2E6B);margin-top:10px}
+.walletcard.pts small{color:#D4B8FF}
+.walletcard.pts .btn{background:#F2A900;color:#3D2E00}
 .addrchip{display:flex;align-items:center;gap:8px;margin-top:10px;background:none;border:0;color:var(--ink);padding:0;cursor:pointer;text-align:start;max-width:100%}
 .addrchip .pin{width:34px;height:34px;border-radius:12px;background:rgba(232,114,42,.12);display:grid;place-items:center;flex:none;font-size:17px}
 .addrchip small{display:block;font-size:12px;color:var(--muted);font-weight:600}
@@ -700,17 +713,18 @@ html[dir=rtl] .btn.bike-load .bl-bike{left:auto;right:-52px;transform:none;anima
 
 /* top bar: warm light + truck-art band */
 .top{position:sticky;top:0;background:linear-gradient(180deg,#FFF9F1,#FFF6EC)!important;border-radius:0!important;box-shadow:0 2px 14px rgba(180,110,50,.08)!important;padding:14px 16px 16px!important;color:var(--ink)}
+@media (prefers-color-scheme: dark){ .top{background:linear-gradient(180deg,#141E19,#101713)!important;box-shadow:0 2px 14px rgba(0,0,0,.4)!important} }
 .top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--band)}
 .top .brand{color:var(--ink);font-size:19px;font-weight:800;letter-spacing:-.025em;white-space:nowrap;flex:none}
 .top-row{gap:8px}
 .actions-top{display:flex;gap:6px;align-items:center;min-width:0}
 #cityBtn{min-width:0;display:flex}
-#cityBtn .citybtn{min-width:0;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none;border:0;color:#fff;font-weight:700;font-size:13.5px;padding:6px 2px;cursor:pointer}
+#cityBtn .citybtn{min-width:0;max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none;border:0;color:var(--ink);font-weight:700;font-size:13.5px;padding:6px 2px;cursor:pointer}
 #cityBtn .citybtn span{color:var(--marigold);margin-inline-start:4px;font-size:12px}
 .actions-top>.pillbtn{flex:none;padding:0 10px!important}
 .brand b{color:var(--marigold)}
-.pillbtn{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff;border-radius:12px!important;height:38px;padding:0 12px!important;font-weight:600;font-size:13.5px;white-space:nowrap}
-.top .cbtn{width:38px;height:38px;border-radius:12px!important;background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.16)!important;color:#fff!important;font-size:17px}
+.pillbtn{background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--ink);border-radius:12px!important;height:38px;padding:0 12px!important;font-weight:600;font-size:13.5px;white-space:nowrap;box-shadow:var(--sh-1)}
+.top .cbtn{width:38px;height:38px;border-radius:12px!important;background:var(--surface)!important;border:1px solid var(--line)!important;color:var(--ink)!important;font-size:17px;box-shadow:var(--sh-1)}
 .addrchip .pin{background:rgba(255,184,0,.16);border-radius:10px;color:var(--marigold)}
 .addrchip small{opacity:.65}
 .hello b{font-family:var(--display);font-size:24px;letter-spacing:-.03em}
@@ -775,7 +789,7 @@ h2 a,h2 button{background:none!important;color:var(--brand)!important;padding:4p
 @media (prefers-color-scheme: dark){ .nav{background:rgba(20,30,25,.94)} }
 .nav a{background:transparent!important;font-size:11.5px;font-weight:600;border-radius:16px;transition:background .25s ease,color .25s ease,transform .15s ease}
 .nav a:active{transform:scale(.96)}
-.nav a.on{background:var(--marigold)!important;color:#1E2B25!important;font-weight:700;box-shadow:0 4px 12px rgba(242,169,0,.35)}
+.nav a.on{background:var(--forest)!important;color:#fff!important;font-weight:700;box-shadow:0 6px 16px rgba(11,58,43,.35);border-radius:20px}
 .nav a.on::after{display:none}
 .nav a svg{width:22px;height:22px}
 .nav .cnt{background:var(--marigold);color:#2A1D00}
@@ -931,7 +945,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.7';
+const APP_VERSION = '5.8';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1039,6 +1053,8 @@ const I18N = {
     categories:'Categories', deals:'Deals', featured:'Featured', top_shops:'Shops', all_products:'All products', see_all:'See all',
     sort_best:'Best selling', sort_new:'Newest', sort_low:'Price: low to high', sort_high:'Price: high to low',
     sold_n:'{n} sold', off:'OFF', you_save:'You save {n}', qty:'Quantity', favourites:'Saved items', no_favs:'Tap the heart on a product to save it here.',
+    reco_reorder:'🔁 Reorder again', reco_reorder_sub:'Your favourites, one tap away', reco_foryou:'✨ For you', reco_foryou_sub:'Picked based on your taste', reco_popular:'📍 Popular near you', reco_popular_sub:'Bestsellers in your area', reco_times:'{n}× bought', reco_orders:'🔥 {n} orders', reco_match:'{n}% match',
+    reco_recent:'👁️ Recently viewed', reco_recent_sub:'You were looking at these', flash_title:'⚡ Flash Sale', flash_ends:'Ends in', price_drop:'⬇ Price dropped', loyalty_pts:'Loyalty points', loyalty_earn:'Earn {n} pt per Rs 100 order', redeem:'Redeem', redeem_how_many:'How many points to redeem? (min 100)', redeem_min:'Minimum 100 points', redeem_done:'Promo code: {c} — apply it at checkout!',
     login_sub:'Welcome back! Log in to order from shops near you.', signup_sub:'Join Wanhar Mart — order, book and track in seconds.',
     ob1t:'Everything in one app', ob1d:'Products, services and appointments from shops near you.',
     ob2t:'Book in seconds', ob2d:'Barber, clinic, car wash — pick a time and book instantly.',
@@ -1147,6 +1163,8 @@ const I18N = {
     categories:'کیٹیگریز', deals:'آفرز', featured:'خاص چیزیں', top_shops:'دکانیں', all_products:'تمام پروڈکٹس', see_all:'سب دیکھیں',
     sort_best:'سب سے زیادہ بکنے والی', sort_new:'نئی', sort_low:'قیمت: کم سے زیادہ', sort_high:'قیمت: زیادہ سے کم',
     sold_n:'{n} بکے', off:'رعایت', you_save:'آپ کی بچت {n}', qty:'تعداد', favourites:'محفوظ چیزیں', no_favs:'کسی پروڈکٹ پر دل دبائیں، وہ یہاں محفوظ ہو جائے گی۔',
+    reco_reorder:'🔁 دوبارہ آرڈر کریں', reco_reorder_sub:'آپ کی پسندیدہ چیزیں، ایک ٹیپ پر', reco_foryou:'✨ آپ کے لیے', reco_foryou_sub:'آپ کی پسند کے حساب سے', reco_popular:'📍 آپ کے علاقے میں مقبول', reco_popular_sub:'آپ کے علاقے میں سب سے زیادہ بکنے والا', reco_times:'{n} بار خریدی', reco_orders:'🔥 {n} آرڈرز', reco_match:'{n}% میچ',
+    reco_recent:'👁️ حال ہی میں دیکھی', reco_recent_sub:'آپ یہ دیکھ رہے تھے', flash_title:'⚡ فلیش سیل', flash_ends:'ختم ہونے میں', price_drop:'⬇ قیمت کم ہوئی', loyalty_pts:'لائلٹی پوائنٹس', loyalty_earn:'ہر Rs 100 کے آرڈر پر {n} پوائنٹ', redeem:'ریڈیم کریں', redeem_how_many:'کتنے پوائنٹس ریڈیم کرنے ہیں؟ (کم از کم 100)', redeem_min:'کم از کم 100 پوائنٹس', redeem_done:'پرومو کوڈ: {c} — چیک آؤٹ پر لگائیں!',
     login_sub:'خوش آمدید! آس پاس کی دکانوں سے آرڈر کے لیے لاگ اِن کریں۔', signup_sub:'ونہر مارٹ جوائن کریں — سیکنڈوں میں آرڈر، بُکنگ اور ٹریکنگ۔',
     ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز اور اپائنٹمنٹس۔',
     ob2t:'سیکنڈوں میں بُک کریں', ob2d:'حجام، کلینک، کار واش — وقت چنیں اور فوراً بُک کریں۔',
@@ -1454,7 +1472,7 @@ function helloHtml(){
   const n = state.profile && state.profile.full_name ? state.profile.full_name.split(' ')[0] : '';
   return `<small>${g} 👋</small><b>${n ? esc(n) : t('hello_q')}</b>`;
 }
-function walletPillHtml(){ return `<span class="wp-ic">Rs</span><b>${money(num(state.walletBal))}</b>`; }
+function walletPillHtml(){ return `<span class="wp-ic">💰</span><b>${money(num(state.walletBal))}</b>`; }
 let miniTop = false;
 window.addEventListener('scroll', () => { const y = window.scrollY; const m = miniTop ? y > 8 : y > 150; if (m !== miniTop){ miniTop = m; const tp = $('topbar'); if (tp) tp.classList.toggle('mini', m); } }, { passive:true });
 function refreshChip(){ const c = $('addrChip'); if (c) c.innerHTML = addrChipHtml(); const h = $('hello'); if (h) h.innerHTML = helloHtml(); }
@@ -1613,6 +1631,116 @@ async function ensureData(){
 const sold = id => num(state.stats.items && state.stats.items[id]);
 const shopRating = id => (state.stats.shops && state.stats.shops[id]) || null;
 
+// ================= FLASH SALES =================
+async function loadFlash(){
+  if (state.flashLoaded) return;
+  state.flashLoaded = true; state.flashMap = {};
+  try {
+    const now = new Date().toISOString();
+    const { data } = await sb.from('flash_sales').select('menu_item_id, flash_price, ends_at, max_qty, sold_qty, menu_items!inner(id,name,price,compare_price,photo_url,restaurant_id,is_available)').eq('is_active', true).lte('starts_at', now).gte('ends_at', now).limit(20);
+    (data || []).forEach(f => {
+      state.flashMap[f.menu_item_id] = f;
+      const mi = f.menu_items;
+      if (mi){ mi._flash = f; state.itemsCache[mi.id] = Object.assign(state.itemsCache[mi.id] || {}, mi); }
+    });
+  } catch (e) {}
+}
+function flashSection(){
+  const items = Object.values(state.flashMap || {});
+  if (!items.length) return '';
+  const soonest = items.slice().sort((a, b) => new Date(a.ends_at) - new Date(b.ends_at))[0];
+  const cards = items.map(f => { const p = state.itemsCache[f.menu_item_id]; return p ? productCard(p) : ''; }).join('');
+  if (!cards) return '';
+  return `<div class="flashwrap"><div class="flashhead"><b>⚡ ${t('flash_title')}</b><span class="flashcd" data-ends="${esc(soonest.ends_at)}">--:--:--</span></div><div class="hscroll">${cards}</div></div>`;
+}
+setInterval(() => {
+  document.querySelectorAll('.flashcd[data-ends]').forEach(el => {
+    const diff = Math.max(0, new Date(el.dataset.ends).getTime() - Date.now());
+    const h = Math.floor(diff / 3600000), m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
+    el.textContent = t('flash_ends') + ' ' + [h, m, s].map(x => String(x).padStart(2, '0')).join(':');
+  });
+}, 1000);
+
+// ================= RECOMMENDATIONS =================
+// Signals: order history (strongest), favorites, product views, region, time of day.
+// score = (buys x 10) + (fav x 8) + (views x 2, capped) + (same shop x 5) + (time match x 4)
+async function trackView(menuItemId, restaurantId){
+  if (!state.user || !menuItemId) return;
+  try { await sb.from('product_views').insert({ user_id: state.user.id, menu_item_id: menuItemId, restaurant_id: restaurantId || null }); } catch (e) {}
+}
+let _lastSearchLogged = '';
+async function trackSearch(q){
+  q = (q || '').trim().slice(0, 100);
+  if (!state.user || q.length < 2 || q === _lastSearchLogged) return;
+  _lastSearchLogged = q;
+  try { await sb.from('search_logs').insert({ user_id: state.user.id, query: q }); } catch (e) {}
+}
+async function loadRecoData(){
+  if (!state.user || state.recoLoaded) return;
+  state.recoLoaded = true; state.recoBuys = {}; state.recoViews = {};
+  try {
+    const { data: orders } = await sb.from('orders').select('id, order_items(menu_item_id, quantity)').eq('customer_id', state.user.id).in('status', ['delivered', 'completed']).order('created_at', { ascending:false }).limit(60);
+    (orders || []).forEach(o => (o.order_items || []).forEach(it => {
+      if (!it.menu_item_id) return;
+      const b = state.recoBuys[it.menu_item_id] || (state.recoBuys[it.menu_item_id] = { times:0, qty:0 });
+      b.times += 1; b.qty += (it.quantity || 1);
+    }));
+  } catch (e) {}
+  try {
+    const { data: views } = await sb.from('product_views').select('menu_item_id').eq('user_id', state.user.id).order('created_at', { ascending:false }).limit(120);
+    (views || []).forEach(v => { if (v.menu_item_id) state.recoViews[v.menu_item_id] = (state.recoViews[v.menu_item_id] || 0) + 1; });
+    // Recently viewed: unique items, most recent first
+    const seen = new Set(); state.recoRecent = [];
+    (views || []).forEach(v => { if (v.menu_item_id && !seen.has(v.menu_item_id)){ seen.add(v.menu_item_id); state.recoRecent.push(v.menu_item_id); } });
+    state.recoRecent = state.recoRecent.slice(0, 10);
+  } catch (e) {}
+}
+function recoScore(p){
+  if (!p || !p.id) return 0;
+  const buys = (state.recoBuys || {})[p.id];
+  let s = 0;
+  if (buys) s += buys.times * 10;
+  if (isFav(p.id)) s += 8;
+  s += Math.min((state.recoViews || {})[p.id] || 0, 5) * 2;
+  if (!buys && state.recoBuys){
+    const shopIds = new Set();
+    Object.keys(state.recoBuys).forEach(id => { const it = state.itemsCache[id]; if (it && it.restaurant_id) shopIds.add(it.restaurant_id); });
+    if (shopIds.has(p.restaurant_id)) s += 5;
+  }
+  try {
+    const hr = parseInt(new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Karachi', hour:'2-digit', hour12:false }).format(new Date()), 10);
+    const nm = (p.name || '').toLowerCase();
+    const morning = hr >= 6 && hr < 11, night = hr >= 19 || hr < 2;
+    if (morning && /(nashta|breakfast|paratha|halwa|chai|tea|milk|bread|egg|omelet)/.test(nm)) s += 4;
+    if (night && /(burger|pizza|fries|shawarma|broast|bbq|tikka|fast)/.test(nm)) s += 4;
+  } catch (e) {}
+  return s;
+}
+function recoSections(PR){
+  if (!state.user) return '';
+  const buys = state.recoBuys || {};
+  const avail = p => p && p.is_available !== false;
+  const withShop = p => { if (p && !p._shop && p.restaurant_id){ const r = (state.restaurants || []).find(x => x.id === p.restaurant_id); if (r) p._shop = r; } return p; };
+  let html = '';
+  // 1. Reorder: bought before, most frequent first
+  const reorderIds = Object.keys(buys).sort((a, b) => buys[b].times - buys[a].times).slice(0, 10);
+  const reorderItems = reorderIds.map(id => withShop(state.itemsCache[id] || PR.find(p => p.id === id))).filter(avail);
+  if (reorderItems.length) html += `<h2>${t('reco_reorder')}</h2><div class="muted" style="font-size:12.5px;margin:-6px 0 8px">${t('reco_reorder_sub')}</div><div class="hscroll">${reorderItems.map(p => productCard(p, t('reco_times', { n: buys[p.id].times }))).join('')}</div>`;
+  // 2. For you: scored, excluding already-bought
+  const scored = PR.filter(p => avail(p) && !buys[p.id]).map(p => ({ p: withShop(p), s: recoScore(p) })).filter(x => x.s >= 8).sort((a, b) => b.s - a.s).slice(0, 10);
+  if (scored.length){
+    const maxS = scored[0].s || 1;
+    html += `<h2>${t('reco_foryou')}</h2><div class="muted" style="font-size:12.5px;margin:-6px 0 8px">${t('reco_foryou_sub')}</div><div class="hscroll">${scored.map(x => productCard(x.p, `<span class="matchtag">${t('reco_match', { n: Math.min(99, Math.round(60 + 39 * x.s / maxS)) })}</span>`)).join('')}</div>`;
+  }
+  // 3. Popular near you: top sold items in region
+  const popular = PR.filter(p => avail(p) && !buys[p.id] && sold(p.id) > 0).sort((a, b) => sold(b.id) - sold(a.id)).slice(0, 10);
+  if (popular.length) html += `<h2>${t('reco_popular')}</h2><div class="muted" style="font-size:12.5px;margin:-6px 0 8px">${t('reco_popular_sub')}</div><div class="hscroll">${popular.map(p => productCard(withShop(p), t('reco_orders', { n: sold(p.id) }))).join('')}</div>`;
+  // 4. Recently viewed
+  const recent = (state.recoRecent || []).map(id => withShop(state.itemsCache[id] || PR.find(p => p.id === id))).filter(avail).slice(0, 10);
+  if (recent.length) html += `<h2>${t('reco_recent')}</h2><div class="muted" style="font-size:12.5px;margin:-6px 0 8px">${t('reco_recent_sub')}</div><div class="hscroll">${recent.map(p => productCard(p)).join('')}</div>`;
+  return html;
+}
+
 
 // tinted initial for items and shops without a photo (same name = same colour)
 const EMOJI_KEYS = [
@@ -1651,15 +1779,19 @@ function noImg(name, cat){
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
 // ================= CARDS =================
 function itemRate(id){ const r = state.stats && state.stats.ritems && state.stats.ritems[id]; return r && r.n ? r : null; }
-function productCard(p){
-  const shop = p.restaurants || p._shop || {}; const off = pctOff(p); const s = sold(p.id);
+function productCard(p, why){
+  const shop = p.restaurants || p._shop || {}; const s = sold(p.id);
+  const fl = p._flash;
+  const effPrice = fl ? num(fl.flash_price) : p.price;
+  const effCompare = fl ? p.price : p.compare_price;
+  const off = effCompare > effPrice ? Math.round((1 - effPrice / effCompare) * 100) : 0;
   const canAdd = p.is_available !== false;
   return `<div class="gcard">
     <button class="heart ${isFav(p.id) ? 'on' : ''}" onclick="A.fav('${p.id}', this)" aria-label="Save">${isFav(p.id) ? '♥' : '♡'}</button>
     <a href="#/p/${p.id}">
-      <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}</div>
+      <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}${why ? `<span class="recowhy">${why}</span>` : ''}</div>
       <div class="gname">${esc(p.name)}</div>
-      <div class="gprice ${off ? '' : 'plain'}">${money(p.price)}${off ? `<span class="strike">${money(p.compare_price)}</span>` : ''}</div>
+      <div class="gprice ${off ? '' : 'plain'}">${fl ? '⚡ ' : ''}${money(effPrice)}${off ? `<span class="strike">${money(effCompare)}</span>` : ''}</div>
       <div class="gmeta"><span>${esc(shop.name || '')}</span>${itemRate(p.id) ? `<span class="star">★ ${itemRate(p.id).avg}</span>` : s ? `<span>${t('sold_n', { n:s })}</span>` : ''}</div>${leftBadge(p)}${hasOpts(p.id) ? `<div class="custom">${t('customizable')}</div>` : ''}
     </a>
     ${canAdd ? `<button class="qadd" onclick="A.quickAdd('${p.id}')" aria-label="${t('add')}">+</button>` : ''}
@@ -1744,7 +1876,9 @@ function homeBody(){
   return `
     ${banner}
     ${typeChips()}
+    ${flashSection()}
     ${(state.againShops || []).length ? `<h2>${t('order_again')}</h2><div class="hscroll">${state.againShops.map(id => state.restaurants.find(r => r.id === id)).filter(Boolean).map(shopMini).join('')}</div>` : ''}
+    ${recoSections(PR)}
     ${state.user ? `<a class="menu-row" href="#/offers" style="border:1px dashed var(--brand);border-radius:14px;padding:12px 14px;margin:6px 0;color:var(--brand)"><span>${t('offers_invite')}</span><span>›</span></a>` : ''}
     ${cats.length ? `<h2>${t('categories')}</h2><div class="cats">${cats.map(c => `<a class="catchip" href="#/c/${encodeURIComponent(c.name)}"><span class="ic">${c.img ? `<img src="${esc(c.img)}" alt="" loading="lazy">` : esc(c.name[0])}</span><span>${esc(c.name)}</span></a>`).join('')}</div>` : ''}
     ${deals.length ? `<h2>${t('deals')}</h2><div class="hscroll">${deals.map(productCard).join('')}</div>` : ''}
@@ -1755,6 +1889,8 @@ function homeBody(){
 }
 async function showHome(){ await ensureData();
   if (state.user && state.walletBal === undefined){ state.walletBal = 0; sb.rpc('my_wallet').then(({ data }) => { state.walletBal = num(data); const w = $('walletPill'); if (w) w.innerHTML = walletPillHtml(); }, () => {}); }
+  if (state.user) loadRecoData().then(() => { if (currentRoute === 'home' && !state.homeQuery.trim()){ const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } }).catch(() => {});
+  loadFlash().then(() => { if (currentRoute === 'home' && !state.homeQuery.trim()){ const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } }).catch(() => {});
   $('view').innerHTML = `<div id="homeBody">${homeBody()}</div>`; startBannerAuto();
   if (state.user && !state.againShops){ state.againShops = []; try { const { data } = await sb.from('orders').select('restaurant_id').eq('customer_id', state.user.id).eq('status', 'delivered').order('created_at', { ascending:false }).limit(30); state.againShops = [...new Set((data || []).map(x => x.restaurant_id))].slice(0, 8); if (state.againShops.length && currentRoute === 'home' && !state.homeQuery.trim()){ const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } } catch (e) {} } }
 function bannerDots(){ const c = $('bcar'), d = $('bdots'); if (!c || !d) return; const i = Math.round(c.scrollLeft / Math.max(1, c.clientWidth)); [...d.children].forEach((x, k) => x.classList.toggle('on', k === Math.abs(i))); }
@@ -1780,7 +1916,11 @@ async function showCategory(name){
 async function showSaved(){
   await ensureData();
   const list = state.favs.map(id => state.itemsCache[id]).filter(Boolean);
-  $('view').innerHTML = `<h1>${t('favourites')}</h1>${list.length ? `<div class="grid2">${list.map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}`;
+  const card = p => {
+    const dropped = p.compare_price > p.price || p._flash;
+    return productCard(p, dropped ? t('price_drop') : '');
+  };
+  $('view').innerHTML = `<h1>${t('favourites')}</h1>${list.length ? `<div class="grid2">${list.map(card).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}`;
 }
 
 // ================= SHOP PAGE =================
@@ -1875,6 +2015,7 @@ async function showProduct(id){
   try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,heavy_fee,weight_kg,stock_qty,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
   const off = pctOff(item); const s = sold(item.id); const rt = shopRating(shop.id);
   state.qty = 1;
+  trackView(item.id, shop.id || item.restaurant_id);
   const canBuy = item.is_available && full.is_active !== false;
   try { await loadOptions(item.id); } catch (e) {}
   $('view').innerHTML = `
@@ -2399,8 +2540,10 @@ async function showAccount(){
   const addrs = state.addresses.map(a => addressRow(a, false)).join('');
   let wbal = 0, wtx = []; if (plusSet()) await loadPlus();
   try { const [b, l] = await Promise.all([sb.rpc('my_wallet'), sb.from('wallet_tx').select('amount,kind,note,created_at').eq('user_id', state.user.id).order('created_at', { ascending:false }).limit(8)]); wbal = num(b.data); wtx = l.data || []; } catch (e) {}
+  let pts = 0; try { const { data } = await sb.from('point_ledger').select('points').eq('user_id', state.user.id); pts = (data || []).reduce((n, x) => n + num(x.points), 0); } catch (e) {}
   $('view').innerHTML = `<h1>${t('account')}</h1>
     <div class="walletcard"><div><small>${t('wallet')}</small><b>${money(wbal)}</b></div><span>💰</span></div>
+    <div class="walletcard pts"><div><small>⭐ ${t('loyalty_pts')}</small><b>${pts} pts</b><div class="muted" style="font-size:12px">${t('loyalty_earn', { n:1 })}</div></div><button class="btn inline" style="width:auto;padding:10px 18px" onclick="A.redeemPts()" ${pts < 100 ? 'disabled style="width:auto;padding:10px 18px;opacity:.5"' : ''}>${t('redeem')}</button></div>
     ${wtx.length ? `<details class="box wtx"><summary class="muted">${t('w_hist')}</summary>${wtx.map(x => `<div class="line"><span>${t({ order:'w_order', order_back:'w_back', refund:'w_refund', admin:'w_admin', plus:'w_plus' }[x.kind] || 'w_admin')}<small class="muted" style="display:block;font-size:12px">${esc(when(x.created_at))}${x.note ? ' · ' + esc(x.note) : ''}</small></span><b style="color:${num(x.amount) < 0 ? 'var(--danger)' : 'var(--brand)'}">${num(x.amount) > 0 ? '+' : '−'}${money(Math.abs(num(x.amount)))}</b></div>`).join('')}</details>` : `<div class="muted" style="font-size:13px;margin:-4px 2px 10px">${t('wallet_none')}</div>`}
     ${plusSet() ? `<a class="menu-row plusrow" href="#/plus"><span>⭐ ${t('plus')}<small>${plusActive() ? esc(t('plus_until', { d:new Date(state.plus.ends_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) }).replace('⭐ ', '')) : t('plus_s')}</small></span><span class="muted">›</span></a>` : ''}
     <a class="menu-row" href="#/saved"><span>♥ ${t('favourites')} (${state.favs.length})</span><span class="muted">›</span></a>
@@ -2608,6 +2751,7 @@ const A = {
     state.homeQuery = v;
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
+      trackSearch(v);
       if (currentRoute === 'shops'){ showShops(); return; }
       if (currentRoute !== 'home'){ nav('/'); return; }
       const el = $('homeBody'); if (el) el.innerHTML = homeBody();
@@ -2740,6 +2884,15 @@ const A = {
     await run(async () => { state.plus = need(await sb.rpc('plus_join', { p_method:'online', p_label:'Online', p_ref:ref })); toast('✓'); await showPlus(); }); },
   setSub(k){ state.subPref = k; drawCheckout(); },
   setWallet(v){ state.useWallet = v; drawCheckout(); },
+  async redeemPts(){
+    const pts = prompt(t('redeem_how_many'));
+    const n = Math.floor(num(pts));
+    if (!n || n < 100) return toast(t('redeem_min'), true);
+    const r = await run(async () => need(await sb.rpc('redeem_points', { p_points:n })));
+    if (r === false) return;
+    toast(t('redeem_done', { c:r.code }));
+    showAccount();
+  },
   setShopF(k){ state.shopF = k === 'all' ? null : k; showShops(); },
   async rxPick(inp){
     const f = inp.files && inp.files[0]; if (!f) return; if (f.size > 10e6) return toast('Max 10 MB', true);
