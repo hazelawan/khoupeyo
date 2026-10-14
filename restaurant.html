@@ -661,7 +661,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.4';
+const APP_VERSION = '6.6';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -790,6 +790,7 @@ const I18N = {
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
+    flash_price_q:'Flash price in Rs? (regular {p})', flash_price_bad:'Flash price must be less than regular price', flash_hours_q:'Duration in hours?', flash_req_sent:'⚡ Request sent! Admin will approve.',
     remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Wanhar Mart admin approves them.',
     no_sections:'Add a section first, for example Burgers.', menu_empty:'No products yet. Add a section, then add your products.',
     search:'Search products', all:'All', out_filter:'Out of stock', pending_filter:'Waiting approval',
@@ -860,6 +861,7 @@ const I18N = {
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
+    flash_price_q:'فلیش قیمت Rs میں؟ (اصل {p})', flash_price_bad:'فلیش قیمت اصل قیمت سے کم ہونی چاہیے', flash_hours_q:'کتنے گھنٹے کے لیے؟', flash_req_sent:'⚡ درخواست بھیج دی! ایڈمن منظور کرے گا۔',
     remove_q:'یہ پروڈکٹ دکان سے ہٹا دیں؟', pending:'ایڈمن کی منظوری کا انتظار', pending_note:'نئی پروڈکٹس Wanhar Mart ایڈمن کی منظوری کے بعد گاہکوں کو نظر آئیں گی۔',
     no_sections:'پہلے ایک سیکشن بنائیں، جیسے برگر۔', menu_empty:'ابھی کوئی پروڈکٹ نہیں۔ سیکشن بنائیں، پھر پروڈکٹس شامل کریں۔',
     search:'پروڈکٹ تلاش کریں', all:'سب', out_filter:'ختم', pending_filter:'منظوری باقی',
@@ -1321,7 +1323,7 @@ function itemRow(i){
       <div>${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}</div>
       ${i.stock_qty != null ? `<div class="muted" style="font-size:13px;${num(i.stock_qty) <= 3 ? 'color:var(--danger);font-weight:700' : ''}">📦 ${t('stock_n', { n:num(i.stock_qty) })}</div>` : ''}
       ${i.is_approved === false ? `<span class="pill y">${t('pending')}</span>` : ''}</button>
-    <div style="text-align:center;flex:none"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="${t('in_stock')}"><span></span></label><small class="muted">${i.is_available ? t('in_stock') : t('out_stock')}</small></div>
+    <div style="text-align:center;flex:none"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="${t('in_stock')}"><span></span></label><small class="muted">${i.is_available ? t('in_stock') : t('out_stock')}</small><div style="margin-top:6px"><button class="linkbtn" onclick="A.flashReq('${i.id}')" title="Flash sale">⚡</button></div></div>
   </div>`;
 }
 // sections fold open and closed; the open ones are remembered on this phone
@@ -1917,6 +1919,18 @@ const A = {
     w.document.close();
   },
   async toggleItem(id, v){ await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('id', id)); await loadMenu(); renderTab(); }); },
+  async flashReq(itemId){
+    const i = (state.items || []).find(x => x.id === itemId);
+    if (!i) return;
+    const price = prompt(t('flash_price_q', { p: money(i.price) }));
+    const fp = Math.floor(num(price));
+    if (!fp || fp <= 0 || fp >= num(i.price)) return toast(t('flash_price_bad'), true);
+    const hours = Math.floor(num(prompt(t('flash_hours_q'), '6'))) || 6;
+    await run(async () => {
+      need(await sb.from('flash_requests').insert({ restaurant_id: state.restaurant.id, menu_item_id: itemId, flash_price: fp, hours: Math.min(72, Math.max(1, hours)), status: 'pending' }));
+      toast(t('flash_req_sent'));
+    });
+  },
   editCategory(id){
     const c = state.cats.find(x => x.id === id);
     openSheet(c ? t('edit_section') : t('add_section'), `
