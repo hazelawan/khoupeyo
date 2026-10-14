@@ -235,6 +235,13 @@ label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
 main{padding-bottom:140px!important}
 /* ===== Rider / Shop / Admin look ===== */
 .top,.topbar{background:var(--grad)!important;color:#fff;border-bottom:0!important;border-radius:0 0 22px 22px;box-shadow:0 10px 26px rgba(11,107,68,.22);padding:14px 16px!important}
+.riderid{display:flex;align-items:center;gap:11px;min-width:0;flex:1}
+.ravatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--marigold),#E09B00);color:#3D2E00;display:grid;place-items:center;font-weight:900;font-size:17px;flex:none;box-shadow:0 4px 12px rgba(255,179,2,.35)}
+.riderid b{display:block;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.riderid small{color:rgba(255,255,255,.75);font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+@keyframes goldPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,179,2,.45),var(--sh-2)}50%{box-shadow:0 0 0 10px rgba(255,179,2,0),var(--sh-2)}}
+.card.offer{animation:goldPulse 1.8s ease-in-out infinite;border:2px solid var(--marigold)!important}
+.card.offer .pill.y{background:var(--marigold);color:#3D2E00;font-weight:900}
 .top .brand,.topbar .brand{color:#fff;font-size:19px;line-height:1.15}
 .tiles{row-gap:10px}
 .top .brand small,.topbar .ver{color:rgba(255,255,255,.8)!important}
@@ -253,7 +260,8 @@ h2{font-size:18px}
 .tile{border:0!important;border-radius:20px;box-shadow:var(--sh-1);padding:14px}
 .tile b{font-size:24px;letter-spacing:-.02em}
 .tile span{color:var(--muted);font-weight:600;font-size:13px}
-.tile.hi{background:var(--grad)!important;box-shadow:0 10px 24px rgba(198,94,27,.28)}
+.tile.hi{background:linear-gradient(135deg,#0E7A4D,#0A5E3B)!important;box-shadow:0 10px 24px rgba(14,122,77,.35);border:0!important}
+.tile.hi b,.tile.hi span{color:#fff!important}
 .tile.hi span{color:rgba(255,255,255,.85)!important}
 .pill{padding:3px 10px}
 .cash{background:linear-gradient(135deg,rgba(255,179,2,.18),rgba(255,179,2,.08));border-radius:16px;padding:14px}
@@ -510,7 +518,7 @@ main{padding-bottom:130px!important}
 const Theme = (() => {
   const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
   const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
-  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const get = () => { try { return localStorage.getItem(KEY) || 'dark'; } catch (e) { return 'dark'; } };
   function walk(rules, mode){
     for (const r of rules){
       if (r.media && r.cssRules){
@@ -1024,11 +1032,14 @@ function dutyLabel(){
   const mins = state.shift ? (Date.now() - new Date(state.shift.started_at)) / 60000 : 0;
   return `<i></i>${t('on_duty')}${state.shift ? ` <small>${hm(mins)}</small>` : ''}`;
 }
+function riderName(){ const r = state.rider; return (r && r.full_name) || t('rider'); }
+function riderInitials(){ const n = riderName().trim().split(/\s+/); return ((n[0] || 'R')[0] + (n[1] || '')[0]).toUpperCase(); }
+function riderSub(){ const r = state.rider || {}; const rg = state.regionName || ''; const c = r.contract_type === 'company' ? t('c_company') : t('c_freelance'); return rg ? `${rg}` : c; }
 function renderShell(){
   $('app').innerHTML = `
     <header class="top">
-      <div class="brand">Wanhar Mart<b>.</b><small>Rider</small></div>
-      <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="duty ${onDuty() ? 'on' : ''}" id="dutyBtn" onclick="A.toggleDuty()">${dutyLabel()}</button></div>
+      <div class="riderid"><span class="ravatar" id="rAvatar">${riderInitials()}</span><div style="min-width:0"><b id="rName">${esc(riderName())}</b><small id="rSub">${esc(riderSub())}</small></div></div>
+      <div style="display:flex;gap:8px;align-items:center;flex:none">${Chat.button()}<button class="duty ${onDuty() ? 'on' : ''}" id="dutyBtn" onclick="A.toggleDuty()">${dutyLabel()}</button></div>
     </header>
     <main id="view"></main>
     <nav class="nav"><div class="nav-in">
@@ -1339,13 +1350,13 @@ function activeCard(o){
 }
 function jobCard(j){
   const d = jobDistances(j);
-  return `<div class="card" ${j.offered_to_me ? 'style="border:2px solid var(--marigold,#F2A900)"' : j.batch ? 'style="border:2px solid var(--brand)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
+  return `<div class="card ${j.offered_to_me ? 'offer' : ''}" ${!j.offered_to_me && j.batch ? 'style="border:2px solid var(--brand)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
     <div class="muted">${esc(j.restaurant_address || '')}</div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="cash"><span>${t('your_pay')}${payNote(j.extra_pay, j.tip)}</span><b>${money(j.rider_pay)}</b></div>
-    <button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>`;
+    ${j.offered_to_me ? `<div class="two" style="margin-top:12px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', true)">${t('decline')}</button><button class="btn" style="min-height:56px;font-size:18px" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>` : `<button class="btn" style="min-height:54px" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button>`}</div>`;
 }
 function cashWarning(){
   const lim = num(state.rider.cash_limit), cash = num(state.cash);
