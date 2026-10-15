@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.5';
+const APP_VERSION = '7.6';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2262,6 +2262,16 @@ function viewSettings(){
       <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('multi_zone_fee', Math.max(0, Number($('s_mzf').value || 0)))">Save</button></div>
     </div>
     <div class="card">
+      <b>⭐ Loyalty points rules</b>
+      <div class="muted" style="font-size:14px">Customers earn points on delivered orders and redeem them for promo codes. 0 = loyalty off.</div>
+      <div class="two">
+        <div><label class="f" for="s_lp_per">Rs per 1 point</label><input id="s_lp_per" type="number" min="0" value="${num(s.loyalty_per ?? 100)}"></div>
+        <div><label class="f" for="s_lp_min">Min order (Rs) to earn</label><input id="s_lp_min" type="number" min="0" value="${num(s.loyalty_min_order ?? 0)}"></div>
+      </div>
+      <label class="f" for="s_lp_red" style="margin-top:8px">Min points to redeem</label><input id="s_lp_red" type="number" min="1" value="${num(s.loyalty_redeem_min ?? 100)}">
+      <div class="actions"><button class="btn ghost block" onclick="A.saveLoyalty()">Save</button></div>
+    </div>
+    <div class="card">
       <b>📦 Big and heavy orders: rider share</b>
       <div class="muted" style="font-size:14px">Customers pay extra delivery for big orders and heavy items (set in Delivery zones and Products). Choose how much of that extra goes to the rider. 100 = all to the rider, 0 = all to Wanhar Mart.</div>
       <label class="f" for="rx_share">Rider gets (%)</label><input id="rx_share" type="number" min="0" max="100" value="${num(s.rider_extra_share ?? 100)}">
@@ -3836,6 +3846,14 @@ const A = {
   },
   async saveSetting(key, value){
     await run(async () => { need(await putSettings({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
+  },
+  async saveLoyalty(){
+    const rows = [
+      { key:'loyalty_per', value:Math.max(0, num($('s_lp_per').value || 100)) },
+      { key:'loyalty_min_order', value:Math.max(0, num($('s_lp_min').value || 0)) },
+      { key:'loyalty_redeem_min', value:Math.max(1, num($('s_lp_red').value || 100)) }
+    ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
+    await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Loyalty rules saved'); });
   }
 };
 
