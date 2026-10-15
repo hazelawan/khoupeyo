@@ -945,7 +945,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.9';
+const APP_VERSION = '5.10';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1054,7 +1054,7 @@ const I18N = {
     sort_best:'Best selling', sort_new:'Newest', sort_low:'Price: low to high', sort_high:'Price: high to low',
     sold_n:'{n} sold', off:'OFF', you_save:'You save {n}', qty:'Quantity', favourites:'Saved items', no_favs:'Tap the heart on a product to save it here.',
     reco_reorder:'🔁 Reorder again', reco_reorder_sub:'Your favourites, one tap away', reco_foryou:'✨ For you', reco_foryou_sub:'Picked based on your taste', reco_popular:'📍 Popular near you', reco_popular_sub:'Bestsellers in your area', reco_times:'{n}× bought', reco_orders:'🔥 {n} orders', reco_match:'{n}% match',
-    reco_recent:'👁️ Recently viewed', reco_recent_sub:'You were looking at these', flash_title:'⚡ Flash Sale', flash_ends:'Ends in', price_drop:'⬇ Price dropped', loyalty_pts:'Loyalty points', loyalty_earn:'Earn {n} pt per Rs 100 order', redeem:'Redeem', redeem_how_many:'How many points to redeem? (min 100)', redeem_min:'Minimum 100 points', redeem_done:'Promo code: {c} — apply it at checkout!',
+    reco_recent:'👁️ Recently viewed', reco_recent_sub:'You were looking at these', flash_title:'⚡ Flash Sale', flash_ends:'Ends in', price_drop:'⬇ Price dropped', loyalty_pts:'Loyalty points', loyalty_earn:'Earn 1 pt per Rs {n} order', redeem:'Redeem', redeem_how_many:'How many points to redeem? (min {m})', redeem_min:'Minimum {m} points', redeem_done:'Promo code: {c} — apply it at checkout!',
     login_sub:'Welcome back! Log in to order from shops near you.', signup_sub:'Join Wanhar Mart — order, book and track in seconds.',
     ob1t:'Everything in one app', ob1d:'Products, services and appointments from shops near you.',
     ob2t:'Book in seconds', ob2d:'Barber, clinic, car wash — pick a time and book instantly.',
@@ -1164,7 +1164,7 @@ const I18N = {
     sort_best:'سب سے زیادہ بکنے والی', sort_new:'نئی', sort_low:'قیمت: کم سے زیادہ', sort_high:'قیمت: زیادہ سے کم',
     sold_n:'{n} بکے', off:'رعایت', you_save:'آپ کی بچت {n}', qty:'تعداد', favourites:'محفوظ چیزیں', no_favs:'کسی پروڈکٹ پر دل دبائیں، وہ یہاں محفوظ ہو جائے گی۔',
     reco_reorder:'🔁 دوبارہ آرڈر کریں', reco_reorder_sub:'آپ کی پسندیدہ چیزیں، ایک ٹیپ پر', reco_foryou:'✨ آپ کے لیے', reco_foryou_sub:'آپ کی پسند کے حساب سے', reco_popular:'📍 آپ کے علاقے میں مقبول', reco_popular_sub:'آپ کے علاقے میں سب سے زیادہ بکنے والا', reco_times:'{n} بار خریدی', reco_orders:'🔥 {n} آرڈرز', reco_match:'{n}% میچ',
-    reco_recent:'👁️ حال ہی میں دیکھی', reco_recent_sub:'آپ یہ دیکھ رہے تھے', flash_title:'⚡ فلیش سیل', flash_ends:'ختم ہونے میں', price_drop:'⬇ قیمت کم ہوئی', loyalty_pts:'لائلٹی پوائنٹس', loyalty_earn:'ہر Rs 100 کے آرڈر پر {n} پوائنٹ', redeem:'ریڈیم کریں', redeem_how_many:'کتنے پوائنٹس ریڈیم کرنے ہیں؟ (کم از کم 100)', redeem_min:'کم از کم 100 پوائنٹس', redeem_done:'پرومو کوڈ: {c} — چیک آؤٹ پر لگائیں!',
+    reco_recent:'👁️ حال ہی میں دیکھی', reco_recent_sub:'آپ یہ دیکھ رہے تھے', flash_title:'⚡ فلیش سیل', flash_ends:'ختم ہونے میں', price_drop:'⬇ قیمت کم ہوئی', loyalty_pts:'لائلٹی پوائنٹس', loyalty_earn:'ہر Rs {n} کے آرڈر پر 1 پوائنٹ', redeem:'ریڈیم کریں', redeem_how_many:'کتنے پوائنٹس ریڈیم کرنے ہیں؟ (کم از کم {m})', redeem_min:'کم از کم {m} پوائنٹس', redeem_done:'پرومو کوڈ: {c} — چیک آؤٹ پر لگائیں!',
     login_sub:'خوش آمدید! آس پاس کی دکانوں سے آرڈر کے لیے لاگ اِن کریں۔', signup_sub:'ونہر مارٹ جوائن کریں — سیکنڈوں میں آرڈر، بُکنگ اور ٹریکنگ۔',
     ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز اور اپائنٹمنٹس۔',
     ob2t:'سیکنڈوں میں بُک کریں', ob2d:'حجام، کلینک، کار واش — وقت چنیں اور فوراً بُک کریں۔',
@@ -1621,6 +1621,7 @@ async function loadProducts(){
   sb.from('app_settings').select('value').eq('key', 'weight_tiers').maybeSingle().then(({ data }) => { const v = 'weight_tiers' in (state.rset || {}) ? state.rset.weight_tiers : data && data.value; state.weightTiers = Array.isArray(v) ? v : []; }, () => {});
   sb.from('app_settings').select('value').eq('key', 'complaint_rules').maybeSingle().then(({ data }) => { state.cmpRules = ('complaint_rules' in (state.rset || {}) ? state.rset.complaint_rules : data && data.value) || null; }, () => {});
   sb.from('app_settings').select('value').eq('key', 'multi_zone_fee').maybeSingle().then(({ data }) => { state.multiZoneFee = num(data && data.value); }, () => {});
+  ['loyalty_per','loyalty_min_order','loyalty_redeem_min'].forEach(k => sb.from('app_settings').select('value').eq('key', k).maybeSingle().then(({ data }) => { state[k] = num(data && data.value); }, () => {}));
   let bq = sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false });
   if (state.region) bq = bq.eq('region_id', state.region);
   await Promise.all([loadOptItems(), bq.then(({ data }) => { state.banners = data || []; }, () => {})]);
@@ -2559,7 +2560,7 @@ async function showAccount(){
   let pts = 0; try { const { data } = await sb.from('point_ledger').select('points').eq('user_id', state.user.id); pts = (data || []).reduce((n, x) => n + num(x.points), 0); } catch (e) {}
   $('view').innerHTML = `<h1>${t('account')}</h1>
     <div class="walletcard"><div><small>${t('wallet')}</small><b>${money(wbal)}</b></div><span>💰</span></div>
-    <div class="walletcard pts"><div><small>⭐ ${t('loyalty_pts')}</small><b>${pts} pts</b><div class="muted" style="font-size:12px">${t('loyalty_earn', { n:1 })}</div></div><button class="btn inline" style="width:auto;padding:10px 18px" onclick="A.redeemPts()" ${pts < 100 ? 'disabled style="width:auto;padding:10px 18px;opacity:.5"' : ''}>${t('redeem')}</button></div>
+    <div class="walletcard pts"><div><small>⭐ ${t('loyalty_pts')}</small><b>${pts} pts</b><div class="muted" style="font-size:12px">${t('loyalty_earn', { n:state.loyalty_per || 100 })}</div></div><button class="btn inline" style="width:auto;padding:10px 18px" onclick="A.redeemPts()" ${pts < (state.loyalty_redeem_min || 100) ? 'disabled style="width:auto;padding:10px 18px;opacity:.5"' : ''}>${t('redeem')}</button></div>
     ${wtx.length ? `<details class="box wtx"><summary class="muted">${t('w_hist')}</summary>${wtx.map(x => `<div class="line"><span>${t({ order:'w_order', order_back:'w_back', refund:'w_refund', admin:'w_admin', plus:'w_plus' }[x.kind] || 'w_admin')}<small class="muted" style="display:block;font-size:12px">${esc(when(x.created_at))}${x.note ? ' · ' + esc(x.note) : ''}</small></span><b style="color:${num(x.amount) < 0 ? 'var(--danger)' : 'var(--brand)'}">${num(x.amount) > 0 ? '+' : '−'}${money(Math.abs(num(x.amount)))}</b></div>`).join('')}</details>` : `<div class="muted" style="font-size:13px;margin:-4px 2px 10px">${t('wallet_none')}</div>`}
     ${plusSet() ? `<a class="menu-row plusrow" href="#/plus"><span>⭐ ${t('plus')}<small>${plusActive() ? esc(t('plus_until', { d:new Date(state.plus.ends_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) }).replace('⭐ ', '')) : t('plus_s')}</small></span><span class="muted">›</span></a>` : ''}
     <a class="menu-row" href="#/saved"><span>♥ ${t('favourites')} (${state.favs.length})</span><span class="muted">›</span></a>
@@ -2898,9 +2899,10 @@ const A = {
   setSub(k){ state.subPref = k; drawCheckout(); },
   setWallet(v){ state.useWallet = v; drawCheckout(); },
   async redeemPts(){
-    const pts = prompt(t('redeem_how_many'));
+    const minR = state.loyalty_redeem_min || 100;
+    const pts = prompt(t('redeem_how_many', { m:minR }));
     const n = Math.floor(num(pts));
-    if (!n || n < 100) return toast(t('redeem_min'), true);
+    if (!n || n < minR) return toast(t('redeem_min', { m:minR }), true);
     const r = await run(async () => need(await sb.rpc('redeem_points', { p_points:n })));
     if (r === false) return;
     toast(t('redeem_done', { c:r.code }));
