@@ -945,7 +945,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.10';
+const APP_VERSION = '5.11';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2809,7 +2809,7 @@ const A = {
     const key = it.id + (ids.length ? '|' + ids.join(',') : '');
     const ex = state.cart.items.find(c => c.key === key);
     if (ex) ex.qty += qty;
-    else state.cart.items.push({ key, id:it.id, rid:it.restaurant_id, name:it.name, price:num(it.price) + (opt ? opt.extra : 0), qty, opts:ids, optText:opt ? opt.text : '', heavy:num(it.heavy_fee), w:num(it.weight_kg) + (opt ? num(opt.w) : 0) });
+    else state.cart.items.push({ key, id:it.id, rid:it.restaurant_id, name:it.name, price:num(it._flash ? it._flash.flash_price : it.price) + (opt ? opt.extra : 0), qty, opts:ids, optText:opt ? opt.text : '', heavy:num(it.heavy_fee), w:num(it.weight_kg) + (opt ? num(opt.w) : 0) });
     saveCart(); return true;
   },
   cartShops(){ const m = new Map(); state.cart.items.forEach(i => { const rid = i.rid || state.cart.rid; if (!m.has(rid)) m.set(rid, []); m.get(rid).push(i); }); return [...m.entries()].map(([rid, items]) => ({ rid, items, shop:(state.restaurants || []).find(r => r.id === rid) || {} })); },
@@ -3014,16 +3014,16 @@ const A = {
       }
       const pm = state.payM === 'wallet' && payOn() ? 'wallet' : 'cod';
       const shops = A.cartShops();
-      const orderIds = [];
-      for (const s of shops){
-        const data = need(await sb.rpc('place_order', {
-          p_restaurant_id:s.rid, p_address_id:pick ? null : state.selAddr, p_items:s.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })),
-          p_payment_method:pm, p_promo:(shops.length === 1 && state.promoRes && state.promoRes.ok ? state.promo.trim() : null) || null, p_note:(state.cart.note || '').trim() || null,
-          p_tip:pick ? 0 : num(state.tip), p_scheduled_for:state.when === 'later' ? state.schedAt : null,
-          p_extra:{ type:pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet }
-        }));
-        orderIds.push(data);
-        if (state.forOther){ try { need(await sb.rpc('set_order_receiver', { p_order:data, p_name:(state.rcvName || '').trim(), p_phone:normalizePhone(state.rcvPhone || '') })); } catch (e) { logErr(e); } }
+      const data = need(await sb.rpc('place_multi_order', {
+        p_groups:shops.map(s => ({ restaurant_id:s.rid, items:s.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })) })),
+        p_address_id:pick ? null : state.selAddr, p_payment_method:pm,
+        p_promo:(shops.length === 1 && state.promoRes && state.promoRes.ok ? state.promo.trim() : null) || null, p_note:(state.cart.note || '').trim() || null,
+        p_tip:pick ? 0 : num(state.tip), p_scheduled_for:state.when === 'later' ? state.schedAt : null,
+        p_extra:{ type:pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet }
+      }));
+      const orderIds = (data.orders || []).map(o => o.order_id);
+      for (const oid of orderIds){
+        if (state.forOther){ try { need(await sb.rpc('set_order_receiver', { p_order:oid, p_name:(state.rcvName || '').trim(), p_phone:normalizePhone(state.rcvPhone || '') })); } catch (e) { logErr(e); } }
       }
       if (orderIds.length > 1) toast(t('multi_order_ok', { n:orderIds.length }));
       state.forOther = false; state.rcvName = ''; state.rcvPhone = '';
