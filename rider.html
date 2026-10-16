@@ -637,7 +637,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.12';
+const APP_VERSION = '5.15';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -709,7 +709,7 @@ const I18N = {
     confirm_giveback:'Give back this delivery? Another rider can take it.',
     today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Wanhar Mart at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
-    paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand',
+    paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand', handover_code:'Confirm cash handover', handover_t:'Enter the 4-digit code the admin shows you', handover_ph:'Code', handover_ok:'Cash handover confirmed',
     cash_note:'All cash you collected must be deposited at the Wanhar Mart office. Your pay comes with your salary.',
     cash_limit:'Limit', over_limit:'You are over your cash limit. Deposit the cash to get new deliveries.',
     near_limit:'You are close to your cash limit. Deposit cash soon.',
@@ -741,10 +741,10 @@ const I18N = {
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
     k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
     k_order_lost:'🚨 Order stolen or lost', lost_btn:'🚨 Order stolen or lost', lost_title:'Order stolen or lost', lost_what:'What happened?', lr_stolen:'Stolen (taken when I was not looking)', lr_robbed:'Robbed (snatched by force)', lr_lost:'Lost or fell on the way', lost_note_l:'Write clearly: where, what time, how it happened', lost_photo_l:'Photo: police report (roznamcha), the place, or your bike', lost_warn:'⚠️ The office will check your location and the times. If the report is false, the full order price and a fine are cut from your pay and your ID can be closed. If it is true, you pay nothing.', lost_send:'Send report to the office', lost_need_what:'Choose what happened', lost_need_note:'Write clearly what happened', lost_sent:'Report sent. Wait for the office. Do not deliver this order.', lost_open:'Lost report sent · waiting for the office', k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
-    shop_word:'Shop', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat',
+    shop_word:'Shop', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat', contact:'Contact',
     tab_duty:'Duty', susp_title:'Your rider ID is paused', susp_back:'Active again at {t}', susp_note:'You cannot take deliveries now. Duty time does not count while paused.', susp_left:'left',
     deliver_by:'Deliver by {t}', due_left:'{m} min left', due_late:'Late by {m} min', cust_expects:'Customer expects the order by {t}',
-    att_title:'Attendance and leave', my_timing:'My duty timing', timing_none:'Wanhar Mart has not set your duty time yet.', timing_from:'From {a}', timing_range:'{a} to {b}', timing_change:'Coming change',
+    att_title:'Attendance and leave', duty_m_timing:'My Duty Timing & Attendance', duty_m_leave:'Ask for Leave', duty_m_complaints:'Customer Complaints', duty_m_offers:'Company Offers & My Charges', duty_m_contract:'Change My Contract', duty_back:'‹ Back', earn_t_pay:'Month Pay & Cash', earn_t_targets:'Targets & Pay Levels', earn_t_board:'Leaderboard', my_timing:'My duty timing', timing_none:'Wanhar Mart has not set your duty time yet.', timing_from:'From {a}', timing_range:'{a} to {b}', timing_change:'Coming change',
     s_present:'Present', s_late:'Late', s_leave:'Leave', s_half_leave:'Half leave', s_absent:'Absent', s_suspended:'Paused', s_not_yet:'Not started yet', s_no_duty:'No duty',
     att_month:'This month', worked:'Worked', ask_leave:'Ask for leave', my_leaves:'My leave requests', no_leaves:'No leave requests yet.',
     lk_half:'Half day', lk_full:'Full day', lk_emergency:'Emergency', half_first:'First half', half_second:'Second half', leave_date:'From date', leave_days:'How many days?', leave_reason:'Reason',
@@ -789,7 +789,7 @@ const I18N = {
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
     today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Wanhar Mart طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
-    paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد',
+    paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد', handover_code:'نقد حوالگی کی تصدیق', handover_t:'ایڈمن جو 4 ہندسوں کا کوڈ دکھائے وہ درج کریں', handover_ph:'کوڈ', handover_ok:'نقد حوالگی کی تصدیق ہو گئی',
     cash_note:'وصول شدہ تمام نقد رقم Wanhar Mart کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
     cash_limit:'حد', over_limit:'آپ کے پاس نقد کی حد پوری ہو گئی ہے۔ نئی ڈیلیوری کے لیے رقم جمع کروائیں۔',
     near_limit:'نقد رقم حد کے قریب ہے۔ جلد جمع کروائیں۔',
@@ -821,10 +821,10 @@ const I18N = {
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'دکان پر آرڈر تیار نہیں',
     k_shop_closed:'دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'حادثہ یا گاڑی کا مسئلہ',
     k_order_lost:'🚨 آرڈر چوری ہو گیا یا گم ہو گیا', lost_btn:'🚨 آرڈر چوری یا گم ہو گیا', lost_title:'آرڈر چوری یا گم ہو گیا', lost_what:'کیا ہوا؟', lr_stolen:'چوری ہو گیا (میری غیر موجودگی میں)', lr_robbed:'چھین لیا گیا (زبردستی)', lr_lost:'راستے میں گر گیا یا گم ہو گیا', lost_note_l:'صاف لکھیں: کہاں، کس وقت، کیسے ہوا', lost_photo_l:'تصویر: پولیس رپورٹ (روزنامچہ)، جگہ، یا اپنی بائیک', lost_warn:'⚠️ دفتر آپ کی لوکیشن اور وقت چیک کرے گا۔ اگر رپورٹ جھوٹی نکلی تو آرڈر کی پوری قیمت اور جرمانہ آپ کی تنخواہ سے کٹے گا اور آئی ڈی بند ہو سکتی ہے۔ اگر سچ ہے تو آپ کو کچھ نہیں دینا۔', lost_send:'رپورٹ دفتر کو بھیجیں', lost_need_what:'چنیں کیا ہوا', lost_need_note:'صاف لکھیں کیا ہوا', lost_sent:'رپورٹ بھیج دی گئی۔ دفتر کا انتظار کریں۔ یہ آرڈر ڈیلیور نہ کریں۔', lost_open:'گمشدگی کی رپورٹ بھیج دی · دفتر کا انتظار', k_rider_delay:'مجھے دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', pick_problem:'مسئلہ چنیں', call_customer:'گاہک کو کال کریں',
-    shop_word:'دکان', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا',
+    shop_word:'دکان', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا', contact:'رابطہ',
     tab_duty:'ڈیوٹی', susp_title:'آپ کی رائیڈر آئی ڈی روک دی گئی ہے', susp_back:'{t} پر دوبارہ چالو ہوگی', susp_note:'ابھی آپ ڈیلیوری نہیں لے سکتے۔ رکنے کے دوران ڈیوٹی کا وقت نہیں گنا جاتا۔', susp_left:'باقی',
     deliver_by:'{t} تک پہنچائیں', due_left:'{m} منٹ باقی', due_late:'{m} منٹ دیر', cust_expects:'گاہک کو {t} تک آرڈر چاہیے',
-    att_title:'حاضری اور چھٹی', my_timing:'میری ڈیوٹی کا وقت', timing_none:'Wanhar Mart نے ابھی آپ کی ڈیوٹی کا وقت مقرر نہیں کیا۔', timing_from:'{a} سے', timing_range:'{a} سے {b} تک', timing_change:'آنے والی تبدیلی',
+    att_title:'حاضری اور چھٹی', duty_m_timing:'میری ڈیوٹی ٹائمنگ اور حاضری', duty_m_leave:'چھٹی کی درخواست', duty_m_complaints:'گاہک کی شکایات', duty_m_offers:'کمپنی آفرز اور میری کٹوتی', duty_m_contract:'کنٹریکٹ تبدیل کریں', duty_back:'‹ واپس', earn_t_pay:'ماہانہ تنخواہ اور نقد', earn_t_targets:'اہداف اور تنخواہ کی سطح', earn_t_board:'ٹاپ رائیڈرز', my_timing:'میری ڈیوٹی کا وقت', timing_none:'Wanhar Mart نے ابھی آپ کی ڈیوٹی کا وقت مقرر نہیں کیا۔', timing_from:'{a} سے', timing_range:'{a} سے {b} تک', timing_change:'آنے والی تبدیلی',
     s_present:'حاضر', s_late:'دیر سے', s_leave:'چھٹی', s_half_leave:'آدھی چھٹی', s_absent:'غیر حاضر', s_suspended:'رکا ہوا', s_not_yet:'ابھی شروع نہیں', s_no_duty:'ڈیوٹی نہیں',
     att_month:'اس مہینے', worked:'کام کیا', ask_leave:'چھٹی کی درخواست', my_leaves:'میری چھٹی کی درخواستیں', no_leaves:'ابھی کوئی درخواست نہیں۔',
     lk_half:'آدھا دن', lk_full:'پورا دن', lk_emergency:'ایمرجنسی', half_first:'پہلا حصہ', half_second:'دوسرا حصہ', leave_date:'کس تاریخ سے', leave_days:'کتنے دن؟', leave_reason:'وجہ',
@@ -1280,10 +1280,7 @@ function bindSliders(){
 // ================= DELIVERIES TAB =================
 function chatRow(o){
   const id = JSON.stringify(o.id);
-  return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
-    <button class="btn ghost small" onclick='Chat.open(${id}, "cr", null)'>💬 ${t('customer')}</button>
-    <button class="btn ghost small" onclick='Chat.open(${id}, "rs", null)'>💬 ${t('shop_word')}</button>
-    <button class="btn ghost small" onclick='Chat.open(${id}, "sup_r", null)'>💬 ${t('help_word')}</button></div>`;
+  return `<div style="margin-top:10px"><button class="btn ghost small" style="width:100%" onclick='A.contactSheet(${id})'>💬 ${t('contact')}</button></div>`;
 }
 function waitIssue(o){ return (state.issues[o.id] || []).find(i => i.status === 'open' && i.wait_until); }
 function returnCard(o){
@@ -1687,40 +1684,64 @@ function viewDuty(){
       ${l.status === 'pending' ? `<button class="chip" style="margin-top:6px" onclick="A.cancelLeave('${l.id}')">${t('cancel_req')}</button>` : ''}</div><span class="st ${l.status}">${t('lv_' + l.status)}</span></div>`; }).join('');
   const comps = state.complaints.map(c => `<div class="lrow"><div style="min-width:0"><b>${t('ck_' + c.kind)}</b> <span class="muted" style="font-size:13px">#${esc(String(c.order_id).slice(-4).toUpperCase())}</span>
       <div class="muted" style="font-size:13px">${when(c.created_at)}${c.late_minutes ? ' · ' + t('due_late', { m:c.late_minutes }) : ''}</div>${c.note ? `<div style="font-size:13px;overflow-wrap:anywhere">“${esc(c.note)}”</div>` : ''}${c.penalty && c.status === 'approved' ? `<div style="font-size:13px;color:var(--danger);font-weight:700">${esc(c.penalty)}</div>` : ''}</div><span class="st ${c.status}">${t('cs_' + c.status)}</span></div>`).join('');
-  return `<h1>${t('att_title')}</h1>${suspBanner()}
+  const sec = state.dutySec;
+  const mrow = (key, icon, label) => `<button class="row" style="width:100%;text-align:start;background:none;border:none;cursor:pointer" onclick="state.dutySec='${key}';renderTab()"><div><b>${icon} ${label}</b></div><span class="muted">›</span></button>`;
+  const back = `<button class="row" style="width:100%;text-align:start;background:none;border:none;cursor:pointer;margin-bottom:8px" onclick="state.dutySec=null;renderTab()"><div><b>${t('duty_back')}</b></div></button>`;
+  if (!sec) return `<h1>${t('att_title')}</h1>${suspBanner()}<div class="list">
+    ${mrow('timing', '🕘', t('duty_m_timing'))}
+    ${mrow('leave', '🏖️', t('duty_m_leave'))}
+    ${mrow('complaints', '⚠️', t('duty_m_complaints'))}
+    ${mrow('offers', '🎁', t('duty_m_offers'))}
+    ${mrow('contract', '📋', t('duty_m_contract'))}
+  </div>`;
+  if (sec === 'timing') return `<h1>${t('duty_m_timing')}</h1>${suspBanner()}${back}
     <div class="card"><b>🕘 ${t('my_timing')}</b>${timing}${nextHtml}</div>
     <div class="card"><b>📊 ${t('att_month')}</b>
       <div class="attgrid"><div><b>${cnt('present')}</b><span>${t('s_present')}</span></div><div><b style="color:#8a5a00">${cnt('late')}</b><span>${t('s_late')}</span></div>
       <div><b style="color:#2257B8">${cnt('leave') + cnt('half_leave') / 2}</b><span>${t('s_leave')}</span></div><div><b style="color:var(--danger)">${cnt('absent')}</b><span>${t('s_absent')}</span></div></div>
       ${att ? `<div style="max-height:300px;overflow:auto">${att}</div>` : ''}</div>
-    <button class="btn" style="margin-bottom:12px" onclick="A.leaveForm()">📅 ${t('ask_leave')}</button>
-    <div class="card"><b>${t('my_leaves')}</b>${leaves || `<div class="muted" style="margin-top:6px">${t('no_leaves')}</div>`}</div>
-    <div class="card"><b>📣 ${t('my_complaints')}</b>${comps || `<div class="muted" style="margin-top:6px">${t('no_complaints')}</div>`}</div>
-    ${perksCards()}
     ${penaltyRules()}`;
+  if (sec === 'leave') return `<h1>${t('duty_m_leave')}</h1>${suspBanner()}${back}
+    <button class="btn" style="margin-bottom:12px" onclick="A.leaveForm()">📅 ${t('ask_leave')}</button>
+    <div class="card"><b>${t('my_leaves')}</b>${leaves || `<div class="muted" style="margin-top:6px">${t('no_leaves')}</div>`}</div>`;
+  if (sec === 'complaints') return `<h1>${t('duty_m_complaints')}</h1>${suspBanner()}${back}
+    <div class="card"><b>📣 ${t('my_complaints')}</b>${comps || `<div class="muted" style="margin-top:6px">${t('no_complaints')}</div>`}</div>`;
+  if (sec === 'offers') return `<h1>${t('duty_m_offers')}</h1>${suspBanner()}${back}
+    ${offersCard()}${chargesCard()}${requestsCard()}`;
+  return `<h1>${t('duty_m_contract')}</h1>${suspBanner()}${back}${contractCard()}`;
 }
 function offerCost(o){
   if (o.kind === 'free' || !num(o.amount)) return t('offer_free');
   return (o.kind === 'installment' ? t('per_month_x', { a:money(o.amount), n:num(o.months) }) : o.kind === 'monthly' ? t('every_month', { a:money(o.amount) }) : t('one_time', { a:money(o.amount) })) + ' · ' + t('cut_from_pay');
 }
-function perksCards(){
+function offersCard(){
   const pend = (state.reqs || []).filter(q => q.status === 'pending');
   const offers = (state.offers || []).map(o => { const asked = pend.some(q => q.offer_id === o.id);
     return `<div class="lrow"><div style="min-width:0"><b>${esc(o.title)}</b><div class="muted" style="font-size:13px">${offerCost(o)}</div>${o.details ? `<div style="font-size:13px;overflow-wrap:anywhere">${esc(o.details)}</div>` : ''}</div>
       ${asked ? `<span class="st pending">${t('asked_wait')}</span>` : `<button class="chip on" style="flex:none" onclick="A.askOffer('${o.id}')">${t('want_this')}</button>`}</div>`; }).join('');
+  return `<div class="card"><b>🎁 ${t('offers_title')}</b><div class="muted" style="font-size:13px;margin-top:4px">${t('offers_note')}</div>${offers || `<div class="muted" style="margin-top:6px">${t('no_offers')}</div>`}</div>`;
+}
+function chargesCard(){
   const now = ymd(monthStart()).slice(0, 7);
   const charges = (state.charges || []).map(c => { const done = c.end_month && String(c.end_month).slice(0, 7) < now;
     const st = c.status === 'stopped' ? t('ch_stopped') : done ? t('ch_done') : t('ch_active');
     return `<div class="lrow"><div style="min-width:0"><b>${esc(c.title)}</b><div class="muted" style="font-size:13px">${c.kind === 'installment' ? t('per_month_x', { a:money(c.amount), n:num(c.months) }) : c.kind === 'monthly' ? t('every_month', { a:money(c.amount) }) : t('one_time', { a:money(c.amount) })}</div>${c.note ? `<div style="font-size:13px">${esc(c.note)}</div>` : ''}</div><span class="st ${c.status === 'stopped' || done ? 'pending' : 'approved'}">${st}</span></div>`; }).join('');
+  return `<div class="card"><b>🧾 ${t('my_charges')}</b>${charges || `<div class="muted" style="margin-top:6px">${t('no_charges')}</div>`}</div>`;
+}
+function requestsCard(){
   const reqs = (state.reqs || []).map(q => `<div class="lrow"><div style="min-width:0"><b>${q.kind === 'offer' ? '🎁 ' + esc(q.offer_title || '') : '📝 ' + t('rq_contract') + ': ' + t('c_' + q.from_contract) + ' → ' + t('c_' + q.to_contract)}</b>
       <div class="muted" style="font-size:13px">${when(q.created_at)}</div>${q.admin_note ? `<div style="font-size:13px"><span class="muted">💬 ${esc(q.admin_note)}</span></div>` : ''}
       ${q.status === 'pending' ? `<button class="chip" style="margin-top:6px" onclick="A.cancelReq('${q.id}')">${t('cancel_req')}</button>` : ''}</div><span class="st ${q.status}">${t('rq_' + q.status)}</span></div>`).join('');
+  return reqs ? `<div class="card"><b>📨 ${t('my_requests')}</b>${reqs}</div>` : '';
+}
+function contractCard(){
+  const pend = (state.reqs || []).filter(q => q.status === 'pending');
   const ctWait = pend.some(q => q.kind === 'contract'); const company = myContract().kind === 'company';
-  return `<div class="card"><b>🎁 ${t('offers_title')}</b><div class="muted" style="font-size:13px;margin-top:4px">${t('offers_note')}</div>${offers || `<div class="muted" style="margin-top:6px">${t('no_offers')}</div>`}</div>
-    <div class="card"><b>🧾 ${t('my_charges')}</b>${charges || `<div class="muted" style="margin-top:6px">${t('no_charges')}</div>`}</div>
-    ${reqs ? `<div class="card"><b>📨 ${t('my_requests')}</b>${reqs}</div>` : ''}
-    <div class="card"><b>📝 ${t('contract_title')}</b><div class="muted" style="font-size:13px;margin-top:4px">${company ? t('contract_note_co') : t('contract_note_free')}</div>
+  return `<div class="card"><b>📝 ${t('contract_title')}</b><div class="muted" style="font-size:13px;margin-top:4px">${company ? t('contract_note_co') : t('contract_note_free')}</div>
       ${ctWait ? `<div class="note" style="margin-top:8px">⏳ ${t('contract_wait')}</div>` : `<button class="btn ghost" style="margin-top:10px" onclick="A.askContract()">${t('contract_btn')}</button>`}</div>`;
+}
+function perksCards(){
+  return offersCard() + chargesCard() + requestsCard() + contractCard();
 }
 // ================= EARNINGS TAB =================
 function viewEarn(){
@@ -1746,23 +1767,20 @@ function viewEarn(){
   const dep = state.handovers.map(h => Receipt.row(h, { kind:'handover', ur:state.lang === 'ur', to:rname })).join('');
   const pay = state.payouts.map(p => Receipt.row(p, { kind:'payout', ur:state.lang === 'ur', to:rname })).join('');
   const monthName = new Date().toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { month:'long', year:'numeric' });
-  return `<h1>${t('earnings')}</h1>${boostBanner()}
-    <div class="tiles">
+  const et = state.earnTab || 'pay';
+  const etab = (key, label) => `<button class="chip ${et === key ? 'on' : ''}" onclick="state.earnTab='${key}';renderTab()">${label}</button>`;
+  let earnBody = '';
+  if (et === 'pay') earnBody = `<div class="tiles">
       <div class="tile hi"><b>${money(monthPay)}</b><span>${t('month_pay')}</span></div>
       <div class="tile hi"><b>${money(Math.max(0, monthPay - paid))}</b><span>${t('to_pay')}</span></div>
       <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
       <div class="tile"><b>${hm(state.todayMinutes)}</b><span>${t('on_duty_time')} · ${t('today')}</span></div>
     </div>
     <button class="btn ghost" style="margin-bottom:12px" onclick="showPaySlip()">🧾 ${t('pay_slip_btn')}</button>
-    ${goalCard()}
-    ${targetsCard()}
-    ${lbCard()}
-    ${dutyCard()}
     <div class="card">
       <div class="line"><span class="muted">${t('contract')}</span><b>${t('c_' + c.kind)}</b></div>
       <div class="muted" style="font-size:14px">${company ? t('company_note').replace('{s}', money(r.monthly_salary)).replace('{r}', money(c.overtime_per_hour)) : t('free_note').replace('{p}', money(c.delivery_pay))}</div>
     </div>
-    ${tierCard()}
     <h2>${esc(monthName)}</h2>
     <div class="card">
       ${company ? `<div class="line"><span class="muted">${t('salary')}</span><span>${money(salary)}</span></div>` : ''}
@@ -1784,10 +1802,16 @@ function viewEarn(){
       <div class="line"><b style="font-size:24px" class="${lim && cash >= lim ? 'red' : ''}">${money(cash)}</b>${lim ? `<span class="muted">${t('cash_limit')} ${money(lim)}</span>` : ''}</div>
       ${lim ? `<div class="bar"><i class="${cash >= lim ? 'overlim' : ''}" style="width:${pct}%"></i></div>` : ''}
       <div class="muted" style="font-size:13px">${t('cash_note')}</div>
+      ${cash > 0 ? `<button class="btn block" style="margin-top:10px" onclick="A.handoverCode()">🔐 ${t('handover_code')}</button>` : ''}
     </div>
     <h2>${t('recent')}</h2>${rows || `<div class="empty">${t('no_recent')}</div>`}
     ${dep ? `<h2>${t('deposits')}</h2>${dep}` : ''}
     ${pay ? `<h2>${t('payments')}</h2>${pay}` : ''}`;
+  else if (et === 'targets') earnBody = `${goalCard()}${targetsCard()}${tierCard()}${dutyCard()}`;
+  else earnBody = `${lbCard()}`;
+  return `<h1>${t('earnings')}</h1>${boostBanner()}
+    <div class="chips" style="margin-bottom:10px">${etab('pay', t('earn_t_pay'))}${etab('targets', t('earn_t_targets'))}${etab('board', t('earn_t_board'))}</div>
+    ${earnBody}`;
 }
 
 // ================= RULES TAB =================
@@ -1838,6 +1862,27 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
     renderShell(); markTab(); renderTab();
+  },
+  handoverCode(){
+    openSheet(`<h2>🔐 ${t('handover_code')}</h2><p>${t('handover_t')}</p>
+      <input id="hcCode" inputmode="numeric" maxlength="4" placeholder="${t('handover_ph')}" style="font-size:28px;text-align:center;letter-spacing:10px;width:100%;padding:12px;border:2px solid #ddd;border-radius:10px">
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.confirmHandover()">${t('confirm')}</button></div>`);
+    setTimeout(() => $('hcCode')?.focus(), 300);
+  },
+  contactSheet(orderId){
+    const row = (icon, label, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b></span><span class="muted">›</span></button>`;
+    openSheet(t('contact'),
+      row('💬', t('customer'), `closeSheet();Chat.open('${orderId}',"cr",null)`)
+      + row('💬', t('shop_word'), `closeSheet();Chat.open('${orderId}',"rs",null)`)
+      + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}',"sup_r",null)`));
+  },
+  async confirmHandover(){
+    const code = ($('hcCode')?.value || '').trim();
+    if (code.length !== 4){ toast(t('handover_ph')); return; }
+    await run(async () => {
+      const amt = need(await sb.rpc('rider_confirm_cash_handover', { p_code:code }));
+      closeSheet(); toast(t('handover_ok') + ': ' + money(amt)); await loadEarnings(); renderTab();
+    });
   },
   async resendConfirm(){
     const email = ($('a_email') && $('a_email').value.trim()) || ''; if (!email.includes('@')) return;
