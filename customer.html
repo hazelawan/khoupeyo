@@ -531,6 +531,7 @@ html[dir=rtl] .banner::after{right:auto;left:-6px}
 /* orders */
 .orow{background:var(--surface);border:0;border-radius:20px;box-shadow:var(--sh-1);padding:12px;margin-bottom:10px}
 .statushero{background:var(--grad);border-radius:24px;padding:20px;box-shadow:var(--sh-2);position:relative;overflow:hidden}
+.etabanner{background:#fff;border-radius:18px;padding:16px;margin:10px 0;display:flex;gap:14px;align-items:center;box-shadow:var(--sh-2);border-left:5px solid var(--brand)}
 .statushero::after{content:"🛵";position:absolute;right:10px;bottom:-8px;font-size:80px;opacity:.2}
 html[dir=rtl] .statushero::after{right:auto;left:10px}
 .track li.now i{box-shadow:0 0 0 6px rgba(255,179,2,.25)}
@@ -951,7 +952,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.16';
+const APP_VERSION = '5.19';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -980,7 +981,7 @@ const I18N = {
     voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Wanhar Mart:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
     rate_items_t:'Rate the products (optional)', rate_bk:'How was the service?', rate_bk_send:'Send rating', rate_bk_thanks:'Thank you for your rating!', reviews_t:'Customer reviews', no_reviews:'No reviews yet.', rev_n:'{n} reviews',
     book:'📅 Book', book_title:'Book a time', bk_day:'Choose a day', bk_time:'Choose a time', bk_none:'No free time on this day. Try another day.', bk_note:'Note for the shop (optional)', bk_confirm:'Book this time', bk_ok:'Booked! Please reach on time.', bk_login:'Please log in to book', my_bookings:'My bookings', bk_booked:'Booked', bk_arrived:'At the shop', bk_done:'Done', bk_cancelled:'Cancelled', bk_no_show:'Cancelled — late', bk_rule:'Please be on time. If you are more than {m} min late, the booking is cancelled by itself.', bk_wait_till:'The shop waits for you until {t}', bk_cancel:'Cancel booking', bk_cancel_q:'Cancel this booking?', bk_cancel_ok:'Booking cancelled', bk_free:'{n} free', bk_pay:'Pay at the shop', today:'Today', tomorrow:'Tomorrow', min_s:'min', bk_loading:'Loading times…',
-    login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password',
+    login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password', email_ph:'yourname@gmail.com', pw_ph:'Enter your password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
     search:'Search products and shops', open:'Open', closed:'Closed', delivery:'Delivery', min_order:'Min order',
     add:'Add', cart_tab:'Cart', add_to_cart:'Add to cart', sold_out:'Out of stock', view_cart:'View cart', cart:'Your cart',
@@ -1052,7 +1053,7 @@ const I18N = {
     need_details:'Please add your name and phone so the shop and rider can reach you.',
     arrive_by:'Rider arriving by about {t}', deliver_around:'Delivery by about {t}', cmp_btn:'Problem with the delivery? Complain', cmp_title:'Complain about the rider', cmp_q:'What happened?', cmp_late:'Rider came late', cmp_damaged:'Items were damaged or spoiled', cmp_rude:'Rider was rude', cmp_other:'Something else', cmp_note:'Tell us more', cmp_send:'Send complaint', cmp_pick:'Please choose the problem', cmp_need_note:'Please write what happened', cmp_done:'Thank you. Your complaint is counted and action is taken on the rider.', cmp_sent:'Thank you. Wanhar Mart will check your complaint.', cmp_status:'Your complaint', cmp_pending:'Wanhar Mart is checking it', cmp_approved:'Complaint accepted, action taken on the rider', cmp_rejected:'Checked by Wanhar Mart: {n}', cmp_late_by:'The order came {m} minutes late',
     city_title:'Choose your city', city_note:'You will see shops and products of this city.', city_now:'Now showing shops in {c}',
-    ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map',
+    ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map', expected_by:'Expected delivery', eta_note:'Based on shop prep time + distance', no_rider:'⚠️ No riders online right now — delivery may take longer',
     rate_title:'How was your order?', rate_food:'Products', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the products',
     delete_confirm:'Delete this address?', edit:'Edit', visit_shop:'See everything from this shop', related:'You might also like', add_new_address:'Add a new address',
@@ -1090,7 +1091,7 @@ const I18N = {
     voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Wanhar Mart پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
     rate_items_t:'پروڈکٹس کو ریٹ کریں (اختیاری)', rate_bk:'سروس کیسی رہی؟', rate_bk_send:'ریٹنگ بھیجیں', rate_bk_thanks:'ریٹنگ کا شکریہ!', reviews_t:'گاہکوں کے ریویوز', no_reviews:'ابھی کوئی ریویو نہیں۔', rev_n:'{n} ریویوز',
     book:'📅 بُک کریں', book_title:'وقت بُک کریں', bk_day:'دن چنیں', bk_time:'وقت چنیں', bk_none:'اس دن کوئی وقت خالی نہیں۔ کوئی اور دن دیکھیں۔', bk_note:'دکان کے لیے نوٹ (اختیاری)', bk_confirm:'یہ وقت بُک کریں', bk_ok:'بُک ہو گیا! وقت پر پہنچیں۔', bk_login:'بُک کرنے کے لیے لاگ اِن کریں', my_bookings:'میری بُکنگز', bk_booked:'بُک ہے', bk_arrived:'دکان پر پہنچ گئے', bk_done:'مکمل', bk_cancelled:'منسوخ', bk_no_show:'منسوخ — دیر ہو گئی', bk_rule:'وقت پر پہنچیں۔ اگر آپ {m} منٹ سے زیادہ لیٹ ہوئے تو بُکنگ خود منسوخ ہو جائے گی۔', bk_wait_till:'دکان {t} تک آپ کا انتظار کرے گی', bk_cancel:'بُکنگ منسوخ کریں', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟', bk_cancel_ok:'بُکنگ منسوخ ہو گئی', bk_free:'{n} خالی', bk_pay:'پیسے دکان پر دیں', today:'آج', tomorrow:'کل', min_s:'منٹ', bk_loading:'وقت لوڈ ہو رہے ہیں…',
-    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', email_ph:'yourname@gmail.com', pw_ph:'اپنا پاس ورڈ لکھیں',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
     search:'پروڈکٹس اور دکانیں تلاش کریں', open:'کھلا ہے', closed:'بند ہے', delivery:'ڈیلیوری', min_order:'کم از کم آرڈر',
     add:'شامل کریں', cart_tab:'کارٹ', add_to_cart:'کارٹ میں ڈالیں', sold_out:'ختم ہو گیا', view_cart:'کارٹ دیکھیں', cart:'آپ کا کارٹ',
@@ -1162,7 +1163,7 @@ const I18N = {
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
     arrive_by:'رائیڈر تقریباً {t} تک پہنچے گا', deliver_around:'ڈیلیوری تقریباً {t} تک', cmp_btn:'ڈیلیوری میں مسئلہ؟ شکایت کریں', cmp_title:'رائیڈر کی شکایت', cmp_q:'کیا ہوا؟', cmp_late:'دیر سے پہنچا', cmp_damaged:'سامان خراب یا ٹوٹا ہوا تھا', cmp_rude:'رائیڈر نے بدتمیزی کی', cmp_other:'کچھ اور', cmp_note:'تفصیل لکھیں', cmp_send:'شکایت بھیجیں', cmp_pick:'براہ کرم مسئلہ چنیں', cmp_need_note:'براہ کرم لکھیں کیا ہوا', cmp_done:'شکریہ۔ آپ کی شکایت درج ہو گئی اور رائیڈر پر لاگو ہو گئی۔', cmp_sent:'شکریہ۔ Wanhar Mart آپ کی شکایت چیک کرے گا۔', cmp_status:'آپ کی شکایت', cmp_pending:'Wanhar Mart چیک کر رہا ہے', cmp_approved:'شکایت منظور، رائیڈر کے خلاف کارروائی ہو گئی', cmp_rejected:'Wanhar Mart نے چیک کیا: {n}', cmp_late_by:'آرڈر {m} منٹ دیر سے پہنچا',
     city_title:'اپنا شہر چنیں', city_note:'آپ کو اسی شہر کی دکانیں اور چیزیں نظر آئیں گی۔', city_now:'اب {c} کی دکانیں دکھائی جا رہی ہیں',
-    ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں',
+    ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں', expected_by:'متوقع ڈیلیوری', eta_note:'دکان کے تیاری وقت + فاصلے کے حساب سے', no_rider:'⚠️ ابھی کوئی رائیڈر آن لائن نہیں — ڈیلیوری میں زیادہ وقت لگ سکتا ہے',
     rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'چیزیں', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم چیزوں کے لیے ستارے دبائیں',
     delete_confirm:'یہ پتہ حذف کریں؟', edit:'تبدیل کریں', visit_shop:'اس دکان کی تمام چیزیں دیکھیں', related:'یہ بھی پسند آ سکتا ہے', add_new_address:'نیا پتہ شامل کریں',
@@ -1240,7 +1241,7 @@ function weightFee(kg, tiers){ let fee = 0, best = -1; (tiers || state.weightTie
 const kgText = kg => (Math.round(num(kg) * 100) / 100) + ' kg';
 function cartZones(){ const z = new Set(); (A.cartShops ? A.cartShops() : []).forEach(s => { const zid = (s.shop && s.shop.zone && s.shop.zone.id) || (s.shop && s.shop.zone_id); if (zid) z.add(zid); }); return [...z]; }
 function multiZoneFee(){ const zones = cartZones(); return zones.length > 1 ? num(state.multiZoneFee) : 0; }
-function cartFee(){ const r = cartRestaurant(); const x = cartExtras(); let fee = num(r && r.zone ? r.zone.delivery_fee : 0) + x.bulk + x.heavy + x.wfee; const shops = A.cartShops ? A.cartShops() : []; if (shops.length > 1){ fee = shops.reduce((n, s) => n + num(s.shop && s.shop.zone ? s.shop.zone.delivery_fee : 0), 0) + x.bulk + x.heavy + x.wfee + multiZoneFee(); } return fee; }
+function cartFee(){ const r = cartRestaurant(); const x = cartExtras(); let fee = num(r ? zoneFee(r) : 0) + x.bulk + x.heavy + x.wfee; const shops = A.cartShops ? A.cartShops() : []; if (shops.length > 1){ fee = shops.reduce((n, s) => n + num(s.shop ? zoneFee(s.shop) : 0), 0) + x.bulk + x.heavy + x.wfee + multiZoneFee(); } return fee; }
 function extraLines(bulk, heavy, items, kg, wfee){
   return `${num(wfee) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ⚖️ ${t('weight_line').replace('{k}', kgText(kg))}</span><span class="muted">${money(wfee)}</span></div>` : ''}${num(bulk) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ${t('bulk_line').replace('{n}', items)}</span><span class="muted">${money(bulk)}</span></div>` : ''}${num(heavy) ? `<div class="line" style="font-size:14px"><span class="muted">↳ ${t('heavy_line')}</span><span class="muted">${money(heavy)}</span></div>` : ''}`;
 }
@@ -1272,6 +1273,65 @@ function baseMap(L, el, center, zoom){
 }
 function kmBetween(a, b, c, d){ const R = 6371, r = x => x * Math.PI / 180; const x = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
 function shopDist(r){ const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0]; if (!a || a.lat == null || r.lat == null || r.lng == null) return ''; return fmtKmC(kmBetween(a.lat, a.lng, r.lat, r.lng)); }
+// ETA in minutes: prep + (distance / rider_speed * 60) + buffer
+function shopEta(r){
+  const prep = num(r.prep_time_minutes) || 25;
+  const speed = num(state.settings && state.settings.rider_speed_kmh) || 20;
+  const buffer = 5;
+  const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
+  let distKm = 0;
+  if (a && a.lat != null && r.lat != null && r.lng != null) distKm = kmBetween(a.lat, a.lng, r.lat, r.lng);
+  return Math.round(prep + (distKm / speed * 60) + buffer);
+}
+// expected delivery time string for an order
+function etaTime(o){
+  if (o.status === 'picked_up' && o.rider_due_at) return tAt(o.rider_due_at);
+  const r = o.restaurant || {};
+  const mins = shopEta({ prep_time_minutes: r.prep_time_minutes || o.prep_minutes || 25, lat: r.lat, lng: r.lng });
+  // adjust for elapsed time since order placed
+  const elapsed = Math.round((Date.now() - new Date(o.created_at).getTime()) / 60000);
+  const left = Math.max(5, mins - elapsed);
+  return new Date(Date.now() + left * 60000).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+// ---- zone detection ----
+// returns zone id for a lat/lng: inside a circle, else nearest zone center
+// returns null if farther than 30 km from every zone (out of region)
+function detectZone(lat, lng){
+  const zones = (state.allZones || []).filter(z => z.is_active !== false && z.center_lat != null);
+  if (!lat || !lng || !zones.length) return null;
+  // inside a circle?
+  for (const z of zones){
+    const d = kmBetween(lat, lng, Number(z.center_lat), Number(z.center_lng));
+    if (d <= num(z.radius_km || 5)) return z.id;
+  }
+  // nearest fallback (gap between villages)
+  let best = null, bd = 1e9;
+  for (const z of zones){
+    const d = kmBetween(lat, lng, Number(z.center_lat), Number(z.center_lng));
+    if (d < bd){ bd = d; best = z.id; }
+  }
+  return bd <= 30 ? best : null; // out of region → no zone
+}
+function customerZone(){
+  const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
+  if (!a || a.lat == null) return null;
+  const zid = detectZone(Number(a.lat), Number(a.lng));
+  return zid ? (state.allZones || []).find(z => z.id === zid) : null;
+}
+function customerZoneId(){
+  const z = customerZone();
+  return z ? z.id : null;
+}
+// delivery fee from shop's zone to customer's zone via matrix
+function zoneFee(shop){
+  const cz = customerZoneId();
+  const sz = (shop.zone && shop.zone.id) || shop.zone_id;
+  if (cz && sz && state.zoneCharges){
+    const k = sz + '|' + cz;
+    if (state.zoneCharges[k] != null) return num(state.zoneCharges[k]);
+  }
+  return shop.zone ? num(shop.zone.delivery_fee) : 0;
+}
 const fmtKmC = d => d == null ? '' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
 // ---- Pakistan time helpers for scheduling ----
 const PKF = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Karachi', hour:'2-digit', minute:'2-digit', hour12:false });
@@ -1390,8 +1450,8 @@ function showAuth(msg, ok){
     fields.push(`<div class="afield" style="animation-delay:.15s"><label class="f" for="a_name">${t('name')}</label><div class="inpwrap"><input id="a_name" type="text" autocomplete="name"></div></div>`);
     fields.push(`<div class="afield" style="animation-delay:.22s"><label class="f" for="a_phone">${t('phone')}</label><div class="inpwrap"><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="03001234567"></div></div>`);
   }
-  fields.push(`<div class="afield" style="animation-delay:.29s"><label class="f" for="a_email">${t('email')}</label><div class="inpwrap"><input id="a_email" type="email" autocomplete="username" autocapitalize="off"></div></div>`);
-  fields.push(`<div class="afield" style="animation-delay:.36s"><label class="f" for="a_pw">${t('password')}</label><div class="inpwrap"><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}"><button type="button" class="eye" onclick="A.togglePw()" aria-label="show">👁️</button></div></div>`);
+  fields.push(`<div class="afield" style="animation-delay:.29s"><label class="f" for="a_email">${t('email')}</label><div class="inpwrap"><input id="a_email" type="email" autocomplete="username" autocapitalize="off" placeholder="${t('email_ph')}"></div></div>`);
+  fields.push(`<div class="afield" style="animation-delay:.36s"><label class="f" for="a_pw">${t('password')}</label><div class="inpwrap"><input id="a_pw" type="password" placeholder="${t('pw_ph')}" autocomplete="${signup ? 'new-password' : 'current-password'}"><button type="button" class="eye" onclick="A.togglePw()" aria-label="show">👁️</button></div></div>`);
   $('app').innerHTML = `
   <div class="auth">
     <div class="auth-hero"><svg class="scene" viewBox="0 0 390 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
@@ -1608,7 +1668,7 @@ function refreshCityBtn(){ const el = document.getElementById('cityBtn'); if (el
 async function loadRestaurants(){
   if (!state.regions) await loadRegionsC();
   let q = sb.from('restaurants')
-    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,hours,categories,busy_until,offer,sponsored_until,allow_pickup,booking_on,chairs,grace_min,is_open,is_active,prep_time_minutes,zone:zones(name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers)')
+    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,hours,categories,busy_until,offer,sponsored_until,allow_pickup,booking_on,chairs,grace_min,is_open,is_active,prep_time_minutes,zone:zones(id,name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers,center_lat,center_lng,radius_km)')
     .eq('is_active', true).order('name');
   if (state.region) q = q.eq('region_id', state.region);
   const list = need(await q);
@@ -1807,7 +1867,7 @@ function productCard(p, why){
       <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}${why ? `<span class="recowhy">${why}</span>` : ''}</div>
       <div class="gname">${esc(p.name)}</div>
       <div class="gprice ${off ? '' : 'plain'}">${fl ? '⚡ ' : ''}${money(effPrice)}${off ? `<span class="strike">${money(effCompare)}</span>` : ''}</div>
-      <div class="gmeta"><span>${esc(shop.name || '')}</span>${itemRate(p.id) ? `<span class="star">★ ${itemRate(p.id).avg}</span>` : s ? `<span>${t('sold_n', { n:s })}</span>` : ''}</div>${leftBadge(p)}${hasOpts(p.id) ? `<div class="custom">${t('customizable')}</div>` : ''}
+      <div class="gmeta"><span>${esc(shop.name || '')}</span>${itemRate(p.id) ? `<span class="star">★ ${itemRate(p.id).avg}</span>` : s ? `<span>${t('sold_n', { n:s })}</span>` : ''}<span>🛵 ~${shopEta(shop)} ${t('minutes')}</span></div>${leftBadge(p)}${hasOpts(p.id) ? `<div class="custom">${t('customizable')}</div>` : ''}
     </a>
     ${canAdd ? `<button class="qadd" onclick="A.quickAdd('${p.id}')" aria-label="${t('add')}">+</button>` : ''}
   </div>`;
@@ -1824,7 +1884,7 @@ function restaurantCard(r){
     <div class="rbody">
       <div class="rname">${r.ad ? `<span class="adtag">${t('ad')}</span>` : ''}${esc(r.name)}<span class="badge ${r.is_open ? '' : 'closed'}">${r.is_open ? t('open') : t('closed')}</span></div>
       <div class="rdesc">${esc(r.description || '')}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}
-      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}${sd ? `<span class="dist">📍 ${sd}</span>` : ''}<span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
+      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}${sd ? `<span class="dist">📍 ${sd}</span>` : ''}<span>${t('delivery')} ${money(zoneFee(r))}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
     </div></a>`;
 }
 function sortProducts(list){
@@ -1877,7 +1937,11 @@ function searchResults(q){
 }
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
-  if (!state.products.length && !state.restaurants.length) return `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
+  const cz = customerZone();
+  if (state.user && !cz && (state.addresses || []).length) return `<div class="empty" style="margin-top:40px"><div class="eic">🚫</div><div style="font-weight:800;font-size:17px">Out of delivery area</div><div class="muted" style="margin-top:6px">Sorry, we don't deliver to your current address yet.<br>Please choose an address inside our delivery zones.</div></div>`;
+  const zoneBar = cz ? `<div style="margin:0 16px 10px;padding:10px 14px;background:#eef7f0;border:1px solid #cfe6d4;border-radius:12px;font-size:14px">📍 You are in <b style="color:#0b5c2f">${esc(cz.name)}</b> — delivery charges for your zone</div>` : '';
+  if (!state.products.length && !state.restaurants.length) return `${zoneBar}<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
+  const noRider = state.ridersOnline === 0 ? `<div class="warnbox" style="margin:0 16px 10px">${t('no_rider')}</div>` : '';
   const PR = typeProducts(), RS = typeShops();
   const cats = categories(PR);
   const deals = PR.filter(p => pctOff(p) > 0).sort((a, b) => pctOff(b) - pctOff(a)).slice(0, 12);
@@ -1889,6 +1953,8 @@ function homeBody(){
       ${bn.length > 1 ? `<div class="bdots" id="bdots">${bn.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}`
     : `<div class="banner"><div><b>${t('banner_t')}</b><span style="opacity:.9;font-size:14px">${t('banner_s')}</span></div>${maxOff ? `<div class="big">-${maxOff}%</div>` : ''}</div>`;
   return `
+    ${noRider}
+    ${zoneBar}
     ${banner}
     ${typeChips()}
     ${flashSection()}
@@ -1959,7 +2025,7 @@ async function showRestaurant(id){
     <div class="hero-info">
       <h1>${esc(r.name)}</h1>
       <div class="muted">${esc(r.description || '')}</div>
-      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${r.zone ? money(r.zone.delivery_fee) : ''}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
+      <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${money(zoneFee(r))}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
       ${offerText(r) ? `<div class="offtag big">🏷️ ${esc(t('shop_offer'))}: ${esc(offerText(r))}</div>` : ''}${r.allow_pickup !== false ? `<div class="muted" style="font-size:13px;margin-top:6px">🛍️ ${t('o_pickup').replace('🛍️ ', '')} ✓</div>` : ''}
       ${hoursHtml(r)}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${waNum(r.phone) ? `<a class="wabtn" target="_blank" rel="noopener" href="${waHref(r.phone, '')}">${WA_IC} ${t('wa_shop')}</a>` : ''}<button class="pillbtn sharebtn" onclick="A.share('r','${r.id}')">${t('share')}</button></div>
@@ -2467,6 +2533,7 @@ async function showOrder(id){
   const heroKey = o.order_type === 'pickup' && o.status === 'ready' ? 'hero_ready_pick' : o.payment_method === 'wallet' && o.status === 'placed' && ['unpaid', 'checking'].includes(o.payment_status) ? (o.payment_status === 'unpaid' ? 'hero_pay' : 'hero_paycheck') : 'hero_' + o.status;
   $('view').innerHTML = `
     ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}${arriveLine(o)}${o.scheduled_for && !FINAL.includes(o.status) ? `<span style="display:block;margin-top:6px"><span class="schedpill">🗓️ ${esc(t('sched_for', { d:schedLabel(o.scheduled_for) }))}</span></span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
+    ${!FINAL.includes(o.status) ? `<div class="etabanner"><span style="font-size:28px">🛵</span><div><b>${t('expected_by')}</b><div style="font-size:22px;font-weight:800">${etaTime(o)}</div><div class="muted" style="font-size:13px">${t('eta_note')}</div></div></div>` : ''}
     <div class="muted">${when(o.created_at)}</div>
     ${o.order_type !== 'pickup' && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:2px">${t('shop_km', { km:fmtKmC(kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng)) })}</div>` : ''}
     ${payBox(o, payAcc)}
@@ -3026,7 +3093,7 @@ const A = {
       toast(t('saved'));
     });
   },
-  selectAddr(id){ state.selAddr = id; ls.set('kh_addr', id); refreshChip(); drawCheckout(); },
+  selectAddr(id){ state.selAddr = id; ls.set('kh_addr', id); refreshChip(); drawCheckout(); route(); },
   pickAddr(){
     const list = (state.addresses || []).map(a => `<button class="menu-row" style="width:100%" onclick="A.chooseAddr('${a.id}')"><span style="text-align:start"><b>${a.id === state.selAddr ? '✅ ' : '📍 '}${esc(a.label || t('address'))}</b><div class="muted" style="font-size:13px;font-weight:400">${esc(a.full_address)}</div></span><span class="muted">›</span></button>`).join('');
     openSheet(t('deliver_to_l'), `${list || `<div class="muted" style="margin-bottom:10px">${t('pick_address')}</div>`}<button class="btn" style="margin-top:8px" onclick="A.showAddrForm()">+ ${t('add_address')}</button>`);
@@ -3886,6 +3953,21 @@ function hideSplash(){
 }
 async function bootMain(){
   try {
+    // load global settings (rider speed) + rider availability
+    try {
+      const { data:rs } = await sb.from('region_settings').select('key,value').in('key', ['rider_speed_kmh']);
+      state.settings = {}; (rs || []).forEach(x => { state.settings[x.key] = x.value; });
+    } catch(e){ state.settings = {}; }
+    try {
+      const { data:az } = await sb.from('zones').select('id,name,center_lat,center_lng,radius_km,is_active').eq('is_active', true);
+      state.allZones = az || [];
+      const { data:zc } = await sb.from('zone_charges').select('from_zone_id,to_zone_id,delivery_fee');
+      state.zoneCharges = {}; (zc || []).forEach(c => { state.zoneCharges[c.from_zone_id + '|' + c.to_zone_id] = c.delivery_fee; });
+    } catch(e){ state.allZones = []; state.zoneCharges = {}; }
+    try {
+      const { count } = await sb.from('riders').select('id', { count:'exact', head:true }).eq('is_online', true).eq('is_approved', true);
+      state.ridersOnline = count || 0;
+    } catch(e){ state.ridersOnline = -1; }
     const { data:{ session } } = await sb.auth.getSession();
     if (session) await afterLogin(session.user);
     else { if (!location.hash || location.hash === '#') replaceHash('#/'); renderShell(); route(); }
