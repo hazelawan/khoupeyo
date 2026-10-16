@@ -665,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.7';
+const APP_VERSION = '6.10';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -777,7 +777,7 @@ const I18N = {
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
     mfee:'Monthly fee', mfee_due:'Fee due', mfee_note:'This fee is billed on the 1st of every month and is cut from your earning when Wanhar Mart pays you.', mfee_paid:'Paid', mfee_cut:'Cut from payment', mfee_waived:'Waived', mfee_after:'You get after the fee',
-    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart',
+    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request',
     to_receive_note:'Your earning from delivered orders that Wanhar Mart has not paid yet.',
     payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
     reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
@@ -792,6 +792,8 @@ const I18N = {
     pick_on:'Customers can collect orders themselves (pickup)', pick_s:'No rider. Customer comes to your shop and shows a code.', shop_disc:'Shop offer', brk:'Break', add_brk:'+ Add break', jumma:'🕌 Jumma break', brk_from:'Break from', brk_to:'to', open24:'⏰ Open 24 hours', in_break:'On break now. Customers can order again at {t}.', hrs_bad:'{d}: the break must be inside the open time',
     my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', shop_dashboard:'Shop dashboard', back_shop:'‹ Back to my shop', back_kind:'‹ Back', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
+    m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
+    today_hours:'Today', mode_same:'Same time every day', mode_diff:'Different time per day',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
     flash_price_q:'Flash price in Rs? (regular {p})', flash_price_bad:'Flash price must be less than regular price', flash_hours_q:'Duration in hours?', flash_req_sent:'⚡ Request sent! Admin will approve.',
@@ -818,7 +820,7 @@ const I18N = {
     k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
     k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
-    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat'
+    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat', contact:'Contact'
   },
   ur: {
     sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Wanhar Mart چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Wanhar Mart کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
@@ -848,7 +850,7 @@ const I18N = {
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     mfee:'ماہانہ فیس', mfee_due:'فیس باقی', mfee_note:'یہ فیس ہر مہینے کی 1 تاریخ کو لگتی ہے اور ادائیگی کے وقت آپ کی کمائی سے کٹ جاتی ہے۔', mfee_paid:'ادا ہو گئی', mfee_cut:'ادائیگی سے کٹ گئی', mfee_waived:'معاف', mfee_after:'فیس کے بعد آپ کو ملے گا',
-    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے',
+    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے',
     to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Wanhar Mart نے ابھی ادا نہیں کی۔',
     payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
     reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
@@ -863,6 +865,8 @@ const I18N = {
     pick_on:'گاہک خود آرڈر لے جا سکتے ہیں (پک اپ)', pick_s:'رائیڈر نہیں۔ گاہک دکان پر آ کر کوڈ دکھائے گا۔', shop_disc:'دکان کی آفر', brk:'وقفہ', add_brk:'+ وقفہ شامل کریں', jumma:'🕌 جمعہ کا وقفہ', brk_from:'وقفہ', brk_to:'سے', open24:'⏰ 24 گھنٹے کھلی', in_break:'ابھی وقفہ ہے۔ گاہک {t} سے دوبارہ آرڈر کر سکیں گے۔', hrs_bad:'{d}: وقفہ کھلنے کے وقت کے اندر ہونا چاہیے',
     my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', shop_dashboard:'دکان کا ڈیش بورڈ', back_shop:'‹ اپنی دکان پر واپس', back_kind:'‹ واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
+    m_timings:'دکان کے اوقات اور وقفے', m_timings_s:'ہر دن کے کھلنے کے اوقات', m_profile:'دکان کی پروفائل اور جگہ', m_profile_s:'نام، پتہ، لوگو، لوکیشن', m_orderset:'آرڈر اور پک اپ سیٹنگ', m_orderset_s:'آٹو قبول، پک اپ، دکان کی قسم', m_offer2:'دکان کی رعایت آفر', m_offer2_s:'گاہکوں کے لیے آپ کی رعایت', m_booking2:'بکنگ سیٹنگ', m_booking2_s:'کرسیاں، رعایتی وقت', m_staff2:'عملے کے لاگ اِن', m_staff2_s:'ورکرز کے اکاؤنٹس', m_payout2:'بینک / جیزکیش اکاؤنٹ', m_payout2_s:'آپ کو پیسے کہاں ملیں گے',
+    today_hours:'آج', mode_same:'ہر روز ایک ہی وقت', mode_diff:'ہر دن کا الگ وقت',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
     flash_price_q:'فلیش قیمت Rs میں؟ (اصل {p})', flash_price_bad:'فلیش قیمت اصل قیمت سے کم ہونی چاہیے', flash_hours_q:'کتنے گھنٹے کے لیے؟', flash_req_sent:'⚡ درخواست بھیج دی! ایڈمن منظور کرے گا۔',
@@ -889,7 +893,7 @@ const I18N = {
     k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
     k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
-    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا'
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا', contact:'رابطہ'
   }
 };
 const state = {
@@ -1196,10 +1200,7 @@ function orderCard(o){
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
   const cid = JSON.stringify(o.id);
-  actions += `<div style="display:grid;grid-template-columns:${o.rider_id ? '1fr 1fr 1fr' : '1fr 1fr'};gap:8px;margin-top:10px">
-    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "cs", null)'>💬 ${t('customer')}</button>
-    ${o.rider_id ? `<button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "rs", null)'>💬 ${t('rider_label')}</button>` : ''}
-    <button class="btn ghost small" style="width:auto;display:block" onclick='Chat.open(${cid}, "sup_s", null)'>💬 ${t('help_word')}</button></div>`;
+  actions += `<div style="margin-top:10px"><button class="btn ghost small" style="width:100%;display:block" onclick='A.contactSheet(${cid}, ${o.rider_id ? 'true' : 'false'})'>💬 ${t('contact')}</button></div>`;
   if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   const pickupBox = o.pickup_code && ['ready','rider_assigned'].includes(o.status) ? `<div class="pickcode"><div><b>🔐 ${t('pickup_code_t')}</b><small>${t('pickup_code_s')}</small></div><span class="code">${esc(o.pickup_code)}</span></div>` : '';
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
@@ -1453,7 +1454,8 @@ function viewEarn(){
       <div style="opacity:.85">${t('to_receive')}</div><div style="font-size:30px;font-weight:800">${money(e.unpaid)}</div>
       <div style="opacity:.85;font-size:13px">${t('to_receive_note')}</div>
       ${feeDue() ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);display:flex;justify-content:space-between;gap:10px"><span>− ${t('mfee_due')}</span><b>${money(feeDue())}</b></div>
-        <div style="display:flex;justify-content:space-between;gap:10px;font-weight:800"><span>${t('mfee_after')}</span><span>${money(Math.max(0, num(e.unpaid) - feeDue()))}</span></div>` : ''}</div>
+        <div style="display:flex;justify-content:space-between;gap:10px;font-weight:800"><span>${t('mfee_after')}</span><span>${money(Math.max(0, num(e.unpaid) - feeDue()))}</span></div>` : ''}
+      ${num(e.unpaid) > 0 ? `<button class="btn block" style="margin-top:12px;background:#fff;color:var(--brand)" onclick="A.requestPayout()">💸 ${t('req_payout')}</button>` : ''}</div>
     ${feeCard()}
     <div class="chips">${chips}</div>
     <div class="tiles">
@@ -1493,57 +1495,20 @@ function viewShop(){
       <div class="tile hi"><b>${avg ? '★ ' + avg : '—'}</b><span>${t('rating')} (${rv.length})</span></div>
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
     </div>
-    <h2>${t('shop_details')}</h2>
-    <div class="card">
-      <label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
-      <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
-      <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
-      <label class="f">${t('hours_t')}</label>
-      <div class="hrsed" id="hrsed">${hoursEd(r)}</div>
-      <div class="muted" style="font-size:13px;margin-top:4px">${t('all_day_note')}</div>
-      <button class="btn ghost small" type="button" style="margin-top:8px" onclick="A.hrsCopy()">${t('same_all')}</button>
-      <label class="f">${t('shop_loc')}</label>
-      <div class="muted" style="font-size:14px">${r.lat != null && r.lng != null ? `✅ ${t('loc_set')} <a href="https://maps.google.com/?q=${r.lat},${r.lng}" target="_blank" rel="noopener">${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}</a>` : `⚠️ ${t('loc_missing')}`}</div>
-      <button class="btn ghost" type="button" id="locBtn" style="margin-top:8px" onclick="A.setShopLoc()">${t('set_loc')}</button>
-      <label class="f" for="s_prep">${t('prep_default')}</label><input id="s_prep" type="number" min="5" step="5" value="${r.prep_time_minutes || 25}">
-      <label class="f" for="s_logo">${t('logo')}</label><input id="s_logo" type="file" accept="image/*" onchange="previewFile(this,'s_prev')">
-      <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
-      <div class="actions"><button class="btn" id="shopSave" onclick="A.saveShop()">${t('save')}</button></div>
-    </div>
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${t('aa_t')}</b><div class="muted" style="font-size:13px">${t('aa_s')}</div></div>
-      <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.auto_accept ? 'checked' : ''} onchange="A.setAutoAccept(this.checked)" aria-label="${t('aa_t')}"><span></span></label></div>
-    <h2>${t('staff_t')}</h2>
-    <div class="card"><div class="muted" style="font-size:14px">${t('staff_s')}</div><div id="staffList" style="margin-top:8px">${staffListHtml()}</div>
-      <button class="btn ghost small" style="width:100%;margin-top:8px" onclick="A.staffAdd()">${t('staff_add')}</button></div>
-    ${isServices() ? `<h2>${t('bk_set')}</h2>
-    <div class="card"><div class="muted" style="font-size:14px">${t('bk_set_s')}</div>
-      ${(() => { const k = state.bkTerms || { pct:0 }; const p = num(k.pct); return `<div class="note" style="margin:10px 0 0"><b>${p > 0 ? t('bk_fee').replace('{p}', p) : '🎁 ' + t('bk_free_now')}</b><div style="font-size:13px;margin-top:4px">${t('bk_fee_note')}</div>
-        ${num(k.month_done) ? `<div style="font-size:13px;margin-top:4px">${t('bk_month').replace('{n}', k.month_done).replace('{s}', money(k.month_sales)).replace('{c}', money(k.month_commission))}</div>` : ''}
-        ${num(k.rating_n) ? `<div style="font-size:13px;margin-top:4px">${t('bk_rating').replace('{a}', k.rating).replace('{n}', k.rating_n)}</div>` : ''}</div>`; })()}
-      <label class="check"><input id="bk_on" type="checkbox" ${r.booking_on ? 'checked' : ''}> ${t('bk_on')}</label>
-      <label class="f" for="bk_ch">${t('bk_chairs')}</label><input id="bk_ch" type="number" min="1" max="20" inputmode="numeric" value="${r.chairs || 1}">
-      <label class="f" for="bk_gr">${t('bk_grace')}</label><select id="bk_gr">${[5, 10, 15, 20, 30].map(m => `<option value="${m}" ${(r.grace_min ?? 10) === m ? 'selected' : ''}>${m} ${t('min_s')}</option>`).join('')}</select>
-      <div class="actions"><button class="btn" onclick="A.saveBooking()">${t('bk_save')}</button></div></div>` : ''}
-    <h2>${t('offer_t')}</h2>
-    <div class="card">${(() => { const f = r.offer || {}; return `<div class="muted" style="font-size:14px">${t('offer_s')}</div>
-      <label class="check"><input id="of_on" type="checkbox" ${f.on ? 'checked' : ''}> ${t('offer_on')}</label>
-      <div class="two"><div><label class="f" for="of_pct">${t('offer_pct')}</label><input id="of_pct" type="number" min="1" max="90" inputmode="numeric" value="${num(f.pct) || ''}" placeholder="10"></div>
-        <div><label class="f" for="of_min">${t('offer_min')}</label><input id="of_min" type="number" min="0" inputmode="numeric" value="${num(f.min) || ''}" placeholder="0"></div></div>
-      <label class="f" for="of_max">${t('offer_max')}</label><input id="of_max" type="number" min="0" inputmode="numeric" value="${num(f.max) || ''}" placeholder="0">
-      <div class="actions"><button class="btn" onclick="A.saveOffer()">${t('save_offer')}</button></div>`; })()}</div>
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>🛍️ ${t('pick_on')}</b><div class="muted" style="font-size:13px">${t('pick_s')}</div></div>
-      <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.allow_pickup !== false ? 'checked' : ''} onchange="A.setPickup(this.checked)" aria-label="${t('pick_on')}"><span></span></label></div>
+    ${(() => { const x = weekHours(r)[todayDw()]; const badge = x.off ? t('day_closed') : `${time12(x.o)} – ${time12(x.c)}`; return `
+    <div class="list">
+      <button class="row" onclick="A.timingsSheet()"><div class="row-main"><div class="row-title">🕘 ${t('m_timings')}</div><div class="row-sub">${t('today_hours')}: ${esc(badge)}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.profileSheet()"><div class="row-main"><div class="row-title">🏪 ${t('m_profile')}</div><div class="row-sub">${t('m_profile_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.orderSetSheet()"><div class="row-main"><div class="row-title">⚙️ ${t('m_orderset')}</div><div class="row-sub">${t('m_orderset_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.offerSheet2()"><div class="row-main"><div class="row-title">🏷️ ${t('m_offer2')}</div><div class="row-sub">${t('m_offer2_s')}</div></div><span class="muted">›</span></button>
+      ${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
+      <button class="row" onclick="A.staffSheet2()"><div class="row-main"><div class="row-title">👥 ${t('m_staff2')}</div><div class="row-sub">${t('m_staff2_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.payoutSheet2()"><div class="row-main"><div class="row-title">💳 ${t('m_payout2')}</div><div class="row-sub">${t('m_payout2_s')}</div></div><span class="muted">›</span></button>
+    </div>`; })()}
     <h2>${t('my_shops')}</h2>
     <div class="card">${(state.shops || []).length > 1 ? `<div class="muted" style="font-size:14px;margin-bottom:8px">${(state.shops || []).map(x => esc(x.name)).join(' · ')}</div><button type="button" class="btn ghost small" style="width:100%;margin-bottom:8px" onclick="shopMenu()">🔁 ${t('switch_shop')}</button>` : ''}
       ${state.sreqPending ? `<div class="note" style="margin:0 0 8px">⏳ ${esc(t('shop_pending').replace('{s}', state.sreqPending.shop_name))} <button type="button" class="link" onclick="A.addShop()">${t('see_req')}</button></div>` : ''}
       <button type="button" class="btn ghost small" style="width:100%" onclick="A.addShop()">${t('add_shop')}</button></div>
-    <h2>${t('payout_t')}</h2>
-    <div class="card">${(() => { const p = r.payout || {}; const m = p.method || 'jazzcash'; return `<div class="muted" style="font-size:14px;margin-bottom:6px">${t('payout_s')}</div>
-      <label class="f" for="po_m" style="margin-top:0">${t('pay_method')}</label><select id="po_m" onchange="A.poMethod(this.value)">${[['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['bank','Bank / Raast']].map(([k, l]) => `<option value="${k}" ${m === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
-      <div id="po_bank" style="display:${m === 'bank' ? 'block' : 'none'}"><label class="f" for="po_bn">${t('bank_name')}</label><input id="po_bn" type="text" value="${esc(p.bank || '')}" placeholder="Meezan, HBL, UBL…"></div>
-      <label class="f" for="po_t">${t('acc_title')}</label><input id="po_t" type="text" value="${esc(p.title || '')}">
-      <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
-      <div class="actions"><button class="btn" id="poSave" onclick="A.savePayout()">${t('save_acc')}</button></div>`; })()}</div>
     <h2>${t('reviews')}</h2>${revs || `<div class="empty">${t('no_reviews')}</div>`}
     ${Theme.picker(state.lang)}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b>${t('sound')}</b>
@@ -1588,6 +1553,131 @@ const A = {
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.restaurant) showAuth(); else if (!shopKind()) showKindPicker(); else { renderShell(); renderTab(); }
+  },
+  requestPayout(){
+    openSheet(`<h2>💸 ${t('req_title')}</h2><p>${t('to_receive')}: <b>${money(num(state.earn?.unpaid))}</b></p>
+      <input id="rpNote" placeholder="${t('req_note')}" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px">
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.sendPayoutReq()">${t('req_payout')}</button></div>`);
+  },
+  contactSheet(orderId, hasRider){
+    const row = (icon, label, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b></span><span class="muted">›</span></button>`;
+    openSheet(t('contact'),
+      row('💬', t('customer'), `closeSheet();Chat.open('${orderId}',"cs",null)`)
+      + (hasRider ? row('💬', t('rider_label'), `closeSheet();Chat.open('${orderId}',"rs",null)`) : '')
+      + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}',"sup_s",null)`));
+  },
+  timingsSheet(){
+    const r = state.restaurant; if (!state.hrsMode) state.hrsMode = 'diff';
+    const mode = state.hrsMode;
+    const dayCard = d => { const w = hrsDraft(r); const x = w[d]; return `<div class="hday ${x.off ? 'off' : ''}">
+      <div class="hhead"><b>${DAYN(d)}</b><label class="hsw"><span class="hst">${x.off ? t('day_closed') : t('day_open')}</span><label class="switch" style="margin:0"><input type="checkbox" ${x.off ? '' : 'checked'} onchange="A.hrsSet(${d},'off',!this.checked)" aria-label="${DAYN(d)}"><span></span></label></label></div>
+      ${x.off ? '' : `<div class="htimes">${tSel(x.o, `A.hrsSet(${d},'o',this.value)`)}<span>–</span>${tSel(x.c, `A.hrsSet(${d},'c',this.value)`)}</div>
+      ${x.o === x.c ? `<div class="h24">${t('open24')}</div>` : ''}
+      ${x.b.map((b, i) => `<div class="hbrk"><span>☕ ${t('brk')}</span>${tSel(b.s, `A.brkSet(${d},${i},'s',this.value)`)}<span>–</span>${tSel(b.e, `A.brkSet(${d},${i},'e',this.value)`)}<button type="button" class="hx" onclick="A.brkDel(${d},${i})" aria-label="×">×</button></div>`).join('')}
+      <div class="hbtns">${x.b.length < 3 ? `<button type="button" class="hadd" onclick="A.brkAdd(${d})">${t('add_brk')}</button>` : ''}${d === 5 && !x.b.some(b => b.s === '13:00') ? `<button type="button" class="hadd" onclick="A.brkAdd(5,'13:00','14:30')">${t('jumma')}</button>` : ''}</div>`}</div>`; };
+    openSheet(`<h2>🕘 ${t('m_timings')}</h2>
+      <div class="chips" style="margin-bottom:10px">
+        <button class="chip ${mode === 'same' ? 'on' : ''}" onclick="state.hrsMode='same';A.timingsSheet()">${t('mode_same')}</button>
+        <button class="chip ${mode === 'diff' ? 'on' : ''}" onclick="state.hrsMode='diff';A.timingsSheet()">${t('mode_diff')}</button>
+      </div>
+      <div class="muted" style="font-size:13px;margin-bottom:8px">${t('all_day_note')}</div>
+      <div class="hrsed" id="hrsed">${mode === 'same' ? dayCard(1) : [1, 2, 3, 4, 5, 6, 0].map(dayCard).join('')}</div>
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveTimings()">${t('save')}</button></div>`);
+  },
+  async saveTimings(){
+    const r = state.restaurant; const w = hrsDraft(r);
+    if (state.hrsMode === 'same'){ const m = w[1]; for (let d = 0; d < 7; d++) if (d !== 1) w[d] = { o:m.o, c:m.c, off:m.off, b:m.b.map(b => Object.assign({}, b)) }; }
+    await run(async () => {
+      const hours = {};
+      for (let d = 0; d < 7; d++){
+        const x = w[d]; const b = x.b.filter(y => y.s && y.e && y.s < y.e);
+        for (const y of b){ const inside = x.o === x.c || (x.o < x.c ? (y.s >= x.o && y.e <= x.c) : (y.s >= x.o || y.e <= x.c)); if (!inside) throw new Error(t('hrs_bad').replace('{d}', DAYN(d))); }
+        hours[d] = { o:x.o || '', c:x.c || '', off:!!x.off }; if (b.length) hours[d].b = b;
+      }
+      const mon = hours[1];
+      need(await sb.from('restaurants').update({ hours, open_time:mon.o || null, close_time:mon.c || null }).eq('id', r.id));
+      Object.assign(state.restaurant, { hours, open_time:mon.o || null, close_time:mon.c || null });
+      closeSheet(); renderTab(); toast(t('saved'));
+    });
+  },
+  profileSheet(){
+    const r = state.restaurant;
+    openSheet(`<h2>🏪 ${t('m_profile')}</h2>
+      <label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
+      <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
+      <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
+      <label class="f">${t('shop_loc')}</label>
+      <div class="muted" style="font-size:14px">${r.lat != null && r.lng != null ? `✅ ${t('loc_set')} <a href="https://maps.google.com/?q=${r.lat},${r.lng}" target="_blank" rel="noopener">${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}</a>` : `⚠️ ${t('loc_missing')}`}</div>
+      <button class="btn ghost" type="button" id="locBtn" style="margin-top:8px" onclick="A.setShopLoc()">${t('set_loc')}</button>
+      <label class="f" for="s_prep">${t('prep_default')}</label><input id="s_prep" type="number" min="5" step="5" value="${r.prep_time_minutes || 25}">
+      <label class="f" for="s_logo">${t('logo')}</label><input id="s_logo" type="file" accept="image/*" onchange="previewFile(this,'s_prev')">
+      <img id="s_prev" class="preview" alt="" style="display:${r.logo_url ? 'block' : 'none'}" src="${esc(r.logo_url || '')}">
+      <div class="actions" style="margin-top:12px"><button class="btn block" id="shopSave" onclick="A.saveProfile()">${t('save')}</button></div>`);
+  },
+  async saveProfile(){
+    const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
+    const btn = $('shopSave'); btn.disabled = true; btn.textContent = t('loading');
+    await run(async () => {
+      const row = { description:$('s_desc').value.trim() || null, address:$('s_addr').value.trim() || null, phone:$('s_phone').value.trim() || null, prep_time_minutes:prep };
+      const f = $('s_logo').files[0]; if (f) row.logo_url = await uploadImage(f, 'restaurants');
+      need(await sb.from('restaurants').update(row).eq('id', state.restaurant.id));
+      Object.assign(state.restaurant, row); closeSheet(); renderTab(); toast(t('saved'));
+    });
+    const b = $('shopSave'); if (b){ b.disabled = false; b.textContent = t('save'); }
+  },
+  orderSetSheet(){
+    const r = state.restaurant;
+    openSheet(`<h2>⚙️ ${t('m_orderset')}</h2>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${t('aa_t')}</b><div class="muted" style="font-size:13px">${t('aa_s')}</div></div>
+        <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.auto_accept ? 'checked' : ''} onchange="A.setAutoAccept(this.checked)" aria-label="${t('aa_t')}"><span></span></label></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px"><div><b>🛍️ ${t('pick_on')}</b><div class="muted" style="font-size:13px">${t('pick_s')}</div></div>
+        <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.allow_pickup !== false ? 'checked' : ''} onchange="A.setPickup(this.checked)" aria-label="${t('pick_on')}"><span></span></label></div>
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px">
+        <div><b>${isServices() ? t('kind_services') : t('kind_products')}</b><div class="muted" style="font-size:13px">${t('kind_cur')}</div></div>
+        <button class="btn ghost small" type="button" style="width:auto;flex:none" onclick="closeSheet();A.changeKind()">${t('kind_change')}</button></div>`);
+  },
+  offerSheet2(){
+    const r = state.restaurant; const f = r.offer || {};
+    openSheet(`<h2>🏷️ ${t('m_offer2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('offer_s')}</div>
+      <label class="check"><input id="of_on" type="checkbox" ${f.on ? 'checked' : ''}> ${t('offer_on')}</label>
+      <div class="two"><div><label class="f" for="of_pct">${t('offer_pct')}</label><input id="of_pct" type="number" min="1" max="90" inputmode="numeric" value="${num(f.pct) || ''}" placeholder="10"></div>
+        <div><label class="f" for="of_min">${t('offer_min')}</label><input id="of_min" type="number" min="0" inputmode="numeric" value="${num(f.min) || ''}" placeholder="0"></div></div>
+      <label class="f" for="of_max">${t('offer_max')}</label><input id="of_max" type="number" min="0" inputmode="numeric" value="${num(f.max) || ''}" placeholder="0">
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveOffer()">${t('save_offer')}</button></div>`);
+  },
+  bookingSheet2(){
+    const r = state.restaurant;
+    openSheet(`<h2>📅 ${t('m_booking2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('bk_set_s')}</div>
+      ${(() => { const k = state.bkTerms || { pct:0 }; const p = num(k.pct); return `<div class="note" style="margin:0 0 10px"><b>${p > 0 ? t('bk_fee').replace('{p}', p) : '🎁 ' + t('bk_free_now')}</b><div style="font-size:13px;margin-top:4px">${t('bk_fee_note')}</div></div>`; })()}
+      <label class="check"><input id="bk_on" type="checkbox" ${r.booking_on ? 'checked' : ''}> ${t('bk_on')}</label>
+      <label class="f" for="bk_ch">${t('bk_chairs')}</label><input id="bk_ch" type="number" min="1" max="20" inputmode="numeric" value="${r.chairs || 1}">
+      <label class="f" for="bk_gr">${t('bk_grace')}</label><select id="bk_gr">${[5, 10, 15, 20, 30].map(m => `<option value="${m}" ${(r.grace_min ?? 10) === m ? 'selected' : ''}>${m} ${t('min_s')}</option>`).join('')}</select>
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveBooking()">${t('bk_save')}</button></div>`);
+  },
+  staffSheet2(){
+    openSheet(`<h2>👥 ${t('m_staff2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('staff_s')}</div>
+      <div id="staffList" style="margin-top:8px">${staffListHtml()}</div>
+      <button class="btn ghost small" style="width:100%;margin-top:8px" onclick="A.staffAdd()">${t('staff_add')}</button>`);
+  },
+  payoutSheet2(){
+    const r = state.restaurant; const p = r.payout || {}; const m = p.method || 'jazzcash';
+    openSheet(`<h2>💳 ${t('m_payout2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('payout_s')}</div>
+      <label class="f" for="po_m" style="margin-top:0">${t('pay_method')}</label><select id="po_m" onchange="A.poMethod(this.value)">${[['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['bank','Bank / Raast']].map(([k, l]) => `<option value="${k}" ${m === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <div id="po_bank" style="display:${m === 'bank' ? 'block' : 'none'}"><label class="f" for="po_bn">${t('bank_name')}</label><input id="po_bn" type="text" value="${esc(p.bank || '')}" placeholder="Meezan, HBL, UBL…"></div>
+      <label class="f" for="po_t">${t('acc_title')}</label><input id="po_t" type="text" value="${esc(p.title || '')}">
+      <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
+      <div class="actions" style="margin-top:12px"><button class="btn block" id="poSave" onclick="A.savePayout()">${t('save_acc')}</button></div>`);
+  },
+  async sendPayoutReq(){
+    const note = ($('rpNote')?.value || '').trim();
+    await run(async () => {
+      try {
+        need(await sb.rpc('shop_request_payout', { p_note:note || null }));
+        closeSheet(); toast(t('req_sent'));
+      } catch (e) {
+        if (String(e.message).includes('pending')) toast(t('req_already')); else throw e;
+      }
+    });
   },
   async sendVerify(){
     const b = $('vSend'); if (b) b.disabled = true; const m = $('vMsg');
@@ -1811,7 +1901,7 @@ const A = {
     if (m !== 'bank') n = n.replace(/^\+?92/, '0');
     if (m === 'bank' && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(n) && !/^\d{8,20}$/.test(n)) return toast(t('iban_l'), true);
     const payout = { method:m, title, number:n, bank:m === 'bank' ? ($('po_bn').value.trim() || null) : null, updated_at:new Date().toISOString() };
-    await run(async () => { need(await sb.from('restaurants').update({ payout }).eq('id', state.restaurant.id)); state.restaurant.payout = payout; toast(t('acc_saved')); });
+    await run(async () => { need(await sb.from('restaurants').update({ payout }).eq('id', state.restaurant.id)); state.restaurant.payout = payout; toast(t('acc_saved')); closeSheet(); renderTab(); });
   },
   async saveShop(){
     const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
@@ -1895,7 +1985,7 @@ const A = {
   async saveBooking(){
     if (!isServices()) return;
     const v = { booking_on:$('bk_on').checked, chairs:Math.max(1, Math.min(20, Math.round(num($('bk_ch').value)) || 1)), grace_min:Math.round(num($('bk_gr').value)) || 10 };
-    await run(async () => { need(await sb.from('restaurants').update(v).eq('id', state.restaurant.id)); Object.assign(state.restaurant, v); toast(t('saved')); });
+    await run(async () => { need(await sb.from('restaurants').update(v).eq('id', state.restaurant.id)); Object.assign(state.restaurant, v); toast(t('saved')); closeSheet(); });
   },
   async apptAct(id, action, minutes){
     let reason = null;
@@ -1906,7 +1996,7 @@ const A = {
     const pct = Math.round(num($('of_pct').value)), on = $('of_on').checked;
     if (on && (pct < 1 || pct > 90)) return toast('1 – 90 %', true);
     const offer = { on, pct, min:Math.max(0, Math.round(num($('of_min').value))), max:Math.max(0, Math.round(num($('of_max').value))) };
-    await run(async () => { need(await sb.from('restaurants').update({ offer }).eq('id', state.restaurant.id)); state.restaurant.offer = offer; toast(t('saved')); });
+    await run(async () => { need(await sb.from('restaurants').update({ offer }).eq('id', state.restaurant.id)); state.restaurant.offer = offer; toast(t('saved')); closeSheet(); renderTab(); });
   },
   async setPickup(v){ await run(async () => { need(await sb.from('restaurants').update({ allow_pickup:v }).eq('id', state.restaurant.id)); state.restaurant.allow_pickup = v; toast(t('saved')); }); },
   printSlip(id){
