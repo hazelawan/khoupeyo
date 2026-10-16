@@ -637,7 +637,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.15';
+const APP_VERSION = '5.16';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1864,7 +1864,7 @@ const A = {
     renderShell(); markTab(); renderTab();
   },
   handoverCode(){
-    openSheet(`<h2>🔐 ${t('handover_code')}</h2><p>${t('handover_t')}</p>
+    openSheet(`🔐 ${t('handover_code')}`, `<p>${t('handover_t')}</p>
       <input id="hcCode" inputmode="numeric" maxlength="4" placeholder="${t('handover_ph')}" style="font-size:28px;text-align:center;letter-spacing:10px;width:100%;padding:12px;border:2px solid #ddd;border-radius:10px">
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.confirmHandover()">${t('confirm')}</button></div>`);
     setTimeout(() => $('hcCode')?.focus(), 300);
