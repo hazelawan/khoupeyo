@@ -665,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.10';
+const APP_VERSION = '6.11';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1555,7 +1555,7 @@ const A = {
     if (onAuth || !state.restaurant) showAuth(); else if (!shopKind()) showKindPicker(); else { renderShell(); renderTab(); }
   },
   requestPayout(){
-    openSheet(`<h2>💸 ${t('req_title')}</h2><p>${t('to_receive')}: <b>${money(num(state.earn?.unpaid))}</b></p>
+    openSheet(`💸 ${t('req_title')}`, `<p>${t('to_receive')}: <b>${money(num(state.earn?.unpaid))}</b></p>
       <input id="rpNote" placeholder="${t('req_note')}" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px">
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.sendPayoutReq()">${t('req_payout')}</button></div>`);
   },
@@ -1575,8 +1575,8 @@ const A = {
       ${x.o === x.c ? `<div class="h24">${t('open24')}</div>` : ''}
       ${x.b.map((b, i) => `<div class="hbrk"><span>☕ ${t('brk')}</span>${tSel(b.s, `A.brkSet(${d},${i},'s',this.value)`)}<span>–</span>${tSel(b.e, `A.brkSet(${d},${i},'e',this.value)`)}<button type="button" class="hx" onclick="A.brkDel(${d},${i})" aria-label="×">×</button></div>`).join('')}
       <div class="hbtns">${x.b.length < 3 ? `<button type="button" class="hadd" onclick="A.brkAdd(${d})">${t('add_brk')}</button>` : ''}${d === 5 && !x.b.some(b => b.s === '13:00') ? `<button type="button" class="hadd" onclick="A.brkAdd(5,'13:00','14:30')">${t('jumma')}</button>` : ''}</div>`}</div>`; };
-    openSheet(`<h2>🕘 ${t('m_timings')}</h2>
-      <div class="chips" style="margin-bottom:10px">
+    openSheet(`🕘 ${t('m_timings')}`,
+      `<div class="chips" style="margin-bottom:10px">
         <button class="chip ${mode === 'same' ? 'on' : ''}" onclick="state.hrsMode='same';A.timingsSheet()">${t('mode_same')}</button>
         <button class="chip ${mode === 'diff' ? 'on' : ''}" onclick="state.hrsMode='diff';A.timingsSheet()">${t('mode_diff')}</button>
       </div>
@@ -1602,8 +1602,8 @@ const A = {
   },
   profileSheet(){
     const r = state.restaurant;
-    openSheet(`<h2>🏪 ${t('m_profile')}</h2>
-      <label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
+    openSheet(`🏪 ${t('m_profile')}`,
+      `<label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
       <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
       <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
       <label class="f">${t('shop_loc')}</label>
@@ -1627,7 +1627,7 @@ const A = {
   },
   orderSetSheet(){
     const r = state.restaurant;
-    openSheet(`<h2>⚙️ ${t('m_orderset')}</h2>
+    openSheet(`⚙️ ${t('m_orderset')}`, `
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><b>${t('aa_t')}</b><div class="muted" style="font-size:13px">${t('aa_s')}</div></div>
         <label class="switch" style="margin:0;flex:none"><input type="checkbox" ${r.auto_accept ? 'checked' : ''} onchange="A.setAutoAccept(this.checked)" aria-label="${t('aa_t')}"><span></span></label></div>
       <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px"><div><b>🛍️ ${t('pick_on')}</b><div class="muted" style="font-size:13px">${t('pick_s')}</div></div>
@@ -1638,7 +1638,7 @@ const A = {
   },
   offerSheet2(){
     const r = state.restaurant; const f = r.offer || {};
-    openSheet(`<h2>🏷️ ${t('m_offer2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('offer_s')}</div>
+    openSheet(`🏷️ ${t('m_offer2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('offer_s')}</div>
       <label class="check"><input id="of_on" type="checkbox" ${f.on ? 'checked' : ''}> ${t('offer_on')}</label>
       <div class="two"><div><label class="f" for="of_pct">${t('offer_pct')}</label><input id="of_pct" type="number" min="1" max="90" inputmode="numeric" value="${num(f.pct) || ''}" placeholder="10"></div>
         <div><label class="f" for="of_min">${t('offer_min')}</label><input id="of_min" type="number" min="0" inputmode="numeric" value="${num(f.min) || ''}" placeholder="0"></div></div>
@@ -1647,7 +1647,7 @@ const A = {
   },
   bookingSheet2(){
     const r = state.restaurant;
-    openSheet(`<h2>📅 ${t('m_booking2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('bk_set_s')}</div>
+    openSheet(`📅 ${t('m_booking2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('bk_set_s')}</div>
       ${(() => { const k = state.bkTerms || { pct:0 }; const p = num(k.pct); return `<div class="note" style="margin:0 0 10px"><b>${p > 0 ? t('bk_fee').replace('{p}', p) : '🎁 ' + t('bk_free_now')}</b><div style="font-size:13px;margin-top:4px">${t('bk_fee_note')}</div></div>`; })()}
       <label class="check"><input id="bk_on" type="checkbox" ${r.booking_on ? 'checked' : ''}> ${t('bk_on')}</label>
       <label class="f" for="bk_ch">${t('bk_chairs')}</label><input id="bk_ch" type="number" min="1" max="20" inputmode="numeric" value="${r.chairs || 1}">
@@ -1655,13 +1655,13 @@ const A = {
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveBooking()">${t('bk_save')}</button></div>`);
   },
   staffSheet2(){
-    openSheet(`<h2>👥 ${t('m_staff2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('staff_s')}</div>
+    openSheet(`👥 ${t('m_staff2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('staff_s')}</div>
       <div id="staffList" style="margin-top:8px">${staffListHtml()}</div>
       <button class="btn ghost small" style="width:100%;margin-top:8px" onclick="A.staffAdd()">${t('staff_add')}</button>`);
   },
   payoutSheet2(){
     const r = state.restaurant; const p = r.payout || {}; const m = p.method || 'jazzcash';
-    openSheet(`<h2>💳 ${t('m_payout2')}</h2><div class="muted" style="font-size:14px;margin-bottom:8px">${t('payout_s')}</div>
+    openSheet(`💳 ${t('m_payout2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('payout_s')}</div>
       <label class="f" for="po_m" style="margin-top:0">${t('pay_method')}</label><select id="po_m" onchange="A.poMethod(this.value)">${[['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['bank','Bank / Raast']].map(([k, l]) => `<option value="${k}" ${m === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <div id="po_bank" style="display:${m === 'bank' ? 'block' : 'none'}"><label class="f" for="po_bn">${t('bank_name')}</label><input id="po_bn" type="text" value="${esc(p.bank || '')}" placeholder="Meezan, HBL, UBL…"></div>
       <label class="f" for="po_t">${t('acc_title')}</label><input id="po_t" type="text" value="${esc(p.title || '')}">
@@ -2018,10 +2018,13 @@ const A = {
   async flashReq(itemId){
     const i = (state.items || []).find(x => x.id === itemId);
     if (!i) return;
-    const price = prompt(t('flash_price_q', { p: money(i.price) }));
+    const price = await uiPrompt(t('flash_price_q', { p: money(i.price) }), '', { type:'number' });
+    if (price === null) return;
     const fp = Math.floor(num(price));
     if (!fp || fp <= 0 || fp >= num(i.price)) return toast(t('flash_price_bad'), true);
-    const hours = Math.floor(num(prompt(t('flash_hours_q'), '6'))) || 6;
+    const hoursIn = await uiPrompt(t('flash_hours_q'), '6', { type:'number' });
+    if (hoursIn === null) return;
+    const hours = Math.floor(num(hoursIn)) || 6;
     await run(async () => {
       need(await sb.from('flash_requests').insert({ restaurant_id: state.restaurant.id, menu_item_id: itemId, flash_price: fp, hours: Math.min(72, Math.max(1, hours)), status: 'pending' }));
       toast(t('flash_req_sent'));
