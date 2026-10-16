@@ -588,6 +588,7 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 .typerow{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;margin:4px 0}
 .typerow::-webkit-scrollbar{display:none}
 .hrs,.hrs1{margin-top:8px;font-size:14px}
+.hrsbadge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:8px 14px;background:var(--soft);border:1px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
 .hrs summary{cursor:pointer;font-weight:600;list-style:none}
 .hrs summary::after{content:' ▾';color:var(--muted)}
 .hrs .line{display:flex;justify-content:space-between;padding:4px 2px;font-size:14px;border-bottom:1px solid var(--line)}
@@ -945,7 +946,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.11';
+const APP_VERSION = '5.14';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1024,7 +1025,7 @@ const I18N = {
     hero_ready:'Your order is ready, finding a rider', hero_rider_assigned:'A rider is going to the shop', hero_picked_up:'Your order is on the way',
     hero_delivered:'Delivered. Enjoy!',
     cancel_order:'Cancel order', cancel_confirm:'Cancel this order?', call:'Call shop', reorder:'Order again',
-    logout:'Log out', language:'Language', saved_addresses:'Saved addresses', delete:'Delete', save:'Save',
+    logout:'Log out', language:'Language', saved_addresses:'Saved addresses', delete:'Delete', save:'Save', edit_profile:'Edit profile', addresses_n:'saved',
     loading:'Loading…', retry:'Try again', error:'Something went wrong. Please try again.',
     other_rest_msg:'Your cart has items from another shop. Clear it and add this item?',
     min_order_msg:'Add {n} more to reach the minimum order', closed_msg:'This shop is closed right now.', opens_at:'Opens {t}.', hours:'Timings',
@@ -1063,7 +1064,7 @@ const I18N = {
     banner_t:'Everything delivered to your door', banner_s:'Order from local shops. Pay cash on delivery.', minutes:'min',
     search_shop:'Search in this shop', results_for:'Results for "{q}"', blocked:'Your account is blocked. Please contact Wanhar Mart.',
     rider_here:'Your rider has arrived. Please come to the door.', rider_waiting:'Your rider is waiting for you', wait_warn:'Please pick up the phone or come to the door. If you do not respond before the time ends, your order will be cancelled.', failed:'The rider could not deliver your order and it was cancelled.',
-    a_title:'Message about your order', open_order:'Open my order', ok:'OK', chat_rider:'Chat with rider', chat_shop:'Chat with shop', chat_support:'Wanhar Mart help',
+    a_title:'Message about your order', open_order:'Open my order', ok:'OK', chat_rider:'Chat with rider', chat_shop:'Chat with shop', chat_support:'Wanhar Mart help', contact:'Contact', sec_rider:'Rider', sec_shop:'Shop', sec_support:'Support', rider_after_pickup:'Only after pickup',
     m_customer_unreachable:'Your rider is calling you. Please pick up the phone.', m_customer_absent:'Your rider is at your address but cannot find you. Please come outside or call the rider.',
     m_customer_refused_pay:'Your rider reported a payment problem. Please pay the order amount in cash.', m_wrong_address:'Your rider cannot find your address. Please call the rider and guide them.',
     m_shop_delay:'Your order is taking a little longer at the shop.', m_shop_closed:'There is a problem at the shop. Wanhar Mart will contact you.',
@@ -1134,7 +1135,7 @@ const I18N = {
     hero_ready:'آرڈر تیار ہے، رائیڈر ڈھونڈا جا رہا ہے', hero_rider_assigned:'رائیڈر دکان کی طرف جا رہا ہے', hero_picked_up:'آپ کا آرڈر راستے میں ہے',
     hero_delivered:'پہنچ گیا۔ مزے کریں!',
     cancel_order:'آرڈر منسوخ کریں', cancel_confirm:'کیا یہ آرڈر منسوخ کریں؟', call:'دکان کو کال کریں', reorder:'دوبارہ آرڈر کریں',
-    logout:'لاگ آؤٹ', language:'زبان', saved_addresses:'محفوظ پتے', delete:'حذف کریں', save:'محفوظ کریں',
+    logout:'لاگ آؤٹ', language:'زبان', saved_addresses:'محفوظ پتے', delete:'حذف کریں', save:'محفوظ کریں', edit_profile:'پروفائل تبدیل کریں', addresses_n:'محفوظ',
     loading:'لوڈ ہو رہا ہے…', retry:'دوبارہ کوشش کریں', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔',
     other_rest_msg:'آپ کے کارٹ میں دوسری دکان کی چیزیں ہیں۔ انہیں ہٹا کر یہ شامل کریں؟',
     min_order_msg:'کم از کم آرڈر کے لیے {n} مزید شامل کریں', closed_msg:'یہ دکان ابھی بند ہے۔', opens_at:'{t} کھلے گی۔', hours:'اوقات',
@@ -1173,7 +1174,7 @@ const I18N = {
     banner_t:'ہر چیز آپ کے دروازے پر', banner_s:'مقامی دکانوں سے آرڈر کریں۔ ادائیگی ڈیلیوری پر نقد۔', minutes:'منٹ',
     search_shop:'اس دکان میں تلاش کریں', results_for:'"{q}" کے نتائج', blocked:'آپ کا اکاؤنٹ بلاک ہے۔ براہ کرم Wanhar Mart سے رابطہ کریں۔',
     rider_here:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', rider_waiting:'آپ کا رائیڈر آپ کا انتظار کر رہا ہے', wait_warn:'براہ کرم فون اٹھائیں یا دروازے پر آئیں۔ وقت ختم ہونے تک جواب نہ دیا تو آرڈر منسوخ ہو جائے گا۔', failed:'رائیڈر آپ کا آرڈر نہیں پہنچا سکا اور یہ منسوخ ہو گیا۔',
-    a_title:'آپ کے آرڈر کے بارے میں پیغام', open_order:'میرا آرڈر کھولیں', ok:'ٹھیک ہے', chat_rider:'رائیڈر سے بات کریں', chat_shop:'دکان سے بات کریں', chat_support:'Wanhar Mart مدد',
+    a_title:'آپ کے آرڈر کے بارے میں پیغام', open_order:'میرا آرڈر کھولیں', ok:'ٹھیک ہے', chat_rider:'رائیڈر سے بات کریں', chat_shop:'دکان سے بات کریں', chat_support:'Wanhar Mart مدد', contact:'رابطہ', sec_rider:'رائیڈر', sec_shop:'دکان', sec_support:'مدد', rider_after_pickup:'صرف پک اپ کے بعد',
     m_customer_unreachable:'آپ کا رائیڈر آپ کو کال کر رہا ہے۔ براہ کرم فون اٹھائیں۔', m_customer_absent:'رائیڈر آپ کے پتے پر ہے مگر آپ نہیں مل رہے۔ باہر آئیں یا رائیڈر کو کال کریں۔',
     m_customer_refused_pay:'رائیڈر نے ادائیگی کا مسئلہ بتایا ہے۔ براہ کرم آرڈر کی رقم نقد ادا کریں۔', m_wrong_address:'رائیڈر کو آپ کا پتہ نہیں مل رہا۔ رائیڈر کو کال کر کے راستہ بتائیں۔',
     m_shop_delay:'دکان پر آپ کا آرڈر تیار ہونے میں تھوڑا وقت لگ رہا ہے۔', m_shop_closed:'دکان پر مسئلہ ہے۔ Wanhar Mart آپ سے رابطہ کرے گا۔',
@@ -1294,8 +1295,13 @@ function dayHours(r, d){
 }
 function hoursHtml(r){
   const today = WD[PKW.format(new Date())];
-  if (!hasWeek(r)) return r.open_time && r.close_time && r.open_time !== r.close_time ? `<div class="hrs1">🕒 ${dayHours(r, today)}</div>` : '';
-  return `<details class="hrs"><summary>🕒 ${t('today_l')}: ${dayHours(r, today)}</summary>${[1, 2, 3, 4, 5, 6, 0].map(d => `<div class="line ${d === today ? 'now' : ''}"><span>${DAYN(d)}</span><span>${dayHours(r, d)}</span></div>`).join('')}</details>`;
+  const badge = `🕒 ${t('today_l')}: ${dayHours(r, today)}`;
+  if (!hasWeek(r)) return r.open_time && r.close_time && r.open_time !== r.close_time ? `<button class="hrsbadge" onclick="A.hoursSheet()">${badge}</button>` : '';
+  return `<button class="hrsbadge" onclick="A.hoursSheet()">${badge} <span class="muted">›</span></button>`;
+}
+function hoursSheetHtml(r){
+  const today = WD[PKW.format(new Date())];
+  return `<div class="list">${[1, 2, 3, 4, 5, 6, 0].map(d => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title" style="${d === today ? 'color:var(--brand);font-weight:800' : ''}">${DAYN(d)}${d === today ? ' · ' + t('today_l') : ''}</div></div><div class="row-side" style="font-size:14px">${dayHours(r, d)}</div></div>`).join('')}</div>`;
 }
 function schedSlots(r){
   const out = {}; const start = Date.now() + 45 * 60000; let tms = Math.ceil(start / 1800000) * 1800000; const end = Date.now() + 3 * 864e5 - 3600000;
@@ -1970,8 +1976,8 @@ function ctlHtml(i){
   if (!i.is_available) return `<span class="soldout">${t('sold_out')}</span><button class="add bell ${(state.alerts || new Set()).has(i.id) ? 'on' : ''}" onclick="A.notifyMe('${i.id}')" aria-label="${t('notify_me')}">🔔</button>`;
   if (!state.curRest) return '';
   if (i.duration_min && state.curRest.booking_on) return `<button class="add" onclick="A.bookOpen('${i.id}')">${t('book')}</button>`;
-  if (hasOpts(i.id)){ const n = state.cart.rid === i.restaurant_id ? cartQtyOf(i.id) : 0; return `<button class="add" onclick="A.add('${i.id}')">${t('add')}${n ? ' · ' + n : ''}</button>`; }
-  const inCart = state.cart.rid === i.restaurant_id ? state.cart.items.find(c => c.key === i.id) : null;
+  if (hasOpts(i.id)){ const n = state.cart.items.filter(c => c.id === i.id && (c.rid || state.cart.rid) === i.restaurant_id).reduce((a, c) => a + c.qty, 0); return `<button class="add" onclick="A.add('${i.id}')">${t('add')}${n ? ' · ' + n : ''}</button>`; }
+  const inCart = state.cart.items.find(c => c.key === i.id && (c.rid || state.cart.rid) === i.restaurant_id);
   if (!inCart) return `<button class="add" onclick="A.add('${i.id}')">${t('add')}</button>`;
   return `<div class="stepper"><button onclick="A.chg('${i.id}',-1)" aria-label="-">−</button><b>${inCart.qty}</b><button onclick="A.chg('${i.id}',1)" aria-label="+">+</button></div>`;
 }
@@ -2197,6 +2203,8 @@ const quoteKey = () => state.cart.rid + '|' + state.selAddr + '|' + state.cart.i
 async function loadQuote(){
   const key = quoteKey();
   if (!state.cart.rid || !state.selAddr || (state.quote && state.quote.key === key)) return;
+  const shops = A.cartShops ? A.cartShops() : [];
+  if (shops.length > 1){ state.quote = { key, ok:true, fee:cartFee(), km:null, msg:'' }; if (currentRoute === 'checkout') drawCheckout(); return; }
   state.quote = { key, loading:true };
   try {
     const { data, error } = await sb.rpc('quote_cart', { p_restaurant_id:state.cart.rid, p_address_id:state.selAddr, p_items:state.cart.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })) });
@@ -2428,6 +2436,7 @@ async function showOrder(id){
     if (lg.data && lg.data[0]) eta = new Date(new Date(lg.data[0].changed_at).getTime() + o.prep_minutes * 60000).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
   }
   if (['rider_assigned', 'picked_up'].includes(o.status)){ const rr = await sb.rpc('order_rider_info', { p_order_id:id }); if (rr.data && rr.data[0]) rider = rr.data[0]; }
+  state.curRider = rider;
   let cmp = null;
   if (o.status === 'delivered'){ const rv = await sb.from('reviews').select('*').eq('order_id', id).maybeSingle(); review = rv.data || null;
     if (o.rider_id){ try { const cq = await sb.from('rider_complaints').select('kind,status,admin_note,late_minutes').eq('order_id', id).maybeSingle(); cmp = cq.data || null; } catch (e) {} } }
@@ -2476,11 +2485,7 @@ async function showOrder(id){
       <button class="btn ghost" style="margin-top:10px" onclick="A.receipt()">${t('receipt')}</button></div>
     <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.receiver_name ? `<div style="margin-top:4px">👤 ${t('receiver')}: <b>${esc(o.receiver_name)}</b> · ${esc(o.receiver_phone || '')}</div>` : ''}${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
     <div style="display:grid;gap:10px;margin-top:10px">
-      ${o.rider_id ? `<button class="btn ghost" onclick='Chat.open(${JSON.stringify(o.id)}, "cr", null)'>💬 ${t('chat_rider')}</button>` : ''}
-      <button class="btn ghost" onclick='Chat.open(${JSON.stringify(o.id)}, "cs", null)'>💬 ${t('chat_shop')}</button>
-      <button class="btn ghost" onclick='Chat.open(${JSON.stringify(o.id)}, "sup_c", null)'>💬 ${t('chat_support')}</button>
-      ${!FINAL.includes(o.status) && rider && waNum(rider.phone) ? `<a class="wabtn wide" target="_blank" rel="noopener" href="${waHref(rider.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${WA_IC} ${t('wa_rider')}</a>` : ''}
-      ${o.restaurant && waNum(o.restaurant.phone) ? `<a class="wabtn wide" target="_blank" rel="noopener" href="${waHref(o.restaurant.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${WA_IC} ${t('wa_shop')}</a>` : ''}
+      <button class="btn ghost" onclick="A.contactSheet('${o.id}')">💬 ${t('contact')}</button>
     </div>
     <div style="display:grid;gap:10px;margin-top:14px">
       ${o.restaurant && o.restaurant.phone ? `<a class="btn ghost" href="tel:${esc(o.restaurant.phone)}">${t('call')}</a>` : ''}
@@ -2567,15 +2572,16 @@ async function showAccount(){
     <a class="menu-row" href="#/orders"><span>${t('history')}</span><span class="muted">›</span></a>
     <a class="menu-row" href="#/offers"><span>${t('offers_invite')}</span><span class="muted">›</span></a>
     <button class="menu-row" onclick='Chat.open(null, "sup", state.user.id)'><span>💬 ${t('chat_support')}</span><span class="muted">›</span></button>
-    <div class="box">
+    <button class="menu-row" onclick="A.accSection('profile')"><span>👤 ${t('edit_profile')}<small class="muted" style="display:block;font-size:12px">${esc(p.full_name || state.user.email)}</small></span><span class="muted">›</span></button>
+    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
       <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
       <label class="f" for="p_phone">${t('phone')}</label><input id="p_phone" type="tel" inputmode="tel" value="${esc(p.phone)}">
       <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
       <div style="margin-top:14px"><button class="btn" onclick="A.saveProfile()">${t('save')}</button></div>
-    </div>
-    <h2>${t('saved_addresses')}</h2>
-    <div class="box"><div id="addrList2">${addrs || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
-    <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button></div>
+    </div></div>
+    <button class="menu-row" onclick="A.accSection('addresses')"><span>📍 ${t('saved_addresses')}<small class="muted" style="display:block;font-size:12px">${state.addresses.length} ${t('addresses_n')}</small></span><span class="muted">›</span></button>
+    <div id="accAddresses" style="display:${state.accSec === 'addresses' ? 'block' : 'none'}"><div class="box"><div id="addrList2">${addrs || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
+    <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button></div></div>
     <div style="display:grid;gap:10px;margin-top:16px">
       ${Theme.picker(state.lang)}
       <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
@@ -2677,6 +2683,26 @@ let searchTimer = null;
 const A = {
   pickRegion(){
     openSheet(t('city_title'), `<div class="muted" style="margin-bottom:10px">${t('city_note')}</div>${state.regions.map(r => `<button class="menu-row" style="width:100%" onclick="A.setRegion('${r.id}')"><span><b>${r.id === state.region ? '✅ ' : '📍 '}${esc(r.name)}</b></span><span class="muted">›</span></button>`).join('')}`);
+  },
+  contactSheet(orderId){
+    const o = state.curOrder; if (!o || o.id !== orderId) return;
+    const rider = state.curRider; const pickedUp = ['picked_up'].includes(o.status);
+    const row = (icon, label, sub, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px"> ${icon}</span><span><b>${label}</b>${sub ? `<br><small class="muted">${sub}</small>` : ''}</span><span class="muted">›</span></button>`;
+    const sect = s => `<div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 4px">${s}</div>`;
+    let h = '';
+    if (o.rider_id && pickedUp){
+      h += sect(t('sec_rider'));
+      h += row('💬', t('chat_rider'), '', `closeSheet();Chat.open('${o.id}',"cr",null)`);
+      if (rider && rider.phone) h += row('📞', t('call_rider'), rider.phone, `location.href='tel:${esc(rider.phone)}'`);
+      if (rider && waNum(rider.phone)) h += `<a class="menu-row" style="width:100%;text-decoration:none;color:inherit" target="_blank" rel="noopener" href="${waHref(rider.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}"><span style="font-size:20px">🟢</span><span><b>${t('wa_rider')}</b></span><span class="muted">›</span></a>`;
+    }
+    h += sect(t('sec_shop'));
+    h += row('💬', t('chat_shop'), '', `closeSheet();Chat.open('${o.id}',"cs",null)`);
+    if (o.restaurant && o.restaurant.phone) h += row('📞', t('call'), o.restaurant.phone, `location.href='tel:${esc(o.restaurant.phone)}'`);
+    if (o.restaurant && waNum(o.restaurant.phone)) h += `<a class="menu-row" style="width:100%;text-decoration:none;color:inherit" target="_blank" rel="noopener" href="${waHref(o.restaurant.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}"><span style="font-size:20px">🟢</span><span><b>${t('wa_shop')}</b></span><span class="muted">›</span></a>`;
+    h += sect(t('sec_support'));
+    h += row('🛟', t('chat_support'), '', `closeSheet();Chat.open('${o.id}',"sup_c",null)`);
+    openSheet(t('contact'), h);
   },
   async setRegion(id, quiet){
     closeSheet();
@@ -2900,7 +2926,8 @@ const A = {
   setWallet(v){ state.useWallet = v; drawCheckout(); },
   async redeemPts(){
     const minR = state.loyalty_redeem_min || 100;
-    const pts = prompt(t('redeem_how_many', { m:minR }));
+    const pts = await uiPrompt(t('redeem_how_many', { m:minR }), String(minR));
+    if (pts === null) return;
     const n = Math.floor(num(pts));
     if (!n || n < minR) return toast(t('redeem_min', { m:minR }), true);
     const r = await run(async () => need(await sb.rpc('redeem_points', { p_points:n })));
@@ -3086,6 +3113,7 @@ const A = {
     window.open('https://wa.me/?text=' + encodeURIComponent(text + '\n' + url), '_blank', 'noopener');
   },
   forOther(v){ state.forOther = !!v; if (typeof drawCheckout === 'function') drawCheckout(); },
+  hoursSheet(){ const r = state.curRest; if (!r) return; openSheet(t('hours'), hoursSheetHtml(r)); },
   faq(){
     const L = FAQ[state.lang === 'ur' ? 'ur' : 'en'];
     openSheet(t('faq_t'), L.map(([q, a]) => `<details class="faqq"><summary>${esc(q)}</summary><div>${esc(a)}</div></details>`).join('') + `<button class="btn ghost" style="margin-top:12px" onclick='closeSheet();if(state.user)Chat.open(null, "sup", state.user.id);else showAuth()'>💬 ${t('chat_support')}</button>`);
@@ -3235,6 +3263,12 @@ const A = {
       need(await sb.from('profiles').update({ full_name:name, phone }).eq('id', state.user.id));
       state.profile = Object.assign({}, state.profile, { full_name:name, phone }); toast(t('saved'));
     });
+  },
+  accSection(which){
+    state.accSec = state.accSec === which ? null : which;
+    const p = $('accProfile'), a = $('accAddresses');
+    if (p) p.style.display = state.accSec === 'profile' ? 'block' : 'none';
+    if (a) a.style.display = state.accSec === 'addresses' ? 'block' : 'none';
   }
 };
 
@@ -3362,7 +3396,7 @@ async function afterLogin(user){
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', dphoto_cap:'📷 Delivery photo by rider',
       new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
       'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
       'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
@@ -3387,7 +3421,7 @@ const Chat = (() => {
       sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', dphoto_cap:'📷 رائیڈر کی ڈیلیوری تصویر',
       new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
       'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
       'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
@@ -3526,6 +3560,24 @@ const Chat = (() => {
     draw();
     if (cur.msgs.length) setSeen(k, cur.msgs[cur.msgs.length - 1].created_at);
     delete unread[k]; paintBadge();
+    // show rider's delivery photo at top of customer-rider order chat
+    if (orderId && thread === 'cr') {
+      try {
+        const { data: od } = await sb.from('orders').select('delivery_photo').eq('id', orderId).single();
+        if (od && od.delivery_photo && cur && cur.k === k) {
+          const { data: su } = await sb.storage.from('rider-selfies').createSignedUrl(od.delivery_photo, 3600);
+          if (su && su.signedUrl) {
+            const box = document.getElementById('msgs');
+            if (box) {
+              const div = document.createElement('div');
+              div.style.cssText = 'text-align:center;padding:8px;border-bottom:1px solid #eee;margin-bottom:8px';
+              div.innerHTML = `<div style="font-size:13px;color:#666;margin-bottom:6px">${e(tr('dphoto_cap'))}</div><img src="${e(su.signedUrl)}" style="max-width:100%;border-radius:10px;max-height:220px" alt="">`;
+              box.insertBefore(div, box.firstChild);
+            }
+          }
+        }
+      } catch (err) { /* photo optional */ }
+    }
   }
   function fmt(m){
     if (m.sender_role !== 'system') return String(m.body);
