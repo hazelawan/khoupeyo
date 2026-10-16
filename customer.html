@@ -951,7 +951,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.15';
+const APP_VERSION = '5.16';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2473,6 +2473,7 @@ async function showOrder(id){
     ${code && (o.order_type === 'pickup' ? o.status !== 'placed' : ['rider_assigned', 'picked_up', 'ready', 'preparing', 'accepted'].includes(o.status)) ? `<div class="codebox"><div><b>${o.order_type === 'pickup' ? t('code_t').replace('delivery ', '') : t('code_t')}</b><small>${o.order_type === 'pickup' ? t('code_pick') : t('code_s')}</small></div><span class="code">${esc(code)}</span></div>` : ''}
     ${o.order_type === 'pickup' && !FINAL.includes(o.status) && o.restaurant && o.restaurant.lat != null ? `<a class="btn ghost" style="margin:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${o.restaurant.lat},${o.restaurant.lng}">${t('pick_dir')}</a>` : ''}
     ${waitHtml}
+    ${o.delivery_photo ? `<div class="box" id="dphotoBox" style="text-align:center"><b>📷 ${t('dphoto_cap')}</b><div style="margin-top:8px"><img id="dphotoImg" style="max-width:100%;border-radius:10px;max-height:300px" alt=""></div></div>` : ''}
     ${trackerHtml(o)}
     ${showTrackMap(o) ? `<h2>${t('live_map')}</h2><div id="mapSlot"></div>${rider && rider.lat && o.address_lat ? `<div class="rkm">🛵 ${t('rider_km', { km:kmBetween(rider.lat, rider.lng, o.address_lat, o.address_lng).toFixed(1) })}</div>` : ''}` : ''}
     ${riderBox}
@@ -2507,6 +2508,17 @@ async function showOrder(id){
       const { data } = await sb.rpc('order_rider_info', { p_order_id:o.id }); const rr = data && data[0];
       if (rr && rr.lat) updateRiderPin(rr);
     }, 6000);
+  }
+  // load delivery photo if present
+  if (o.delivery_photo){
+    (async () => {
+      try {
+        const { data: su } = await sb.storage.from('rider-selfies').createSignedUrl(o.delivery_photo, 3600);
+        const img = document.getElementById('dphotoImg');
+        if (su && su.signedUrl && img) img.src = su.signedUrl;
+        else { const box = document.getElementById('dphotoBox'); if (box) box.style.display = 'none'; }
+      } catch (e) { const box = document.getElementById('dphotoBox'); if (box) box.style.display = 'none'; }
+    })();
   }
 }
 
@@ -3362,21 +3374,30 @@ function ensureBubble(){
   b.addEventListener('pointerdown', e => {
     dragging = true; moved = 0; sx = e.clientX; sy = e.clientY;
     const p = pos(); bx = p.x; by = p.y;
-    b.setPointerCapture(e.pointerId); b.style.cursor = 'grabbing';
+    try { b.setPointerCapture(e.pointerId); } catch(e2){}
+    b.style.cursor = 'grabbing';
   });
   b.addEventListener('pointermove', e => {
     if (!dragging) return;
     const dx = e.clientX - sx, dy = e.clientY - sy;
     moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
-    setPos(bx + dx, by + dy);
+    if (moved > 8) setPos(bx + dx, by + dy);
   });
   const end = e => {
     if (!dragging) return; dragging = false; b.style.cursor = 'grab';
     try { ls.set('kh_bubble_pos', JSON.stringify({ x: parseFloat(b.dataset.x), y: parseFloat(b.dataset.y) })); } catch(e2){}
-    if (moved < 12 && bubbleOrder) nav('/order/' + bubbleOrder.id);
+    b.dataset.moved = moved;
   };
   b.addEventListener('pointerup', end);
   b.addEventListener('pointercancel', end);
+  b.addEventListener('click', e => {
+    e.stopPropagation();
+    if (parseFloat(b.dataset.moved || 0) < 12 && bubbleOrder){
+      try { closeSheet(); } catch(e2){}
+      nav('/order/' + bubbleOrder.id);
+    }
+    b.dataset.moved = 0;
+  });
   return b;
 }
 function updateOrderBubble(activeOrder){
