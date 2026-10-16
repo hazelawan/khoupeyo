@@ -665,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.11';
+const APP_VERSION = '6.12';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -792,7 +792,7 @@ const I18N = {
     pick_on:'Customers can collect orders themselves (pickup)', pick_s:'No rider. Customer comes to your shop and shows a code.', shop_disc:'Shop offer', brk:'Break', add_brk:'+ Add break', jumma:'🕌 Jumma break', brk_from:'Break from', brk_to:'to', open24:'⏰ Open 24 hours', in_break:'On break now. Customers can order again at {t}.', hrs_bad:'{d}: the break must be inside the open time',
     my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', shop_dashboard:'Shop dashboard', back_shop:'‹ Back to my shop', back_kind:'‹ Back', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
-    m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
+    m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', shop_name:'Shop name', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
     today_hours:'Today', mode_same:'Same time every day', mode_diff:'Different time per day',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
@@ -865,7 +865,7 @@ const I18N = {
     pick_on:'گاہک خود آرڈر لے جا سکتے ہیں (پک اپ)', pick_s:'رائیڈر نہیں۔ گاہک دکان پر آ کر کوڈ دکھائے گا۔', shop_disc:'دکان کی آفر', brk:'وقفہ', add_brk:'+ وقفہ شامل کریں', jumma:'🕌 جمعہ کا وقفہ', brk_from:'وقفہ', brk_to:'سے', open24:'⏰ 24 گھنٹے کھلی', in_break:'ابھی وقفہ ہے۔ گاہک {t} سے دوبارہ آرڈر کر سکیں گے۔', hrs_bad:'{d}: وقفہ کھلنے کے وقت کے اندر ہونا چاہیے',
     my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', shop_dashboard:'دکان کا ڈیش بورڈ', back_shop:'‹ اپنی دکان پر واپس', back_kind:'‹ واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
-    m_timings:'دکان کے اوقات اور وقفے', m_timings_s:'ہر دن کے کھلنے کے اوقات', m_profile:'دکان کی پروفائل اور جگہ', m_profile_s:'نام، پتہ، لوگو، لوکیشن', m_orderset:'آرڈر اور پک اپ سیٹنگ', m_orderset_s:'آٹو قبول، پک اپ، دکان کی قسم', m_offer2:'دکان کی رعایت آفر', m_offer2_s:'گاہکوں کے لیے آپ کی رعایت', m_booking2:'بکنگ سیٹنگ', m_booking2_s:'کرسیاں، رعایتی وقت', m_staff2:'عملے کے لاگ اِن', m_staff2_s:'ورکرز کے اکاؤنٹس', m_payout2:'بینک / جیزکیش اکاؤنٹ', m_payout2_s:'آپ کو پیسے کہاں ملیں گے',
+    m_timings:'دکان کے اوقات اور وقفے', m_timings_s:'ہر دن کے کھلنے کے اوقات', m_profile:'دکان کی پروفائل اور جگہ', m_profile_s:'نام، پتہ، لوگو، لوکیشن', shop_name:'دکان کا نام', m_orderset:'آرڈر اور پک اپ سیٹنگ', m_orderset_s:'آٹو قبول، پک اپ، دکان کی قسم', m_offer2:'دکان کی رعایت آفر', m_offer2_s:'گاہکوں کے لیے آپ کی رعایت', m_booking2:'بکنگ سیٹنگ', m_booking2_s:'کرسیاں، رعایتی وقت', m_staff2:'عملے کے لاگ اِن', m_staff2_s:'ورکرز کے اکاؤنٹس', m_payout2:'بینک / جیزکیش اکاؤنٹ', m_payout2_s:'آپ کو پیسے کہاں ملیں گے',
     today_hours:'آج', mode_same:'ہر روز ایک ہی وقت', mode_diff:'ہر دن کا الگ وقت',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
@@ -1603,7 +1603,8 @@ const A = {
   profileSheet(){
     const r = state.restaurant;
     openSheet(`🏪 ${t('m_profile')}`,
-      `<label class="f" for="s_desc" style="margin-top:0">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
+      `<label class="f" for="s_name" style="margin-top:0">${t('shop_name')}</label><input id="s_name" type="text" value="${esc(r.name)}">
+      <label class="f" for="s_desc">${t('description')}</label><input id="s_desc" type="text" value="${esc(r.description)}">
       <label class="f" for="s_addr">${t('address')}</label><input id="s_addr" type="text" value="${esc(r.address)}">
       <label class="f" for="s_phone">${t('phone')}</label><input id="s_phone" type="tel" value="${esc(r.phone)}">
       <label class="f">${t('shop_loc')}</label>
@@ -1616,9 +1617,10 @@ const A = {
   },
   async saveProfile(){
     const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
+    const sName = $('s_name').value.trim(); if (!sName) return toast(t('enter_all'), true);
     const btn = $('shopSave'); btn.disabled = true; btn.textContent = t('loading');
     await run(async () => {
-      const row = { description:$('s_desc').value.trim() || null, address:$('s_addr').value.trim() || null, phone:$('s_phone').value.trim() || null, prep_time_minutes:prep };
+      const row = { name:sName, description:$('s_desc').value.trim() || null, address:$('s_addr').value.trim() || null, phone:$('s_phone').value.trim() || null, prep_time_minutes:prep };
       const f = $('s_logo').files[0]; if (f) row.logo_url = await uploadImage(f, 'restaurants');
       need(await sb.from('restaurants').update(row).eq('id', state.restaurant.id));
       Object.assign(state.restaurant, row); closeSheet(); renderTab(); toast(t('saved'));
