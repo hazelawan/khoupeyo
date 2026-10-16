@@ -399,6 +399,11 @@ label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
 .sheet-head h3{font-size:20px;letter-spacing:-.01em}
 .x{border-radius:50%!important;background:var(--field)!important;width:36px;height:36px;display:grid;place-items:center;border:0!important}
 .toast{border-radius:16px!important;box-shadow:var(--sh-3)!important;font-weight:700;animation:wmToast .35s var(--ease) both;backdrop-filter:blur(6px)}
+/* draggable order bubble */
+#orderBubble{position:fixed;z-index:55;width:74px;height:74px;border-radius:50%;background:var(--green,#0b5c2f);display:none;align-items:center;justify-content:center;font-size:34px;box-shadow:0 8px 24px rgba(0,0,0,.35);border:3px solid #fff;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#orderBubble.show{display:flex}
+#orderBubble .ebadge{position:absolute;top:-10px;right:-14px;background:#E8A100;color:#3a2a00;font-weight:800;font-size:11px;border-radius:14px;padding:4px 8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}
+#orderBubble .blabel{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:3px 8px;white-space:nowrap;pointer-events:none}
 @keyframes wmFade{from{opacity:0}to{opacity:1}}
 @keyframes wmUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes wmToast{from{transform:translate(-50%,16px) scale(.96);opacity:0}}
@@ -946,7 +951,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.14';
+const APP_VERSION = '5.15';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1017,7 +1022,7 @@ const I18N = {
     plus_price:'{p} for {d} days', plus_min:'On orders above {m}', plus_cap:'Up to {c} off delivery each order', plus_until:'⭐ You are a Plus member until {d}', plus_pending:'⏳ We are checking your payment. It usually takes a few minutes.',
     plus_wallet:'💰 Pay from wallet ({b})', plus_online:'📲 Pay with JazzCash / Easypaisa / Bank', plus_send:'I have paid — send', plus_done:'🎉 Welcome to Wanhar Plus!', plus_get:'⭐ Get free delivery with Wanhar Plus ›', plus_line:'⭐ Plus free delivery', plus_extend:'Add {d} more days', plus_no:'Wanhar Plus is not available in your city yet.', w_plus:'Wanhar Plus', pay_note_pick:'Pay cash at the shop when you collect.', hero_pay:'Waiting for your payment', hero_paycheck:'Checking your payment', order_placed_pay:'Order saved. Now pay to confirm it.', place_order:'Place order',
     home:'Home', shops:'Shops', orders:'Orders', account:'Account',
-    no_orders:'No orders yet. Your first order will show up here.',
+    no_orders:'No orders yet. Your first order will show up here.', your_order:'Your order',
     st_placed:'Order placed', st_accepted:'Accepted', st_preparing:'Being prepared', st_ready:'Ready',
     st_rider_assigned:'Rider assigned', st_picked_up:'On the way', st_delivered:'Delivered',
     st_cancelled:'Cancelled', st_rejected:'Rejected',
@@ -1127,7 +1132,7 @@ const I18N = {
     plus_price:'{d} دن کے لیے {p}', plus_min:'{m} سے اوپر کے آرڈر پر', plus_cap:'ہر آرڈر پر ڈیلیوری میں {c} تک چھوٹ', plus_until:'⭐ آپ {d} تک پلس ممبر ہیں', plus_pending:'⏳ ہم آپ کی ادائیگی چیک کر رہے ہیں۔ عام طور پر چند منٹ لگتے ہیں۔',
     plus_wallet:'💰 والیٹ سے ادا کریں ({b})', plus_online:'📲 جاز کیش / ایزی پیسہ / بینک سے ادا کریں', plus_send:'میں نے ادائیگی کر دی — بھیجیں', plus_done:'🎉 وانہار پلس میں خوش آمدید!', plus_get:'⭐ وانہار پلس سے مفت ڈیلیوری لیں ›', plus_line:'⭐ پلس مفت ڈیلیوری', plus_extend:'{d} دن اور بڑھائیں', plus_no:'آپ کے شہر میں وانہار پلس ابھی دستیاب نہیں۔', w_plus:'وانہار پلس', pay_note_pick:'آرڈر لیتے وقت دکان پر نقد ادا کریں۔', hero_pay:'آپ کی ادائیگی کا انتظار ہے', hero_paycheck:'آپ کی ادائیگی چیک ہو رہی ہے', order_placed_pay:'آرڈر محفوظ ہو گیا۔ اب ادائیگی کر کے پکا کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', shops:'دکانیں', orders:'آرڈرز', account:'اکاؤنٹ',
-    no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔',
+    no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔', your_order:'آپ کا آرڈر',
     st_placed:'آرڈر بھیج دیا گیا', st_accepted:'قبول ہو گیا', st_preparing:'تیار ہو رہا ہے', st_ready:'تیار ہے',
     st_rider_assigned:'رائیڈر مقرر ہو گیا', st_picked_up:'راستے میں ہے', st_delivered:'پہنچ گیا',
     st_cancelled:'منسوخ', st_rejected:'مسترد',
@@ -3310,9 +3315,9 @@ async function checkAlerts(){
   if (!state.user || checking) return; checking = true;
   try {
     const since = new Date(Date.now() - 3 * 3600e3).toISOString();
-    const { data:ords } = await sb.from('orders').select('id,status,arrived_at,failed_delivery,created_at,delivered_at,customer_received_at,customer_disputed,restaurant:restaurants(name)')
+    const { data:ords } = await sb.from('orders').select('id,status,arrived_at,failed_delivery,created_at,delivered_at,customer_received_at,customer_disputed,rider_due_at,restaurant:restaurants(name)')
       .eq('customer_id', state.user.id).gte('created_at', since).order('created_at', { ascending:false }).limit(20);
-    const list = ords || []; if (!list.length) return;
+    const list = ords || []; if (!list.length){ updateOrderBubble(null); return; }
     list.forEach(o => {
       if (o.status === 'picked_up' && o.arrived_at) pushAlert('arr-' + o.id, t('m_arrived'), o.id, true);
       if (o.failed_delivery) pushAlert('fail-' + o.id, t('m_failed'), o.id);
@@ -3320,11 +3325,70 @@ async function checkAlerts(){
     const del = list.find(o => o.status === 'delivered' && !o.customer_received_at && !o.customer_disputed && !seenAlerts.has('recv-' + o.id));
     if (del) showRecvPopup(del);
     const live = list.filter(o => !FINAL.includes(o.status)).map(o => o.id);
+    updateOrderBubble(list.find(o => !FINAL.includes(o.status)) || null);
     if (live.length){
       const { data:iss } = await sb.from('order_issues').select('id,order_id,kind,reported_by').in('order_id', live).eq('status', 'open');
       (iss || []).filter(i => i.kind !== 'chat_help' && i.reported_by !== state.user.id).forEach(i => pushAlert('iss-' + i.id, t('m_' + i.kind), i.order_id));
     }
   } catch (e) { logErr(e); } finally { checking = false; }
+}
+/* ---- draggable order bubble ---- */
+let bubbleOrder = null;
+function bubbleEta(o){
+  if (o.status === 'picked_up' && o.rider_due_at){
+    const mins = Math.max(1, Math.round((new Date(o.rider_due_at) - Date.now()) / 60000));
+    return '~' + mins + ' ' + t('minutes');
+  }
+  return null;
+}
+function ensureBubble(){
+  let b = $('orderBubble');
+  if (b) return b;
+  b = document.createElement('div');
+  b.id = 'orderBubble';
+  b.innerHTML = `🛵<span class="ebadge"></span><span class="blabel">${t('your_order') || 'Your order'}</span>`;
+  document.body.appendChild(b);
+  // drag logic
+  let sx=0, sy=0, bx=0, by=0, dragging=false, moved=0;
+  const pos = () => ({ x: parseFloat(b.dataset.x || (innerWidth - 96)), y: parseFloat(b.dataset.y || 320) });
+  const setPos = (x, y) => {
+    x = Math.max(8, Math.min(innerWidth - 82, x));
+    y = Math.max(80, Math.min(innerHeight - 170, y));
+    b.dataset.x = x; b.dataset.y = y;
+    b.style.left = x + 'px'; b.style.top = y + 'px'; b.style.right = 'auto'; b.style.bottom = 'auto';
+  };
+  try { const saved = JSON.parse(ls.get('kh_bubble_pos') || 'null'); if (saved) { b.dataset.x = saved.x; b.dataset.y = saved.y; } } catch(e){}
+  const p0 = pos(); setPos(p0.x, p0.y);
+  b.addEventListener('pointerdown', e => {
+    dragging = true; moved = 0; sx = e.clientX; sy = e.clientY;
+    const p = pos(); bx = p.x; by = p.y;
+    b.setPointerCapture(e.pointerId); b.style.cursor = 'grabbing';
+  });
+  b.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+    setPos(bx + dx, by + dy);
+  });
+  const end = e => {
+    if (!dragging) return; dragging = false; b.style.cursor = 'grab';
+    try { ls.set('kh_bubble_pos', JSON.stringify({ x: parseFloat(b.dataset.x), y: parseFloat(b.dataset.y) })); } catch(e2){}
+    if (moved < 12 && bubbleOrder) nav('/order/' + bubbleOrder.id);
+  };
+  b.addEventListener('pointerup', end);
+  b.addEventListener('pointercancel', end);
+  return b;
+}
+function updateOrderBubble(activeOrder){
+  const b = ensureBubble();
+  bubbleOrder = activeOrder || null;
+  if (!bubbleOrder){ b.classList.remove('show'); return; }
+  const badge = b.querySelector('.ebadge');
+  const eta = bubbleEta(bubbleOrder);
+  badge.textContent = eta || ({ placed:'📝', accepted:'✅', preparing:'👨‍🍳', picked_up:'🛵', on_way:'🛵', arrived:'📍' }[bubbleOrder.status] || '🛵');
+  badge.style.display = '';
+  b.querySelector('.blabel').textContent = t('your_order') || 'Your order';
+  b.classList.add('show');
 }
 setInterval(checkAlerts, 20000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkAlerts(); });
