@@ -637,7 +637,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.16';
+const APP_VERSION = '5.17';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1881,7 +1881,7 @@ const A = {
     if (code.length !== 4){ toast(t('handover_ph')); return; }
     await run(async () => {
       const amt = need(await sb.rpc('rider_confirm_cash_handover', { p_code:code }));
-      closeSheet(); toast(t('handover_ok') + ': ' + money(amt)); await loadEarnings(); renderTab();
+      closeSheet(); toast(t('handover_ok') + ': ' + money(amt)); await loadMoney(); renderTab();
     });
   },
   async resendConfirm(){
