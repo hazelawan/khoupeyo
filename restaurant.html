@@ -665,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.12';
+const APP_VERSION = '6.15';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -759,7 +759,7 @@ const I18N = {
     kind_services:'💈 Services', kind_services_s:'Salon, barber, doctors — customers book appointments.',
     add_service:'+ Add service',
     kind_cur:'Shop type', kind_change:'Change', kind_change_q:'Change the shop type? The app will switch to the other side.',
-    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password',
+    login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', email_ph:'yourname@gmail.com', pw_ph:'Enter your password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New here? Create an account',
     orders:'Orders', products:'Products', earnings:'Earnings', shop:'Shop',
     new_orders:'New orders', in_kitchen:'Preparing', ready_pickup:'Ready for pickup', past:'Past orders',
@@ -777,7 +777,7 @@ const I18N = {
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
     mfee:'Monthly fee', mfee_due:'Fee due', mfee_note:'This fee is billed on the 1st of every month and is cut from your earning when Wanhar Mart pays you.', mfee_paid:'Paid', mfee_cut:'Cut from payment', mfee_waived:'Waived', mfee_after:'You get after the fee',
-    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request',
+    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request', payout_code_btn:'Confirm payout receipt', payout_code_t:'Payout confirmation code', payout_code_s:'Enter the 4-digit code the admin gave you to confirm you received your payout', payout_ok:'Payout confirmed', code_ph:'Code',
     to_receive_note:'Your earning from delivered orders that Wanhar Mart has not paid yet.',
     payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
     reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
@@ -832,7 +832,7 @@ const I18N = {
     kind_services:'💈 سروسز', kind_services_s:'سیلون، حجام، ڈاکٹر — گاہک اپائنٹمنٹ بک کریں۔',
     add_service:'+ سروس شامل کریں',
     kind_cur:'دکان کی قسم', kind_change:'تبدیل کریں', kind_change_q:'دکان کی قسم تبدیل کریں؟ ایپ دوسری طرف منتقل ہو جائے گی۔',
-    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ',
+    login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', email_ph:'yourname@gmail.com', pw_ph:'اپنا پاس ورڈ لکھیں',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے ہیں؟ اکاؤنٹ بنائیں',
     orders:'آرڈرز', products:'پروڈکٹس', earnings:'کمائی', shop:'دکان',
     new_orders:'نئے آرڈرز', in_kitchen:'تیار ہو رہے ہیں', ready_pickup:'اٹھانے کے لیے تیار', past:'پرانے آرڈرز',
@@ -850,7 +850,7 @@ const I18N = {
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     mfee:'ماہانہ فیس', mfee_due:'فیس باقی', mfee_note:'یہ فیس ہر مہینے کی 1 تاریخ کو لگتی ہے اور ادائیگی کے وقت آپ کی کمائی سے کٹ جاتی ہے۔', mfee_paid:'ادا ہو گئی', mfee_cut:'ادائیگی سے کٹ گئی', mfee_waived:'معاف', mfee_after:'فیس کے بعد آپ کو ملے گا',
-    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے',
+    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے', payout_code_btn:'ادائیگی ملنے کی تصدیق', payout_code_t:'ادائیگی کا تصدیقی کوڈ', payout_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے ادائیگی ملنے کی تصدیق کریں', payout_ok:'ادائیگی کی تصدیق ہو گئی', code_ph:'کوڈ',
     to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Wanhar Mart نے ابھی ادا نہیں کی۔',
     payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
     reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
@@ -899,6 +899,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
   sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, productFilter:'all', productQ:'', alerted:new Set(),
+  settings:{},
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -957,8 +958,8 @@ function showAuth(msg, ok){
     <form onsubmit="A.submitAuth(event)">
       ${signup ? `<label class="f" for="a_name">${t('name')}</label><input id="a_name" type="text" autocomplete="name">
       <label class="f" for="a_phone">${t('phone')}</label><input id="a_phone" type="tel" inputmode="tel" autocomplete="tel">` : ''}
-      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off">
-      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}">
+      <label class="f" for="a_email">${t('email')}</label><input id="a_email" type="email" autocomplete="username" autocapitalize="off" placeholder="${t('email_ph')}">
+      <label class="f" for="a_pw">${t('password')}</label><input id="a_pw" type="password" placeholder="${t('pw_ph')}" autocomplete="${signup ? 'new-password' : 'current-password'}">
       <div style="margin-top:20px"><button class="btn" id="authBtn" type="submit">${signup ? t('signup') : t('login')}</button></div>
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--brand)' : ''}">${esc(msg || '')}</div>
     </form>
@@ -1395,6 +1396,7 @@ function itemForm(i){
     <label class="f" for="i_photo">${t('photo')}</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <div id="bgRmBox" style="display:none;margin:8px 0"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">${t('more_photos')}</label>
     <div class="pgrid" id="pgrid"></div>
     <label class="filebtn">${t('add_photos')}<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
@@ -1455,7 +1457,7 @@ function viewEarn(){
       <div style="opacity:.85;font-size:13px">${t('to_receive_note')}</div>
       ${feeDue() ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);display:flex;justify-content:space-between;gap:10px"><span>− ${t('mfee_due')}</span><b>${money(feeDue())}</b></div>
         <div style="display:flex;justify-content:space-between;gap:10px;font-weight:800"><span>${t('mfee_after')}</span><span>${money(Math.max(0, num(e.unpaid) - feeDue()))}</span></div>` : ''}
-      ${num(e.unpaid) > 0 ? `<button class="btn block" style="margin-top:12px;background:#fff;color:var(--brand)" onclick="A.requestPayout()">💸 ${t('req_payout')}</button>` : ''}</div>
+      ${num(e.unpaid) > 0 ? `<button class="btn block" style="margin-top:12px;background:#fff;color:var(--brand)" onclick="A.requestPayout()">💸 ${t('req_payout')}</button><button class="btn block" style="margin-top:8px;background:transparent;border:1px solid #fff;color:#fff" onclick="A.payoutCode()">🔐 ${t('payout_code_btn')}</button>` : ''}</div>
     ${feeCard()}
     <div class="chips">${chips}</div>
     <div class="tiles">
@@ -1546,7 +1548,19 @@ function drawPics(){
   const add = state.pics.add.map((f, k) => `<div class="pth"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="A.rmPhoto('a', ${k})" aria-label="${t('remove')}">×</button></div>`);
   g.innerHTML = old.concat(add).join('');
 }
-function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = URL.createObjectURL(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+async function removeBg(inputId, prevId){
+  const inp = $(inputId); const f = inp.files && inp.files[0]; if (!f) return;
+  const msg = $('bgRmMsg'); if (msg) msg.textContent = '⏳ AI kaam kar raha hai...';
+  try {
+    const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+    const blob = await removeBackground(f);
+    const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
+    const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
+    $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
+    if (msg) msg.textContent = '✅ Background remove ho gaya!';
+  } catch(e){ if (msg) msg.textContent = '❌ Failed: ' + (e.message || e); }
+}
 
 // ================= ACTIONS =================
 const A = {
@@ -1558,6 +1572,20 @@ const A = {
     openSheet(`💸 ${t('req_title')}`, `<p>${t('to_receive')}: <b>${money(num(state.earn?.unpaid))}</b></p>
       <input id="rpNote" placeholder="${t('req_note')}" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px">
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.sendPayoutReq()">${t('req_payout')}</button></div>`);
+  },
+  payoutCode(){
+    openSheet(`🔐 ${t('payout_code_t')}`, `<p>${t('payout_code_s')}</p>
+      <input id="pcCode" inputmode="numeric" maxlength="4" placeholder="${t('code_ph')}" style="font-size:28px;text-align:center;letter-spacing:10px;width:100%;padding:12px;border:2px solid #ddd;border-radius:10px">
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.confirmPayout()">${t('confirm')}</button></div>`);
+    setTimeout(() => $('pcCode')?.focus(), 300);
+  },
+  async confirmPayout(){
+    const code = ($('pcCode')?.value || '').trim();
+    if (code.length !== 4){ toast(t('code_ph')); return; }
+    await run(async () => {
+      const amt = need(await sb.rpc('shop_confirm_payout_code', { p_code:code }));
+      closeSheet(); toast(t('payout_ok') + ': ' + money(amt)); renderTab();
+    });
   },
   contactSheet(orderId, hasRider){
     const row = (icon, label, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b></span><span class="muted">›</span></button>`;
@@ -3246,6 +3274,10 @@ function hideSplash(){
 }
 (async function boot(){
   applyLang();
+  try {
+    const { data:rs } = await sb.from('region_settings').select('key,value').eq('key', 'ai_bg_remove').limit(1).maybeSingle();
+    if (rs) state.settings.ai_bg_remove = rs.value;
+  } catch(e){}
   try {
     const { data:{ session } } = await sb.auth.getSession();
     if (session) await afterLogin(session.user); else showAuth();
