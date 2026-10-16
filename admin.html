@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.11';
+const APP_VERSION = '7.16';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -785,7 +785,19 @@ function drawPics(){
   g.innerHTML = state.pics.old.map((u, k) => `<div class="pth"><img src="${esc(u)}" alt=""><button type="button" onclick="A.rmPhoto('o', ${k})" aria-label="Remove">×</button></div>`).concat(
     state.pics.add.map((f, k) => `<div class="pth"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="A.rmPhoto('a', ${k})" aria-label="Remove">×</button></div>`)).join('');
 }
-function previewFile(input, imgId){ const f = input.files && input.files[0]; if (!f) return; const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block'; }
+function previewFile(input, imgId){ const f = input.files && input.files[0]; if (!f) return; const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+async function removeBg(inputId, prevId){
+  const inp = $(inputId); const f = inp.files && inp.files[0]; if (!f) return;
+  const msg = $('bgRmMsg'); if (msg) msg.textContent = '⏳ AI kaam kar raha hai...';
+  try {
+    const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+    const blob = await removeBackground(f);
+    const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
+    const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
+    $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
+    if (msg) msg.textContent = '✅ Background remove ho gaya!';
+  } catch(e){ if (msg) msg.textContent = '❌ Failed: ' + (e.message || e); }
+}
 async function signedUrls(paths){
   const list = [...new Set(paths.filter(Boolean))]; if (!list.length) return {};
   const { data } = await sb.storage.from('rider-selfies').createSignedUrls(list, 3600);
@@ -799,8 +811,8 @@ function showLogin(msg){
     <div class="brand">Wanhar Mart<b>.</b></div>
     <p class="muted">Admin sign in <span class="ver">v${APP_VERSION}</span></p>
     <form onsubmit="A.login(event)">
-      <label class="f" for="em">Email</label><input id="em" type="email" autocomplete="username" required>
-      <label class="f" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+      <label class="f" for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="yourname@gmail.com" required>
+      <label class="f" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" placeholder="Enter your password" required>
       <div class="actions"><button class="btn block" id="loginBtn" type="submit">Sign in</button></div>
       <div class="err-text" id="loginErr">${esc(msg || '')}</div>
       <button type="button" class="linkbtn" style="margin-top:10px" onclick="A.forgotPw()">Forgot password?</button>
@@ -1311,6 +1323,7 @@ function itemForm(i){
     <label class="f" for="i_photo">Photo</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <div id="bgRmBox" style="display:none;margin:8px 0"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">More photos (up to 5)</label>
     <div class="pgrid" id="pgrid"></div>
     <label class="filebtn">📷 Add more photos<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
@@ -2084,7 +2097,7 @@ function viewZones(){
   const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
       <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
       <div class="row-side"><b>${num(z.per_km_fee) ? 'Per km' : 'Fixed'}</b> · ${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${num(z.bulk_fee) && num(z.bulk_items) ? `, +${money(z.bulk_fee)}/item after ${num(z.bulk_items)} items` : ''}${Array.isArray(z.weight_tiers) ? `, own weight charges (${z.weight_tiers.length})` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
-  return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button></div>
+  return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button><button class="btn ghost" onclick="A.zoneMatrix()">Zone-to-zone charges</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
 }
 function zoneWeightEditor(){
@@ -2128,6 +2141,13 @@ function zoneForm(z){
     <label class="check"><input id="z_wown" type="checkbox" ${Array.isArray(z.weight_tiers) ? 'checked' : ''} onchange="$('zwtBox').style.display = this.checked ? 'block' : 'none'"> This zone has its own weight charges</label>
     <div id="zwtBox" style="display:${Array.isArray(z.weight_tiers) ? 'block' : 'none'}">${zoneWeightEditor()}</div>
     <label class="f" for="z_pay">Rider pay per delivery (Rs, only if the rider has no contract pay)</label><input id="z_pay" type="number" min="0" value="${z.rider_pay ?? 60}">
+    <div class="note" style="margin-top:14px"><b>📍 Zone area (village/circle).</b> Set the center and radius — customers inside this circle belong to this zone.</div>
+    <div class="two">
+      <div><label class="f" for="z_clat">Center latitude</label><input id="z_clat" type="number" step="0.0001" value="${z.center_lat ?? ''}" placeholder="32.7712"></div>
+      <div><label class="f" for="z_clng">Center longitude</label><input id="z_clng" type="number" step="0.0001" value="${z.center_lng ?? ''}" placeholder="72.7031"></div>
+    </div>
+    <label class="f" for="z_rad">Radius (km)</label><input id="z_rad" type="number" min="0.5" step="0.5" value="${z.radius_km ?? 5}">
+    <div id="z_mapprev" style="height:200px;border-radius:12px;margin-top:8px;background:#e8e8e8;display:flex;align-items:center;justify-content:center;color:#888">Map preview coming after save</div>
     <label class="check"><input id="z_active" type="checkbox" ${z.is_active ? 'checked' : ''}> Zone is open for orders</label>
     <div class="actions"><button class="btn block" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
 }
@@ -2245,7 +2265,7 @@ function viewSettings(){
   const wrap = (title, inner) => `${backLink()}<h2>${title}</h2>${note}${back}<div style="margin-top:10px">${inner}</div>`;
   if (sub === 'pay') return wrap('💳 Online Payment Accounts', payAccCard());
   if (sub === 'dispatch') return wrap('🛵 Auto-Dispatch & Timing', setDispatchCard(s) + setWaitCard(s) + setCancelCard(s));
-  if (sub === 'charges') return wrap('⚖️ Delivery & Weight Charges', setWeightCard(s) + setMultiZoneCard(s) + setRiderShareCard(s));
+  if (sub === 'charges') return wrap('⚖️ Delivery & Weight Charges', setWeightCard(s) + setSpeedCard(s) + setMultiZoneCard(s) + setRiderShareCard(s));
   if (sub === 'safety') return wrap('🛡️ Safety & Fake Order Rules', setSafetyCard(s));
   if (sub === 'selfie') return wrap('🤳 Selfie & Face Verification', setSelfieCard(s));
   if (sub === 'contracts') return wrap('📋 Rider Contracts & ID Fee', setContractsCard(s));
@@ -2291,6 +2311,15 @@ function setWeightCard(s){
     <div class="actions"><button class="btn ghost block" onclick="A.saveWeight()">Save weight charges</button></div>
   </div>`;
 }
+function setSpeedCard(s){
+  const v = num(s.rider_speed_kmh) || 20;
+  return `<div class="card">
+    <b>🛵 Rider speed for ETA (km/h)</b>
+    <div class="muted" style="font-size:14px">Used to calculate expected delivery time shown to customers: prep time + (distance ÷ speed) + 5 min buffer.</div>
+    <label class="f" for="rs_speed">Speed (km/h)</label><input id="rs_speed" type="number" min="5" max="80" value="${v}">
+    <div class="actions"><button class="btn ghost block" onclick="A.saveSpeed()">Save speed</button></div>
+  </div>`;
+}
 function setMultiZoneCard(s){
   return `<div class="card">
     <b>🗺️ Multi-zone delivery surcharge</b>
@@ -2308,6 +2337,7 @@ function setRiderShareCard(s){
   </div>`;
 }
 function setSafetyCard(s){
+  const codeOn = s.payout_code_required !== 'false';
   return `<div class="card">
     <b>🛡️ Safety: fake orders and delivery code</b>
     <div class="muted" style="font-size:14px">Stops people who order with cash and then do not take the order.</div>
@@ -2318,6 +2348,18 @@ function setSafetyCard(s){
     <label class="check"><input id="dp_on" type="checkbox" ${s.delivery_photo === true ? 'checked' : ''}> Rider must take a photo of every delivery (proof if the customer says “not received”)</label>
     <div class="muted" style="font-size:13px">The customer sees the code in their app. It stops riders marking “delivered” without giving the order. You can block a customer or turn cash off for one customer in More → Customers.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.saveSafety()">Save</button></div>
+  </div>
+  <div class="card">
+    <b>🔐 Payout code verification</b>
+    <div class="muted" style="font-size:14px">When you pay a rider's salary or a shop's payout, a 4-digit code is generated. They must enter it in their app to confirm receipt.</div>
+    <label class="check"><input id="pc_on" type="checkbox" ${codeOn ? 'checked' : ''}> Require code for salary & shop payouts (recommended ON)</label>
+    <div class="actions"><button class="btn ghost block" onclick="A.savePayoutCode()">Save</button></div>
+  </div>
+  <div class="card">
+    <b>🤖 AI background removal</b>
+    <div class="muted" style="font-size:14px">Free AI that removes the photo background when shops upload product photos. Turn OFF if shopkeepers complain it's slow.</div>
+    <label class="check"><input id="bg_on" type="checkbox" ${s.ai_bg_remove !== 'false' ? 'checked' : ''}> Enable AI background removal for product photos</label>
+    <div class="actions"><button class="btn ghost block" onclick="A.saveBgRemove()">Save</button></div>
   </div>`;
 }
 function setSelfieCard(s){
@@ -2599,6 +2641,12 @@ const A = {
     const v = { first_max:Math.max(0, Math.round(num($('cr_first').value))), max_fails:Math.max(0, Math.round(num($('cr_fail').value))) };
     await run(async () => { need(await putSettings([{ key:'cod_rules', value:v }, { key:'delivery_code', value:$('dc_on').checked }, { key:'delivery_photo', value:$('dp_on').checked }])); await loadSettings(); renderTab(); toast('Saved'); });
   },
+  async savePayoutCode(){
+    await run(async () => { need(await putSettings([{ key:'payout_code_required', value:String($('pc_on').checked) }])); await loadSettings(); renderTab(); toast('Saved'); });
+  },
+  async saveBgRemove(){
+    await run(async () => { need(await putSettings([{ key:'ai_bg_remove', value:String($('bg_on').checked) }])); await loadSettings(); renderTab(); toast('Saved'); });
+  },
   async setStatus(id, status){
     let reason = null;
     if (status === 'rejected'){ reason = await uiPrompt('Reason for rejecting (optional)'); if (reason === null) return; }
@@ -2701,7 +2749,16 @@ const A = {
     const r = state.restaurants.find(x => x.id === id) || {};
     payForm({ title:'Pay shop', who:r.name, acc:r.payout || null, amount:amt, verb:'Pay', save:async f => {
       const v = need(await sb.rpc('settle_restaurant', { p_restaurant_id:id, p_note:f.note, p_method:f.method, p_reference:f.ref }));
-      toast('Paid ' + money(v) + ' (monthly fee cut, if due)'); await loadShopReport(); if (state.tab === 'restaurants') renderTab(); A.openShop(id);
+      // code verification if enabled
+      const codeReq = await A.payoutCodeRequired();
+      if (codeReq){
+        const res = need(await sb.rpc('admin_init_payout_code', { p_kind:'payout', p_party_id:id, p_amount:v }));
+        const row = Array.isArray(res) ? res[0] : res;
+        A.showPayoutCode(row.code, v, r.name || '', 'payout');
+      } else {
+        toast('Paid ' + money(v) + ' (monthly fee cut, if due)');
+      }
+      await loadShopReport(); if (state.tab === 'restaurants') renderTab(); A.openShop(id);
     }});
   },
   receiveFee(id, amt){
@@ -3053,8 +3110,32 @@ const A = {
     let acc = null; try { acc = (await sb.from('riders').select('payout').eq('id', id).single()).data?.payout || null; } catch (e) {}
     payForm({ title:'Pay rider · ' + monthLabel(state.riderMonth), who:r.full_name, acc, amount:due, editAmount:true, verb:'Pay', save:async f => {
       need(await sb.from('payouts').insert({ party_type:'rider', party_id:id, amount:f.amount, period_start:state.riderMonth, period_end:monthEnd(state.riderMonth), status:'paid', note:f.note, method:f.method, reference:f.ref, breakdown:payBreakdown(r) }));
-      toast('Payment saved'); await A.refreshRider(id);
+      // code verification if enabled
+      const codeReq = await A.payoutCodeRequired();
+      if (codeReq){
+        const res = need(await sb.rpc('admin_init_payout_code', { p_kind:'salary', p_party_id:id, p_amount:f.amount }));
+        const row = Array.isArray(res) ? res[0] : res;
+        A.showPayoutCode(row.code, f.amount, r.full_name || '', 'salary');
+      } else {
+        toast('Payment saved');
+      }
+      await A.refreshRider(id);
     }});
+  },
+  async payoutCodeRequired(){
+    try {
+      const { data } = await sb.from('region_settings').select('value').eq('key', 'payout_code_required').limit(1).maybeSingle();
+      return !data || data.value === 'true';
+    } catch(e){ return true; }
+  },
+  showPayoutCode(code, amount, name, kind){
+    const isSalary = kind === 'salary';
+    openSheet(`🔐 ${isSalary ? 'Salary' : 'Payout'} code`,
+      `<p>Ask the ${isSalary ? 'rider' : 'shop'} to enter this code in their app to confirm they received the ${isSalary ? 'salary' : 'payout'}.</p>
+      <div style="text-align:center;margin:18px 0"><span style="font-size:44px;font-weight:800;letter-spacing:12px;background:#FFF7E6;border:2px dashed #E8A100;border-radius:12px;padding:12px 18px">${esc(code)}</span></div>
+      <p><b>Amount:</b> ${money(amount)} · <b>${isSalary ? 'Rider' : 'Shop'}:</b> ${esc(name)}</p>
+      <p class="muted" style="font-size:13px">Code expires in 30 minutes. Payment completes only after confirmation.</p>
+      <div class="actions"><button class="btn ghost block" onclick="closeSheet()">Done</button></div>`);
   },
   async receiveCash(id, amt){
     const r = state.riderRows.find(x => x.rider_id === id) || {};
@@ -3393,15 +3474,43 @@ const A = {
 
   // ---- Zones ----
   async editZone(id){ if (!state.settings || !('weight_tiers' in state.settings)) await run(loadSettings); const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
+  async zoneMatrix(){
+    await run(async () => {
+      const { data:charges } = await sb.from('zone_charges').select('*');
+      state.zcEdit = {};
+      (charges || []).forEach(c => { state.zcEdit[c.from_zone_id + '|' + c.to_zone_id] = num(c.delivery_fee); });
+      const zs = state.zones.filter(z => z.is_active);
+      const head = `<tr><th style="padding:8px">From ↓ To →</th>${zs.map(z => `<th style="padding:8px;font-size:12px">${esc(z.name)}</th>`).join('')}</tr>`;
+      const body = zs.map(fz => `<tr><td style="padding:8px;font-weight:700;font-size:13px">${esc(fz.name)}</td>${zs.map(tz => {
+        const k = fz.id + '|' + tz.id;
+        const v = state.zcEdit[k] ?? (fz.id === tz.id ? num(fz.delivery_fee) : '');
+        return `<td style="padding:4px"><input type="number" min="0" value="${v}" data-k="${k}" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:8px" onchange="state.zcEdit[this.dataset.k]=num(this.value)"></td>`;
+      }).join('')}</tr>`).join('');
+      openSheet('Zone-to-zone delivery charges', `<p class="muted" style="font-size:13px">How much the customer pays when ordering from a shop in one zone to an address in another zone. Same zone uses the zone's own delivery fee.</p>
+        <div style="overflow-x:auto"><table style="border-collapse:collapse">${head}${body}</table></div>
+        <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveZoneMatrix()">Save charges</button></div>`);
+    });
+  },
+  async saveZoneMatrix(){
+    await run(async () => {
+      for (const k in (state.zcEdit || {})){
+        const [fz, tz] = k.split('|'); const fee = num(state.zcEdit[k]);
+        await sb.from('zone_charges').upsert({ from_zone_id:fz, to_zone_id:tz, delivery_fee:fee }, { onConflict:'from_zone_id,to_zone_id' });
+      }
+      closeSheet(); toast('Saved');
+    });
+  },
   async saveZone(id){
     const name = $('z_name').value.trim(); if (!name) return toast('Enter the zone name', true);
     await run(async () => {
       const maxV = $('z_max').value.trim();
       const fmode = (document.querySelector('input[name="z_fmode"]:checked') || {}).value || 'fixed';
+      const clat = parseFloat($('z_clat').value), clng = parseFloat($('z_clng').value);
       const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
         base_km:num($('z_base').value), per_km_fee:fmode === 'perkm' ? num($('z_perkm').value) : 0, max_km:fmode === 'perkm' && maxV !== '' ? num(maxV) : null,
         bulk_items:Math.max(0, Math.round(num($('z_bitems').value))), bulk_fee:num($('z_bfee').value), bulk_max:$('z_bmax').value.trim() === '' ? null : num($('z_bmax').value),
-        weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null };
+        weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null,
+        center_lat:isNaN(clat) ? null : clat, center_lng:isNaN(clng) ? null : clng, radius_km:num($('z_rad').value) || 5 };
       need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
     });
@@ -3443,6 +3552,7 @@ const A = {
   wtAdd(){ const l = weightList(); const last = l[l.length - 1]; l.push({ above:last ? last.above + 10 : 10, fee:last ? last.fee + 50 : 50 }); $('wtBox').innerHTML = weightEditor(); },
   wtDel(i){ weightList().splice(i, 1); $('wtBox').innerHTML = weightEditor(); },
   async saveWeight(){ const l = weightList().filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above); state.wtEdit = null; await A.saveSetting('weight_tiers', l); },
+  async saveSpeed(){ const v = Math.min(80, Math.max(5, num($('rs_speed').value) || 20)); await A.saveSetting('rider_speed_kmh', v); toast('Saved'); },
   vehToggle(ct, v, on){ if (!state.vehOn) state.vehOn = {}; state.vehOn[ct + '|' + v] = on; const w = $('vehwrap_' + ct + '_' + v); if (w) w.innerHTML = on ? tierEditor(ct + '|' + v) : ''; },
   tierSet(k, i, f, v){ const l = tierList(k); if (!l[i]) return; l[i][f] = num(v); if (f === 'from') redrawTiers(k); },
   tierAdd(k){ const l = tierList(k); const last = l[l.length - 1] || { from:1, pay:0 }; l.push({ from:last.from + 100, pay:last.pay + 10 }); redrawTiers(k); },
