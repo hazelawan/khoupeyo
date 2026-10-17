@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.21';
+const APP_VERSION = '7.22';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1943,20 +1943,34 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
     mk.on('dragend', sync);
     map.on('click', e => { mk.setLatLng(e.latlng); sync(); });
     if (kmEl) kmEl.addEventListener('input', drawCirc);
-    // extra circles (draggable via center handle, tap circle to delete)
+    // expose for "use my location" buttons
+    window._areaPicker = { map, mk, sync };
+    // extra circles (draggable via center handle, ✕ button in list to delete)
     const extraCircles = [];
     const exEl = extraIn ? $(extraIn) : null;
-    const saveExtra = () => { if (exEl) exEl.value = JSON.stringify(extraCircles.map(e => ({ lat:+e.c.getLatLng().lat.toFixed(5), lng:+e.c.getLatLng().lng.toFixed(5), r:+(e.c.getRadius()/1000).toFixed(1) }))); };
+    const saveExtra = () => { if (exEl) exEl.value = JSON.stringify(extraCircles.map(e => ({ lat:+e.c.getLatLng().lat.toFixed(5), lng:+e.c.getLatLng().lng.toFixed(5), r:+(e.c.getRadius()/1000).toFixed(1) }))); renderExtraList(); };
     const dotIcon = L.divIcon({ className:'', html:'<div style="width:18px;height:18px;background:#E8722A;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px #0005"></div>', iconSize:[18,18], iconAnchor:[9,9] });
+    const delExtra = (entry) => { map.removeLayer(entry.c); map.removeLayer(entry.h); const i = extraCircles.indexOf(entry); if (i >= 0) extraCircles.splice(i, 1); saveExtra(); };
     const addExtra = (clat, clng, rkm) => {
       const cc = L.circle([clat, clng], { radius:(rkm||5)*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
       const handle = L.marker([clat, clng], { draggable:true, icon:dotIcon }).addTo(map);
       const entry = { c:cc, h:handle };
       handle.on('drag', () => cc.setLatLng(handle.getLatLng()));
       handle.on('dragend', () => { cc.setLatLng(handle.getLatLng()); saveExtra(); });
-      cc.on('click', () => { map.removeLayer(cc); map.removeLayer(handle); const i = extraCircles.indexOf(entry); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
       extraCircles.push(entry); saveExtra();
       return entry;
+    };
+    const listBox = document.createElement('div');
+    listBox.id = mapId + '_list'; listBox.style.marginTop = '6px';
+    const renderExtraList = () => {
+      listBox.innerHTML = extraCircles.map((e, i) => {
+        const p = e.c.getLatLng();
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff7f0;border:1px solid #f0d9c0;border-radius:10px;margin-bottom:6px;font-size:13px">
+          <span style="width:12px;height:12px;background:#E8722A;border-radius:50%;flex-shrink:0"></span>
+          <span style="flex:1">Circle ${i + 1} · ${p.lat.toFixed(3)}, ${p.lng.toFixed(3)}</span>
+          <button type="button" class="btn warn small" data-i="${i}">✕ Delete</button></div>`;
+      }).join('');
+      listBox.querySelectorAll('button').forEach(b => b.onclick = () => delExtra(extraCircles[+b.dataset.i]));
     };
     if (exEl && exEl.value){
       try { JSON.parse(exEl.value).forEach(c => addExtra(c.lat, c.lng, c.r)); } catch(e){}
@@ -1968,12 +1982,14 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
       addBtn.onclick = () => {
         const c = map.getCenter();
         addExtra(c.lat, c.lng, mainKm());
-        toast('New circle added — drag the orange dot to move it, tap circle to delete');
+        toast('New circle added — drag the orange dot to move it');
       };
       box.parentNode.insertBefore(addBtn, box.nextSibling);
+      box.parentNode.insertBefore(listBox, addBtn.nextSibling);
       const hint = document.createElement('div');
-      hint.className = 'muted'; hint.style.fontSize = '12px'; hint.textContent = 'Extra circles: drag the orange dot to move, tap the circle to delete.';
-      box.parentNode.insertBefore(hint, addBtn.nextSibling);
+      hint.className = 'muted'; hint.style.fontSize = '12px'; hint.textContent = 'Extra circles: drag the orange dot to move. Delete with the ✕ button below.';
+      box.parentNode.insertBefore(hint, listBox.nextSibling);
+      renderExtraList();
     }
     setTimeout(() => map.invalidateSize(), 300);
     // draw region boundary as reference (so partner sees their limits)
@@ -2219,6 +2235,7 @@ function zoneForm(z){
       <div><label class="f" for="z_clat">Center latitude</label><input id="z_clat" type="number" step="0.0001" value="${z.center_lat ?? ''}" placeholder="32.7712"></div>
       <div><label class="f" for="z_clng">Center longitude</label><input id="z_clng" type="number" step="0.0001" value="${z.center_lng ?? ''}" placeholder="72.7031"></div>
     </div>
+    <button type="button" class="btn ghost small" style="margin-top:8px" onclick="A.zoneHere()">📍 Use my current location</button>
     <label class="f" for="z_rad">Radius (km)</label><input id="z_rad" type="number" min="0.5" step="0.5" value="${z.radius_km ?? 5}">
     <div id="z_map" style="height:220px;border-radius:12px;margin-top:8px;z-index:0"></div>
     <input type="hidden" id="z_extra" value="${esc(JSON.stringify(z.extra_circles || []))}">
@@ -3822,7 +3839,19 @@ const A = {
   },
   regionHere(){
     if (!navigator.geolocation) return toast('Location is not available', true);
-    navigator.geolocation.getCurrentPosition(p => { $('rg_lat').value = p.coords.latitude.toFixed(5); $('rg_lng').value = p.coords.longitude.toFixed(5); }, () => toast('Could not get your location', true), { enableHighAccuracy:true, timeout:15000 });
+    navigator.geolocation.getCurrentPosition(p => {
+      $('rg_lat').value = p.coords.latitude.toFixed(5); $('rg_lng').value = p.coords.longitude.toFixed(5);
+      const ap = window._areaPicker;
+      if (ap && ap.mk){ ap.mk.setLatLng([p.coords.latitude, p.coords.longitude]); ap.map.setView([p.coords.latitude, p.coords.longitude], 12); ap.sync(); }
+    }, () => toast('Could not get your location', true), { enableHighAccuracy:true, timeout:15000 });
+  },
+  zoneHere(){
+    if (!navigator.geolocation) return toast('Location is not available', true);
+    navigator.geolocation.getCurrentPosition(p => {
+      $('z_clat').value = p.coords.latitude.toFixed(5); $('z_clng').value = p.coords.longitude.toFixed(5);
+      const ap = window._areaPicker;
+      if (ap && ap.mk){ ap.mk.setLatLng([p.coords.latitude, p.coords.longitude]); ap.map.setView([p.coords.latitude, p.coords.longitude], 12); ap.sync(); }
+    }, () => toast('Could not get your location', true), { enableHighAccuracy:true, timeout:15000 });
   },
   async saveRegion(id){
     const name = $('rg_name').value.trim(); if (!name) return toast('Write the city name', true);
