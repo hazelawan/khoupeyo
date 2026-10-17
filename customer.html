@@ -420,8 +420,8 @@ label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
 /* Floating bottom navigation */
 .nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(22px + env(safe-area-inset-bottom,0px))!important;
   border:1px solid var(--line)!important;border-radius:24px;box-shadow:var(--sh-3);padding:4px!important;
-  background:rgba(255,255,255,.9);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px)}
-@media (prefers-color-scheme: dark){ .nav{background:rgba(22,33,27,.9)} }
+  background:#fff}
+@media (prefers-color-scheme: dark){ .nav{background:#16211c} }
 .nav a,.nav button{border-top:0!important;border-radius:18px;transition:background .2s,color .2s}
 .nav a.on,.nav button.on{background:var(--forest)!important;color:#fff!important;border-radius:20px;box-shadow:0 6px 16px rgba(11,58,43,.35)}
 main{padding-bottom:140px!important}
@@ -952,7 +952,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.23';
+const APP_VERSION = '5.24';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
