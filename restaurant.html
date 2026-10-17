@@ -665,7 +665,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.15';
+const APP_VERSION = '6.16';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1396,7 +1396,7 @@ function itemForm(i){
     <label class="f" for="i_photo">${t('photo')}</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
-    <div id="bgRmBox" style="display:none;margin:8px 0"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
+    <div id="bgRmBox" style="margin:8px 0;${(typeof state !== "undefined" && state.settings && state.settings.ai_bg_remove === "false") ? "display:none" : ""}"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">${t('more_photos')}</label>
     <div class="pgrid" id="pgrid"></div>
     <label class="filebtn">${t('add_photos')}<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
@@ -1550,16 +1550,18 @@ function drawPics(){
 }
 function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = URL.createObjectURL(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
-  const inp = $(inputId); const f = inp.files && inp.files[0]; if (!f) return;
-  const msg = $('bgRmMsg'); if (msg) msg.textContent = '⏳ AI kaam kar raha hai...';
+  const inp = $(inputId); const f = inp.files && inp.files[0];
+  const msg0 = $('bgRmMsg');
+  if (!f){ if (msg0) msg0.textContent = '⚠️ Pehle photo select karo'; return; }
+  if (msg0) msg0.textContent = '⏳ AI kaam kar raha hai...';
   try {
     const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
     const blob = await removeBackground(f);
     const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
     const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
     $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
-    if (msg) msg.textContent = '✅ Background remove ho gaya!';
-  } catch(e){ if (msg) msg.textContent = '❌ Failed: ' + (e.message || e); }
+    if (msg0) msg0.textContent = '✅ Background remove ho gaya!';
+  } catch(e){ if (msg0) msg0.textContent = '❌ Failed: ' + (e.message || e); }
 }
 
 // ================= ACTIONS =================
