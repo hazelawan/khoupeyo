@@ -952,7 +952,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.20';
+const APP_VERSION = '5.21';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1324,6 +1324,22 @@ function customerZone(){
 function customerZoneId(){
   const z = customerZone();
   return z ? z.id : null;
+}
+// is the customer's address inside any active region? (region = delivery coverage)
+function insideRegion(){
+  const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
+  if (!a || a.lat == null) return true; // no address → don't block
+  const lat = Number(a.lat), lng = Number(a.lng);
+  const regs = state.allRegions || [];
+  if (!regs.length) return true; // no regions configured → don't block
+  for (const r of regs){
+    if (r.center_lat == null) continue;
+    if (kmBetween(lat, lng, Number(r.center_lat), Number(r.center_lng)) <= num(r.radius_km || 30)) return true;
+    for (const c of (r.extra_circles || [])){
+      if (kmBetween(lat, lng, Number(c.lat), Number(c.lng)) <= num(c.r || 30)) return true;
+    }
+  }
+  return false;
 }
 // delivery fee from shop's zone to customer's zone via matrix
 function zoneFee(shop){
@@ -1941,7 +1957,7 @@ function searchResults(q){
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
   const cz = customerZone();
-  if (state.user && !cz && (state.addresses || []).length) return `<div class="empty" style="margin-top:40px"><div class="eic">🚫</div><div style="font-weight:800;font-size:17px">Out of delivery area</div><div class="muted" style="margin-top:6px">Sorry, we don't deliver to your current address yet.<br>Please choose an address inside our delivery zones.</div></div>`;
+  if (state.user && !insideRegion() && (state.addresses || []).length) return `<div class="empty" style="margin-top:40px"><div class="eic">🚫</div><div style="font-weight:800;font-size:17px">Out of delivery area</div><div class="muted" style="margin-top:6px">Sorry, we don't deliver to your current address yet.<br>Please choose an address inside our delivery zones.</div></div>`;
   const zoneBar = cz ? `<div style="margin:0 16px 10px;padding:10px 14px;background:#eef7f0;border:1px solid #cfe6d4;border-radius:12px;font-size:14px">📍 You are in <b style="color:#0b5c2f">${esc(cz.name)}</b> — delivery charges for your zone</div>` : '';
   if (!state.products.length && !state.restaurants.length) return `${zoneBar}<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
   const noRider = state.ridersOnline === 0 ? `<div class="warnbox" style="margin:0 16px 10px">${t('no_rider')}</div>` : '';
@@ -3966,7 +3982,9 @@ async function bootMain(){
       state.allZones = az || [];
       const { data:zc } = await sb.from('zone_charges').select('from_zone_id,to_zone_id,delivery_fee');
       state.zoneCharges = {}; (zc || []).forEach(c => { state.zoneCharges[c.from_zone_id + '|' + c.to_zone_id] = c.delivery_fee; });
-    } catch(e){ state.allZones = []; state.zoneCharges = {}; }
+      const { data:rgs } = await sb.from('regions').select('id,name,center_lat,center_lng,radius_km,extra_circles').eq('is_active', true);
+      state.allRegions = rgs || [];
+    } catch(e){ state.allZones = []; state.zoneCharges = {}; state.allRegions = []; }
     try {
       const { count } = await sb.from('riders').select('id', { count:'exact', head:true }).eq('is_online', true).eq('is_approved', true);
       state.ridersOnline = count || 0;
