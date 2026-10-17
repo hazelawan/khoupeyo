@@ -952,7 +952,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.19';
+const APP_VERSION = '5.20';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1299,10 +1299,13 @@ function etaTime(o){
 function detectZone(lat, lng){
   const zones = (state.allZones || []).filter(z => z.is_active !== false && z.center_lat != null);
   if (!lat || !lng || !zones.length) return null;
-  // inside a circle?
+  const inCircle = (z, clat, clng, rkm) => kmBetween(lat, lng, Number(clat), Number(clng)) <= num(rkm || 5);
+  // inside main circle or any extra circle?
   for (const z of zones){
-    const d = kmBetween(lat, lng, Number(z.center_lat), Number(z.center_lng));
-    if (d <= num(z.radius_km || 5)) return z.id;
+    if (inCircle(z, z.center_lat, z.center_lng, z.radius_km)) return z.id;
+    for (const c of (z.extra_circles || [])){
+      if (inCircle(z, c.lat, c.lng, c.r)) return z.id;
+    }
   }
   // nearest fallback (gap between villages)
   let best = null, bd = 1e9;
@@ -3959,7 +3962,7 @@ async function bootMain(){
       state.settings = {}; (rs || []).forEach(x => { state.settings[x.key] = x.value; });
     } catch(e){ state.settings = {}; }
     try {
-      const { data:az } = await sb.from('zones').select('id,name,center_lat,center_lng,radius_km,is_active').eq('is_active', true);
+      const { data:az } = await sb.from('zones').select('id,name,center_lat,center_lng,radius_km,extra_circles,is_active').eq('is_active', true);
       state.allZones = az || [];
       const { data:zc } = await sb.from('zone_charges').select('from_zone_id,to_zone_id,delivery_fee');
       state.zoneCharges = {}; (zc || []).forEach(c => { state.zoneCharges[c.from_zone_id + '|' + c.to_zone_id] = c.delivery_fee; });
