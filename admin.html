@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.20';
+const APP_VERSION = '7.21';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -838,7 +838,7 @@ async function afterLogin(user){
 }
 
 // ---- Shared data ----
-async function loadZones(){ state.zones = need(await sb.from('zones').select('*').order('created_at')); }
+async function loadZones(){ const q = sb.from('zones').select('*').order('created_at'); if (scope()) q.eq('region_id', scope()); state.zones = need(await q); }
 async function loadRestaurants(){ state.restaurants = need(await sb.from('restaurants').select('*').order('name')); }
 async function loadRiders(){
   const { data } = await sb.from('riders').select('id,is_approved,is_online,profile:profiles(full_name,phone)').eq('is_approved', true);
@@ -1976,6 +1976,15 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
       box.parentNode.insertBefore(hint, addBtn.nextSibling);
     }
     setTimeout(() => map.invalidateSize(), 300);
+    // draw region boundary as reference (so partner sees their limits)
+    try {
+      const regId = (extraIn === 'z_extra' && $('z_region')) ? $('z_region').value : (extraIn === 'rg_extra' ? null : scope());
+      const reg = regId && (state.regions || []).find(r => r.id === regId);
+      if (reg && reg.center_lat != null){
+        L.circle([+reg.center_lat, +reg.center_lng], { radius:num(reg.radius_km || 30)*1000, color:'#1a73e8', weight:2, dashArray:'8,6', fill:false }).addTo(map).bindTooltip('Your region: ' + reg.name, { permanent:false });
+        (reg.extra_circles || []).forEach(c => L.circle([+c.lat, +c.lng], { radius:num(c.r || 30)*1000, color:'#1a73e8', weight:2, dashArray:'8,6', fill:false }).addTo(map));
+      }
+    } catch(e){}
   } catch(e){ const b = $(mapId); if (b) b.innerHTML = '<div class="muted" style="padding:20px;text-align:center">Map could not load. Enter coordinates manually.</div>'; }
 }
 function viewOmap(){
@@ -2170,8 +2179,13 @@ function zoneWeightEditor(){
 function zoneForm(z){
   z = z || { delivery_fee:100, min_order:0, rider_pay:60, is_active:true };
   const feeMode = num(z.per_km_fee) > 0 ? 'perkm' : 'fixed';
+  const myReg = scope();
+  const regField = myReg
+    ? `<div class="note" style="margin-bottom:8px">📍 Region: <b>${esc(regionName(myReg))}</b> (your region)</div><input type="hidden" id="z_region" value="${myReg}">`
+    : `<label class="f" for="z_region">Region</label><select id="z_region">${(state.regions || []).map(r => `<option value="${r.id}" ${z.region_id === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select>`;
   state.zwt = (Array.isArray(z.weight_tiers) ? z.weight_tiers : (Array.isArray(state.settings && state.settings.weight_tiers) ? state.settings.weight_tiers : [])).map(x => ({ above:num(x.above), fee:num(x.fee) }));
-  return `<label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
+  return `${regField}
+    <label class="f" for="z_name">Zone name</label><input id="z_name" type="text" value="${esc(z.name)}">
     <label class="f" for="z_city">City</label><input id="z_city" type="text" value="${esc(z.city)}">
     <div class="two">
       <div><label class="f" for="z_fee">Delivery fee (Rs)</label><input id="z_fee" type="number" min="0" value="${z.delivery_fee}"></div>
@@ -3568,7 +3582,8 @@ const A = {
       const fmode = (document.querySelector('input[name="z_fmode"]:checked') || {}).value || 'fixed';
       const clat = parseFloat($('z_clat').value), clng = parseFloat($('z_clng').value);
       let zExtra = []; try { zExtra = JSON.parse($('z_extra').value || '[]'); } catch(e){}
-      const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
+      const zReg = $('z_region') ? $('z_region').value : null;
+      const row = { name, city:$('z_city').value.trim() || null, region_id:zReg || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
         base_km:num($('z_base').value), per_km_fee:fmode === 'perkm' ? num($('z_perkm').value) : 0, max_km:fmode === 'perkm' && maxV !== '' ? num(maxV) : null,
         bulk_items:Math.max(0, Math.round(num($('z_bitems').value))), bulk_fee:num($('z_bfee').value), bulk_max:$('z_bmax').value.trim() === '' ? null : num($('z_bmax').value),
         weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null,
