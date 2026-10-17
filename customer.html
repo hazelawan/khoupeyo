@@ -417,12 +417,13 @@ label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
 *::-webkit-scrollbar{height:0;width:6px}
 *::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-/* Floating bottom navigation */
-.nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(22px + env(safe-area-inset-bottom,0px))!important;
-  border:1px solid var(--line)!important;border-radius:24px;box-shadow:var(--sh-3);padding:4px!important;
+/* Docked bottom navigation (full-width, like Foodpanda/Daraz) */
+.nav{left:0!important;right:0!important;transform:none!important;width:100%!important;bottom:0!important;border-radius:0!important;
+  border:0!important;border-top:1px solid var(--line)!important;box-shadow:0 -4px 20px rgba(0,0,0,.08)!important;padding:6px 4px calc(8px + env(safe-area-inset-bottom,0px))!important;
   background:#fff}
+.nav-in{max-width:640px;margin:0 auto;display:flex}
 @media (prefers-color-scheme: dark){ .nav{background:#16211c} }
-.nav a,.nav button{border-top:0!important;border-radius:18px;transition:background .2s,color .2s}
+.nav a,.nav button{border-top:0!important;border-radius:14px;transition:background .2s,color .2s;flex:1}
 .nav a.on,.nav button.on{background:var(--forest)!important;color:#fff!important;border-radius:20px;box-shadow:0 6px 16px rgba(11,58,43,.35)}
 main{padding-bottom:140px!important}
 /* ===== Customer app look ===== */
@@ -519,7 +520,7 @@ html[dir=rtl] .banner::after{right:auto;left:-6px}
 .buybar{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:0;box-shadow:0 -10px 30px rgba(0,0,0,.08)}
 @media (prefers-color-scheme: dark){.buybar{background:rgba(22,33,27,.92)}}
 /* cart and checkout */
-.cartbar{bottom:calc(88px + env(safe-area-inset-bottom,0px))!important}
+.cartbar{bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}
 .cartbar a{background:var(--grad)!important;border-radius:18px!important;box-shadow:0 12px 26px rgba(198,94,27,.35)!important}
 .cartrow{padding:12px 0}
 .cartrow .thumb{border-radius:14px}
@@ -952,7 +953,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.24';
+const APP_VERSION = '5.25';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
