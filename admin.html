@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.16';
+const APP_VERSION = '7.18';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1919,6 +1919,58 @@ function loadLeafletA(){
   if (!document.getElementById('lfcss')){ const l = document.createElement('link'); l.id = 'lfcss'; l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
   return new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload = () => res(window.L); sc.onerror = () => rej(new Error('Map could not load')); document.head.appendChild(sc); });
 }
+// ---- Map picker: tap to set center, circles show radius. Multiple circles supported ----
+async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
+  try {
+    const L = await loadLeafletA();
+    const latEl = $(latIn), lngEl = $(lngIn), kmEl = kmIn ? $(kmIn) : null;
+    let lat = parseFloat(latEl.value) || 32.7712, lng = parseFloat(lngEl.value) || 72.7031;
+    const box = $(mapId); if (!box) return;
+    box.innerHTML = '';
+    const map = L.map(mapId).setView([lat, lng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+    let mk = L.marker([lat, lng], { draggable:true }).addTo(map);
+    let circ = null;
+    const mainKm = () => kmEl ? (parseFloat(kmEl.value) || 5) : 5;
+    const drawCirc = () => {
+      if (circ) map.removeLayer(circ);
+      circ = L.circle([mk.getLatLng().lat, mk.getLatLng().lng], { radius: mainKm() * 1000, color:'#0b5c2f', fillOpacity:0.15 }).addTo(map);
+    };
+    drawCirc();
+    const sync = () => { const p = mk.getLatLng(); latEl.value = p.lat.toFixed(5); lngEl.value = p.lng.toFixed(5); drawCirc(); };
+    mk.on('dragend', sync);
+    map.on('click', e => { mk.setLatLng(e.latlng); sync(); });
+    if (kmEl) kmEl.addEventListener('input', drawCirc);
+    // extra circles
+    const extraCircles = [];
+    const exEl = extraIn ? $(extraIn) : null;
+    const saveExtra = () => { if (exEl) exEl.value = JSON.stringify(extraCircles.map(c => ({ lat:+c.getLatLng().lat.toFixed(5), lng:+c.getLatLng().lng.toFixed(5), r:+(c.getRadius()/1000).toFixed(1) }))); };
+    if (exEl && exEl.value){
+      try { JSON.parse(exEl.value).forEach(c => {
+        const cc = L.circle([c.lat, c.lng], { radius:(c.r||5)*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
+        cc.on('click', () => { map.removeLayer(cc); const i = extraCircles.indexOf(cc); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
+        extraCircles.push(cc);
+      }); } catch(e){}
+    }
+    if (exEl){
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button'; addBtn.className = 'btn ghost small'; addBtn.style.marginTop = '8px';
+      addBtn.textContent = '＋ Add another circle';
+      addBtn.onclick = () => {
+        const c = map.getCenter();
+        const cc = L.circle(c, { radius: mainKm()*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
+        cc.on('click', () => { map.removeLayer(cc); const i = extraCircles.indexOf(cc); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
+        extraCircles.push(cc); saveExtra();
+        toast('New circle added at map center — tap it to delete');
+      };
+      box.parentNode.insertBefore(addBtn, box.nextSibling);
+      const hint = document.createElement('div');
+      hint.className = 'muted'; hint.style.fontSize = '12px'; hint.textContent = 'Extra circles: tap one to delete it.';
+      box.parentNode.insertBefore(hint, addBtn.nextSibling);
+    }
+    setTimeout(() => map.invalidateSize(), 300);
+  } catch(e){ const b = $(mapId); if (b) b.innerHTML = '<div class="muted" style="padding:20px;text-align:center">Map could not load. Enter coordinates manually.</div>'; }
+}
 function viewOmap(){
   const pts = state.omap || []; const cells = {};
   pts.forEach(o => { const k = (Math.round(o.address_lat * 100) / 100) + ',' + (Math.round(o.address_lng * 100) / 100); cells[k] = (cells[k] || 0) + 1; });
@@ -2147,7 +2199,9 @@ function zoneForm(z){
       <div><label class="f" for="z_clng">Center longitude</label><input id="z_clng" type="number" step="0.0001" value="${z.center_lng ?? ''}" placeholder="72.7031"></div>
     </div>
     <label class="f" for="z_rad">Radius (km)</label><input id="z_rad" type="number" min="0.5" step="0.5" value="${z.radius_km ?? 5}">
-    <div id="z_mapprev" style="height:200px;border-radius:12px;margin-top:8px;background:#e8e8e8;display:flex;align-items:center;justify-content:center;color:#888">Map preview coming after save</div>
+    <div id="z_map" style="height:220px;border-radius:12px;margin-top:8px;z-index:0"></div>
+    <input type="hidden" id="z_extra" value="${esc(JSON.stringify(z.extra_circles || []))}">
+    <div class="muted" style="font-size:12px">Tap the map to move the center pin, or drag the pin. The circle is your zone.</div>
     <label class="check"><input id="z_active" type="checkbox" ${z.is_active ? 'checked' : ''}> Zone is open for orders</label>
     <div class="actions"><button class="btn block" onclick="A.saveZone('${z.id || ''}')">Save zone</button></div>`;
 }
@@ -3473,7 +3527,7 @@ const A = {
   async deleteBanner(id){ if (!await uiConfirm('Delete this banner?')) return; await run(async () => { need(await sb.from('banners').delete().eq('id', id)); await loadBanners(); closeSheet(); renderTab(); }); },
 
   // ---- Zones ----
-  async editZone(id){ if (!state.settings || !('weight_tiers' in state.settings)) await run(loadSettings); const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); },
+  async editZone(id){ if (!state.settings || !('weight_tiers' in state.settings)) await run(loadSettings); const z = state.zones.find(x => x.id === id); openSheet(z ? 'Edit zone' : 'Add zone', zoneForm(z)); setTimeout(() => initAreaPicker('z_map', 'z_clat', 'z_clng', 'z_rad', 'z_extra'), 100); },
   async zoneMatrix(){
     await run(async () => {
       const { data:charges } = await sb.from('zone_charges').select('*');
@@ -3506,11 +3560,12 @@ const A = {
       const maxV = $('z_max').value.trim();
       const fmode = (document.querySelector('input[name="z_fmode"]:checked') || {}).value || 'fixed';
       const clat = parseFloat($('z_clat').value), clng = parseFloat($('z_clng').value);
+      let zExtra = []; try { zExtra = JSON.parse($('z_extra').value || '[]'); } catch(e){}
       const row = { name, city:$('z_city').value.trim() || null, delivery_fee:num($('z_fee').value), min_order:num($('z_min').value), rider_pay:num($('z_pay').value), is_active:$('z_active').checked,
         base_km:num($('z_base').value), per_km_fee:fmode === 'perkm' ? num($('z_perkm').value) : 0, max_km:fmode === 'perkm' && maxV !== '' ? num(maxV) : null,
         bulk_items:Math.max(0, Math.round(num($('z_bitems').value))), bulk_fee:num($('z_bfee').value), bulk_max:$('z_bmax').value.trim() === '' ? null : num($('z_bmax').value),
         weight_tiers:$('z_wown').checked ? (state.zwt || []).filter(x => x.above >= 0 && x.fee >= 0).sort((a, b) => a.above - b.above) : null,
-        center_lat:isNaN(clat) ? null : clat, center_lng:isNaN(clng) ? null : clng, radius_km:num($('z_rad').value) || 5 };
+        center_lat:isNaN(clat) ? null : clat, center_lng:isNaN(clng) ? null : clng, radius_km:num($('z_rad').value) || 5, extra_circles:zExtra };
       need(await (id ? sb.from('zones').update(row).eq('id', id) : sb.from('zones').insert(row)));
       await loadZones(); closeSheet(); renderTab(); toast('Zone saved');
     });
@@ -3727,6 +3782,9 @@ const A = {
       <div class="two"><div><label class="f" for="rg_lat">Center latitude</label><input id="rg_lat" type="number" step="any" value="${r.center_lat ?? ''}"></div>
         <div><label class="f" for="rg_lng">Center longitude</label><input id="rg_lng" type="number" step="any" value="${r.center_lng ?? ''}"></div></div>
       <button type="button" class="btn ghost small" style="margin-top:8px" onclick="A.regionHere()">📍 Use my current location</button>
+      <div id="rg_map" style="height:220px;border-radius:12px;margin-top:8px;z-index:0"></div>
+      <input type="hidden" id="rg_extra" value="${esc(JSON.stringify(r.extra_circles || []))}">
+      <div class="muted" style="font-size:12px">Tap the map to move the center pin, or drag the pin.</div>
       <label class="f" for="rg_km">Area size (km around the center)</label><input id="rg_km" type="number" min="1" max="200" value="${num(r.radius_km)}">
       <div class="muted" style="font-size:13px">Customers inside this area see this region's shops first.</div>
       <h3 style="margin:14px 0 4px">Partner contract</h3>
@@ -3738,6 +3796,7 @@ const A = {
       <label class="f" for="rg_note">Notes (contract, phone…)</label><textarea id="rg_note" rows="2">${esc(r.partner_note || '')}</textarea>
       <label class="check"><input id="rg_on" type="checkbox" ${r.is_active ? 'checked' : ''}> Region is live (customers can see it)</label>
       <div class="actions"><button class="btn block" onclick="A.saveRegion('${id || ''}')">Save region</button></div>`);
+    setTimeout(() => initAreaPicker('rg_map', 'rg_lat', 'rg_lng', 'rg_km', 'rg_extra'), 100);
   },
   regionHere(){
     if (!navigator.geolocation) return toast('Location is not available', true);
@@ -3746,7 +3805,8 @@ const A = {
   async saveRegion(id){
     const name = $('rg_name').value.trim(); if (!name) return toast('Write the city name', true);
     const lat = $('rg_lat').value === '' ? null : num($('rg_lat').value), lng = $('rg_lng').value === '' ? null : num($('rg_lng').value);
-    const row = { name, center_lat:lat, center_lng:lng, radius_km:Math.max(1, num($('rg_km').value) || 30), hq_percent:Math.min(100, Math.max(0, num($('rg_pct').value))), monthly_fee:Math.max(0, num($('rg_fee').value)), share_basis:$('rg_basis').value, partner_note:$('rg_note').value.trim() || null, is_active:$('rg_on').checked };
+    let rgExtra = []; try { rgExtra = JSON.parse($('rg_extra').value || '[]'); } catch(e){}
+    const row = { name, center_lat:lat, center_lng:lng, radius_km:Math.max(1, num($('rg_km').value) || 30), extra_circles:rgExtra, hq_percent:Math.min(100, Math.max(0, num($('rg_pct').value))), monthly_fee:Math.max(0, num($('rg_fee').value)), share_basis:$('rg_basis').value, partner_note:$('rg_note').value.trim() || null, is_active:$('rg_on').checked };
     await run(async () => {
       if (id) need(await sb.from('regions').update(row).eq('id', id));
       else need(await sb.from('regions').insert(row));
