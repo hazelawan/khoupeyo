@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.18';
+const APP_VERSION = '7.20';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -787,16 +787,18 @@ function drawPics(){
 }
 function previewFile(input, imgId){ const f = input.files && input.files[0]; if (!f) return; const el = $(imgId); el.src = URL.createObjectURL(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
-  const inp = $(inputId); const f = inp.files && inp.files[0]; if (!f) return;
-  const msg = $('bgRmMsg'); if (msg) msg.textContent = '⏳ AI kaam kar raha hai...';
+  const inp = $(inputId); const f = inp.files && inp.files[0];
+  const msg0 = $('bgRmMsg');
+  if (!f){ if (msg0) msg0.textContent = '⚠️ Pehle photo select karo'; return; }
+  if (msg0) msg0.textContent = '⏳ AI kaam kar raha hai...';
   try {
     const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
     const blob = await removeBackground(f);
     const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
     const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
     $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
-    if (msg) msg.textContent = '✅ Background remove ho gaya!';
-  } catch(e){ if (msg) msg.textContent = '❌ Failed: ' + (e.message || e); }
+    if (msg0) msg0.textContent = '✅ Background remove ho gaya!';
+  } catch(e){ if (msg0) msg0.textContent = '❌ Failed: ' + (e.message || e); }
 }
 async function signedUrls(paths){
   const list = [...new Set(paths.filter(Boolean))]; if (!list.length) return {};
@@ -1323,7 +1325,7 @@ function itemForm(i){
     <label class="f" for="i_photo">Photo</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
-    <div id="bgRmBox" style="display:none;margin:8px 0"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
+    <div id="bgRmBox" style="margin:8px 0;${(typeof state !== "undefined" && state.settings && state.settings.ai_bg_remove === "false") ? "display:none" : ""}"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">More photos (up to 5)</label>
     <div class="pgrid" id="pgrid"></div>
     <label class="filebtn">📷 Add more photos<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
@@ -1941,16 +1943,23 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
     mk.on('dragend', sync);
     map.on('click', e => { mk.setLatLng(e.latlng); sync(); });
     if (kmEl) kmEl.addEventListener('input', drawCirc);
-    // extra circles
+    // extra circles (draggable via center handle, tap circle to delete)
     const extraCircles = [];
     const exEl = extraIn ? $(extraIn) : null;
-    const saveExtra = () => { if (exEl) exEl.value = JSON.stringify(extraCircles.map(c => ({ lat:+c.getLatLng().lat.toFixed(5), lng:+c.getLatLng().lng.toFixed(5), r:+(c.getRadius()/1000).toFixed(1) }))); };
+    const saveExtra = () => { if (exEl) exEl.value = JSON.stringify(extraCircles.map(e => ({ lat:+e.c.getLatLng().lat.toFixed(5), lng:+e.c.getLatLng().lng.toFixed(5), r:+(e.c.getRadius()/1000).toFixed(1) }))); };
+    const dotIcon = L.divIcon({ className:'', html:'<div style="width:18px;height:18px;background:#E8722A;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px #0005"></div>', iconSize:[18,18], iconAnchor:[9,9] });
+    const addExtra = (clat, clng, rkm) => {
+      const cc = L.circle([clat, clng], { radius:(rkm||5)*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
+      const handle = L.marker([clat, clng], { draggable:true, icon:dotIcon }).addTo(map);
+      const entry = { c:cc, h:handle };
+      handle.on('drag', () => cc.setLatLng(handle.getLatLng()));
+      handle.on('dragend', () => { cc.setLatLng(handle.getLatLng()); saveExtra(); });
+      cc.on('click', () => { map.removeLayer(cc); map.removeLayer(handle); const i = extraCircles.indexOf(entry); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
+      extraCircles.push(entry); saveExtra();
+      return entry;
+    };
     if (exEl && exEl.value){
-      try { JSON.parse(exEl.value).forEach(c => {
-        const cc = L.circle([c.lat, c.lng], { radius:(c.r||5)*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
-        cc.on('click', () => { map.removeLayer(cc); const i = extraCircles.indexOf(cc); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
-        extraCircles.push(cc);
-      }); } catch(e){}
+      try { JSON.parse(exEl.value).forEach(c => addExtra(c.lat, c.lng, c.r)); } catch(e){}
     }
     if (exEl){
       const addBtn = document.createElement('button');
@@ -1958,14 +1967,12 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
       addBtn.textContent = '＋ Add another circle';
       addBtn.onclick = () => {
         const c = map.getCenter();
-        const cc = L.circle(c, { radius: mainKm()*1000, color:'#E8722A', fillOpacity:0.15 }).addTo(map);
-        cc.on('click', () => { map.removeLayer(cc); const i = extraCircles.indexOf(cc); if (i>=0) extraCircles.splice(i,1); saveExtra(); });
-        extraCircles.push(cc); saveExtra();
-        toast('New circle added at map center — tap it to delete');
+        addExtra(c.lat, c.lng, mainKm());
+        toast('New circle added — drag the orange dot to move it, tap circle to delete');
       };
       box.parentNode.insertBefore(addBtn, box.nextSibling);
       const hint = document.createElement('div');
-      hint.className = 'muted'; hint.style.fontSize = '12px'; hint.textContent = 'Extra circles: tap one to delete it.';
+      hint.className = 'muted'; hint.style.fontSize = '12px'; hint.textContent = 'Extra circles: drag the orange dot to move, tap the circle to delete.';
       box.parentNode.insertBefore(hint, addBtn.nextSibling);
     }
     setTimeout(() => map.invalidateSize(), 300);
@@ -2657,7 +2664,7 @@ const A = {
   },
   async backup(){
     const days = Number($('bk_days').value) || 90; const btn = $('bkBtn'); const msg = $('bkMsg');
-    btn.disabled = true; const say = x => { if (msg) msg.textContent = x; };
+    btn.disabled = true; const say = x => { if (msg0) msg0.textContent = x; };
     await run(async () => {
       try {
         const since = new Date(Date.now() - days * 864e5).toISOString();
