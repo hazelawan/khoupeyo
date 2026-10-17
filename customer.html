@@ -418,7 +418,7 @@ label.f{color:var(--muted);font-weight:700;font-size:13px;letter-spacing:.01em}
 *::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* Floating bottom navigation */
-.nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+.nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(22px + env(safe-area-inset-bottom,0px))!important;
   border:1px solid var(--line)!important;border-radius:24px;box-shadow:var(--sh-3);padding:4px!important;
   background:rgba(255,255,255,.9);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px)}
 @media (prefers-color-scheme: dark){ .nav{background:rgba(22,33,27,.9)} }
@@ -952,7 +952,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.21';
+const APP_VERSION = '5.23';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1052,7 +1052,7 @@ const I18N = {
     browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
     need_details:'Please add your name and phone so the shop and rider can reach you.',
     arrive_by:'Rider arriving by about {t}', deliver_around:'Delivery by about {t}', cmp_btn:'Problem with the delivery? Complain', cmp_title:'Complain about the rider', cmp_q:'What happened?', cmp_late:'Rider came late', cmp_damaged:'Items were damaged or spoiled', cmp_rude:'Rider was rude', cmp_other:'Something else', cmp_note:'Tell us more', cmp_send:'Send complaint', cmp_pick:'Please choose the problem', cmp_need_note:'Please write what happened', cmp_done:'Thank you. Your complaint is counted and action is taken on the rider.', cmp_sent:'Thank you. Wanhar Mart will check your complaint.', cmp_status:'Your complaint', cmp_pending:'Wanhar Mart is checking it', cmp_approved:'Complaint accepted, action taken on the rider', cmp_rejected:'Checked by Wanhar Mart: {n}', cmp_late_by:'The order came {m} minutes late',
-    city_title:'Choose your city', city_note:'You will see shops and products of this city.', city_now:'Now showing shops in {c}',
+    city_title:'Choose your city', city_note:'You will see shops and products of this city.', city_now:'Now showing shops in {c}', delivery_region:'Delivery Region',
     ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map', expected_by:'Expected delivery', eta_note:'Based on shop prep time + distance', no_rider:'⚠️ No riders online right now — delivery may take longer',
     rate_title:'How was your order?', rate_food:'Products', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the products',
@@ -1162,7 +1162,7 @@ const I18N = {
     browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
     arrive_by:'رائیڈر تقریباً {t} تک پہنچے گا', deliver_around:'ڈیلیوری تقریباً {t} تک', cmp_btn:'ڈیلیوری میں مسئلہ؟ شکایت کریں', cmp_title:'رائیڈر کی شکایت', cmp_q:'کیا ہوا؟', cmp_late:'دیر سے پہنچا', cmp_damaged:'سامان خراب یا ٹوٹا ہوا تھا', cmp_rude:'رائیڈر نے بدتمیزی کی', cmp_other:'کچھ اور', cmp_note:'تفصیل لکھیں', cmp_send:'شکایت بھیجیں', cmp_pick:'براہ کرم مسئلہ چنیں', cmp_need_note:'براہ کرم لکھیں کیا ہوا', cmp_done:'شکریہ۔ آپ کی شکایت درج ہو گئی اور رائیڈر پر لاگو ہو گئی۔', cmp_sent:'شکریہ۔ Wanhar Mart آپ کی شکایت چیک کرے گا۔', cmp_status:'آپ کی شکایت', cmp_pending:'Wanhar Mart چیک کر رہا ہے', cmp_approved:'شکایت منظور، رائیڈر کے خلاف کارروائی ہو گئی', cmp_rejected:'Wanhar Mart نے چیک کیا: {n}', cmp_late_by:'آرڈر {m} منٹ دیر سے پہنچا',
-    city_title:'اپنا شہر چنیں', city_note:'آپ کو اسی شہر کی دکانیں اور چیزیں نظر آئیں گی۔', city_now:'اب {c} کی دکانیں دکھائی جا رہی ہیں',
+    city_title:'اپنا شہر چنیں', city_note:'آپ کو اسی شہر کی دکانیں اور چیزیں نظر آئیں گی۔', city_now:'اب {c} کی دکانیں دکھائی جا رہی ہیں', delivery_region:'ڈیلیوری ریجن',
     ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں', expected_by:'متوقع ڈیلیوری', eta_note:'دکان کے تیاری وقت + فاصلے کے حساب سے', no_rider:'⚠️ ابھی کوئی رائیڈر آن لائن نہیں — ڈیلیوری میں زیادہ وقت لگ سکتا ہے',
     rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'چیزیں', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم چیزوں کے لیے ستارے دبائیں',
@@ -1537,7 +1537,7 @@ function renderShell(){
     <header class="top" id="topbar">
       <div class="greetrow">
         <div class="hello" id="hello">${helloHtml()}</div>
-        <div class="actions-top">${state.user ? `<a class="walletpill" id="walletPill" href="#/account" aria-label="Wallet">${walletPillHtml()}</a>` : ''}<span id="cityBtn">${cityBtn()}</span>${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+        <div class="actions-top">${state.user ? `<a class="walletpill" id="walletPill" href="#/account" aria-label="Wallet">${walletPillHtml()}</a>` : ''}${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
       </div>
       ${state.user ? `<button class="addrchip" id="addrChip" onclick="A.pickAddr()">${addrChipHtml()}</button>` : ''}
       <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" onfocus="A.suggShow()" onblur="setTimeout(A.suggHide, 250)" autocomplete="off"><button type="button" class="micbtn" onclick="A.voice()" aria-label="Voice search">🎤</button></div>
@@ -2676,7 +2676,7 @@ async function showAccount(){
     <a class="menu-row" href="#/offers"><span>${t('offers_invite')}</span><span class="muted">›</span></a>
     <button class="menu-row" onclick='Chat.open(null, "sup", state.user.id)'><span>💬 ${t('chat_support')}</span><span class="muted">›</span></button>
     <button class="menu-row" onclick="A.accSection('profile')"><span>👤 ${t('edit_profile')}<small class="muted" style="display:block;font-size:12px">${esc(p.full_name || state.user.email)}</small></span><span class="muted">›</span></button>
-    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
+    ${(state.regions || []).length > 1 ? `<button class="menu-row" onclick="A.pickRegion()" style="border:2px solid var(--brand)"><span>📍 ${t('delivery_region') || 'Delivery Region'}<small class="muted" style="display:block;font-size:12px;color:var(--brand);font-weight:700">${esc(regionName())}</small></span><span class="muted">›</span></button>` : ''}    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
       <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
       <label class="f" for="p_phone">${t('phone')}</label><input id="p_phone" type="tel" inputmode="tel" value="${esc(p.phone)}">
       <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
