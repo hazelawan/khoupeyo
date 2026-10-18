@@ -136,6 +136,10 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .closed-note{background:var(--surface);border:1px solid var(--danger);color:var(--danger);border-radius:12px;padding:12px;margin:12px 0;font-weight:600}
 .cattabs{position:sticky;top:54px;z-index:4;background:var(--paper);display:flex;gap:8px;overflow-x:auto;padding:10px 0;margin:6px 0 0}
 .cat{margin:24px 0 4px;font-size:20px;font-weight:800;scroll-margin-top:130px}
+.staffgroup{margin-bottom:18px}
+.staffgroup-h{font-size:16px;font-weight:800;margin:14px 0 8px;padding:8px 12px;background:var(--field);border-radius:12px;display:flex;align-items:center;gap:8px}
+.catcount{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;padding:0 6px;margin-left:6px;vertical-align:middle}
+.shoplist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .item{display:flex;gap:14px;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
 .item.off-stock{opacity:.55}
 .item-text{flex:1;min-width:0}
@@ -1009,7 +1013,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.27';
+const APP_VERSION = '5.28';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2063,7 +2067,23 @@ async function showShops(){
   await ensureData();
   const q = state.homeQuery.trim().toLowerCase();
   const f = SHOP_F[state.shopF]; const list = typeShops().filter(r => (!q || (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q)) && (!f || f(r)));
-  $('view').innerHTML = `<h1>${t('shops')}</h1>${typeChips()}${filterChips()}<div id="homeBody">${list.map(restaurantCard).join('') || `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`}</div>`;
+  let body;
+  if (!state.shopCat && !q && list.length > 3){
+    // Group by primary category when browsing all
+    const catName = k => { const c = SHOP_CATS.find(x => x.k === k); return c ? c.i + ' ' + (state.lang === 'ur' ? c.ur : c.en) : k; };
+    const groups = {};
+    list.forEach(r => {
+      const k = (r.categories && r.categories[0]) || 'other';
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(r);
+    });
+    body = SHOP_CATS.filter(c => groups[c.k]).map(c =>
+      `<div class="staffgroup"><div class="staffgroup-h">${catName(c.k)} <span class="catcount">${groups[c.k].length}</span></div><div class="shoplist">${groups[c.k].map(restaurantCard).join('')}</div></div>`
+    ).join('') || `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
+  } else {
+    body = list.map(restaurantCard).join('') || `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
+  }
+  $('view').innerHTML = `<h1>${t('shops')}</h1>${typeChips()}${filterChips()}<div id="homeBody">${body}</div>`;
 }
 async function showCategory(name){
   await ensureData();
