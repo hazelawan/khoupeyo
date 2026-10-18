@@ -83,6 +83,9 @@ h2{font-size:18px;margin:22px 0 8px;display:flex;align-items:center;gap:8px}
 input[type=text],input[type=password],input[type=email],input[type=tel],select,textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px;font-size:16px}
 label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.staffgroup{margin-bottom:18px}
+.staffgroup-h{font-size:15px;font-weight:800;margin:14px 0 8px;padding:8px 12px;background:var(--field);border-radius:12px;display:flex;align-items:center;gap:8px}
+.catcount{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;padding:0 6px;margin-left:6px;vertical-align:middle}
 .card.live{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .oid{font-weight:800;font-size:18px}
@@ -645,7 +648,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.20';
+const APP_VERSION = '5.21';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1828,8 +1831,20 @@ function viewEarn(){
   const paid = sum(state.payouts.filter(p => p.period_start === ms), p => p.amount);
   const lim = num(r.cash_limit), cash = num(state.cash);
   const pct = lim ? Math.min(100, cash / lim * 100) : 0;
-  const rows = state.done.slice(0, 25).map(o => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}</div></div>
-    <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`; }).join('');
+  const delRow = o => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}</div></div>
+    <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`; };
+  // Group deliveries by week
+  const now = new Date(); const dayMs = 864e5;
+  const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x.getTime(); };
+  const todayStart = startOfDay(now);
+  const weekAgo = todayStart - 7 * dayMs;
+  const thisWeek = [], lastWeek = [], earlier = [];
+  state.done.slice(0, 60).forEach(o => {
+    const t = o.delivered_at ? new Date(o.delivered_at).getTime() : 0;
+    if (t >= weekAgo) thisWeek.push(o); else if (t >= weekAgo - 7 * dayMs) lastWeek.push(o); else earlier.push(o);
+  });
+  const weekGroup = (title, list) => list.length ? `<div class="staffgroup"><div class="staffgroup-h">${title} <span class="catcount">${list.length}</span></div>${list.map(delRow).join('')}</div>` : '';
+  const rows = weekGroup('📅 ' + (state.lang === 'ur' ? 'اس ہفتے' : 'This week'), thisWeek) + weekGroup('📅 ' + (state.lang === 'ur' ? 'پچھلا ہفتہ' : 'Last week'), lastWeek) + weekGroup('📅 ' + (state.lang === 'ur' ? 'پہلے' : 'Earlier'), earlier);
   const rname = r.full_name || (state.profile && state.profile.full_name) || '';
   const dep = state.handovers.map(h => Receipt.row(h, { kind:'handover', ur:state.lang === 'ur', to:rname })).join('');
   const pay = state.payouts.map(p => Receipt.row(p, { kind:'payout', ur:state.lang === 'ur', to:rname })).join('');
