@@ -123,6 +123,11 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;cursor:pointer;font-weight:700}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .cat{display:flex;justify-content:space-between;align-items:center;margin:20px 0 4px}
+.shophead{display:flex;align-items:center;gap:10px;margin:6px 0 2px;font-size:17px}
+.prodstats{display:flex;gap:16px;margin:0 0 8px;font-size:14px;color:var(--muted)}
+.prodstats b{color:var(--ink)}
+.btngroup{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:12px}
+.btngroup-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;flex:0 0 100%;margin-bottom:2px}
 .cat h3{margin:0;font-size:18px}
 .strike{text-decoration:line-through;color:var(--muted);font-size:13px;margin-inline-start:6px}
 .sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
@@ -673,7 +678,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.17';
+const APP_VERSION = '6.18';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1372,11 +1377,12 @@ function viewMenu(){
     if (!state.cats.length && !list.length) body = `<div class="empty">${t('menu_empty')}</div>`;
   }
   return `<h1>${isServices() ? t('kind_services') : t('products')}</h1>
+    ${state.restaurant ? `<div class="shophead"><b>${esc(state.restaurant.name || '')}</b>${state.staffMode ? '' : `<button class="linkbtn" onclick="A.editShopName()">✏️</button>`}</div>
+    <div class="prodstats"><span>📦 <b>${(state.items || []).length}</b> ${isServices() ? t('kind_services') : t('products')}</span><span>📂 <b>${(state.cats || []).length}</b> ${t('add_section')}</span></div>` : ''}
     <input type="search" id="pq" placeholder="${t('search')}" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)">
     <div class="chips">${chips}</div>
-    <div class="two"><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${isServices() ? t('add_service') : t('add_product')}</button></div>
-    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="Bulk.open()">📊 ${t('bulk_btn')}</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 ${t('photo_mode')}</button></div>
-    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="AutoImg.open()">🖼️ ${t('autoimg_btn')}</button></div>
+    <div class="btngroup"><span class="btngroup-t">${t('add_product')}</span><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${isServices() ? t('add_service') : t('add_product')}</button></div>
+    <div class="btngroup"><span class="btngroup-t">📊 Bulk</span><button class="btn ghost" onclick="Bulk.open()">📊 ${t('bulk_btn')}</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 ${t('photo_mode')}</button><button class="btn ghost" onclick="AutoImg.open()">🖼️ ${t('autoimg_btn')}</button></div>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.scanFind()">${t('scan_btn')}</button>${state.staffMode ? '' : `<button class="btn ghost" onclick="A.bulkPrice()">${t('bp_btn')}</button>`}</div>
     ${pending ? `<div class="note" style="margin-top:12px">${t('pending_note')}</div>` : ''}
     <div id="menuBody">${body}</div>`;
@@ -2016,6 +2022,16 @@ const A = {
     if (!p && !ad) return toast(t('enter_all'), true);
     if (!await uiConfirm(t('bp_q').replace('{n}', n))) return;
     await run(async () => { const c = need(await sb.rpc('shop_bulk_price', { p_shop:state.restaurant.id, p_category:cat, p_pct:p, p_add:ad, p_round:rd })); closeSheet(); await loadMenu(); renderTab(); toast(t('bp_done').replace('{n}', c)); });
+  },
+  async editShopName(){
+    if (state.staffMode || !state.restaurant) return;
+    const name = await uiPrompt(t('shop_name') || 'Shop name', state.restaurant.name || '');
+    if (name === null || !name.trim() || name.trim() === state.restaurant.name) return;
+    await run(async () => {
+      need(await sb.from('restaurants').update({ name:name.trim().slice(0, 80) }).eq('id', state.restaurant.id));
+      state.restaurant.name = name.trim().slice(0, 80);
+      renderTab(); toast(t('saved'));
+    });
   },
   scanFind(){
     Scan.open(code => { const it = state.items.find(i => (i.barcode || '') === code);
