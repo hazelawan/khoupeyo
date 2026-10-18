@@ -130,6 +130,14 @@ h3{font-size:18px;margin:22px 0 8px}
 .side-sw{text-align:center;flex:none}
 .side-sw small{font-size:11px;color:var(--muted)}
 .cat{display:flex;justify-content:space-between;align-items:center;margin:20px 0 6px}
+.catcount{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;padding:0 6px;margin-left:6px;vertical-align:middle}
+.shophead{display:flex;align-items:center;gap:10px;margin:10px 0 4px;font-size:17px}
+.prodstats{display:flex;gap:16px;margin:0 0 6px;font-size:14px;color:var(--muted)}
+.prodstats b{color:var(--ink)}
+.btngroup{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;padding:8px;border:1px solid var(--line);border-radius:12px}
+.btngroup-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;flex:0 0 100%;margin-bottom:2px}
+.staffgroup{margin-bottom:18px}
+.staffgroup-h{font-size:16px;font-weight:800;margin:14px 0 8px;padding:8px 12px;background:var(--field);border-radius:12px;display:flex;align-items:center;gap:8px}
 .cat h3{margin:0}
 .sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:820px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px))}
@@ -663,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.23';
+const APP_VERSION = '7.26';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1182,7 +1190,7 @@ function viewShops(){
   const totUnpaid = state.shopReport.reduce((n, r) => n + num(r.unpaid), 0);
   const totSales = state.shopReport.reduce((n, r) => n + num(r.food_sales), 0);
   const totComm = state.shopReport.reduce((n, r) => n + num(r.commission), 0);
-  const rows = state.restaurants.map(r => {
+  const shopCard = r => {
     const s = rep[r.id] || {};
     return `<div class="row" style="cursor:default">
       <div class="thumb">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
@@ -1192,7 +1200,22 @@ function viewShops(){
       </button>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small>${r.is_open ? 'Open' : 'Closed'}</small></div>
     </div>`;
-  }).join('');
+  };
+  let rows;
+  if (!state.myRegion && (state.regions || []).length > 1){
+    // Group by region for HQ
+    const groups = {};
+    state.restaurants.forEach(r => {
+      const rid = r.region_id || 'none';
+      if (!groups[rid]) groups[rid] = { name:rid === 'none' ? 'No region' : regionName(rid), items:[] };
+      groups[rid].items.push(r);
+    });
+    rows = Object.values(groups).map(g =>
+      `<div class="staffgroup"><div class="staffgroup-h">📍 ${esc(g.name)} <span class="catcount">${g.items.length}</span></div><div class="list">${g.items.map(shopCard).join('')}</div></div>`
+    ).join('') || '<div class="empty">No shops yet. Add your first one.</div>';
+  } else {
+    rows = `<div class="list">${state.restaurants.map(shopCard).join('') || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
+  }
   return `<h2>Shops</h2>${periodChips()}
     <div class="tiles" style="margin-bottom:12px">
       <div class="tile"><b>${money(totSales)}</b><span>Shop sales</span></div>
@@ -1202,7 +1225,7 @@ function viewShops(){
     </div>
     ${shopReqBlock()}${staffReqBlock()}
     <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
-    <div class="list">${rows || '<div class="empty">No shops yet. Add your first one.</div>'}</div>`;
+    ${rows}`;
 }
 const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
 const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon'},{k:'parlour',i:'💅',en:'Beauty parlour'},{k:'doctor',i:'🩺',en:'Doctor / clinic'},{k:'dentist',i:'🦷',en:'Dentist'},{k:'lab',i:'🔬',en:'Laboratory / tests'},{k:'carwash',i:'🚗',en:'Car wash & detailing'},{k:'other',i:'➕',en:'Other'}];
@@ -1300,18 +1323,23 @@ function viewProducts(){
     body = `<div class="list menu-list">${items.map(itemRow).join('') || '<div class="empty">No products match.</div>'}</div>`;
   } else {
     const loose = items.filter(i => !state.categories.some(c => c.id === i.category_id));
-    const block = (title, catId, list) => `<div class="cat"><h3>${esc(title)}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
+    const block = (title, catId, list) => `<div class="cat"><h3>${esc(title)} <span class="catcount">${list.length}</span></h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
       <div class="list menu-list">${list.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
     body = state.categories.map(c => block(c.name, c.id, items.filter(i => i.category_id === c.id))).join('') + (loose.length ? block('Other items', null, loose) : '');
     if (!state.categories.length && !loose.length) body = '<div class="empty">This shop has no products. Add a section such as Burgers, then add items to it.</div>';
   }
   const pending = state.items.filter(i => !i.is_approved).length;
+  const totalProducts = state.items.length;
+  const totalSections = state.categories.length;
+  const shopName = (state.restaurants.find(r => r.id === state.menuRestaurant) || {}).name || '';
   return `<h2>Products</h2>
     <select onchange="A.pickMenuRestaurant(this.value)" aria-label="Shop">${opts}</select>
+    ${state.menuRestaurant !== 'all' && shopName ? `<div class="shophead"><b>${esc(shopName)}</b><button class="linkbtn" onclick="A.editShopName()">✏️ Rename</button></div>
+    <div class="prodstats"><span>📦 <b>${totalProducts}</b> products</span><span>📂 <b>${totalSections}</b> sections</span></div>` : ''}
     <input type="search" placeholder="Search products" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)" style="margin:10px 0">
     <div class="chips">${chips}</div>
     <div class="bar">
-      ${state.menuRestaurant !== 'all' ? `<button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button><button class="btn ghost" onclick="AutoImg.open()">🖼️ Find images</button>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
+      ${state.menuRestaurant !== 'all' ? `<div class="btngroup"><span class="btngroup-t">Manage</span><button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button></div><div class="btngroup"><span class="btngroup-t">Bulk</span><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button><button class="btn ghost" onclick="AutoImg.open()">🖼️ Find images</button></div>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
       ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve all ${pending}</button>` : ''}
       <button class="btn ghost" onclick="A.flashList()">⚡ Flash sales</button>
     </div>
@@ -1448,7 +1476,16 @@ function viewRiders(){
         <div><b class="${over ? 'red' : ''}">${money(r.cash_in_hand)}</b><span>Cash in hand</span></div>
       </div></div>`;
   };
-  const chips = [['all','All'],['online','On duty'],['cash','Holding cash'],['unpaid','Pay due'],['flag','Selfie issues']].map(([k, l]) => `<button class="chip ${fl === k ? 'on' : ''}" onclick="A.riderFilter('${k}')">${l}</button>`).join('');
+  const chips = [['all','All'],['online','On duty'],['cash','Holding cash'],['unpaid','Pay due'],['flag','Selfie issues']].map(([k, l]) => `<button class="chip ${fl === k ? 'on' : ''}" onclick="A.riderFilter('${k}')">All ${l}</button>`).join('');
+  // Group by duty status when showing all
+  let riderList;
+  if (fl === 'all' && shown.length > 1){
+    const onDuty = shown.filter(r => r.is_online);
+    const offDuty = shown.filter(r => !r.is_online);
+    riderList = `${onDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">🟢 On duty <span class="catcount">${onDuty.length}</span></div>${onDuty.map(card).join('')}</div>` : ''}${offDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">⚫ Off duty <span class="catcount">${offDuty.length}</span></div>${offDuty.map(card).join('')}</div>` : ''}`;
+  } else {
+    riderList = shown.map(card).join('') || '<div class="empty">No riders here yet. Tap “Create Rider ID” to add a rider.</div>';
+  }
   const lb = state.lb || { today:[], month:[], last_month:[] }; const aw = (state.settings && state.settings.rider_awards) || {};
   const medal = n => n === 1 ? '🥇' : n === 2 ? '🥈' : '🥉';
   const podium = (list, title, prize) => `<div class="card" style="flex:1;min-width:150px;border:2px solid var(--marigold)"><b>🏆 ${title}</b>${num(prize) ? `<div class="muted" style="font-size:13px">Prize ${money(prize)}</div>` : ''}
@@ -1468,7 +1505,7 @@ function viewRiders(){
     </div>
     ${pending.length ? `<h3>New requests (${pending.length})</h3>${pRows}` : ''}
     <div class="chips">${chips}</div>
-    ${shown.map(card).join('') || '<div class="empty">No riders here yet. Tap “Create Rider ID” to add a rider.</div>'}
+    ${riderList}
     ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}`;
 }
 
@@ -2056,16 +2093,25 @@ async function loadCustomers(){ state.customers = need(await sb.rpc('admin_custo
 function viewCustomers(){
   const q = state.customerQ.trim().toLowerCase();
   const list = state.customers.filter(c => !q || (c.full_name || '').toLowerCase().includes(q) || (c.phone || '').includes(q));
-  const rows = list.slice(0, 300).map(c => `<button class="row" onclick="A.openCustomer('${c.id}')"><div class="row-main">
+  const card = c => `<button class="row" onclick="A.openCustomer('${c.id}')"><div class="row-main">
       <div class="row-title">${esc(c.full_name || 'No name')}${c.is_blocked ? '<span class="pill r">Blocked</span>' : ''}</div>
       <div class="row-sub">${esc(c.phone || 'No phone')} · ${c.orders} orders${c.last_order ? ' · last ' + timeAgo(c.last_order) : ''}</div></div>
-      <div class="row-side">${money(c.spent)}<small>spent</small></div></button>`).join('');
+      <div class="row-side">${money(c.spent)}<small>spent</small></div></button>`;
+  let rows;
+  if (!q && list.length > 1){
+    const blocked = list.filter(c => c.is_blocked);
+    const active = list.filter(c => !c.is_blocked && c.orders > 0);
+    const fresh = list.filter(c => !c.is_blocked && !c.orders);
+    rows = `${active.length ? `<div class="staffgroup"><div class="staffgroup-h">🛒 Ordered before <span class="catcount">${active.length}</span></div><div class="list">${active.slice(0, 300).map(card).join('')}</div></div>` : ''}${fresh.length ? `<div class="staffgroup"><div class="staffgroup-h">👋 New (no orders) <span class="catcount">${fresh.length}</span></div><div class="list">${fresh.slice(0, 300).map(card).join('')}</div></div>` : ''}${blocked.length ? `<div class="staffgroup"><div class="staffgroup-h">⛔ Blocked <span class="catcount">${blocked.length}</span></div><div class="list">${blocked.slice(0, 300).map(card).join('')}</div></div>` : ''}`;
+  } else {
+    rows = `<div class="list" id="custList">${list.slice(0, 300).map(card).join('') || '<div class="empty">No customers yet.</div>'}</div>`;
+  }
   const dr = (state.delReq || []).map(x => `<div class="card" style="border-color:var(--danger)"><div class="row-title">${esc(x.full_name || 'No name')} <span class="pill r">${esc(x.role)}</span></div>
       <div class="row-sub">${esc(x.phone || '')} · asked ${when(x.requested_at)}${x.note ? ' · “' + esc(x.note) + '”' : ''}</div>
       <div class="bar" style="margin-top:8px"><button class="btn warn small" onclick="A.deleteAccount('${x.id}', ${esc(JSON.stringify(x.full_name || ''))})">Delete account</button></div></div>`).join('');
   return `${backLink()}${dr ? `<h2>🗑️ Account deletion requests (${state.delReq.length})</h2><div class="muted" style="font-size:14px;margin-bottom:6px">Please finish within 7 days (Play Store rule).</div>${dr}` : ''}<h2>Customers (${state.customers.length})</h2>
     <input type="search" placeholder="Search name or phone" value="${esc(state.customerQ)}" oninput="A.customerSearch(this.value)" style="margin-bottom:10px">
-    <div class="list" id="custList">${rows || '<div class="empty">No customers yet.</div>'}</div>`;
+    ${rows}`;
 }
 
 // ---- Promo codes ----
@@ -2164,10 +2210,24 @@ function viewReports(){
 const PERM_LABEL = { orders:'Orders, problems and customers', chat:'Messages and support chat', shops:'Shops and products', riders:'Riders, fines and targets', money:'Payments, cash and reports', settings:'Settings, promo codes, banners, zones' };
 async function loadStaff(){ state.staff = need(await sb.rpc('admin_staff_list')) || []; }
 function viewStaff(){
-  const rows = state.staff.map(x => `<div class="card"><div class="row-title">${esc(x.full_name || x.email)} ${x.is_owner ? `<span class="pill g">${x.region_id ? 'Region partner' : 'Owner'}</span>` : '<span class="pill b">Staff</span>'}${!state.myRegion ? ` <span class="pill">${x.region_id ? '📍 ' + esc(x.region_name || '') : 'HQ'}</span>` : ''}</div>
+  const card = x => `<div class="card"><div class="row-title">${esc(x.full_name || x.email)} ${x.is_owner ? `<span class="pill g">${x.region_id ? 'Region partner' : 'Owner'}</span>` : '<span class="pill b">Staff</span>'}</div>
     <div class="row-sub">${esc(x.email || '')}${x.phone ? ' · ' + esc(x.phone) : ''}</div>
     ${x.is_owner ? `<div class="muted" style="font-size:14px">Full access${x.region_id ? ' to ' + esc(x.region_name || 'the region') : ''}</div>${x.region_id && can('hq') ? `<button class="btn warn small" style="margin-top:8px" onclick="A.removeStaff('${x.id}')">Remove partner</button>` : ''}` : `<div class="muted" style="font-size:14px">${(x.perms || []).map(p => esc(PERM_LABEL[p] || p)).join(' · ')}</div>
-    <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.staffForm(${esc(JSON.stringify(x.email))}, ${esc(JSON.stringify(x.perms || []))})">Change</button><button class="btn warn small" onclick="A.removeStaff('${x.id}')">Remove</button></div>`}</div>`).join('');
+    <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.staffForm(${esc(JSON.stringify(x.email))}, ${esc(JSON.stringify(x.perms || []))})">Change</button><button class="btn warn small" onclick="A.removeStaff('${x.id}')">Remove</button></div>`}</div>`;
+  // Group: HQ first, then per region
+  const hq = state.staff.filter(x => !x.region_id);
+  const regions = {};
+  state.staff.filter(x => x.region_id).forEach(x => {
+    const rid = x.region_id;
+    if (!regions[rid]) regions[rid] = { name:x.region_name || 'Region', items:[] };
+    regions[rid].items.push(x);
+  });
+  let rows = '';
+  if (hq.length) rows += `<div class="staffgroup"><div class="staffgroup-h">🏢 Headquarters <span class="catcount">${hq.length}</span></div>${hq.map(card).join('')}</div>`;
+  Object.values(regions).forEach(g => {
+    rows += `<div class="staffgroup"><div class="staffgroup-h">📍 ${esc(g.name)} <span class="catcount">${g.items.length}</span></div>${g.items.map(card).join('')}</div>`;
+  });
+  if (!rows) rows = '<div class="empty">No staff yet.</div>';
   return `${backLink()}<h2>👥 Staff</h2>
     <div class="muted" style="margin:-6px 0 10px;font-size:14px">Staff sign in to this Admin panel with their own email. They only see and change what you allow${state.myRegion ? ', and only in ' + esc(regionName(state.myRegion)) : ''}.${state.myRegion ? '' : ' Only you (owner) can add staff, publish updates and delete accounts. Region partners are added in More → Regions.'}</div>
     <div class="bar"><button class="btn" onclick="A.staffForm()">Add staff</button></div>${rows}`;
@@ -2946,6 +3006,18 @@ const A = {
 
   // ---- Products ----
   async pickMenuRestaurant(id){ state.menuRestaurant = id; await run(loadProducts); renderTab(); },
+  async editShopName(){
+    const r = state.restaurants.find(x => x.id === state.menuRestaurant);
+    if (!r) return;
+    const name = await uiPrompt('Shop name', r.name || '');
+    if (name === null || !name.trim() || name.trim() === r.name) return;
+    await run(async () => {
+      need(await sb.from('restaurants').update({ name:name.trim().slice(0, 80) }).eq('id', r.id));
+      r.name = name.trim().slice(0, 80);
+      const rs = state.restaurants.find(x => x.id === r.id); if (rs) rs.name = r.name;
+      renderTab(); toast('Shop name updated');
+    });
+  },
   productFilter(f){ state.productFilter = f; renderTab(); },
   productSearch(v){ state.productQ = v; renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
   editCategory(id){
