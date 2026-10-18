@@ -327,6 +327,14 @@ html[dir=rtl] .sec .chev{transform:scaleX(-1)} html[dir=rtl] .sec.open .chev{tra
 .paidtag{margin:8px 0 0;background:rgba(232,114,42,.1);color:var(--brand);border-radius:10px;padding:8px 10px;font-weight:700;font-size:14px}
 
 /* bulk products + photo mode */
+.bkmap{padding:6px 0}
+.bkmap-title{font-size:17px;font-weight:800;margin-bottom:6px}
+.bkmap-field{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bkmap-field label{flex:0 0 140px;font-weight:700;font-size:14px}
+.bkmap-field select{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);font-size:14px;font-family:inherit;background:var(--field)}
+.bkmap-sample{margin:10px 0;padding:8px;background:var(--field);border-radius:10px;font-size:12px}
+.bkmap-row{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid var(--line)}
+.bkmap-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#fff;padding:2px 6px;border-radius:6px}
 .bk small{display:block;color:var(--muted);font-size:13px;line-height:1.45;margin-top:2px}
 .bkst{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
 .bkst>div{flex:1;min-width:0}
@@ -665,7 +673,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.16';
+const APP_VERSION = '6.17';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -785,7 +793,7 @@ const I18N = {
     sec_switch:'Whole section on or off', sec_all_on:'All in stock', sec_all_off:'Section is off', sec_some_on:'{a} of {b} in stock', sec_empty:'No products', sec_off_q:'Turn off the whole section “{s}”? Customers will not see its {n} products until you turn it on.', sec_on_done:'Section is on', sec_off_done:'Section is off',
     add_product:'Add product', add_section:'Add section', edit_section:'Edit section', section:'Section', section_name:'Section name',
     product_name:'Product name', description:'Description', price:'Selling price (Rs)', compare:'Price before discount (optional)',
-    bulk_btn:'Excel sheet', busy_b:'⏸ Busy', busy_t:'Too many orders? Stop new orders for a while', busy_on:'⏸ Busy — no new orders till {t}', busy_end:'Take orders again', mins:'{n} min', busy_set:'New orders stopped till {t}',
+    bulk_btn:'Excel sheet', autoimg_btn:'🖼️ Find images', busy_b:'⏸ Busy', busy_t:'Too many orders? Stop new orders for a while', busy_on:'⏸ Busy — no new orders till {t}', busy_end:'Take orders again', mins:'{n} min', busy_set:'New orders stopped till {t}',
     pickup_tag:'🛍️ PICKUP — customer will collect', collected_b:'✅ Customer collected — enter code', code_ask:'Ask the customer for the 4-digit code from their app', wait_collect:'Waiting for the customer to collect',
     sub_lbl:'If out of stock', sub_similar:'give something similar', sub_call:'call the customer', sub_remove:'remove it', rx_see:'💊 See prescription', print_b:'🖨️ Print',
     offer_t:'Your shop offer', offer_s:'Give a discount on your shop. You pay it (it is taken from your earning). Customers see it on your shop.', offer_on:'Offer is on', offer_pct:'Discount %', offer_min:'Minimum order (Rs)', offer_max:'Max discount (Rs, 0 = no limit)', save_offer:'Save offer',
@@ -858,7 +866,7 @@ const I18N = {
     sec_switch:'پورا سیکشن آن یا آف', sec_all_on:'سب دستیاب', sec_all_off:'سیکشن بند ہے', sec_some_on:'{b} میں سے {a} دستیاب', sec_empty:'کوئی پروڈکٹ نہیں', sec_off_q:'پورا سیکشن “{s}” بند کریں؟ جب تک آپ دوبارہ نہ کھولیں، گاہک اس کی {n} پروڈکٹس نہیں دیکھیں گے۔', sec_on_done:'سیکشن کھل گیا', sec_off_done:'سیکشن بند ہو گیا',
     add_product:'پروڈکٹ شامل کریں', add_section:'سیکشن شامل کریں', edit_section:'سیکشن تبدیل کریں', section:'سیکشن', section_name:'سیکشن کا نام',
     product_name:'پروڈکٹ کا نام', description:'تفصیل', price:'قیمت (Rs)', compare:'رعایت سے پہلے کی قیمت (اختیاری)',
-    bulk_btn:'Excel شیٹ', busy_b:'⏸ مصروف', busy_t:'بہت آرڈر ہیں؟ کچھ دیر نئے آرڈر روک دیں', busy_on:'⏸ مصروف — {t} تک نئے آرڈر نہیں', busy_end:'دوبارہ آرڈر لیں', mins:'{n} منٹ', busy_set:'{t} تک نئے آرڈر بند',
+    bulk_btn:'Excel شیٹ', autoimg_btn:'🖼️ تصویریں ڈھونڈو', busy_b:'⏸ مصروف', busy_t:'بہت آرڈر ہیں؟ کچھ دیر نئے آرڈر روک دیں', busy_on:'⏸ مصروف — {t} تک نئے آرڈر نہیں', busy_end:'دوبارہ آرڈر لیں', mins:'{n} منٹ', busy_set:'{t} تک نئے آرڈر بند',
     pickup_tag:'🛍️ خود لے جائے گا — گاہک دکان سے لے گا', collected_b:'✅ گاہک نے لے لیا — کوڈ لکھیں', code_ask:'گاہک سے اس کی ایپ والا 4 ہندسوں کا کوڈ پوچھیں', wait_collect:'گاہک کے آنے کا انتظار',
     sub_lbl:'چیز ختم ہو تو', sub_similar:'ملتی جلتی دے دیں', sub_call:'گاہک کو کال کریں', sub_remove:'ہٹا دیں', rx_see:'💊 نسخہ دیکھیں', print_b:'🖨️ پرنٹ',
     offer_t:'آپ کی دکان کی آفر', offer_s:'اپنی دکان پر رعایت دیں۔ یہ آپ دیں گے (آپ کی کمائی سے کٹے گی)۔ گاہک کو دکان پر نظر آئے گی۔', offer_on:'آفر چالو ہے', offer_pct:'رعایت %', offer_min:'کم از کم آرڈر (روپے)', offer_max:'زیادہ سے زیادہ رعایت (0 = کوئی حد نہیں)', save_offer:'آفر محفوظ کریں',
@@ -1368,6 +1376,7 @@ function viewMenu(){
     <div class="chips">${chips}</div>
     <div class="two"><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${isServices() ? t('add_service') : t('add_product')}</button></div>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="Bulk.open()">📊 ${t('bulk_btn')}</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 ${t('photo_mode')}</button></div>
+    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="AutoImg.open()">🖼️ ${t('autoimg_btn')}</button></div>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.scanFind()">${t('scan_btn')}</button>${state.staffMode ? '' : `<button class="btn ghost" onclick="A.bulkPrice()">${t('bp_btn')}</button>`}</div>
     ${pending ? `<div class="note" style="margin-top:12px">${t('pending_note')}</div>` : ''}
     <div id="menuBody">${body}</div>`;
@@ -2732,9 +2741,17 @@ const Bulk = (() => {
 
   // ---------- columns ----------
   const HEAD = ['ID', 'Name', 'Price', 'Old price', 'Section', 'Stock', 'Weight', 'Description', 'Keywords', 'Barcode', 'Photo'];
-  const ALIAS = { id:['id','productid'], name:['name','product','productname','item','itemname','naam'], price:['price','rate','saleprice','sellingprice','qeemat','priceRs'.toLowerCase()],
-    old:['oldprice','mrp','compareprice','pricebeforediscount','originalprice','retailprice','cutprice'], section:['section','category','group','department'], stock:['stock','qty','quantity','stockqty'],
-    weight:['weight','weightkg','wt'], desc:['description','detail','details','desc'], kw:['keywords','keyword','tags','tag','searchwords','search','otherwords'], bc:['barcode','ean','upc','barcodeno','sku'], photo:['photo','image','picture','pic','photofile','imagefile','img'] };
+  const ALIAS = { id:['id','productid','itemid','itemcode','productcode','code'],
+    name:['name','product','productname','item','itemname','naam','description1','itemdescription','particulars','particular'],
+    price:['price','rate','salerate','saleprice','sellingprice','qeemat','pricers','retail','retailprice','amount','netprice','sprice'],
+    old:['oldprice','mrp','compareprice','pricebeforediscount','originalprice','cutprice','wasprice','listprice'],
+    section:['section','category','group','department','cat','class','subcategory'],
+    stock:['stock','qty','quantity','stockqty','onhand','balance','available','instock'],
+    weight:['weight','weightkg','wt','netweight','size','packsize'],
+    desc:['description','detail','details','desc','longdescription','specification'],
+    kw:['keywords','keyword','tags','tag','searchwords','search','otherwords'],
+    bc:['barcode','ean','upc','barcodeno','sku','barcodes','ean13','gtin'],
+    photo:['photo','image','picture','pic','photofile','imagefile','img','imageurl','photourl'] };
   const key = h => String(h ?? '').toLowerCase().replace(/[^a-z]/g, '');
   function headerMap(row){ const m = {}; row.forEach((h, i) => { const k = key(h); for (const f in ALIAS) if (m[f] === undefined && ALIAS[f].includes(k)) m[f] = i; }); return m.name !== undefined && m.price !== undefined ? m : null; }
   const numv = v => { const s = String(v ?? '').replace(/rs\.?|pkr|,|\s/gi, ''); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : NaN; };
@@ -2790,10 +2807,90 @@ const Bulk = (() => {
     S.files = [...(inp.files || [])]; $('bkPicsL').textContent = '🖼️ ' + S.files.length + ' ✓'; inp.value = '';
     if (S.raw) await build();
   }
+  // ---------- smart column mapper (when auto-detect fails) ----------
+  function showColumnMapper(pv, rows){
+    // Find the most likely header row (row with most text cells)
+    let hi = 0, best = -1;
+    for (let i = 0; i < Math.min(6, rows.length); i++){
+      const r = rows[i] || []; const txt = r.filter(x => String(x ?? '').trim() && isNaN(Number(String(x).replace(/[,Rs\s]/gi,'')))).length;
+      if (txt > best){ best = txt; hi = i; }
+    }
+    const headers = (rows[hi] || []).map((h, i) => ({ i, label: String(h ?? '').trim() || ('Column ' + (i + 1)) }));
+    const sample = rows.slice(hi + 1, hi + 4);
+    S.mapHi = hi;
+    const fields = [
+      { k:'name', label:'Product Name', req:1 },
+      { k:'price', label:'Price', req:1 },
+      { k:'bc', label:'Barcode' },
+      { k:'section', label:'Section/Category' },
+      { k:'stock', label:'Stock' },
+      { k:'photo', label:'Photo' },
+    ];
+    // Try to pre-select using aliases
+    const pre = {};
+    headers.forEach(h => {
+      const kk = key(h.label);
+      for (const f in ALIAS) if (pre[f] === undefined && ALIAS[f].includes(kk)) pre[f] = h.i;
+    });
+    const opts = sel => `<option value="">—</option>` + headers.map(h => `<option value="${h.i}"${sel === h.i ? ' selected' : ''}>${esc(h.label)}</option>`).join('');
+    const sampleHtml = sample.length ? `<div class="bkmap-sample"><b>Preview:</b>${sample.map(r => `<div class="bkmap-row">${r.slice(0, 6).map(c => `<span>${esc(String(c ?? '').slice(0, 20))}</span>`).join('')}</div>`).join('')}</div>` : '';
+    pv.innerHTML = `<div class="bkmap">
+      <div class="bkmap-title">🗺️ Columns khud map karo</div>
+      <div class="muted" style="font-size:13px;margin-bottom:10px">Auto-detect nahi ho saka. Neeche har field ke liye sahi column chuno:</div>
+      ${fields.map(f => `<div class="bkmap-field"><label>${f.label}${f.req ? ' <b style="color:red">*</b>' : ''}</label><select id="bkmap_${f.k}">${opts(pre[f])}</select></div>`).join('')}
+      ${sampleHtml}
+      <button type="button" class="btn bkbtn" onclick="Bulk.applyMapping()">✓ Apply & Preview</button>
+    </div>`;
+  }
+  function applyMapping(){
+    const m = {};
+    ['name','price','bc','section','stock','photo'].forEach(k => {
+      const el = $('bkmap_' + k); if (el && el.value !== '') m[k] = Number(el.value);
+    });
+    if (m.name === undefined || m.price === undefined){ C.toast('Name aur Price lazmi hain!', true); return; }
+    S.manualMap = m; buildWithMap();
+  }
+  async function buildWithMap(){
+    const pv = $('bkPrev'); const rows = S.raw || [];
+    const hi = S.mapHi || 0, m = S.manualMap;
+    const sh = await loadShop(); S.shop = sh;
+    const byId = new Map(sh.items.map(i => [i.id, i])), byName = new Map(sh.items.map(i => [norm(i.name), i]));
+    const catByName = new Map(sh.cats.map(c => [norm(c.name), c])), catName = id => (sh.cats.find(c => c.id === id) || {}).name || '';
+    const files = new Map(); S.files.forEach(f => { files.set(norm(f.name), f); files.set(base(f.name), f); });
+    const seen = new Set(); const out = [];
+    for (let r = hi + 1; r < rows.length && out.length < 5000; r++){
+      const row = rows[r] || []; const g = k => m[k] === undefined ? undefined : String(row[m[k]] ?? '').trim();
+      if (!row.some(x => String(x ?? '').trim())) continue;
+      const it = { line:r + 1, name:g('name') || '', errs:[], warns:[] };
+      const price = numv(g('price'));
+      if (!it.name) it.errs.push(t('e_name'));
+      if (price === null || isNaN(price) || price < 0) it.errs.push(t('e_price'));
+      const nk = norm(it.name); if (it.name && seen.has(nk)) it.errs.push(t('e_dup')); seen.add(nk);
+      const ex = byName.get(nk) || null;
+      it.ex = ex; it.price = price;
+      it.stock = m.stock === undefined ? undefined : (() => { const st = numv(g('stock')); return st === null || isNaN(st) ? null : Math.max(0, Math.round(st)); })();
+      it.bc = m.bc === undefined ? undefined : (String(g('bc') || '').replace(/\.0+$/, '').trim().slice(0, 64) || null);
+      it.section = g('section') || (ex ? catName(ex.category_id) : '') || '';
+      if (!it.section){ it.section = t('other'); it.warns.push(t('w_sec')); }
+      it.cat = catByName.get(norm(it.section)) || null;
+      const ph = g('photo') || '';
+      if (/^https?:\/\//i.test(ph)) it.photoUrl = ph;
+      else { const f = (ph && (files.get(norm(ph)) || files.get(base(ph)))) || files.get(nk); if (f) it.file = f; else if (ph && S.files.length) it.warns.push(t('w_photo', { f:ph })); }
+      if (it.errs.length) it.status = 'bad';
+      else if (!ex) it.status = 'new';
+      else {
+        const ch = Number(ex.price) !== price || (it.stock !== undefined && (ex.stock_qty == null ? null : Number(ex.stock_qty)) !== it.stock)
+          || (it.bc !== undefined && (ex.barcode || null) !== it.bc) || norm(catName(ex.category_id)) !== norm(it.section) || ex.name !== it.name || !!it.file || (it.photoUrl && it.photoUrl !== ex.photo_url);
+        it.status = ch ? 'upd' : 'same';
+      }
+      out.push(it);
+    }
+    S.rows = out; drawPrev();
+  }
   async function build(){
     const pv = $('bkPrev'); const rows = S.raw || [];
     let hi = -1, m = null; for (let i = 0; i < Math.min(6, rows.length); i++){ m = headerMap(rows[i] || []); if (m){ hi = i; break; } }
-    if (!m) { pv.innerHTML = `<div class="bkerr">${t('nohead')}</div>`; return; }
+    if (!m) { showColumnMapper(pv, rows); return; }
     const sh = await loadShop(); S.shop = sh;
     const byId = new Map(sh.items.map(i => [i.id, i])), byName = new Map(sh.items.map(i => [norm(i.name), i]));
     const catByName = new Map(sh.cats.map(c => [norm(c.name), c])), catName = id => (sh.cats.find(c => c.id === id) || {}).name || '';
@@ -2933,9 +3030,76 @@ const Bulk = (() => {
   function pmNext(){ if (!PM) return; PM.i++; drawPM(); }
   async function close(){ const had = PM && PM.done; C.closeSheet(); PM = null; S = null; if (had) try { await C.onDone(); } catch (e) {} }
   function init(cfg){ C = cfg; }
-  return { init, open, template, pickSheet, pickPhotos, save, photoMode, pmPick, pmNext, close, _readXlsx:readXlsx, _readCsv:readCsv, _xlsxBlob:xlsxBlob };
+  return { init, open, template, pickSheet, pickPhotos, save, photoMode, pmPick, pmNext, close, applyMapping, _readXlsx:readXlsx, _readCsv:readCsv, _xlsxBlob:xlsxBlob };
 })();
 Bulk.init({ get sb(){ return sb; }, shopId:() => state.restaurant && state.restaurant.id, isAdmin:false, lang:() => state.lang, uploadImage:(f, d) => uploadImage(f, d), openSheet:(a, b) => openSheet(a, b), closeSheet:() => closeSheet(), toast:(m, e) => toast(m, e), onDone:async () => { await loadMenu(); renderTab(); } });
+// ================= AUTO IMAGE (barcode -> OpenFoodFacts -> product photo) =================
+const AutoImg = (() => {
+  let C = null, running = false, paused = false, done = 0, found = 0, total = 0, items = [];
+  const t = k => ({ found:'Tasveer mil gayi', notfound:'Nahi mili', done:'Ho gaya!', foundN:'tasveeren lag gayin', pause:'Roko', resume:'Jari rakho', close:'Band karo', start:'Tasveeren dhundo', none:'Koi product nahi mila jisme barcode ho aur tasveer na ho.' })[k] || k;
+  async function lookup(bc){
+    try {
+      const r = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(bc) + '.json?fields=product_name,image_url', { signal:AbortSignal.timeout(12000) });
+      const j = await r.json();
+      if (j && j.status === 1 && j.product && j.product.image_url) return j.product.image_url;
+    } catch (e) {}
+    return null;
+  }
+  async function fetchBlob(url){
+    const r = await fetch(url, { signal:AbortSignal.timeout(20000) });
+    if (!r.ok) throw new Error('img');
+    return await r.blob();
+  }
+  function draw(){
+    const el = document.getElementById('aimgBody'); if (!el) return;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    el.innerHTML = `<div style="text-align:center;padding:8px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:6px">🖼️ ${done} / ${total} &nbsp;·&nbsp; ✅ ${found}</div>
+      <div style="height:14px;background:var(--field);border-radius:8px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--brand);border-radius:8px;transition:width .3s"></div></div>
+      <div style="font-size:13px;color:var(--muted);margin:8px 0">${running ? (paused ? '⏸ Ruka hua' : '⏳ Chal raha hai...') : t('done') + ' ' + found + ' ' + t('foundN')}</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+        ${running ? `<button class="btn ghost" onclick="AutoImg.toggle()">${paused ? t('resume') : t('pause')}</button>` : ''}
+        <button class="btn ghost" onclick="AutoImg.close()">${t('close')}</button>
+      </div></div>`;
+  }
+  async function open(){
+    if (!state.restaurant || !state.restaurant.id){ toast(t('none'), true); return; }
+    const all = state.items || [];
+    items = all.filter(i => i.barcode && !i.photo_url);
+    if (!items.length){ toast(t('none'), true); return; }
+    total = items.length; done = 0; found = 0; running = true; paused = false;
+    openSheet('🖼️ Auto Image', `<div id="aimgBody"></div>`);
+    draw();
+    // process 4 at a time
+    const workers = [];
+    const next = async () => {
+      while (done < items.length){
+        if (!running) return;
+        while (paused){ await new Promise(r => setTimeout(r, 500)); if (!running) return; }
+        const it = items[done++];
+        try {
+          const url = await lookup(it.barcode);
+          if (url){
+            const blob = await fetchBlob(url);
+            const upUrl = await uploadImage(blob, 'items');
+            const { error } = await sb.from('menu_items').update({ photo_url:upUrl }).eq('id', it.id);
+            if (!error){ it.photo_url = upUrl; found++; }
+          }
+        } catch (e) {}
+        draw();
+      }
+    };
+    for (let w = 0; w < 4; w++) workers.push(next());
+    await Promise.all(workers);
+    running = false; draw();
+    await loadMenu(); renderTab();
+  }
+  function toggle(){ paused = !paused; draw(); }
+  function close(){ running = false; C.closeSheet(); }
+  function init(cfg){ C = cfg; }
+  return { init, open, toggle, close };
+})();
+AutoImg.init({ closeSheet:() => closeSheet() });
 // ================= PRODUCT OPTIONS EDITOR (Shop app and Admin) =================
 // Sizes, colours, weights and extras. The customer picks them before adding the product to the cart.
 const OE = (() => {
