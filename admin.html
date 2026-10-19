@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.26';
+const APP_VERSION = '7.28';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1913,8 +1913,8 @@ function viewMore(){
     ${grp('🗺️', 'Places & delivery', places)}
     ${grp('👥', 'People', people)}
     ${grp('⚙️', 'System', system)}
-    <div class="list" style="margin-top:14px"><a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
-    <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">Sign out</div></div></button></div>
+    ${grp('👤', 'Account', `<a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
+    <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">🚪 Sign out</div></div></button>`)}
   <p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
 
@@ -2520,6 +2520,16 @@ function setSafetyCard(s){
     <div class="muted" style="font-size:14px">Free AI that removes the photo background when shops upload product photos. Turn OFF if shopkeepers complain it's slow.</div>
     <label class="check"><input id="bg_on" type="checkbox" ${s.ai_bg_remove !== 'false' ? 'checked' : ''}> Enable AI background removal for product photos</label>
     <div class="actions"><button class="btn ghost block" onclick="A.saveBgRemove()">Save</button></div>
+  </div>
+  <div class="card">
+    <b>🕌 Prayer breaks for riders</b>
+    <div class="muted" style="font-size:14px">Riders get a prayer break button at namaz times. Prayer break time counts in duty hours (company's account), separate from the normal break.</div>
+    <label class="check"><input id="pb_on" type="checkbox" ${s.prayer_break_enabled === 'true' ? 'checked' : ''}> Enable prayer breaks</label>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">
+      ${['fajr','zuhr','asr','maghrib','isha'].map(p => `<div><label class="f" style="font-size:12px;margin:0 0 2px">${p[0].toUpperCase() + p.slice(1)} (min)</label><input id="pb_${p}" type="number" min="5" max="60" value="${(s.prayer_break_times && s.prayer_break_times[p]) || 15}" style="padding:8px"></div>`).join('')}
+      <div><label class="f" style="font-size:12px;margin:0 0 2px">Jummah (min)</label><input id="pb_jummah" type="number" min="10" max="90" value="${(s.prayer_break_times && s.prayer_break_times.jummah) || 30}" style="padding:8px"></div>
+    </div>
+    <div class="actions"><button class="btn ghost block" onclick="A.savePrayerBreak()">Save</button></div>
   </div>`;
 }
 function setSelfieCard(s){
@@ -2806,6 +2816,17 @@ const A = {
   },
   async saveBgRemove(){
     await run(async () => { need(await putSettings([{ key:'ai_bg_remove', value:String($('bg_on').checked) }])); await loadSettings(); renderTab(); toast('Saved'); });
+  },
+  async savePrayerBreak(){
+    const times = {};
+    ['fajr','zuhr','asr','maghrib','isha','jummah'].forEach(p => { times[p] = Math.max(5, Math.min(90, num($('pb_' + p).value) || (p === 'jummah' ? 30 : 15))); });
+    await run(async () => {
+      need(await putSettings([
+        { key:'prayer_break_enabled', value:String($('pb_on').checked) },
+        { key:'prayer_break_times', value:times }
+      ]));
+      await loadSettings(); renderTab(); toast('Saved');
+    });
   },
   async setStatus(id, status){
     let reason = null;
@@ -3153,7 +3174,7 @@ const A = {
     openSheet(r.full_name || 'Rider', '<div class="empty">Loading…</div>');
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
-      const [rd, fines, shifts, hand, pays, hs, cr, ch] = await Promise.all([
+      const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr] = await Promise.all([
         sb.from('riders').select('face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
@@ -3161,11 +3182,19 @@ const A = {
         sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', id).order('created_at', { ascending:false }).limit(12),
         sb.rpc('rider_holder_stats', { p_rider:id }),
         sb.from('rider_credentials').select('login_id,password,updated_at').eq('rider_id', id).maybeSingle(),
-        sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(60)
+        sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(60),
+        sb.from('rider_prayer_breaks').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(100)
       ]);
       state.riderChargeList = (ch && ch.data) || [];
       state.holders = hs.data || []; state.riderCred = cr.data || null;
       const rider = need(rd); const fl = need(fines); const sh = need(shifts); const hd = need(hand); const py = need(pays);
+      const prayerBreaks = (pbr && pbr.data) || [];
+      const prayerRows = prayerBreaks.map(p => {
+        const label = { fajr:'Fajr', zuhr:'Zuhr', asr:'Asr', maghrib:'Maghrib', isha:'Isha' }[p.prayer_name] || p.prayer_name;
+        const dur = p.duration_min || (p.ended_at ? Math.round((new Date(p.ended_at) - new Date(p.started_at)) / 60000) : 0);
+        return `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">🕌 ${label}</div><div class="row-sub">${when(p.started_at)}${p.ended_at ? ' – ' + when(p.ended_at) : ' · ongoing'}</div></div><div class="row-side">${dur} min</div></div>`;
+      }).join('');
+      const prayerTotal = prayerBreaks.reduce((n, p) => n + (p.duration_min || 0), 0);
       const urls = await signedUrls([rider.face_photo_path, ...sh.map(s => s.selfie_path)]);
       const net = riderNet(r); const due = net - num(r.paid);
       const over = num(r.cash_limit) > 0 && num(r.cash_in_hand) >= num(r.cash_limit);
@@ -3199,6 +3228,8 @@ const A = {
         ${riderIdBlock(id, rider, r)}
         ${pauseBlock(id, rider)}
         <div class="kv" style="margin-top:8px"><span class="muted">🕘 Duty time</span><span>${esc(timingText(r))}</span></div>
+        ${prayerBreaks.length ? `<div class="kv"><span class="muted">🕌 Prayer breaks (${monthLabel(state.riderMonth)})</span><span>${prayerBreaks.length} breaks · ${prayerTotal} min</span></div>
+        <div class="list" style="margin-top:6px">${prayerRows}</div>` : ''}
         <div class="bar" style="margin:8px 0 0"><button class="btn ghost small" onclick="A.planForm(['${id}'])">Change duty time</button><button class="btn ghost small" onclick="A.riderAttendance('${id}')">📋 Attendance</button></div>
         <div class="actions" style="margin-top:22px">
           ${r.face_registered ? `<button class="btn ghost block" onclick="A.resetFace('${id}')">Reset face (rider registers again)</button>` : ''}
