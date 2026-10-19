@@ -86,6 +86,9 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .staffgroup{margin-bottom:18px}
 .staffgroup-h{font-size:15px;font-weight:800;margin:14px 0 8px;padding:8px 12px;background:var(--field);border-radius:12px;display:flex;align-items:center;gap:8px}
 .catcount{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;padding:0 6px;margin-left:6px;vertical-align:middle}
+.grp{margin:18px 0}
+.grp-h{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 4px 8px}
+.row.danger .row-title{color:#C0392B}
 .card.live{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .oid{font-weight:800;font-size:18px}
@@ -648,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.21';
+const APP_VERSION = '5.23';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1117,9 +1120,34 @@ async function loadShift(){
     state.breakDone = br.filter(b => b.ended_at).reduce((n, b) => n + (new Date(b.ended_at) - new Date(b.started_at)) / 60000, 0);
   } catch (e) { state.breakOpen = null; state.breakDone = 0; }
   try { const lt = await sb.from('rider_shifts').select('late_minutes').eq('rider_id', state.rider.id).gte('started_at', since.toISOString()).not('late_minutes', 'is', null).limit(1); state.lateToday = lt.data && lt.data[0] ? lt.data[0].late_minutes : 0; } catch (e) { state.lateToday = 0; }
+  // Prayer break state
+  try {
+    const pb = await sb.from('rider_prayer_breaks').select('*').eq('rider_id', state.rider.id).is('ended_at', null).order('started_at', { ascending:false }).limit(1);
+    const open = pb.data && pb.data[0];
+    if (open){
+      const mins = open.duration_min || 15;
+      const endsAt = new Date(open.started_at).getTime() + mins * 60000;
+      if (endsAt > Date.now()){
+        state.prayerOpen = open; state.prayerEndsAt = endsAt;
+        setTimeout(() => { if (state.prayerOpen && state.prayerOpen.id === open.id) A.endPrayerBreak(); }, endsAt - Date.now() + 5000);
+      } else {
+        await sb.from('rider_prayer_breaks').update({ ended_at:new Date().toISOString() }).eq('id', open.id);
+        state.prayerOpen = null;
+      }
+    } else state.prayerOpen = null;
+  } catch (e) { state.prayerOpen = null; }
   state.rider.on_break = !!state.breakOpen;
   state.todayAt = Date.now();
   state.todayMinutes = rows.reduce((n, r) => n + ((r.ended_at ? new Date(r.ended_at) : new Date()) - Math.max(new Date(r.started_at), since)) / 60000, 0);
+  // Fetch prayer times (Kallar Kahar default if no region coords)
+  try {
+    let lat = 32.7758, lng = 72.6996; // Kallar Kahar
+    if (state.rider.region_id){
+      const rg = await sb.from('regions').select('center_lat,center_lng').eq('id', state.rider.region_id).maybeSingle();
+      if (rg.data && rg.data.center_lat){ lat = rg.data.center_lat; lng = rg.data.center_lng; }
+    }
+    Prayer.fetchTimes(lat, lng);
+  } catch (e) {}
 }
 async function loadMine(){
   state.mine = need(await sb.from('orders')
@@ -1133,7 +1161,7 @@ async function loadMine(){
   }
 }
 async function loadAvailable(){
-  if (!onDuty()){ state.available = []; return; }
+  if (!onDuty() || state.prayerOpen || state.breakOpen){ state.available = []; return; }
   state.available = need(await sb.rpc('available_deliveries')) || [];
   // a 2nd order from the same (or next door) shop going the same way: show it first
   if (state.mine.some(o => o.status === 'rider_assigned')){ try { const { data } = await sb.rpc('batch_suggestions'); const m = {}; (data || []).forEach(x => { m[x.order_id] = x.reason; }); state.available.forEach(j => { j.batch = m[j.order_id] || null; }); } catch (e) {} }
@@ -1469,7 +1497,88 @@ function breakCard(){
       <div class="muted" style="font-size:14px">${left < 0 ? t('break_over') : t('break_left')}</div>
       <button class="btn" style="margin-top:10px" onclick="A.endBreak()">${t('end_break')}</button></div>`;
   }
-  return `<button class="btn ghost" style="margin-bottom:12px" onclick="A.startBreak()">☕ ${t('start_break')}${used ? ` <span class="muted" style="font-weight:600">(${hm(Math.max(0, allow - used))} ${t('left_word')})</span>` : ''}</button>`;
+  return `<button class="btn ghost" style="margin-bottom:12px" onclick="A.startBreak()">☕ ${t('start_break')}${used ? ` <span class="muted" style="font-weight:600">(${hm(Math.max(0, allow - used))} ${t('left_word')})</span>` : ''}</button>${prayerBreakBtn()}`;
+}
+// ================= PRAYER BREAK =================
+const Prayer = {
+  times:null, lastFetch:'',
+  async fetchTimes(lat, lng){
+    const today = ymd(new Date());
+    if (this.lastFetch === today && this.times) return this.times;
+    try {
+      const r = await fetch(`https://api.aladhan.com/v1/timings/${today}?latitude=${lat}&longitude=${lng}&method=2`, { signal:AbortSignal.timeout(10000) });
+      const j = await r.json();
+      if (j && j.data && j.data.timings){
+        const t = j.data.timings;
+        this.times = { fajr:t.Fajr.slice(0,5), zuhr:t.Dhuhr.slice(0,5), asr:t.Asr.slice(0,5), maghrib:t.Maghrib.slice(0,5), isha:t.Isha.slice(0,5) };
+        this.lastFetch = today;
+      }
+    } catch (e) {}
+    return this.times;
+  },
+  // Returns {name, time} of the current or next prayer within window
+  currentPrayer(){
+    if (!this.times) return null;
+    const now = new Date(); const hm = now.getHours() * 60 + now.getMinutes();
+    const order = ['fajr','zuhr','asr','maghrib','isha'];
+    // Find prayer whose time was within last 45 min (active window)
+    for (let i = order.length - 1; i >= 0; i--){
+      const p = order[i]; const [h, m] = this.times[p].split(':').map(Number);
+      const pt = h * 60 + m;
+      if (hm >= pt && hm - pt <= 45) return { name:p, time:this.times[p] };
+    }
+    return null;
+  },
+  async start(prayerName){
+    if (!onDuty() || state.breakOpen || state.prayerOpen) return;
+    // Can't start during active delivery
+    if (state.jobs && state.jobs.some(j => ['accepted','picked_up'].includes(j.status))){ toast(t('prayer_busy') || 'Complete your delivery first', true); return; }
+    const settings = state.settings || {};
+    if (settings.prayer_break_enabled !== 'true' && settings.prayer_break_enabled !== true){ toast('Prayer breaks are off', true); return; }
+    const times = settings.prayer_break_times || {};
+    const isFriday = new Date().getDay() === 5;
+    const mins = (prayerName === 'zuhr' && isFriday) ? (times.jummah || 30) : (times[prayerName] || 15);
+    try {
+      const { data, error } = await sb.from('rider_prayer_breaks').insert({
+        rider_id:state.rider.id, region_id:state.rider.region_id || null,
+        prayer_name:prayerName, duration_min:mins
+      }).select().single();
+      if (error) throw error;
+      state.prayerOpen = data;
+      state.prayerEndsAt = Date.now() + mins * 60000;
+      state.available = []; closeJobPopup(); renderTab();
+      toast('🕌 ' + (t('prayer_started') || 'Prayer break started'));
+      // Auto-end timer
+      setTimeout(() => { if (state.prayerOpen && state.prayerOpen.id === data.id) A.endPrayerBreak(); }, mins * 60000 + 5000);
+    } catch (e) { toast(e.message || 'Error', true); }
+  },
+  async end(){
+    if (!state.prayerOpen) return;
+    try {
+      await sb.from('rider_prayer_breaks').update({ ended_at:new Date().toISOString() }).eq('id', state.prayerOpen.id);
+    } catch (e) {}
+    state.prayerOpen = null; state.prayerEndsAt = 0;
+    renderTab(); toast(t('break_ended'));
+  }
+};
+function prayerBreakBtn(){
+  if (!onDuty() || state.breakOpen || state.prayerOpen) return '';
+  const settings = state.settings || {};
+  if (settings.prayer_break_enabled !== 'true' && settings.prayer_break_enabled !== true) return '';
+  const cur = Prayer.currentPrayer();
+  if (!cur) return '';
+  const label = { fajr:'Fajr', zuhr:'Zuhr', asr:'Asr', maghrib:'Maghrib', isha:'Isha' }[cur.name] || cur.name;
+  return `<button class="btn ghost" style="margin-bottom:12px;margin-left:8px" onclick="Prayer.start('${cur.name}')">🕌 ${label} break</button>`;
+}
+function prayerBreakCard(){
+  if (!state.prayerOpen) return '';
+  const left = Math.max(0, Math.round((state.prayerEndsAt - Date.now()) / 60000));
+  const label = { fajr:'Fajr', zuhr:'Zuhr', asr:'Asr', maghrib:'Maghrib', isha:'Isha' }[state.prayerOpen.prayer_name] || state.prayerOpen.prayer_name;
+  return `<div class="card" style="border:2px solid var(--brand);text-align:center">
+    <div style="font-size:30px">🕌</div><b style="font-size:20px">${label} prayer break</b>
+    <div style="font-size:30px;font-weight:800;margin:6px 0">${hm(left)}</div>
+    <div class="muted" style="font-size:14px">Counts in your duty time ✅ · No new orders</div>
+    <button class="btn" style="margin-top:10px" onclick="A.endPrayerBreak()">Back to work</button></div>`;
 }
 // ================= MY OWN GOAL (rider sets it, just for motivation) =================
 const dayKey = d => ymd(d);
@@ -1646,6 +1755,7 @@ function viewJobs(){
   const jobs = onDuty() ? (list.length ? `<h2>${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
     : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
   if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
+  if (onDuty() && state.prayerOpen) return sound + prayerBreakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
@@ -1950,15 +2060,24 @@ function viewAcct(){
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
       <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
+    <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
     ${Theme.picker(state.lang)}
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center"><b>${t('sound')}</b>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>🔔 ${t('sound')}</b>
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
-    <button class="btn ghost" style="margin-bottom:10px" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
-    <button class="btn small sosbtn" style="margin-bottom:10px;width:100%" onclick="A.sos()">${t('sos')}</button>
-    ${state.settings.support_phone ? `<a class="btn ghost" style="margin-bottom:10px" href="tel:${esc(state.settings.support_phone)}">${t('call_support')}</a>` : ''}
-    ${Legal.links(state.lang)}
-    <div class="actions"><button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
-    <button class="btn warn" onclick="A.logout()">${t('logout')}</button></div>
+    <div class="card" style="margin-top:8px"><button class="row" style="width:100%;border:none;background:none" onclick="A.toggleLang()"><div class="row-main"><div class="row-title">🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</div></div><span class="muted">›</span></button></div>
+    </div>
+    <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
+    <div class="card">
+      <button class="row" style="width:100%;border:none;background:none" onclick='Chat.open(null, "sup", state.user.id)'><div class="row-main"><div class="row-title">💬 ${t('chat_support')}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
+      ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
+      ${Legal.links(state.lang)}
+    </div></div>
+    <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
+    <div class="card">
+      <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
+      <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
+    </div></div>
     <p class="ver" style="margin-top:14px">Wanhar Mart Rider v${APP_VERSION}</p>`;
 }
 async function showMyFace(){
@@ -2160,6 +2279,7 @@ const A = {
   async endBreak(){
     await run(async () => { need(await sb.rpc('end_break')); await loadShift(); await loadJobs(); renderTab(); toast(t('break_ended')); });
   },
+  async endPrayerBreak(){ await Prayer.end(); await loadJobs(); },
   async toggleDuty(){
     unlockAudio();
     if (onDuty()){
