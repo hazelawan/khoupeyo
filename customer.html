@@ -541,6 +541,9 @@ html[dir=rtl] .banner::after{right:auto;left:-6px}
 html[dir=rtl] .statushero::after{right:auto;left:10px}
 .track li.now i{box-shadow:0 0 0 6px rgba(255,179,2,.25)}
 .menu-row{background:var(--surface);border:0!important;border-radius:16px;box-shadow:var(--sh-1);padding:15px 14px!important;margin-bottom:8px}
+.grp{margin:18px 0}
+.grp-h{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 4px 8px}
+.menu-row.danger span:first-child{color:#C0392B}
 .offer{border-radius:18px;box-shadow:var(--sh-1)}
 .refcard{border-radius:24px;box-shadow:var(--sh-2);background:var(--grad)}
 /* nav icons */
@@ -1013,7 +1016,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.28';
+const APP_VERSION = '5.29';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2763,12 +2766,17 @@ async function showAccount(){
     <button class="menu-row" onclick="A.accSection('addresses')"><span>📍 ${t('saved_addresses')}<small class="muted" style="display:block;font-size:12px">${state.addresses.length} ${t('addresses_n')}</small></span><span class="muted">›</span></button>
     <div id="accAddresses" style="display:${state.accSec === 'addresses' ? 'block' : 'none'}"><div class="box"><div id="addrList2">${addrs || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
     <button class="link" onclick="A.showAddrForm()">${t('add_new_address')}</button></div></div>
-    <div style="display:grid;gap:10px;margin-top:16px">
+    <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
       ${Theme.picker(state.lang)}
-      <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
-      <button class="btn ghost" style="margin-bottom:10px" onclick="A.faq()">${t('faq_link')}</button>
+      <button class="menu-row" style="margin-top:8px" onclick="A.toggleLang()"><span>🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</span><span class="muted">›</span></button>
+    </div>
+    <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
+      <button class="menu-row" onclick="A.faq()"><span>❓ ${t('faq_link')}</span><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
-      <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
+    </div>
+    <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
+      <button class="menu-row danger" onclick="Legal.del()"><span>🗑️ ${t('delete_account') || 'Delete my account'}</span><span class="muted">›</span></button>
+      <button class="menu-row danger" onclick="A.logout()"><span>🚪 ${t('logout')}</span></button>
     </div>
     <div class="ver" style="margin-top:14px">Wanhar Mart v${APP_VERSION}</div>`;
 }
