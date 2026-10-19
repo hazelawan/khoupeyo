@@ -86,6 +86,10 @@ input[type=text],input[type=password],input[type=email],input[type=tel],input[ty
 textarea{min-height:70px;resize:vertical}
 label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.grp{margin:18px 0}
+.grp-h{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 4px 8px}
+.row.danger .row-title{color:#C0392B}
+.row.danger .row-sub{color:#C0392B;opacity:.7}
 .card.new{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
 .card.late{border:2px solid var(--danger)}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
@@ -678,7 +682,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.18';
+const APP_VERSION = '6.19';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1527,15 +1531,22 @@ function viewShop(){
       ${state.sreqPending ? `<div class="note" style="margin:0 0 8px">⏳ ${esc(t('shop_pending').replace('{s}', state.sreqPending.shop_name))} <button type="button" class="link" onclick="A.addShop()">${t('see_req')}</button></div>` : ''}
       <button type="button" class="btn ghost small" style="width:100%" onclick="A.addShop()">${t('add_shop')}</button></div>
     <h2>${t('reviews')}</h2>${revs || `<div class="empty">${t('no_reviews')}</div>`}
+    <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
     ${Theme.picker(state.lang)}
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><b>${t('sound')}</b>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>🔔 ${t('sound')}</b>
       <label class="switch" style="margin:0"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)" aria-label="${t('sound')}"><span></span></label></div>
-    <div class="actions">
-      <button class="btn ghost" onclick='Chat.open(null, "sup", state.user.id)'>💬 ${t('chat_support')}</button>
-      ${Legal.links(state.lang)}
-      <button class="btn ghost" onclick="A.toggleLang()">${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</button>
-      <button class="btn warn" onclick="A.logout()">${t('logout')}</button>
+    <div class="card" style="margin-top:8px"><button class="row" style="width:100%;border:none;background:none" onclick="A.toggleLang()"><div class="row-main"><div class="row-title">🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</div></div><span class="muted">›</span></button></div>
     </div>
+    <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
+    <div class="card">
+      <button class="row" style="width:100%;border:none;background:none" onclick='Chat.open(null, "sup", state.user.id)'><div class="row-main"><div class="row-title">💬 ${t('chat_support')}</div></div><span class="muted">›</span></button>
+      ${Legal.links(state.lang)}
+    </div></div>
+    <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
+    <div class="card">
+      <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div><div class="row-sub">${t('delete_warn') || 'Permanent'}</div></div><span class="muted">›</span></button>
+      <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
+    </div></div>
     <p class="ver" style="margin-top:14px">Wanhar Mart Shop v${APP_VERSION}</p>`;
 }
 
