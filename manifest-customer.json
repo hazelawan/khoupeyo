@@ -1,7 +1,7 @@
 {
  "id": "./customer.html",
- "name": "Wanhar Mart",
- "short_name": "Wanhar Mart",
+ "name": "Dera",
+ "short_name": "Dera",
  "description": "Shop anything, delivered in Kallar Kahar",
  "start_url": "./customer.html",
  "scope": "./customer.html",

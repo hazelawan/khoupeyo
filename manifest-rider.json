@@ -1,7 +1,7 @@
 {
  "id": "./rider.html",
- "name": "Wanhar Mart Rider",
- "short_name": "WM Rider",
+ "name": "Dera Rider",
+ "short_name": "Dera Rider",
  "description": "Delivery partner app",
  "start_url": "./rider.html",
  "scope": "./rider.html",

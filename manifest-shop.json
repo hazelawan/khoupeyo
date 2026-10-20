@@ -1,7 +1,7 @@
 {
  "id": "./restaurant.html",
- "name": "Wanhar Mart Shop",
- "short_name": "WM Shop",
+ "name": "Dera Shop",
+ "short_name": "Dera Shop",
  "description": "Shop partner app",
  "start_url": "./restaurant.html",
  "scope": "./restaurant.html",
