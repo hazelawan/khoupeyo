@@ -532,7 +532,7 @@ main{padding-bottom:130px!important}
 const Theme = (() => {
   const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
   const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
-  const get = () => { try { return localStorage.getItem(KEY) || 'dark'; } catch (e) { return 'dark'; } };
+  const get = () => { try { return localStorage.getItem(KEY) || 'light'; } catch (e) { return 'light'; } };
   function walk(rules, mode){
     for (const r of rules){
       if (r.media && r.cssRules){
@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.25';
+const APP_VERSION = '5.26';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
