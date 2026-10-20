@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#E8722A">
-<title>Wanhar Mart Shop</title>
+<title>Dera Shop</title>
 <link rel="manifest" href="manifest-shop.json?v=3">
 <link rel="apple-touch-icon" href="icon-shop-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -171,7 +171,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .card.back{border:2px solid var(--danger)}
 :focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-/* ===== Wanhar Mart design system v2 (shared by all apps) ===== */
+/* ===== Dera design system v2 (shared by all apps) ===== */
 :root{
   --paper:#F2F5F1; --surface:#FFFFFF; --ink:#13201A; --muted:#64736A; --line:#E2E8E1; --soft:#E8F3EC; --field:#F3F6F2;
   --green:#0E7A4D; --green-dark:#0A5E3B; --green-2:#17A56B; --marigold:#FFB302; --danger:#D63B2F; --deal:#E2472F;
@@ -399,7 +399,7 @@ html[dir=rtl] .sec .chev{transform:scaleX(-1)} html[dir=rtl] .sec.open .chev{tra
 .pickcode b{display:block;font-size:14px}
 .pickcode small{opacity:.8;font-size:12px}
 .pickcode .code{font-size:28px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,.15);padding:6px 14px;border-radius:10px;font-variant-numeric:tabular-nums}
-/* ===== Wanhar Mart design system v3 ===== */
+/* ===== Dera design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
   --green:#0B7D4F; --green-dark:#086640; --green-2:#14A064; --forest:#0B3A2B; --marigold:#FFB400; --danger:#D23B2E; --blue:#2463B5; --deal:#E2472F;
@@ -552,7 +552,7 @@ main{padding-bottom:130px!important}
 </style>
 </head>
 <body>
-<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🏪</div><div class="sp-word"><span style="animation-delay:0.65s">W</span><span style="animation-delay:0.70s">a</span><span style="animation-delay:0.74s">n</span><span style="animation-delay:0.79s">h</span><span style="animation-delay:0.83s">a</span><span style="animation-delay:0.88s">r</span><span style="width:10px;animation-delay:0.92s"> </span><span style="animation-delay:0.97s">M</span><span style="animation-delay:1.01s">a</span><span style="animation-delay:1.05s">r</span><span style="animation-delay:1.10s">t</span><span class="dot" style="animation-delay:1.15s">.</span></div><div class="sp-tag">Seller Hub</div><div class="sp-load"><i></i></div></div>
+<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🏪</div><div class="sp-word"><span style="animation-delay:0.65s">D</span><span style="animation-delay:0.70s">e</span><span style="animation-delay:0.74s">r</span><span style="animation-delay:0.79s">a</span><span class="dot" style="animation-delay:0.85s">.</span></div><div class="sp-tag">Seller Hub</div><div class="sp-load"><i></i></div></div>
 <script>window.__splashT=Date.now();</script>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -563,7 +563,7 @@ main{padding-bottom:130px!important}
 const Theme = (() => {
   const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
   const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
-  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const get = () => { try { return localStorage.getItem(KEY) || 'light'; } catch (e) { return 'light'; } };
   function walk(rules, mode){
     for (const r of rules){
       if (r.media && r.cssRules){
@@ -682,7 +682,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.21';
+const APP_VERSION = '6.24';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -767,9 +767,9 @@ function range(p){
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', delete_warn:'Permanent', sf_send:'Send for approval', receiver:'Receiver', aa_t:'⚡ Accept orders by itself', aa_s:'New orders are accepted at once with your normal ready time. Turn it off when you are busy.', staff_t:'👥 Staff logins', staff_s:'Give your workers their own login. Write their Gmail. Wanhar Mart checks and approves it. Then they log in with that Gmail (after verifying it). Staff can see orders and products, not your money or settings.', staff_add:'+ Add staff', staff_email:'Staff Gmail', staff_name:'Staff name', staff_phone:'Phone (optional)', staff_sent:'Sent to Wanhar Mart for approval', staff_pending:'Waiting for approval', staff_approved:'Approved · waiting for first login', staff_active:'Active', staff_rejected:'Not approved', staff_remove_q:'Remove this staff login?', staff_none:'No staff yet.', staff_mode:'Staff login', bp_btn:'💲 Change prices', bp_t:'Change many prices at once', bp_sec:'Which products', bp_all:'All products', bp_pct:'Change by percent (%)', bp_add:'Or add / remove rupees', bp_pct_ph:'10 = 10% more, -10 = 10% less', bp_add_ph:'20 = Rs 20 more, -20 = Rs 20 less', bp_round:'Round the new price to', bp_ex:'Example: {a} becomes {b}', bp_apply:'Change prices', bp_q:'Change the price of {n} products?', bp_done:'{n} prices changed', scan_btn:'📷 Scan barcode', barcode:'Barcode', scan_t:'Point the camera at the barcode', scan_no:'Camera scanning does not work here. Type the barcode.', scan_found:'Found: {n}', scan_new:'New barcode — add the product',
+    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', delete_warn:'Permanent', sf_send:'Send for approval', receiver:'Receiver', aa_t:'⚡ Accept orders by itself', aa_s:'New orders are accepted at once with your normal ready time. Turn it off when you are busy.', staff_t:'👥 Staff logins', staff_s:'Give your workers their own login. Write their Gmail. Dera checks and approves it. Then they log in with that Gmail (after verifying it). Staff can see orders and products, not your money or settings.', staff_add:'+ Add staff', staff_email:'Staff Gmail', staff_name:'Staff name', staff_phone:'Phone (optional)', staff_sent:'Sent to Dera for approval', staff_pending:'Waiting for approval', staff_approved:'Approved · waiting for first login', staff_active:'Active', staff_rejected:'Not approved', staff_remove_q:'Remove this staff login?', staff_none:'No staff yet.', staff_mode:'Staff login', bp_btn:'💲 Change prices', bp_t:'Change many prices at once', bp_sec:'Which products', bp_all:'All products', bp_pct:'Change by percent (%)', bp_add:'Or add / remove rupees', bp_pct_ph:'10 = 10% more, -10 = 10% less', bp_add_ph:'20 = Rs 20 more, -20 = Rs 20 less', bp_round:'Round the new price to', bp_ex:'Example: {a} becomes {b}', bp_apply:'Change prices', bp_q:'Change the price of {n} products?', bp_done:'{n} prices changed', scan_btn:'📷 Scan barcode', barcode:'Barcode', scan_t:'Point the camera at the barcode', scan_no:'Camera scanning does not work here. Type the barcode.', scan_found:'Found: {n}', scan_new:'New barcode — add the product',
     kw_l:'Search words (keywords)', kw_note:'Other names customers may search, with commas. Example: doodh, milk, dairy, دودھ. This helps customers find the product.',
-    bk_fee:'Wanhar Mart commission on bookings: {p}%', bk_free_now:'Free for now — no commission on bookings.', bk_fee_note:'The commission is taken only on bookings that are done. If it changes, you see it here first. A new percent is used only for new bookings.', bk_month:'This month: {n} done · sales {s} · commission {c}', bk_rating:'Customer rating: ★ {a} ({n})',
+    bk_fee:'Dera commission on bookings: {p}%', bk_free_now:'Free for now — no commission on bookings.', bk_fee_note:'The commission is taken only on bookings that are done. If it changes, you see it here first. A new percent is used only for new bookings.', bk_month:'This month: {n} done · sales {s} · commission {c}', bk_rating:'Customer rating: ★ {a} ({n})',
     bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
     kind_title:'What kind of shop is this?', kind_lock:'You can change this later in Shop settings.', kind_shop:'Shop: {s}',
     kind_products:'🛍️ Products', kind_products_s:'Sell products from your shop — grocery, food, garments and more.',
@@ -789,13 +789,13 @@ const I18N = {
     st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
     order_value:'Order value', cust_note:'Customer note', call:'Call', customer:'Customer', no_phone:'No phone number', rider_label:'Rider', cust_km:'📍 Customer {km} away', low_stock_n:'⚠️ {n} items low on stock — tap to restock',
     ready_in:'Ready in', late_by:'Late by', new_order:'New order!', waiting:'waiting',
-    open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now',
+    open_now:'Open', closed_now:'Closed', is_open_msg:'Customers can order now', is_closed_msg:'Customers cannot order right now', point_t:'🏆 Dera Point — your QR code', point_s:'When a customer scans this QR, the CUSTOMER app opens with YOUR invite code applied automatically. Every join counts for you — the monthly Top 5 shops show at the very top of the customer app.', point_share:'Share my link', point_msg:'Get the Dera app — order anything from home! My invite code {c} applies automatically: {u}',
     closed_bar:'Your shop is closed. Customers cannot order.', weight_kg:'Weight of one item (grams or kg)', weight_note:'Used for the delivery charge of heavy orders. Leave empty for light items.', statement:'Statement', statement_note:'Download the statement for the period chosen above.', print_pdf:'Print or save as PDF', close_word:'Close', sched_deliver:'Scheduled order · deliver at', sched_start:'Start preparing around {t}', outside_hours:'Outside your timings ({o} – {c}). Customers can order again at {o}.', shop_loc:'Shop location', loc_set:'Location saved. Delivery fee is worked out from here.', loc_missing:'Not set. Stand inside your shop and tap the button, so delivery fee can be worked out by distance.', set_loc:'📍 Use my location (stand inside the shop)', loc_saved:'Shop location saved', loc_denied:'Location is blocked. Allow location for this site and try again.', open_it:'Open shop',
     today:'Today', d7:'7 days', month:'This month', d30:'30 days',
     orders_n:'Orders', delivered_n:'Delivered', cancelled_n:'Cancelled or rejected', sales:'Sales',
-    mfee:'Monthly fee', mfee_due:'Fee due', mfee_note:'This fee is billed on the 1st of every month and is cut from your earning when Wanhar Mart pays you.', mfee_paid:'Paid', mfee_cut:'Cut from payment', mfee_waived:'Waived', mfee_after:'You get after the fee',
-    commission:'Wanhar Mart commission', your_earning:'Your earning', to_receive:'To receive from Wanhar Mart', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request', payout_code_btn:'Confirm payout receipt', payout_code_t:'Payout confirmation code', payout_code_s:'Enter the 4-digit code the admin gave you to confirm you received your payout', payout_ok:'Payout confirmed', code_ph:'Code',
-    to_receive_note:'Your earning from delivered orders that Wanhar Mart has not paid yet.',
+    mfee:'Monthly fee', mfee_due:'Fee due', mfee_note:'This fee is billed on the 1st of every month and is cut from your earning when Dera pays you.', mfee_paid:'Paid', mfee_cut:'Cut from payment', mfee_waived:'Waived', mfee_after:'You get after the fee',
+    commission:'Dera commission', your_earning:'Your earning', to_receive:'To receive from Dera', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request', payout_code_btn:'Confirm payout receipt', payout_code_t:'Payout confirmation code', payout_code_s:'Enter the 4-digit code the admin gave you to confirm you received your payout', payout_ok:'Payout confirmed', code_ph:'Code',
+    to_receive_note:'Your earning from delivered orders that Dera has not paid yet.',
     payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
     reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
     sec_count:'{n} products', cancel:'Cancel', del_section:'Delete section', del_sec_empty_q:'Delete the section “{s}”?', del_sec_items:'This section has {n} products. What should happen to them?', del_sec_move:'Move them to', del_sec_kill:'Delete the products too', del_sec_go:'Delete section', del_sec_kill_q:'Delete “{s}” and its {n} products? This can not be undone.', sec_deleted:'Section deleted',
@@ -812,37 +812,37 @@ const I18N = {
     m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', shop_name:'Shop name', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
     today_hours:'Today', mode_same:'Same time every day', mode_diff:'Different time per day',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
-    paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Wanhar Mart order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
+    paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Dera order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
     flash_price_q:'Flash price in Rs? (regular {p})', flash_price_bad:'Flash price must be less than regular price', flash_hours_q:'Duration in hours?', flash_req_sent:'⚡ Request sent! Admin will approve.',
-    remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Wanhar Mart admin approves them.',
+    remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Dera admin approves them.',
     no_sections:'Add a section first, for example Burgers.', menu_empty:'No products yet. Add a section, then add your products.',
     search:'Search products', all:'All', out_filter:'Out of stock', pending_filter:'Waiting approval',
     shop_details:'Shop details', address:'Address', opens:'Opens at', closes:'Closes at', logo:'Logo or photo',
     prep_default:'Usual preparing time (minutes)', sound:'Alert sound', logout:'Log out', language:'Language',
     enable_sound:'Tap here to turn on the alert sound',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
-    rq_s_sent:'Request sent', rq_s_seen:'Office opened it', rq_s_wait_seen:'Waiting for the office to open it', rq_s_ok:'Shop approved and opened', rq_usual:'Usually checked within 1 to 2 hours (9 AM to 9 PM). You also get a notification.', rq_still_t:'Still waiting', rq_still_unseen:'Your request was sent {a}. The office has not opened it yet. It is usually checked within 1 to 2 hours (9 AM to 9 PM).', rq_still_seen:'The office opened your request {a} and is checking it. You will get a notification when it is approved.', rq_long:'It is taking longer than usual. You can call the Wanhar Mart office of your city.', ago_now:'just now', ago_min:'{n} min ago', ago_h:'{n} hours ago', ago_d:'{n} days ago',
-    rq_title:'Bring your shop to Wanhar Mart', rq_note:'Fill this once. The Wanhar Mart office of your city checks it and turns your shop on.', rq_city:'Your city', rq_cnic:'CNIC number (must)', rq_cnic_hint:'13 digits, like 37201-1234567-1', rq_owner:'Owner name', rq_phone:'Phone / WhatsApp', rq_shop:'Shop name', rq_cats:'What do you sell? (choose all that fit)', rq_cats_svc:'What services do you offer? (choose all that fit)', rq_other:'Write what you sell', rq_loc:'Shop location', rq_loc_btn:'Use my location (stand inside the shop)', rq_loc_ok:'Location saved', rq_map:'Check on map', rq_addr:'Address (if the map is wrong, this helps)', rq_addr_ph:'Main Bazar, near Jamia Masjid', rq_photo:'Photo of the shop front (optional)', rq_cnic_photo:'Photo of CNIC front (optional)', rq_note2:'Anything else? (optional)', rq_send:'Send request', rq_need_city:'Choose your city', rq_need_cnic:'Write your 13 digit CNIC number', rq_need_shop:'Write the shop name', rq_need_cat:'Choose at least one thing you sell', rq_need_cat_svc:'Choose at least one service', rq_sent:'Request sent', rq_wait_t:'Your request is with the office', rq_wait_n:'The Wanhar Mart office of {c} will check your shop and call you. When it is approved, this app opens by itself.', rq_cancel:'Cancel request', rq_cancel_q:'Cancel your shop request?', rq_rej:'Your last request was not approved', rq_edit:'Change and send again', rq_photo_saved:'Photo added', rq_loc_no:'Location is blocked. Allow location for this site, or write the address.',
+    rq_s_sent:'Request sent', rq_s_seen:'Office opened it', rq_s_wait_seen:'Waiting for the office to open it', rq_s_ok:'Shop approved and opened', rq_usual:'Usually checked within 1 to 2 hours (9 AM to 9 PM). You also get a notification.', rq_still_t:'Still waiting', rq_still_unseen:'Your request was sent {a}. The office has not opened it yet. It is usually checked within 1 to 2 hours (9 AM to 9 PM).', rq_still_seen:'The office opened your request {a} and is checking it. You will get a notification when it is approved.', rq_long:'It is taking longer than usual. You can call the Dera office of your city.', ago_now:'just now', ago_min:'{n} min ago', ago_h:'{n} hours ago', ago_d:'{n} days ago',
+    rq_title:'Bring your shop to Dera', rq_note:'Fill this once. The Dera office of your city checks it and turns your shop on.', rq_city:'Your city', rq_cnic:'CNIC number (must)', rq_cnic_hint:'13 digits, like 37201-1234567-1', rq_owner:'Owner name', rq_phone:'Phone / WhatsApp', rq_shop:'Shop name', rq_cats:'What do you sell? (choose all that fit)', rq_cats_svc:'What services do you offer? (choose all that fit)', rq_other:'Write what you sell', rq_loc:'Shop location', rq_loc_btn:'Use my location (stand inside the shop)', rq_loc_ok:'Location saved', rq_map:'Check on map', rq_addr:'Address (if the map is wrong, this helps)', rq_addr_ph:'Main Bazar, near Jamia Masjid', rq_photo:'Photo of the shop front (optional)', rq_cnic_photo:'Photo of CNIC front (optional)', rq_note2:'Anything else? (optional)', rq_send:'Send request', rq_need_city:'Choose your city', rq_need_cnic:'Write your 13 digit CNIC number', rq_need_shop:'Write the shop name', rq_need_cat:'Choose at least one thing you sell', rq_need_cat_svc:'Choose at least one service', rq_sent:'Request sent', rq_wait_t:'Your request is with the office', rq_wait_n:'The Dera office of {c} will check your shop and call you. When it is approved, this app opens by itself.', rq_cancel:'Cancel request', rq_cancel_q:'Cancel your shop request?', rq_rej:'Your last request was not approved', rq_edit:'Change and send again', rq_photo_saved:'Photo added', rq_loc_no:'Location is blocked. Allow location for this site, or write the address.',
     not_linked:'Your account is not linked to a shop yet',
-    not_linked_msg:'Send this email address to the Wanhar Mart admin. They will link it to your shop:', check_again:'Check again',
+    not_linked_msg:'Send this email address to the Dera admin. They will link it to your shop:', check_again:'Check again',
     v_title:'Confirm your email to continue', v_note:'We send a link to {e}. Open the email (look in Spam too) and tap the link. Then come back here.', v_send:'Send confirmation email', v_sent:'Email sent to {e}. Open it and tap the link.', v_done:'I have confirmed', v_not_yet:'Not confirmed yet. Open the email and tap the link first.', v_ok:'Email confirmed. Welcome! 🎉', v_wrong:'Wrong email? Log out and sign up again.',
-    not_confirmed:'Your email is not confirmed yet. Open the email from Wanhar Mart (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
+    not_confirmed:'Your email is not confirmed yet. Open the email from Dera (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
     confirm_email:'Account created. We sent you an email: open it (look in Spam too) and tap the link, then log in.',
     bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
     commission_rate:'Commission', close_q:'Close the shop? Customers will not be able to order.',
     coming_back:'Coming back to your shop', coming_back_note:'Delivery failed. The rider is bringing this order back.',
     received_back:'I received the order back', received_q:'Did you receive this order back from the rider?',
-    problem:'Problem', new_problem:'New problem reported', report:'Report a problem', report_title:'What is the problem?', send_report:'Send to Wanhar Mart',
-    note_opt:'More details (optional)', pick_problem:'Choose a problem', reported:'Wanhar Mart has been informed', waiting_until:'Rider waits until {t}',
+    problem:'Problem', new_problem:'New problem reported', report:'Report a problem', report_title:'What is the problem?', send_report:'Send to Dera',
+    note_opt:'More details (optional)', pick_problem:'Choose a problem', reported:'Dera has been informed', waiting_until:'Rider waits until {t}',
     k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
     k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
-    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Wanhar Mart', k_chat_help:'Wanhar Mart was asked to join a chat', contact:'Contact'
+    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Dera', k_chat_help:'Dera was asked to join a chat', contact:'Contact'
   },
   ur: {
-    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', delete_warn:'مستقل', sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Wanhar Mart چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Wanhar Mart کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
+    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', delete_warn:'مستقل', sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Dera چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Dera کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
     kw_l:'تلاش کے الفاظ (کی ورڈز)', kw_note:'وہ دوسرے نام جن سے گاہک ڈھونڈ سکتے ہیں، کومے سے الگ۔ مثال: doodh, milk, دودھ۔ اس سے گاہک کو پروڈکٹ آسانی سے ملتی ہے۔',
-    bk_fee:'بُکنگ پر Wanhar Mart کمیشن: {p}%', bk_free_now:'ابھی مفت ہے — بُکنگ پر کوئی کمیشن نہیں۔', bk_fee_note:'کمیشن صرف مکمل ہونے والی بُکنگ پر لگتا ہے۔ اگر بدلا تو آپ کو پہلے یہاں نظر آئے گا۔ نیا فیصد صرف نئی بُکنگز پر لگے گا۔', bk_month:'اس مہینے: {n} مکمل · سیل {s} · کمیشن {c}', bk_rating:'گاہکوں کی ریٹنگ: ★ {a} ({n})',
+    bk_fee:'بُکنگ پر Dera کمیشن: {p}%', bk_free_now:'ابھی مفت ہے — بُکنگ پر کوئی کمیشن نہیں۔', bk_fee_note:'کمیشن صرف مکمل ہونے والی بُکنگ پر لگتا ہے۔ اگر بدلا تو آپ کو پہلے یہاں نظر آئے گا۔ نیا فیصد صرف نئی بُکنگز پر لگے گا۔', bk_month:'اس مہینے: {n} مکمل · سیل {s} · کمیشن {c}', bk_rating:'گاہکوں کی ریٹنگ: ★ {a} ({n})',
     bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
     kind_title:'یہ کس قسم کی دکان ہے؟', kind_lock:'بعد میں دکان کی سیٹنگ سے تبدیل کر سکتے ہیں۔', kind_shop:'دکان: {s}',
     kind_products:'🛍️ پروڈکٹس', kind_products_s:'اپنی دکان کے پروڈکٹس بیچیں — کریانہ، کھانا، کپڑے وغیرہ۔',
@@ -862,13 +862,13 @@ const I18N = {
     st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
     order_value:'آرڈر کی رقم', cust_note:'گاہک کی ہدایت', call:'کال', customer:'گاہک', no_phone:'فون نمبر نہیں', rider_label:'رائیڈر', cust_km:'📍 گاہک {km} دور', low_stock_n:'⚠️ {n} چیزوں کا اسٹاک ختم ہونے والا ہے — دیکھیں',
     ready_in:'تیار ہونے میں', late_by:'دیر', new_order:'نیا آرڈر!', waiting:'انتظار',
-    open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے',
+    open_now:'کھلا ہے', closed_now:'بند ہے', is_open_msg:'گاہک ابھی آرڈر کر سکتے ہیں', is_closed_msg:'گاہک ابھی آرڈر نہیں کر سکتے', point_t:'🏆 ڈیرہ پوائنٹ — آپ کا QR کوڈ', point_s:'جب گاہک یہ QR اسکین کرے گا تو کسٹمر ایپ کھلے گی اور آپ کا کوڈ خود لگ جائے گا۔ ہر جوائن آپ کے نام گنا جائے گا — مہینے کی ٹاپ 5 دکانیں کسٹمر ایپ میں سب سے اوپر نظر آتی ہیں۔', point_share:'اپنا لنک بھیجیں', point_msg:'ڈیرہ مارٹ ایپ لگائیں — ہر چیز گھر بیٹھے منگوائیں! میرا کوڈ {c} خود لگ جائے گا: {u}',
     closed_bar:'آپ کی دکان بند ہے۔ گاہک آرڈر نہیں کر سکتے۔', weight_kg:'ایک چیز کا وزن (گرام یا کلو)', weight_note:'بھاری آرڈر کے ڈیلیوری چارج کے لیے۔ ہلکی چیز ہو تو خالی چھوڑ دیں۔', statement:'اسٹیٹمنٹ', statement_note:'اوپر چنے گئے وقت کی اسٹیٹمنٹ ڈاؤن لوڈ کریں۔', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', sched_deliver:'مقررہ وقت کا آرڈر · پہنچانا ہے', sched_start:'تقریباً {t} پر تیاری شروع کریں', outside_hours:'آپ کے اوقات ({o} – {c}) سے باہر ہے۔ گاہک {o} سے دوبارہ آرڈر کر سکیں گے۔', shop_loc:'دکان کی لوکیشن', loc_set:'لوکیشن محفوظ ہے۔ ڈیلیوری فیس یہاں سے فاصلے کے حساب سے لگے گی۔', loc_missing:'لوکیشن نہیں لگی۔ دکان کے اندر کھڑے ہو کر بٹن دبائیں تاکہ فاصلے کے حساب سے فیس لگے۔', set_loc:'📍 میری لوکیشن لگائیں (دکان کے اندر کھڑے ہو کر)', loc_saved:'دکان کی لوکیشن محفوظ ہو گئی', loc_denied:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں اور دوبارہ کوشش کریں۔', open_it:'دکان کھولیں',
     today:'آج', d7:'7 دن', month:'اس مہینے', d30:'30 دن',
     orders_n:'آرڈرز', delivered_n:'پہنچ گئے', cancelled_n:'منسوخ یا مسترد', sales:'فروخت',
     mfee:'ماہانہ فیس', mfee_due:'فیس باقی', mfee_note:'یہ فیس ہر مہینے کی 1 تاریخ کو لگتی ہے اور ادائیگی کے وقت آپ کی کمائی سے کٹ جاتی ہے۔', mfee_paid:'ادا ہو گئی', mfee_cut:'ادائیگی سے کٹ گئی', mfee_waived:'معاف', mfee_after:'فیس کے بعد آپ کو ملے گا',
-    commission:'Wanhar Mart کمیشن', your_earning:'آپ کی کمائی', to_receive:'Wanhar Mart سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے', payout_code_btn:'ادائیگی ملنے کی تصدیق', payout_code_t:'ادائیگی کا تصدیقی کوڈ', payout_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے ادائیگی ملنے کی تصدیق کریں', payout_ok:'ادائیگی کی تصدیق ہو گئی', code_ph:'کوڈ',
-    to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Wanhar Mart نے ابھی ادا نہیں کی۔',
+    commission:'Dera کمیشن', your_earning:'آپ کی کمائی', to_receive:'Dera سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے', payout_code_btn:'ادائیگی ملنے کی تصدیق', payout_code_t:'ادائیگی کا تصدیقی کوڈ', payout_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے ادائیگی ملنے کی تصدیق کریں', payout_ok:'ادائیگی کی تصدیق ہو گئی', code_ph:'کوڈ',
+    to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Dera نے ابھی ادا نہیں کی۔',
     payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
     reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
     sec_count:'{n} پروڈکٹس', cancel:'واپس', del_section:'سیکشن ختم کریں', del_sec_empty_q:'سیکشن “{s}” ختم کریں؟', del_sec_items:'اس سیکشن میں {n} پروڈکٹس ہیں۔ ان کا کیا کریں؟', del_sec_move:'انہیں منتقل کریں', del_sec_kill:'پروڈکٹس بھی ختم کر دیں', del_sec_go:'سیکشن ختم کریں', del_sec_kill_q:'“{s}” اور اس کی {n} پروڈکٹس ختم کریں؟ یہ واپس نہیں ہو سکتا۔', sec_deleted:'سیکشن ختم ہو گیا',
@@ -887,30 +887,30 @@ const I18N = {
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
     flash_price_q:'فلیش قیمت Rs میں؟ (اصل {p})', flash_price_bad:'فلیش قیمت اصل قیمت سے کم ہونی چاہیے', flash_hours_q:'کتنے گھنٹے کے لیے؟', flash_req_sent:'⚡ درخواست بھیج دی! ایڈمن منظور کرے گا۔',
-    remove_q:'یہ پروڈکٹ دکان سے ہٹا دیں؟', pending:'ایڈمن کی منظوری کا انتظار', pending_note:'نئی پروڈکٹس Wanhar Mart ایڈمن کی منظوری کے بعد گاہکوں کو نظر آئیں گی۔',
+    remove_q:'یہ پروڈکٹ دکان سے ہٹا دیں؟', pending:'ایڈمن کی منظوری کا انتظار', pending_note:'نئی پروڈکٹس Dera ایڈمن کی منظوری کے بعد گاہکوں کو نظر آئیں گی۔',
     no_sections:'پہلے ایک سیکشن بنائیں، جیسے برگر۔', menu_empty:'ابھی کوئی پروڈکٹ نہیں۔ سیکشن بنائیں، پھر پروڈکٹس شامل کریں۔',
     search:'پروڈکٹ تلاش کریں', all:'سب', out_filter:'ختم', pending_filter:'منظوری باقی',
     shop_details:'دکان کی معلومات', address:'پتہ', opens:'کھلنے کا وقت', closes:'بند ہونے کا وقت', logo:'لوگو یا تصویر',
     prep_default:'عام تیاری کا وقت (منٹ)', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
-    rq_s_sent:'درخواست بھیج دی', rq_s_seen:'دفتر نے کھول لی', rq_s_wait_seen:'دفتر کے کھولنے کا انتظار', rq_s_ok:'دکان منظور اور چالو', rq_usual:'عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔ آپ کو نوٹیفکیشن بھی آئے گا۔', rq_still_t:'ابھی انتظار ہے', rq_still_unseen:'آپ کی درخواست {a} بھیجی گئی۔ دفتر نے ابھی اسے کھولا نہیں۔ عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔', rq_still_seen:'دفتر نے آپ کی درخواست {a} کھول لی ہے اور چیک کر رہا ہے۔ منظوری پر آپ کو نوٹیفکیشن آئے گا۔', rq_long:'معمول سے زیادہ وقت لگ رہا ہے۔ اپنے شہر کے Wanhar Mart دفتر کو فون کر سکتے ہیں۔', ago_now:'ابھی', ago_min:'{n} منٹ پہلے', ago_h:'{n} گھنٹے پہلے', ago_d:'{n} دن پہلے',
-    rq_title:'اپنی دکان Wanhar Mart پر لائیں', rq_note:'یہ ایک بار بھریں۔ آپ کے شہر کا Wanhar Mart دفتر اسے چیک کر کے آپ کی دکان چالو کرے گا۔', rq_city:'آپ کا شہر', rq_cnic:'شناختی کارڈ نمبر (ضروری)', rq_cnic_hint:'13 ہندسے، جیسے 37201-1234567-1', rq_owner:'مالک کا نام', rq_phone:'فون / واٹس ایپ', rq_shop:'دکان کا نام', rq_cats:'آپ کیا بیچتے ہیں؟ (جتنے ہوں سب چنیں)', rq_cats_svc:'آپ کون سی سروسز دیتے ہیں؟ (جتنی ہوں سب چنیں)', rq_other:'لکھیں آپ کیا بیچتے ہیں', rq_loc:'دکان کی لوکیشن', rq_loc_btn:'میری لوکیشن لیں (دکان کے اندر کھڑے ہو کر)', rq_loc_ok:'لوکیشن محفوظ', rq_map:'نقشے پر دیکھیں', rq_addr:'پتہ (اگر نقشہ غلط ہو تو یہ کام آئے گا)', rq_addr_ph:'مین بازار، جامع مسجد کے پاس', rq_photo:'دکان کے سامنے کی تصویر (اختیاری)', rq_cnic_photo:'شناختی کارڈ کی تصویر (اختیاری)', rq_note2:'کچھ اور؟ (اختیاری)', rq_send:'درخواست بھیجیں', rq_need_city:'اپنا شہر چنیں', rq_need_cnic:'اپنا 13 ہندسوں کا شناختی کارڈ نمبر لکھیں', rq_need_shop:'دکان کا نام لکھیں', rq_need_cat:'کم از کم ایک چیز چنیں جو آپ بیچتے ہیں', rq_need_cat_svc:'کم از کم ایک سروس چنیں', rq_sent:'درخواست بھیج دی گئی', rq_wait_t:'آپ کی درخواست دفتر کے پاس ہے', rq_wait_n:'{c} کا Wanhar Mart دفتر آپ کی دکان چیک کر کے آپ کو فون کرے گا۔ منظوری کے بعد یہ ایپ خود کھل جائے گی۔', rq_cancel:'درخواست منسوخ کریں', rq_cancel_q:'دکان کی درخواست منسوخ کریں؟', rq_rej:'آپ کی پچھلی درخواست منظور نہیں ہوئی', rq_edit:'بدل کر دوبارہ بھیجیں', rq_photo_saved:'تصویر لگ گئی', rq_loc_no:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں، یا پتہ لکھیں۔',
+    rq_s_sent:'درخواست بھیج دی', rq_s_seen:'دفتر نے کھول لی', rq_s_wait_seen:'دفتر کے کھولنے کا انتظار', rq_s_ok:'دکان منظور اور چالو', rq_usual:'عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔ آپ کو نوٹیفکیشن بھی آئے گا۔', rq_still_t:'ابھی انتظار ہے', rq_still_unseen:'آپ کی درخواست {a} بھیجی گئی۔ دفتر نے ابھی اسے کھولا نہیں۔ عام طور پر 1 سے 2 گھنٹے میں چیک ہو جاتی ہے (صبح 9 سے رات 9 بجے)۔', rq_still_seen:'دفتر نے آپ کی درخواست {a} کھول لی ہے اور چیک کر رہا ہے۔ منظوری پر آپ کو نوٹیفکیشن آئے گا۔', rq_long:'معمول سے زیادہ وقت لگ رہا ہے۔ اپنے شہر کے Dera دفتر کو فون کر سکتے ہیں۔', ago_now:'ابھی', ago_min:'{n} منٹ پہلے', ago_h:'{n} گھنٹے پہلے', ago_d:'{n} دن پہلے',
+    rq_title:'اپنی دکان Dera پر لائیں', rq_note:'یہ ایک بار بھریں۔ آپ کے شہر کا Dera دفتر اسے چیک کر کے آپ کی دکان چالو کرے گا۔', rq_city:'آپ کا شہر', rq_cnic:'شناختی کارڈ نمبر (ضروری)', rq_cnic_hint:'13 ہندسے، جیسے 37201-1234567-1', rq_owner:'مالک کا نام', rq_phone:'فون / واٹس ایپ', rq_shop:'دکان کا نام', rq_cats:'آپ کیا بیچتے ہیں؟ (جتنے ہوں سب چنیں)', rq_cats_svc:'آپ کون سی سروسز دیتے ہیں؟ (جتنی ہوں سب چنیں)', rq_other:'لکھیں آپ کیا بیچتے ہیں', rq_loc:'دکان کی لوکیشن', rq_loc_btn:'میری لوکیشن لیں (دکان کے اندر کھڑے ہو کر)', rq_loc_ok:'لوکیشن محفوظ', rq_map:'نقشے پر دیکھیں', rq_addr:'پتہ (اگر نقشہ غلط ہو تو یہ کام آئے گا)', rq_addr_ph:'مین بازار، جامع مسجد کے پاس', rq_photo:'دکان کے سامنے کی تصویر (اختیاری)', rq_cnic_photo:'شناختی کارڈ کی تصویر (اختیاری)', rq_note2:'کچھ اور؟ (اختیاری)', rq_send:'درخواست بھیجیں', rq_need_city:'اپنا شہر چنیں', rq_need_cnic:'اپنا 13 ہندسوں کا شناختی کارڈ نمبر لکھیں', rq_need_shop:'دکان کا نام لکھیں', rq_need_cat:'کم از کم ایک چیز چنیں جو آپ بیچتے ہیں', rq_need_cat_svc:'کم از کم ایک سروس چنیں', rq_sent:'درخواست بھیج دی گئی', rq_wait_t:'آپ کی درخواست دفتر کے پاس ہے', rq_wait_n:'{c} کا Dera دفتر آپ کی دکان چیک کر کے آپ کو فون کرے گا۔ منظوری کے بعد یہ ایپ خود کھل جائے گی۔', rq_cancel:'درخواست منسوخ کریں', rq_cancel_q:'دکان کی درخواست منسوخ کریں؟', rq_rej:'آپ کی پچھلی درخواست منظور نہیں ہوئی', rq_edit:'بدل کر دوبارہ بھیجیں', rq_photo_saved:'تصویر لگ گئی', rq_loc_no:'لوکیشن بند ہے۔ اس سائٹ کو لوکیشن کی اجازت دیں، یا پتہ لکھیں۔',
     not_linked:'آپ کا اکاؤنٹ ابھی کسی دکان سے نہیں جڑا',
-    not_linked_msg:'یہ ای میل ایڈریس Wanhar Mart کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
+    not_linked_msg:'یہ ای میل ایڈریس Dera کے ایڈمن کو بھیجیں، وہ اسے آپ کی دکان سے جوڑ دیں گے:', check_again:'دوبارہ دیکھیں',
     v_title:'جاری رکھنے کے لیے ای میل کی تصدیق کریں', v_note:'ہم {e} پر ایک لنک بھیجتے ہیں۔ ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر یہاں واپس آئیں۔', v_send:'تصدیقی ای میل بھیجیں', v_sent:'{e} پر ای میل بھیج دی گئی۔ اسے کھول کر لنک دبائیں۔', v_done:'میں نے تصدیق کر لی', v_not_yet:'ابھی تصدیق نہیں ہوئی۔ پہلے ای میل کھول کر لنک دبائیں۔', v_ok:'ای میل کی تصدیق ہو گئی۔ خوش آمدید! 🎉', v_wrong:'غلط ای میل؟ لاگ آؤٹ کر کے دوبارہ اکاؤنٹ بنائیں۔',
-    not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Wanhar Mart کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
+    not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Dera کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
     confirm_email:'اکاؤنٹ بن گیا۔ ہم نے آپ کو ای میل بھیجی ہے: اسے کھولیں (Spam میں بھی دیکھیں)، لنک دبائیں، پھر لاگ اِن کریں۔',
     bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
     commission_rate:'کمیشن', close_q:'دکان بند کریں؟ گاہک آرڈر نہیں کر سکیں گے۔',
     coming_back:'دکان واپس آ رہے ہیں', coming_back_note:'ڈیلیوری نہیں ہو سکی۔ رائیڈر یہ آرڈر واپس لا رہا ہے۔',
     received_back:'آرڈر واپس مل گیا', received_q:'کیا رائیڈر سے یہ آرڈر واپس مل گیا؟',
-    problem:'مسئلہ', new_problem:'نیا مسئلہ رپورٹ ہوا', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟', send_report:'Wanhar Mart کو بھیجیں',
-    note_opt:'مزید تفصیل (اختیاری)', pick_problem:'مسئلہ چنیں', reported:'Wanhar Mart کو اطلاع دے دی گئی', waiting_until:'رائیڈر {t} تک انتظار کرے گا',
+    problem:'مسئلہ', new_problem:'نیا مسئلہ رپورٹ ہوا', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟', send_report:'Dera کو بھیجیں',
+    note_opt:'مزید تفصیل (اختیاری)', pick_problem:'مسئلہ چنیں', reported:'Dera کو اطلاع دے دی گئی', waiting_until:'رائیڈر {t} تک انتظار کرے گا',
     k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
     k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
-    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Wanhar Mart سے بات کریں', k_chat_help:'Wanhar Mart کو چیٹ میں بلایا گیا', contact:'رابطہ'
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Dera سے بات کریں', k_chat_help:'Dera کو چیٹ میں بلایا گیا', contact:'رابطہ'
   }
 };
 const state = {
@@ -961,7 +961,7 @@ function startAlertLoop(){ if (!alertTimer) alertTimer = setInterval(() => { if 
 let wakeLock = null;
 async function keepAwake(){ try { if ('wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.restaurant){ keepAwake(); refreshOrders(); } });
-function updateTitle(){ const n = newOrders().length; document.title = n ? `(${n}) ${t('new_order')} Wanhar Mart` : 'Wanhar Mart Shop'; }
+function updateTitle(){ const n = newOrders().length; document.title = n ? `(${n}) ${t('new_order')} Dera` : 'Dera Shop'; }
 
 // ================= AUTH =================
 function showAuth(msg, ok){
@@ -969,7 +969,7 @@ function showAuth(msg, ok){
   $('app').innerHTML = `
   <div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <p class="muted" style="margin:0 0 6px">Shop</p>
     <h1 style="font-size:22px">${signup ? t('signup') : t('login')}</h1>
     <form onsubmit="A.submitAuth(event)">
@@ -1008,7 +1008,7 @@ function agoText(ts){ const m = Math.max(0, Math.round((Date.now() - new Date(ts
 function showShopRequest(){
   const q = state.sreq;
   const canBackKind = !state.addMode && !state.restaurant && !(q && q.status === 'pending');
-  const top = `${state.addMode ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToShop()">${t('back_shop')}</button>` : (canBackKind ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToKindPicker()">${t('back_kind')}</button>` : '')}<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Wanhar Mart<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
+  const top = `${state.addMode ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToShop()">${t('back_shop')}</button>` : (canBackKind ? `<button type="button" class="link" style="padding:0;margin-bottom:6px" onclick="A.backToKindPicker()">${t('back_kind')}</button>` : '')}<div style="display:flex;justify-content:space-between;align-items:center"><div class="brand">Dera<b>.</b></div><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>`;
   if (q && q.status === 'pending'){
     const city = (state.regionsList.find(r => r.id === q.region_id) || {}).name || '';
     clearInterval(state.rqPoll); state.rqPoll = setInterval(() => { if (!document.hidden && $('rqWait')) A.recheck(); else if (!$('rqWait')) clearInterval(state.rqPoll); }, 30000);
@@ -1062,7 +1062,7 @@ function rqKeep(){ const f = state.rqForm; if (!$('rq_shop')) return; f.cnic = $
   f.address = $('rq_addr').value; f.note = $('rq_note').value; f.other_category = ($('rq_other') || {}).value || ''; }
 function showUnlinked(){
   $('app').innerHTML = `<div class="auth">
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <h1 style="font-size:22px;margin-top:14px">${t('not_linked')}</h1>
     <p class="muted">${t('not_linked_msg')}</p>
     <div class="card" style="font-weight:800;word-break:break-all">${esc(state.user.email)}</div>
@@ -1117,7 +1117,7 @@ function renderShell(){
   const r = state.restaurant;
   $('app').innerHTML = `
     <header class="top">
-      <button type="button" class="brand shopsw" onclick="shopMenu()" aria-label="${t('switch_shop')}"><span class="shopecap">${t('shop_dashboard')}</span>${esc(r.name)}${(state.shops || []).length > 1 ? ' ▾' : ''}<span id="shopBadge" class="sbadge" style="display:none">0</span><small>Wanhar Mart Shop</small></button>
+      <button type="button" class="brand shopsw" onclick="shopMenu()" aria-label="${t('switch_shop')}"><span class="shopecap">${t('shop_dashboard')}</span>${esc(r.name)}${(state.shops || []).length > 1 ? ' ▾' : ''}<span id="shopBadge" class="sbadge" style="display:none">0</span><small>Dera Shop</small></button>
       <div style="display:flex;gap:8px;align-items:center">${Chat.button()}<button class="openbtn ${r.is_open ? 'on' : ''}" id="openBtn" onclick="A.toggleOpen(${!r.is_open})"><i></i>${r.is_open ? t('open_now') : t('closed_now')}</button></div>
     </header>
     <main id="view"></main>
@@ -1440,7 +1440,7 @@ async function loadEarn(){
   const orders = need(o); const del = orders.filter(x => x.status === 'delivered');
   const sum = (l, f) => l.reduce((n, x) => n + num(f(x)), 0);
   // services revenue: appointments are paid cash at the shop, so done ones count in
-  // sales/earning/delivered — but not in "to receive" (Wanhar Mart owes nothing for them)
+  // sales/earning/delivered — but not in "to receive" (Dera owes nothing for them)
   let appts = [];
   try { appts = need(await sb.from('appointments').select('id,item_name,price,commission_amount,status,starts_at').eq('restaurant_id', id).in('status', ['done','cancelled','no_show']).gte('starts_at', from.toISOString()).limit(1000)) || []; } catch (e) { logErr(e); }
   const doneAp = appts.filter(x => x.status === 'done');
@@ -1512,6 +1512,14 @@ function viewShop(){
       <div><b>${isServices() ? t('kind_services') : t('kind_products')}</b><div class="muted" style="font-size:13px">${t('kind_cur')}</div></div>
       <button class="btn ghost small" type="button" style="width:auto;flex:none" onclick="A.changeKind()">${t('kind_change')}</button>
     </div>
+    ${state.ref && state.ref.code ? `<div class="card" style="text-align:center">
+      <b>${t('point_t')}</b>
+      <div class="muted" style="font-size:13px;margin-top:4px">${t('point_s')}</div>
+      <div style="background:#fff;border:2px solid #E3E3E3;border-radius:14px;padding:10px;margin:10px auto;width:196px"><img alt="QR" style="width:176px;height:176px;display:block;margin:0 auto" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=8&data=${encodeURIComponent(new URL('customer.html?ref=' + encodeURIComponent(state.ref.code), location.href).href)}" onerror="this.parentElement.style.display='none'"></div>
+      <div style="font-family:ui-monospace,monospace;font-weight:800;font-size:22px;letter-spacing:.06em">${esc(state.ref.code)}</div>
+      <div class="muted" style="font-size:13px;margin:4px 0 10px">${num(state.ref.friends || 0)} joins</div>
+      <button class="btn gold" onclick="A.sharePoint()">${t('point_share')}</button>
+    </div>` : ''}
     <div class="tiles" style="margin-bottom:12px">
       <div class="tile hi"><b>${avg ? '★ ' + avg : '—'}</b><span>${t('rating')} (${rv.length})</span></div>
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
@@ -1547,7 +1555,7 @@ function viewShop(){
       <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div><div class="row-sub">${t('delete_warn') || 'Permanent'}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
-    <p class="ver" style="margin-top:14px">Wanhar Mart Shop v${APP_VERSION}</p>`;
+    <p class="ver" style="margin-top:14px">Dera Shop v${APP_VERSION}</p>`;
 }
 
 // ---- Photos ----
@@ -1801,7 +1809,7 @@ const A = {
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
-    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Wanhar Mart Shop'; showAuth();
+    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Dera Shop'; showAuth();
   },
   rqCity(id){ rqKeep(); state.rqForm.region_id = id; document.querySelectorAll('#rqCity .chip').forEach(b => b.classList.toggle('on', b.getAttribute('onclick').includes(id))); },
   rqCat(k){ const l = state.rqForm.categories; const i = l.indexOf(k); if (i > -1) l.splice(i, 1); else l.push(k);
@@ -1867,7 +1875,7 @@ const A = {
     const periodName = { today:t('today'), '7d':t('d7'), month:t('month'), '30d':t('d30') }[state.period] || '';
     const d = x => new Date(x).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
     const items = x => (x.order_items || []).map(i => i.quantity + '× ' + i.name).join(', ');
-    const file = 'Wanhar-Mart-' + (r.name || 'shop').replace(/[^a-z0-9]+/gi, '-') + '-' + new Date().toISOString().slice(0, 10);
+    const file = 'Dera-Mart-' + (r.name || 'shop').replace(/[^a-z0-9]+/gi, '-') + '-' + new Date().toISOString().slice(0, 10);
     if (kind === 'xlsx'){
       const rows = [['Order', 'Date', 'Status', 'Items', 'Sales (Rs)', 'Commission (Rs)', 'Your earning (Rs)']];
       list.forEach(x => rows.push(['#' + x.id.slice(-4).toUpperCase(), d(x.created_at), x.status, items(x), num(x.subtotal), num(x.commission_amount), num(x.restaurant_earning)]));
@@ -1927,6 +1935,12 @@ const A = {
   },
 
   // ---- Shop ----
+  async sharePoint(){
+    const c = state.ref && state.ref.code; if (!c) return;
+    const msg = t('point_msg', { c, u:new URL('customer.html?ref=' + encodeURIComponent(c), location.href).href });
+    if (navigator.share){ try { await navigator.share({ text:msg }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  },
   async toggleOpen(v){
     if (!v && !await uiConfirm(t('close_q'))){ renderTab(); return; }
     await run(async () => {
@@ -2071,7 +2085,7 @@ const A = {
     const o = state.orders.find(x => x.id === id); if (!o) return; const r = state.restaurant; const c = o.customer || {};
     const w = window.open('', '_blank', 'width=380,height=640'); if (!w) return toast('Allow pop-ups to print', true);
     w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>#${esc(o.id.slice(-4).toUpperCase())}</title><style>@page{size:58mm auto;margin:3mm}body{font:13px/1.35 monospace;width:52mm;margin:0 auto;color:#000}h1{font-size:16px;text-align:center;margin:0 0 4px}.c{text-align:center}.r{display:flex;justify-content:space-between;gap:6px}hr{border:0;border-top:1px dashed #000;margin:6px 0}b{font-weight:800}</style></head><body>
-      <h1>${esc(r.name)}</h1><div class="c">Wanhar Mart</div><hr>
+      <h1>${esc(r.name)}</h1><div class="c">Dera</div><hr>
       <div class="r"><b>#${esc(o.id.slice(-4).toUpperCase())}</b><span>${esc(new Date(o.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Karachi' }))}</span></div>
       ${o.order_type === 'pickup' ? '<div class="c"><b>** PICKUP **</b></div>' : ''}${o.scheduled_for ? `<div>Deliver at: ${esc(new Date(o.scheduled_for).toLocaleString('en-GB', { weekday:'short', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Karachi' }))}</div>` : ''}
       <div>${esc(c.full_name || '')} ${esc(c.phone || '')}</div><hr>
@@ -2240,7 +2254,7 @@ function showKindPicker(){
   const r = state.restaurant || {};
   $('app').innerHTML = `<div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <h1 style="font-size:24px;margin:18px 0 8px">${t('kind_title')}</h1>
     <p class="muted" style="margin:0 0 4px">${t('kind_shop', { s:esc(r.name || '') })}</p>
     <p class="muted" style="margin:0 0 18px;font-size:13px">🔒 ${t('kind_lock')}</p>
@@ -2258,7 +2272,7 @@ function showKindPicker(){
 function showPreKindPicker(){
   $('app').innerHTML = `<div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <h1 style="font-size:24px;margin:18px 0 8px">${t('kind_title')}</h1>
     <p class="muted" style="margin:0 0 18px;font-size:13px">🔒 ${t('kind_lock')}</p>
     <div class="kindgrid">
@@ -2290,7 +2304,7 @@ function showVerify(){
   const e = esc((state.user && state.user.email) || '');
   $('app').innerHTML = `<div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <div style="font-size:54px;margin:18px 0 6px">📧</div>
     <h1 style="font-size:24px;margin:0 0 8px">${t('v_title')}</h1>
     <p class="muted" style="margin:0">${t('v_note').replace('{e}', '<b>' + e + '</b>')}</p>
@@ -2320,17 +2334,18 @@ async function afterLogin(user){
   await loadRestaurant();
   if (!state.restaurant){ await loadMyRequest(); return routeNoRestaurant(); }
   if (!shopKind()) return showKindPicker();
+  sb.rpc('my_referral').then(({ data }) => { state.ref = data && data[0]; if (state.tab === 'shop') renderTab(); }, () => {});
   await startApp();
 }
 // ================= CHAT (same code in all four apps) =================
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
-      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
-      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
-      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
-      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
+      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Dera', order:'Order',
+      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Dera support',
+      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Dera support',
+      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Dera support',
       'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
       'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
       q_customer_cr:['Please call me','I am coming down','Please leave it at the door','Where are you now?'],
@@ -2342,20 +2357,20 @@ const Chat = (() => {
       q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
       q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please come soon, I am waiting'],
       q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
-      q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
-      q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
-      q_admin_rs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cr:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cs:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_rs:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
       q_admin_sup:['Hello, how can we help you?','We are looking into it','Thank you for waiting','Please call us'],
       q_admin:['We are looking into it','Thank you for waiting','Please call us'],
-      ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
-      sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
+      ask_join:'Call Dera', ask_reason:'Tell Dera what the problem is (for example: customer paid less cash):', ask_sent:'Dera has been asked to join this chat',
+      sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
-      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
-      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
-      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
-      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
+      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Dera', order:'آرڈر',
+      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Dera سپورٹ',
+      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Dera سپورٹ',
+      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Dera سپورٹ',
       sup:'سپورٹ',
       q_customer_cr:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ ابھی کہاں ہیں؟'],
       q_customer_cs:['میرا آرڈر کتنی دیر میں تیار ہوگا؟','مرچ کم رکھیں','ساس زیادہ ڈال دیں','اچھی طرح پیک کریں'],
@@ -2367,8 +2382,8 @@ const Chat = (() => {
       q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، میں انتظار کر رہا ہوں'],
       q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
       q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
-      ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
-      sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
+      ask_join:'Dera کو بلائیں', ask_reason:'Dera کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Dera کو اس چیٹ میں بلا لیا گیا',
+      sys_req:'{w} نے Dera کو چیٹ میں بلایا', sys_joined:'Dera چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
     }
   };
   let cfg = null, cur = null, chan = null, seenIds = new Set(), unread = {};
@@ -2811,8 +2826,8 @@ const Bulk = (() => {
       const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
       let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', i.keywords || '', i.barcode || '', '']);
       if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
-      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
-        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      const help = L() === 'ur' ? [['Dera · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Dera · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
       download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
         'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     } catch (e) { C.toast(e.message || 'Error', true); }
@@ -3267,10 +3282,10 @@ const Legal = (() => {
   const L = {
     en:{ agree:'By creating an account you agree to our {t} and {p}.', terms:'Terms', privacy:'Privacy Policy', links:'Privacy Policy and Terms',
          del:'Delete my account', del_q:'Delete your account? We will remove your personal data. Your past orders stay in our records without your name. This cannot be undone.',
-         del_reason:'Why are you leaving? (optional)', del_done:'Request sent. Wanhar Mart will delete your account within 7 days.' },
+         del_reason:'Why are you leaving? (optional)', del_done:'Request sent. Dera will delete your account within 7 days.' },
     ur:{ agree:'اکاؤنٹ بنا کر آپ ہماری {t} اور {p} سے اتفاق کرتے ہیں۔', terms:'شرائط', privacy:'پرائیویسی پالیسی', links:'پرائیویسی پالیسی اور شرائط',
          del:'میرا اکاؤنٹ ختم کریں', del_q:'اکاؤنٹ ختم کریں؟ آپ کی ذاتی معلومات مٹا دی جائیں گی۔ پرانے آرڈر آپ کے نام کے بغیر ریکارڈ میں رہیں گے۔ یہ واپس نہیں ہو سکتا۔',
-         del_reason:'آپ کیوں جا رہے ہیں؟ (اختیاری)', del_done:'درخواست بھیج دی گئی۔ Wanhar Mart سات دن میں اکاؤنٹ ختم کر دے گا۔' }
+         del_reason:'آپ کیوں جا رہے ہیں؟ (اختیاری)', del_done:'درخواست بھیج دی گئی۔ Dera سات دن میں اکاؤنٹ ختم کر دے گا۔' }
   };
   const tt = (lang, k) => L[lang === 'ur' ? 'ur' : 'en'][k];
   const url = (lang, part) => 'legal.html?lang=' + (lang === 'ur' ? 'ur' : 'en') + '#' + part;
@@ -3332,7 +3347,7 @@ const Report = (() => {
       @media print{#rptWrap .rt{min-width:0}body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
     </style>
     <div class="pg"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h1>${esc2(o.title)}</h1><div style="color:#555">${esc2(o.subtitle || '')}</div></div>
-      <div style="text-align:right"><b style="font-size:18px">Wanhar Mart<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
+      <div style="text-align:right"><b style="font-size:18px">Dera<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
       ${(o.blocks || []).map(b => `<h2>${esc2(b.heading)}</h2><table>${kv(b.rows)}</table>`).join('')}
       ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2><div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${tbl(o.table)}</div>` : ''}
       ${o.note ? `<p style="color:#555;font-size:12px;margin-top:16px">${esc2(o.note)}</p>` : ''}</div>
@@ -3390,8 +3405,8 @@ const BackNav = (() => {
 const Receipt = (() => {
   const M = { cash:['💵', 'Cash', 'نقد'], jazzcash:['📱', 'JazzCash', 'جاز کیش'], easypaisa:['📱', 'Easypaisa', 'ایزی پیسہ'], bank:['🏦', 'Bank transfer', 'بینک ٹرانسفر'], other:['🧾', 'Other', 'دیگر'] };
   const W = {
-    en:{ receipt:'Payment receipt', deposit:'Cash deposit receipt', no:'Receipt no.', amount:'Amount', on:'Paid on', got_on:'Received on', method:'Payment method', ref:'Transaction ID', by:'Paid by', to:'Paid to', from:'Received from', recv_by:'Received by', period:'For orders', orders:'Orders', note:'Note', status:'Status', paid:'Paid ✓', recv:'Received ✓', print:'Print or save as PDF', close:'Close', n_orders:'orders', details:'Payment details', bd:'Pay breakdown', salary:'Monthly salary', delivery:'Delivery pay + tips', overtime:'Overtime', bonus:'Bonus', fines:'Fines', id_fee:'Rider ID fee (monthly)', month_pay:'Month pay', paid_before:'Paid before', this_pay:'This payment', left:'Still to pay after this', shop_earning:'Shop earning', shop_fee:'Monthly fee', monthly:'monthly', once:'one time', inst:'installment {k} of {n}', foot:'This receipt is made by the Wanhar Mart app. Keep it for your records.' },
-    ur:{ receipt:'ادائیگی کی رسید', deposit:'نقد جمع کرانے کی رسید', no:'رسید نمبر', amount:'رقم', on:'ادائیگی کا وقت', got_on:'وصولی کا وقت', method:'طریقہ', ref:'ٹرانزیکشن آئی ڈی', by:'ادا کرنے والا', to:'وصول کنندہ', from:'جمع کرانے والا', recv_by:'وصول کرنے والا', period:'آرڈرز کی مدت', orders:'آرڈرز', note:'نوٹ', status:'حالت', paid:'ادا ہو گیا ✓', recv:'وصول ہو گیا ✓', print:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', n_orders:'آرڈرز', details:'ادائیگی کی تفصیل', bd:'تنخواہ کی تفصیل', salary:'ماہانہ تنخواہ', delivery:'ڈیلیوری کی کمائی + ٹپ', overtime:'اوور ٹائم', bonus:'بونس', fines:'جرمانے', id_fee:'رائیڈر آئی ڈی فیس (ماہانہ)', month_pay:'مہینے کی تنخواہ', paid_before:'پہلے ادا ہوا', this_pay:'یہ ادائیگی', left:'اس کے بعد باقی', shop_earning:'دکان کی کمائی', shop_fee:'ماہانہ فیس', monthly:'ماہانہ', once:'ایک بار', inst:'قسط {k} از {n}', foot:'یہ رسید Wanhar Mart ایپ نے بنائی ہے۔ اپنے ریکارڈ کے لیے رکھیں۔' }
+    en:{ receipt:'Payment receipt', deposit:'Cash deposit receipt', no:'Receipt no.', amount:'Amount', on:'Paid on', got_on:'Received on', method:'Payment method', ref:'Transaction ID', by:'Paid by', to:'Paid to', from:'Received from', recv_by:'Received by', period:'For orders', orders:'Orders', note:'Note', status:'Status', paid:'Paid ✓', recv:'Received ✓', print:'Print or save as PDF', close:'Close', n_orders:'orders', details:'Payment details', bd:'Pay breakdown', salary:'Monthly salary', delivery:'Delivery pay + tips', overtime:'Overtime', bonus:'Bonus', fines:'Fines', id_fee:'Rider ID fee (monthly)', month_pay:'Month pay', paid_before:'Paid before', this_pay:'This payment', left:'Still to pay after this', shop_earning:'Shop earning', shop_fee:'Monthly fee', monthly:'monthly', once:'one time', inst:'installment {k} of {n}', foot:'This receipt is made by the Dera app. Keep it for your records.' },
+    ur:{ receipt:'ادائیگی کی رسید', deposit:'نقد جمع کرانے کی رسید', no:'رسید نمبر', amount:'رقم', on:'ادائیگی کا وقت', got_on:'وصولی کا وقت', method:'طریقہ', ref:'ٹرانزیکشن آئی ڈی', by:'ادا کرنے والا', to:'وصول کنندہ', from:'جمع کرانے والا', recv_by:'وصول کرنے والا', period:'آرڈرز کی مدت', orders:'آرڈرز', note:'نوٹ', status:'حالت', paid:'ادا ہو گیا ✓', recv:'وصول ہو گیا ✓', print:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', n_orders:'آرڈرز', details:'ادائیگی کی تفصیل', bd:'تنخواہ کی تفصیل', salary:'ماہانہ تنخواہ', delivery:'ڈیلیوری کی کمائی + ٹپ', overtime:'اوور ٹائم', bonus:'بونس', fines:'جرمانے', id_fee:'رائیڈر آئی ڈی فیس (ماہانہ)', month_pay:'مہینے کی تنخواہ', paid_before:'پہلے ادا ہوا', this_pay:'یہ ادائیگی', left:'اس کے بعد باقی', shop_earning:'دکان کی کمائی', shop_fee:'ماہانہ فیس', monthly:'ماہانہ', once:'ایک بار', inst:'قسط {k} از {n}', foot:'یہ رسید Dera ایپ نے بنائی ہے۔ اپنے ریکارڈ کے لیے رکھیں۔' }
   };
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const rs = n => 'Rs ' + Math.round(Number(n) || 0).toLocaleString('en-US');
@@ -3434,8 +3449,8 @@ const Receipt = (() => {
     const dep = o.kind === 'handover';
     const rows = [[L.no, iso(no(p.receipt_no))], [L.amount, rs(p.amount), true], [dep ? L.got_on : L.on, iso(full(p.created_at))], [L.method, method(p.method, o.ur)]];
     if (p.reference) rows.push([L.ref, iso(p.reference)]);
-    if (dep){ rows.push([L.from, o.to || ''], [L.recv_by, p.received_by_name || 'Wanhar Mart']); }
-    else { rows.push([L.by, (p.paid_by_name || 'Wanhar Mart') + ' · Wanhar Mart'], [L.to, o.to || '']); }
+    if (dep){ rows.push([L.from, o.to || ''], [L.recv_by, p.received_by_name || 'Dera']); }
+    else { rows.push([L.by, (p.paid_by_name || 'Dera') + ' · Dera'], [L.to, o.to || '']); }
     if (p.period_start) rows.push([L.period, period(p)]);
     if (p.orders_count) rows.push([L.orders, String(p.orders_count)]);
     rows.push([L.status, dep ? L.recv : L.paid]);
