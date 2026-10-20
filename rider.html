@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.23';
+const APP_VERSION = '5.24';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -701,7 +701,7 @@ const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
+    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', pw_ph:'Enter your password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
@@ -781,7 +781,7 @@ const I18N = {
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
-    rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
+    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', pw_ph:'اپنا پاس ورڈ لکھیں',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
@@ -2855,8 +2855,7 @@ const Legal = (() => {
     return `<div class="muted" style="font-size:13px;margin-top:10px;text-align:center">${tt(lang, 'agree').replace('{t}', `<a href="${url(lang, 'terms')}" target="_blank" rel="noopener">${tt(lang, 'terms')}</a>`).replace('{p}', `<a href="${url(lang, 'privacy')}" target="_blank" rel="noopener">${tt(lang, 'privacy')}</a>`)}</div>`;
   }
   function links(lang){
-    return `<a class="btn ghost" style="margin-bottom:10px;display:block;text-align:center;text-decoration:none" href="${url(lang, 'privacy')}" target="_blank" rel="noopener">📄 ${tt(lang, 'links')}</a>
-      <button class="btn ghost" style="margin-bottom:10px;color:var(--danger);border-color:var(--danger)" onclick="Legal.del()">🗑️ ${tt(lang, 'del')}</button>`;
+    return `<a class="btn ghost" style="margin-bottom:10px;display:block;text-align:center;text-decoration:none" href="${url(lang, 'privacy')}" target="_blank" rel="noopener">📄 ${tt(lang, 'links')}</a>`;
   }
   let cfg = null;
   function init(c){ cfg = c; }
