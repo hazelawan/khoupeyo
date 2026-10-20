@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#E8722A">
-<title>Wanhar Mart Admin</title>
+<title>Dera Admin</title>
 <link rel="manifest" href="manifest-admin.json?v=3">
 <link rel="apple-touch-icon" href="icon-admin-192.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -174,7 +174,7 @@ textarea{min-height:70px;resize:vertical}
 .menu-list .row{padding:16px 2px}
 :focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-/* ===== Wanhar Mart design system v2 (shared by all apps) ===== */
+/* ===== Dera design system v2 (shared by all apps) ===== */
 :root{
   --paper:#F2F5F1; --surface:#FFFFFF; --ink:#13201A; --muted:#64736A; --line:#E2E8E1; --soft:#E8F3EC; --field:#F3F6F2;
   --green:#0E7A4D; --green-dark:#0A5E3B; --green-2:#17A56B; --marigold:#FFB302; --danger:#D63B2F; --deal:#E2472F;
@@ -388,7 +388,7 @@ html[dir=rtl] .regrow .go{right:auto;left:14px}
 .bkprog i b,.pmbar b{display:block;height:100%;background:var(--brand);transition:width .3s}
 .pm{text-align:center}
 .pmname{font-size:22px;font-weight:800;margin-top:14px;overflow-wrap:anywhere}
-/* ===== Wanhar Mart design system v3 ===== */
+/* ===== Dera design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
   --green:#0B7D4F; --green-dark:#086640; --green-2:#14A064; --forest:#0B3A2B; --marigold:#FFB400; --danger:#D23B2E; --blue:#2463B5; --deal:#E2472F;
@@ -541,7 +541,7 @@ main{padding-bottom:130px!important}
 </style>
 </head>
 <body>
-<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">📊</div><div class="sp-word"><span style="animation-delay:0.65s">W</span><span style="animation-delay:0.70s">a</span><span style="animation-delay:0.74s">n</span><span style="animation-delay:0.79s">h</span><span style="animation-delay:0.83s">a</span><span style="animation-delay:0.88s">r</span><span style="width:10px;animation-delay:0.92s"> </span><span style="animation-delay:0.97s">M</span><span style="animation-delay:1.01s">a</span><span style="animation-delay:1.05s">r</span><span style="animation-delay:1.10s">t</span><span class="dot" style="animation-delay:1.15s">.</span></div><div class="sp-tag">Admin Panel</div><div class="sp-load"><i></i></div></div>
+<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">📊</div><div class="sp-word"><span style="animation-delay:0.65s">D</span><span style="animation-delay:0.70s">e</span><span style="animation-delay:0.74s">r</span><span style="animation-delay:0.79s">a</span><span class="dot" style="animation-delay:0.85s">.</span></div><div class="sp-tag">Admin Panel</div><div class="sp-load"><i></i></div></div>
 <script>window.__splashT=Date.now();</script>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.32';
+const APP_VERSION = '7.33';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -683,7 +683,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKe
 const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_up','delivered'];
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
-const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Wanhar Mart to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
+const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
 const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
@@ -826,7 +826,7 @@ async function signedUrls(paths){
 function showLogin(msg){
   $('app').innerHTML = `
   <div class="login">
-    <div class="brand">Wanhar Mart<b>.</b></div>
+    <div class="brand">Dera<b>.</b></div>
     <p class="muted">Admin sign in <span class="ver">v${APP_VERSION}</span></p>
     <form onsubmit="A.login(event)">
       <label class="f" for="em">Email</label><input id="em" type="email" autocomplete="username" placeholder="yourname@gmail.com" required>
@@ -923,7 +923,7 @@ function noImg(name, cat){
 // ---- Shell ----
 function showApp(){
   $('app').innerHTML = `
-    <div class="topbar"><div><div class="brand">Wanhar Mart<b>.</b><span class="ver">Admin v${APP_VERSION}</span></div><div class="consolesub">Admin Console</div></div>
+    <div class="topbar"><div><div class="brand">Dera<b>.</b><span class="ver">Admin v${APP_VERSION}</span></div><div class="consolesub">Admin Console</div></div>
       <div style="display:flex;gap:10px;align-items:center">${regionControl()}${Chat.button()}<button class="iconbtn" onclick="go(state.tab)" aria-label="Refresh" title="Refresh"></button></div></div>
     <main id="main"></main>
     <div class="nav"><div class="nav-inner" id="nav"></div></div>`;
@@ -1018,7 +1018,7 @@ function viewHome(){
     ${periodChips()}
     <div class="tiles">
       ${tile(money(n('gmv')), 'Total sales (collected)', true)}
-      ${tile(money(platform), 'Wanhar Mart earning', true)}
+      ${tile(money(platform), 'Dera earning', true)}
       ${tile(n('orders'), 'Orders')}
       ${tile(n('delivered'), 'Delivered')}
       ${tile(money(n('commission')), 'Shop commission')}
@@ -1030,7 +1030,7 @@ function viewHome(){
       ${tile(n('cancelled'), 'Cancelled or rejected')}
       ${tile(n('customers'), 'Customers ordered')}
     </div>
-    <p class="muted" style="font-size:13px">Wanhar Mart earning = commission + delivery fees − rider delivery pay − promo discounts. Rider salaries and fines are in the Riders tab.</p>
+    <p class="muted" style="font-size:13px">Dera earning = commission + delivery fees − rider delivery pay − promo discounts. Rider salaries and fines are in the Riders tab.</p>
     <h3>⚡ Quick actions</h3>
     <div class="chips" style="margin-bottom:6px">
       ${can('money') ? `<button class="chip" onclick="go('riders')">💸 Receive cash</button>` : ''}
@@ -1098,7 +1098,7 @@ function issueCard(i){
       <div class="bar" style="margin:8px 0 0">${i.lat != null ? `<a class="btn ghost small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${i.lat},${i.lng}">📍 Where rider was</a>` : '<span class="muted" style="font-size:13px">No location sent</span>'}
       ${i.photo_path ? `<button class="btn ghost small" onclick='A.lostPhoto(${JSON.stringify(i.photo_path)})'>🖼️ See photo</button>` : '<span class="muted" style="font-size:13px">No photo</span>'}</div>
       ${i.status === 'open' ? `<div class="note" style="margin:8px 0">Check: did the rider report at once? Is the place on the way? Is there a police report? Call the rider and the customer.</div>
-      <div class="two"><button class="btn warn" onclick="A.lostDecide('${i.id}', 'rider', ${Math.round(Number(o.subtotal || o.total || 0))})">💸 Rider pays</button><button class="btn" onclick="A.lostDecide('${i.id}', 'company', 0)">🛡️ Wanhar Mart pays</button></div>` : ''}` : ''}
+      <div class="two"><button class="btn warn" onclick="A.lostDecide('${i.id}', 'rider', ${Math.round(Number(o.subtotal || o.total || 0))})">💸 Rider pays</button><button class="btn" onclick="A.lostDecide('${i.id}', 'company', 0)">🛡️ Dera pays</button></div>` : ''}` : ''}
     ${i.status === 'open' && left != null ? `<div class="kv"><span class="muted">Customer waiting time</span><b class="${left > 0 ? 'red' : ''}">${left > 0 ? left + ' min left' : 'Over, rider can return'}</b></div>` : ''}
     <div class="kv"><span class="muted">Customer</span><span>${esc(c.full_name || '')}</span></div>
     <div class="kv"><span class="muted">Rider</span><span>${esc(rd ? rd.full_name : '')}</span></div>
@@ -1245,7 +1245,7 @@ function staffReqBlock(){
 function shopReqBlock(){
   const l = state.shopReqs || []; if (!l.length) return '';
   return `<div class="card" style="border:1.5px solid var(--marigold);box-shadow:0 0 0 4px rgba(255,180,0,.16)"><div class="row-title">🏪 New shop requests <span class="pill y">${l.length}</span></div>
-    <div class="muted" style="font-size:13px">Shops that want to join Wanhar Mart in your city. Check and approve.</div>
+    <div class="muted" style="font-size:13px">Shops that want to join Dera in your city. Check and approve.</div>
     ${l.map(q => `<button class="row" style="width:100%" onclick="A.shopReq('${q.id}')"><div class="row-main"><div class="row-title">${esc(q.shop_name)}</div>
       <div class="row-sub">${(q.categories || []).map(catName).map(esc).join(' · ')}${q.other_category ? ' · ' + esc(q.other_category) : ''}</div>
       <div class="row-sub">${q.seen_at ? '' : '<b style="color:var(--danger)">● New</b> · '}${esc(q.owner_name || '')} · ${esc(q.phone || '')} · ${when(q.created_at)}${!scope() && (state.regions || []).length > 1 ? ' · 📍 ' + esc(regionName(q.region_id)) : ''}</div></div><span class="muted">›</span></button>`).join('')}</div>`;
@@ -1737,7 +1737,7 @@ function genPw(){ const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ2345
 async function fnErr(e){ try { const j = await e.context.json(); return j.error || e.message; } catch (x) { return (e && e.message) || 'Something went wrong'; } }
 function showLoginCard(region, email, pw){
   const link = location.origin + location.pathname;
-  const text = `Wanhar Mart · ${region} incharge\nAdmin panel: ${link}\nEmail: ${email}${pw ? '\nPassword: ' + pw : ''}`;
+  const text = `Dera · ${region} incharge\nAdmin panel: ${link}\nEmail: ${email}${pw ? '\nPassword: ' + pw : ''}`;
   state.loginText = text;
   openSheet('✅ Incharge saved', `<div class="muted" style="font-size:14px">Send these login details to the incharge. They open the link, sign in, and see only <b>${esc(region)}</b>.${pw ? ' Ask them to keep the password safe.' : ' They use their own password.'}</div>
     <pre style="white-space:pre-wrap;background:var(--field);border-radius:12px;padding:12px;font-size:15px;margin:12px 0">${esc(text)}</pre>
@@ -1872,7 +1872,7 @@ function riderIdBlock(id, rider, r){
     ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
 }
 function riderLoginCard(code, pw, name){
-  const text = `Wanhar Mart Rider app\n${riderAppLink()}\nRider ID: ${code}\nPassword: ${pw}${name ? '\nName: ' + name : ''}`;
+  const text = `Dera Rider app\n${riderAppLink()}\nRider ID: ${code}\nPassword: ${pw}${name ? '\nName: ' + name : ''}`;
   state.loginText = text;
   openSheet('✅ Rider ID ready', `<div class="muted" style="font-size:14px">Give these details to the rider. They open the Rider app, write the Rider ID and password, and start work. They only get orders of this region.</div>
     <pre style="white-space:pre-wrap;background:var(--field);border-radius:12px;padding:12px;font-size:15px;margin:12px 0">${esc(text)}</pre>
@@ -1888,14 +1888,14 @@ function viewMore(){
   const item = (tab, title, sub) => `<button class="row" onclick="go('${tab}')"><div class="row-main"><div class="row-title">${title}</div><div class="row-sub">${sub}</div></div><span class="muted">›</span></button>`;
   const it = (tab, title, sub) => can(TAB_PERM[tab]) ? item(tab, title, sub) : '';
   const grp = (icon, title, inner) => inner.trim() ? `<h3 style="margin:18px 0 8px">${icon} ${title}</h3><div class="list">${inner}</div>` : '';
-  const chatBtn = can('chat') ? `<button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Wanhar Mart</div></div><span class="muted">›</span></button>` : '';
+  const chatBtn = can('chat') ? `<button class="row" onclick="Chat.inbox()"><div class="row-main"><div class="row-title">💬 Messages and support</div><div class="row-sub">All chats between customers, riders, shops and Dera</div></div><span class="muted">›</span></button>` : '';
   const money = it('reports', '📊 Reports', 'Monthly reports, shop statements and rider pay slips (Excel or PDF)')
     + it('payoutreq', '💸 Shop payout requests', 'Shops asking for their money — pay them from here')
     + it('targets', '💰 Rider pay and targets', 'Pay per delivery for bike, car and bicycle · bonus targets');
   const marketing = it('promos', '🎟️ Promo codes', 'Discounts, first order offer, free delivery')
     + it('banners', '🖼️ Home banners', 'Big pictures at the top of the customer app')
     + it('campaign', '📣 Send notification', 'Message on the phones of all customers, riders or shops in your area')
-    + it('plus', '⭐ Wanhar Plus', 'Monthly membership with free delivery: price, members, payments to check');
+    + it('plus', '⭐ Dera Plus', 'Monthly membership with free delivery: price, members, payments to check');
   const places = it('zones', '📍 Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')
     + it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there');
   const people = it('customers', '👥 Customers', 'See every customer, their orders, block or unblock')
@@ -1915,7 +1915,7 @@ function viewMore(){
     ${grp('⚙️', 'System', system)}
     ${grp('👤', 'Account', `<a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">🚪 Sign out</div></div></button>`)}
-  <p class="ver" style="margin-top:14px">Wanhar Mart Admin v${APP_VERSION} (${APP_DATE})</p>`;
+  <p class="ver" style="margin-top:14px">Dera Admin v${APP_VERSION} (${APP_DATE})</p>`;
 }
 
 // ---- Searched but not found ----
@@ -1940,20 +1940,20 @@ function viewBackup(){
       <div class="actions"><button class="btn block" id="bkBtn" onclick="A.backup()">⬇️ Download backup (Excel)</button></div>
       <div class="muted" style="font-size:13px" id="bkMsg"></div></div>`;
 }
-// ---- Wanhar Plus ----
+// ---- Dera Plus ----
 function viewPlus(){
   const rid = payRegion(); const p = Object.assign({ on:false, price:299, days:30, cap:0, min:0 }, state.settings.plus || {});
   const now = new Date(); const all = state.plusSubs || [];
   const pending = all.filter(x => x.status === 'pending'), active = all.filter(x => x.status === 'active' && new Date(x.ends_at) > now);
   const money30 = all.filter(x => x.status === 'active' && new Date(x.created_at) > new Date(Date.now() - 30 * 864e5)).reduce((n, x) => n + num(x.amount), 0);
-  return `${backLink()}<h2>⭐ Wanhar Plus</h2>
-    <div class="note">Customers pay a monthly fee and get free delivery. Wanhar Mart pays the delivery fee for them (the rider is still paid normally). It brings fixed monthly income and makes customers order more often.</div>
+  return `${backLink()}<h2>⭐ Dera Plus</h2>
+    <div class="note">Customers pay a monthly fee and get free delivery. Dera pays the delivery fee for them (the rider is still paid normally). It brings fixed monthly income and makes customers order more often.</div>
     <div class="tiles"><div class="tile hi"><b>${active.length}</b><span>Members now</span></div><div class="tile"><b>${money(money30)}</b><span>Plus income (30 days)</span></div></div>
     ${pending.length ? `<h3>💳 Payments to check (${pending.length})</h3>${pending.map(x => `<div class="card paycard"><div class="kv"><b>${esc(x.user?.full_name || 'Customer')}</b><span>${money(x.amount)}</span></div>
       <div class="kv"><span class="muted">TID</span><b style="user-select:all">${esc(x.pay_ref || '')}</b></div><div class="muted" style="font-size:13px">${esc(x.user?.phone || '')} · ${when(x.created_at)}</div>
       <div class="two" style="margin-top:8px"><button class="btn warn" onclick="A.plusAct('${x.id}', false)">Not received</button><button class="btn" onclick="A.plusAct('${x.id}', true)">✅ Money received</button></div></div>`).join('')}` : ''}
     ${rid ? `<div class="card"><b>Settings for ${esc(regionName(rid))}</b>
-      <label class="check"><input id="pl_on" type="checkbox" ${p.on ? 'checked' : ''}> Wanhar Plus is on</label>
+      <label class="check"><input id="pl_on" type="checkbox" ${p.on ? 'checked' : ''}> Dera Plus is on</label>
       <div class="two"><div><label class="f" for="pl_price">Price (Rs)</label><input id="pl_price" type="number" min="1" value="${num(p.price)}"></div><div><label class="f" for="pl_days">Days</label><input id="pl_days" type="number" min="1" max="365" value="${num(p.days)}"></div></div>
       <div class="two"><div><label class="f" for="pl_min">Free delivery above (Rs, 0 = all)</label><input id="pl_min" type="number" min="0" value="${num(p.min)}"></div><div><label class="f" for="pl_cap">Max free per order (Rs, 0 = full fee)</label><input id="pl_cap" type="number" min="0" value="${num(p.cap)}"></div></div>
       <div class="muted" style="font-size:13px">Customers pay with their wallet or with JazzCash / Easypaisa / Raast to your accounts in Settings → Online payment.</div>
@@ -2084,7 +2084,7 @@ function viewCampaign(){
       <label class="f" for="cp_to" style="margin-top:0">Send to</label><select id="cp_to"><option value="customers">👥 All customers</option><option value="riders">🛵 All riders</option><option value="shops">🏪 All shop owners</option></select>
       <label class="f" for="cp_t">Title</label><input id="cp_t" type="text" maxlength="60" placeholder="🎉 Free delivery today!">
       <label class="f" for="cp_b">Message</label><textarea id="cp_b" rows="3" maxlength="180" placeholder="Order anything above Rs 500 — delivery is on us till 10 PM."></textarea>
-      <div class="bar" style="margin-top:8px">${[['🎉 Free delivery today!', 'Order above Rs 500 and pay no delivery fee till 10 PM.'], ['🍔 Hungry?', 'Your favourite food is a few taps away. Order now on Wanhar Mart.'], ['🛒 Weekly grocery', 'Atta, ghee, sugar and more — delivered to your door today.']].map(([a, b]) => `<button class="chip" onclick="$('cp_t').value=${esc(JSON.stringify(a))};$('cp_b').value=${esc(JSON.stringify(b))}">${esc(a)}</button>`).join('')}</div>
+      <div class="bar" style="margin-top:8px">${[['🎉 Free delivery today!', 'Order above Rs 500 and pay no delivery fee till 10 PM.'], ['🍔 Hungry?', 'Your favourite food is a few taps away. Order now on Dera.'], ['🛒 Weekly grocery', 'Atta, ghee, sugar and more — delivered to your door today.']].map(([a, b]) => `<button class="chip" onclick="$('cp_t').value=${esc(JSON.stringify(a))};$('cp_b').value=${esc(JSON.stringify(b))}">${esc(a)}</button>`).join('')}</div>
       <div class="actions"><button class="btn block" id="cpSend" onclick="A.sendCampaign()">📣 Send now</button></div></div>
     <h3>Sent before</h3><div class="list">${rows || '<div class="empty">Nothing sent yet.</div>'}</div>`;
 }
@@ -2409,7 +2409,7 @@ function viewSettings(){
   const sub = state.setTab;
   const menuRow = (key, icon, title, sub2) => `<button class="row" onclick="state.setTab='${key}';go('settings')"><div class="row-main"><div class="row-title">${icon} ${title}</div><div class="row-sub">${sub2}</div></div><span class="muted">›</span></button>`;
   const back = `<button class="row" onclick="state.setTab=null;go('settings')"><div class="row-main"><div class="row-title">‹ Back to Settings</div></div></button>`;
-  const note = sc ? `<div class="note" style="border-color:var(--brand)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Wanhar Mart settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
+  const note = sc ? `<div class="note" style="border-color:var(--brand)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Dera settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
       : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : '';
   if (!sub) return `${backLink()}<h2>Settings</h2>${note}<div class="list">
     ${menuRow('pay', '💳', 'Online Payment Accounts', 'JazzCash, Easypaisa, Bank, Raast, QR')}
@@ -2491,7 +2491,7 @@ function setMultiZoneCard(s){
 function setRiderShareCard(s){
   return `<div class="card">
     <b>📦 Big and heavy orders: rider share</b>
-    <div class="muted" style="font-size:14px">Customers pay extra delivery for big orders and heavy items (set in Delivery zones and Products). Choose how much of that extra goes to the rider. 100 = all to the rider, 0 = all to Wanhar Mart.</div>
+    <div class="muted" style="font-size:14px">Customers pay extra delivery for big orders and heavy items (set in Delivery zones and Products). Choose how much of that extra goes to the rider. 100 = all to the rider, 0 = all to Dera.</div>
     <label class="f" for="rx_share">Rider gets (%)</label><input id="rx_share" type="number" min="0" max="100" value="${num(s.rider_extra_share ?? 100)}">
     <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('rider_extra_share', Math.min(100, Math.max(0, num($('rx_share').value))))">Save</button></div>
   </div>`;
@@ -2584,7 +2584,7 @@ function setPointsCard(s){
   const cur = (s.top_shops && Array.isArray(s.top_shops.ids)) ? s.top_shops : { ids:[] };
   const now = new Date(); const m0 = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   return `<div class="card">
-    <b>🏆 Wanhar Points — Top 5 Shops</b>
+    <b>🏆 Dera Points — Top 5 Shops</b>
     <div class="muted" style="font-size:14px">Dukaan walay (points) apna invite code naye customers ko lagatay hain — yahan har mahine ki gintee banti hai. Top 5 ki dukaanen customer app mein sab se upar ⭐ badge ke sath dikhti hain. Inaam sirf promotion hai, paisay nahi.</div>
     <div class="two"><div><label class="f" for="pt_month">Month</label><input id="pt_month" type="month" value="${esc(cur.month || m0)}"></div>
     <div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="A.pointsBoard()">📊 Leaderboard dekho</button></div></div>
@@ -2615,7 +2615,7 @@ function setAwardsCard(s){
 function setBookingCard(s){
   return `<div class="card">
     <b>📅 Bookings commission (barber, salon, services)</b>
-    <div class="muted" style="font-size:14px">Wanhar Mart's percent on every booking that is done. 0 = free. Shops see this percent in their app before they take bookings. A new percent is used only for new bookings.</div>
+    <div class="muted" style="font-size:14px">Dera's percent on every booking that is done. 0 = free. Shops see this percent in their app before they take bookings. A new percent is used only for new bookings.</div>
     <label class="f" for="bkc_pct">Commission on bookings (%)</label><input id="bkc_pct" type="number" min="0" max="50" step="0.5" value="${num((s.booking || {}).pct)}">
     <div class="actions"><button class="btn ghost block" onclick="A.saveBookingPct()">Save</button></div>
   </div>`;
@@ -2623,7 +2623,7 @@ function setBookingCard(s){
 function setSupportCard(s){
   return `<div class="card">
     <label class="f" for="s_sup" style="margin-top:0"><b>Support phone number</b></label>
-    <div class="muted" style="font-size:14px">Riders see a "Call Wanhar Mart" button with this number.</div>
+    <div class="muted" style="font-size:14px">Riders see a "Call Dera" button with this number.</div>
     <input id="s_sup" type="text" inputmode="tel" value="${esc(s.support_phone || '')}" placeholder="03001234567" style="margin-top:8px">
     <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('support_phone', $('s_sup').value.trim())">Save</button></div>
     <label class="f" for="s_mail"><b>Support email</b></label>
@@ -2679,7 +2679,7 @@ const A = {
       <div class="kv"><span class="muted">Delivery${num(o.bulk_fee) || num(o.heavy_fee) ? ` (incl. ${num(o.bulk_fee) ? 'big order ' + money(o.bulk_fee) : ''}${num(o.bulk_fee) && num(o.heavy_fee) ? ', ' : ''}${num(o.heavy_fee) ? 'heavy items ' + money(o.heavy_fee) : ''})` : ''}</span><span>${money(o.delivery_fee)}</span></div>
       ${num(o.shop_discount) ? `<div class="kv"><span class="muted">🏷️ Shop offer (paid by shop)</span><span>-${money(o.shop_discount)}</span></div>` : ''}
       ${num(o.discount) ? `<div class="kv"><span class="muted">Discount ${esc(o.promo_code || '')}</span><span>-${money(o.discount)}</span></div>` : ''}
-      ${num(o.plus_saved) ? `<div class="kv"><span class="muted">⭐ Plus free delivery (Wanhar pays)</span><span>-${money(o.plus_saved)}</span></div>` : ''}
+      ${num(o.plus_saved) ? `<div class="kv"><span class="muted">⭐ Plus free delivery (Dera pays)</span><span>-${money(o.plus_saved)}</span></div>` : ''}
       ${num(o.wallet_used) ? `<div class="kv"><span class="muted">💰 Paid from wallet</span><span>-${money(o.wallet_used)}</span></div>` : ''}
       ${num(o.tip) ? `<div class="kv"><span class="muted">Rider tip (goes to rider)</span><span>${money(o.tip)}</span></div>` : ''}
       <div class="kv total"><span>${o.payment_method === 'wallet' ? 'Paid online' + (o.pay_label ? ' (' + esc(o.pay_label) + ')' : '') : o.payment_method === 'qr_door' ? 'Paid by QR at the door' : 'Cash on delivery'}</span><span>${money(o.total)}</span></div>
@@ -2766,7 +2766,7 @@ const A = {
     await run(async () => { const bal = need(await sb.rpc('admin_wallet_credit', { p_user:id, p_amount:amt, p_note:note })); toast('Wallet now ' + money(bal)); await A.openCustomer(id); });
   },
   async refundWallet(id){
-    if (!await uiConfirm('Put the money in the customer’s Wanhar wallet? They can use it on their next order.')) return;
+    if (!await uiConfirm('Put the money in the customer’s Dera wallet? They can use it on their next order.')) return;
     await run(async () => { need(await sb.rpc('admin_refund_wallet', { p_order:id })); closeSheet(); await loadOrders(); renderTab(); toast('Added to wallet'); });
   },
   async sponsor(id, days){
@@ -2801,7 +2801,7 @@ const A = {
         const riders = await page(() => sb.from('riders').select('id,rider_code,vehicle,contract_type,is_approved,blocked,created_at,profile:profiles(full_name,phone)').order('created_at'), 5000);
         const d = x => x ? new Date(x).toLocaleString('en-GB', { timeZone:'Asia/Karachi' }) : '';
         say('Making the file…');
-        await Report.excel('WanharMart-backup-' + new Date().toISOString().slice(0, 10), [
+        await Report.excel('Dera-backup-' + new Date().toISOString().slice(0, 10), [
           { name:'Orders', rows:[['Order', 'Date', 'Delivered', 'Status', 'Type', 'Payment', 'Pay status', 'Items', 'Delivery fee', 'Discount', 'Tip', 'Total', 'Commission', 'Shop gets', 'Rider pay', 'Shop', 'Customer', 'Phone', 'Rider', 'Address', 'Receiver', 'Receiver phone']]
             .concat(ords.map(o => ['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), d(o.delivered_at), o.status, o.order_type, o.payment_method, o.payment_status, num(o.subtotal), num(o.delivery_fee), num(o.discount), num(o.tip), num(o.total), num(o.commission_amount), num(o.restaurant_earning), num(o.rider_pay), o.restaurant?.name || '', o.customer?.full_name || '', o.customer?.phone || '', o.rider?.profile?.full_name || '', o.address_text || '', o.receiver_name || '', o.receiver_phone || ''])) },
           { name:'Shops', rows:[['Name', 'Phone', 'Address', 'Type', 'Active', 'Open', 'Commission %', 'Monthly fee', 'Joined']].concat(shops.map(r => [r.name, r.phone || '', r.address || '', (r.categories || []).join(', '), r.is_active ? 'yes' : 'no', r.is_open ? 'yes' : 'no', num(r.commission_percent), num(r.monthly_fee), d(r.created_at)])) },
@@ -2860,7 +2860,7 @@ const A = {
       months = Math.max(1, Math.min(12, Math.round(num(m)) || 1));
     }
     const note = await uiPrompt('Note for the rider (optional)', payer === 'rider' ? 'No proof that the order was stolen' : 'Police report checked'); if (note === null) return;
-    if (!await uiConfirm(payer === 'rider' ? `Cancel this order and cut Rs ${amount}${months > 1 ? ' in ' + months + ' months' : ''} from the rider's pay?` : 'Cancel this order. Wanhar Mart pays, no charge to the rider?')) return;
+    if (!await uiConfirm(payer === 'rider' ? `Cancel this order and cut Rs ${amount}${months > 1 ? ' in ' + months + ' months' : ''} from the rider's pay?` : 'Cancel this order. Dera pays, no charge to the rider?')) return;
     await run(async () => { need(await sb.rpc('admin_lost_decision', { p_issue:id, p_payer:payer, p_amount:amount, p_months:months, p_note:note || null })); await loadOrders(); renderTab(); toast('Done. Order cancelled.'); });
   },
   async issueAction(id, action){
@@ -3603,19 +3603,19 @@ const A = {
         const out = [['Order', 'Date', 'Status', 'Shop', 'Customer', 'Phone', 'Rider', 'Address', 'Items total', 'Delivery fee', 'Discount', 'Promo', 'Tip', 'Total', 'Commission', 'Shop gets', 'Rider pay', 'Delivered at', 'Scheduled for']];
         rows.forEach(o => out.push(['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), o.status, o.restaurant?.name || '', o.customer?.full_name || '', o.customer?.phone || '', o.rider?.profile?.full_name || '', o.address_text || '',
           num(o.subtotal), num(o.delivery_fee), num(o.discount), o.promo_code || '', num(o.tip), num(o.total), num(o.commission_amount), num(o.restaurant_earning), num(o.rider_pay), d(o.delivered_at), d(o.scheduled_for)]));
-        return Report.excel('Wanhar-Mart-orders-' + tag, [{ name:'Orders ' + tag, rows:out }]);
+        return Report.excel('Dera-Mart-orders-' + tag, [{ name:'Orders ' + tag, rows:out }]);
       }
       if (kind === 'shops'){
         const rep = need(await sb.rpc('admin_shop_report', { p_from:f.toISOString(), p_to:t.toISOString() })) || [];
         const out = [['Shop', 'Orders', 'Delivered', 'Cancelled', 'Sales', 'Commission', 'Shop earning', 'Unpaid to shop (all time)', 'Rating']];
         rep.forEach(r => out.push([r.name || (state.restaurants.find(x => x.id === r.restaurant_id) || {}).name || '', num(r.orders), num(r.delivered), num(r.cancelled), num(r.food_sales), num(r.commission), num(r.shop_earning), num(r.unpaid), r.rating || '']));
-        return Report.excel('Wanhar-Mart-shops-' + tag, [{ name:'Shops ' + tag, rows:out }]);
+        return Report.excel('Dera-Mart-shops-' + tag, [{ name:'Shops ' + tag, rows:out }]);
       }
       if (kind === 'riders'){
         const rs = need(await sb.rpc('admin_rider_month', { p_month:m })) || []; const cm = await chargesMap(m);
         const out = [['Rider', 'Phone', 'Contract', 'Deliveries', 'Salary', 'Delivery pay + tips', 'Overtime (h)', 'Overtime pay', 'Bonus', 'Fines', 'ID fee', 'Charges (helmet, food…)', 'Month pay', 'Paid', 'Due', 'Duty hours', 'Days worked', 'Late days', 'Cash in hand now']];
         rs.filter(r => r.is_approved).forEach(r => { const net = riderNet(r, cm); out.push([r.full_name || '', r.phone || '', r.contract_type === 'company' ? 'Company bike (salary)' : 'Own bike (per delivery)', num(r.deliveries), num(r.monthly_salary), num(r.delivery_pay), +(num(r.overtime_minutes) / 60).toFixed(1), num(r.overtime_pay), num(r.bonus), num(r.fines), idFee(r), chargeOf(r, cm), net, num(r.paid), Math.max(0, net - num(r.paid)), +(num(r.online_minutes) / 60).toFixed(1), num(r.days_worked), num(r.late_days), num(r.cash_in_hand)]); });
-        return Report.excel('Wanhar-Mart-riders-' + tag, [{ name:'Riders ' + tag, rows:out }]);
+        return Report.excel('Dera-Mart-riders-' + tag, [{ name:'Riders ' + tag, rows:out }]);
       }
     });
   },
@@ -4449,11 +4449,11 @@ A.publish = async function(){
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Wanhar Mart support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
-      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Wanhar Mart', order:'Order',
-      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Wanhar Mart support',
-      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Wanhar Mart support',
-      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Wanhar Mart support',
+      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Dera', order:'Order',
+      'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Dera support',
+      'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Dera support',
+      'as_shop.cs':'Customer', 'as_shop.rs':'Rider', 'as_shop.sup_s':'Dera support',
       'as_admin.cr':'Customer and rider', 'as_admin.cs':'Customer and shop', 'as_admin.rs':'Rider and shop',
       'as_admin.sup_c':'Support: customer', 'as_admin.sup_r':'Support: rider', 'as_admin.sup_s':'Support: shop', sup:'Support',
       q_customer_cr:['Please call me','I am coming down','Please leave it at the door','Where are you now?'],
@@ -4465,20 +4465,20 @@ const Chat = (() => {
       q_shop_cs:['Your order is being prepared','Your order is ready','Sorry, one item is not available','It will take 10 more minutes'],
       q_shop_rs:['The order is ready, please come','Ready in 10 minutes','Where are you?','Please come soon, I am waiting'],
       q_shop_sup:['I have a problem with an order','When will I receive my payment?','The rider is late','Please call me'],
-      q_admin_cr:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
-      q_admin_cs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
-      q_admin_rs:['Wanhar Mart here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cr:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_cs:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
+      q_admin_rs:['Dera here. How can we help?','Please share what happened','Thank you, we are solving it'],
       q_admin_sup:['Hello, how can we help you?','We are looking into it','Thank you for waiting','Please call us'],
       q_admin:['We are looking into it','Thank you for waiting','Please call us'],
-      ask_join:'Call Wanhar Mart', ask_reason:'Tell Wanhar Mart what the problem is (for example: customer paid less cash):', ask_sent:'Wanhar Mart has been asked to join this chat',
-      sys_req:'{w} asked Wanhar Mart to join this chat', sys_joined:'Wanhar Mart joined the chat. Please explain the problem.'
+      ask_join:'Call Dera', ask_reason:'Tell Dera what the problem is (for example: customer paid less cash):', ask_sent:'Dera has been asked to join this chat',
+      sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Wanhar Mart سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
-      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Wanhar Mart', order:'آرڈر',
-      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Wanhar Mart سپورٹ',
-      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Wanhar Mart سپورٹ',
-      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Wanhar Mart سپورٹ',
+      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Dera', order:'آرڈر',
+      'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Dera سپورٹ',
+      'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Dera سپورٹ',
+      'as_shop.cs':'گاہک', 'as_shop.rs':'رائیڈر', 'as_shop.sup_s':'Dera سپورٹ',
       sup:'سپورٹ',
       q_customer_cr:['مجھے کال کریں','میں نیچے آ رہا ہوں','دروازے پر رکھ دیں','آپ ابھی کہاں ہیں؟'],
       q_customer_cs:['میرا آرڈر کتنی دیر میں تیار ہوگا؟','مرچ کم رکھیں','ساس زیادہ ڈال دیں','اچھی طرح پیک کریں'],
@@ -4490,8 +4490,8 @@ const Chat = (() => {
       q_shop_rs:['آرڈر تیار ہے، آ جائیں','10 منٹ میں تیار ہوگا','آپ کہاں ہیں؟','جلدی آئیں، میں انتظار کر رہا ہوں'],
       q_shop_sup:['ایک آرڈر میں مسئلہ ہے','میری ادائیگی کب ملے گی؟','رائیڈر لیٹ ہے','مجھے کال کریں'],
       q_admin:['ہم دیکھ رہے ہیں','انتظار کا شکریہ','براہ کرم ہمیں کال کریں'],
-      ask_join:'Wanhar Mart کو بلائیں', ask_reason:'Wanhar Mart کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Wanhar Mart کو اس چیٹ میں بلا لیا گیا',
-      sys_req:'{w} نے Wanhar Mart کو چیٹ میں بلایا', sys_joined:'Wanhar Mart چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
+      ask_join:'Dera کو بلائیں', ask_reason:'Dera کو مسئلہ بتائیں (مثلاً: گاہک نے کم رقم دی):', ask_sent:'Dera کو اس چیٹ میں بلا لیا گیا',
+      sys_req:'{w} نے Dera کو چیٹ میں بلایا', sys_joined:'Dera چیٹ میں شامل ہو گیا۔ براہ کرم مسئلہ بتائیں۔'
     }
   };
   let cfg = null, cur = null, chan = null, seenIds = new Set(), unread = {};
@@ -4905,8 +4905,8 @@ const Bulk = (() => {
       const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
       let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', i.keywords || '', i.barcode || '', '']);
       if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
-      const help = L() === 'ur' ? [['Wanhar Mart · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
-        : [['Wanhar Mart · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      const help = L() === 'ur' ? [['Dera · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Dera · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
       download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
         'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     } catch (e) { C.toast(e.message || 'Error', true); }
@@ -5392,7 +5392,7 @@ const Report = (() => {
       @media print{#rptWrap .rt{min-width:0}body>*:not(#rptWrap){display:none!important}#rptWrap{position:static!important;background:#fff!important;padding:0!important;overflow:visible!important}#rptWrap .nb{display:none!important}#rptWrap .pg{border-radius:0;padding:0}}
     </style>
     <div class="pg"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><h1>${esc2(o.title)}</h1><div style="color:#555">${esc2(o.subtitle || '')}</div></div>
-      <div style="text-align:right"><b style="font-size:18px">Wanhar Mart<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
+      <div style="text-align:right"><b style="font-size:18px">Dera<span style="color:#F2A900">.</span></b><div style="color:#555;font-size:12px">Kallar Kahar · ${esc2(new Date().toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }))}</div></div></div>
       ${(o.blocks || []).map(b => `<h2>${esc2(b.heading)}</h2><table>${kv(b.rows)}</table>`).join('')}
       ${o.table ? `<h2>${esc2(o.table.heading || '')}</h2><div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${tbl(o.table)}</div>` : ''}
       ${o.note ? `<p style="color:#555;font-size:12px;margin-top:16px">${esc2(o.note)}</p>` : ''}</div>
@@ -5450,8 +5450,8 @@ const BackNav = (() => {
 const Receipt = (() => {
   const M = { cash:['💵', 'Cash', 'نقد'], jazzcash:['📱', 'JazzCash', 'جاز کیش'], easypaisa:['📱', 'Easypaisa', 'ایزی پیسہ'], bank:['🏦', 'Bank transfer', 'بینک ٹرانسفر'], other:['🧾', 'Other', 'دیگر'] };
   const W = {
-    en:{ receipt:'Payment receipt', deposit:'Cash deposit receipt', no:'Receipt no.', amount:'Amount', on:'Paid on', got_on:'Received on', method:'Payment method', ref:'Transaction ID', by:'Paid by', to:'Paid to', from:'Received from', recv_by:'Received by', period:'For orders', orders:'Orders', note:'Note', status:'Status', paid:'Paid ✓', recv:'Received ✓', print:'Print or save as PDF', close:'Close', n_orders:'orders', details:'Payment details', bd:'Pay breakdown', salary:'Monthly salary', delivery:'Delivery pay + tips', overtime:'Overtime', bonus:'Bonus', fines:'Fines', id_fee:'Rider ID fee (monthly)', month_pay:'Month pay', paid_before:'Paid before', this_pay:'This payment', left:'Still to pay after this', shop_earning:'Shop earning', shop_fee:'Monthly fee', monthly:'monthly', once:'one time', inst:'installment {k} of {n}', foot:'This receipt is made by the Wanhar Mart app. Keep it for your records.' },
-    ur:{ receipt:'ادائیگی کی رسید', deposit:'نقد جمع کرانے کی رسید', no:'رسید نمبر', amount:'رقم', on:'ادائیگی کا وقت', got_on:'وصولی کا وقت', method:'طریقہ', ref:'ٹرانزیکشن آئی ڈی', by:'ادا کرنے والا', to:'وصول کنندہ', from:'جمع کرانے والا', recv_by:'وصول کرنے والا', period:'آرڈرز کی مدت', orders:'آرڈرز', note:'نوٹ', status:'حالت', paid:'ادا ہو گیا ✓', recv:'وصول ہو گیا ✓', print:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', n_orders:'آرڈرز', details:'ادائیگی کی تفصیل', bd:'تنخواہ کی تفصیل', salary:'ماہانہ تنخواہ', delivery:'ڈیلیوری کی کمائی + ٹپ', overtime:'اوور ٹائم', bonus:'بونس', fines:'جرمانے', id_fee:'رائیڈر آئی ڈی فیس (ماہانہ)', month_pay:'مہینے کی تنخواہ', paid_before:'پہلے ادا ہوا', this_pay:'یہ ادائیگی', left:'اس کے بعد باقی', shop_earning:'دکان کی کمائی', shop_fee:'ماہانہ فیس', monthly:'ماہانہ', once:'ایک بار', inst:'قسط {k} از {n}', foot:'یہ رسید Wanhar Mart ایپ نے بنائی ہے۔ اپنے ریکارڈ کے لیے رکھیں۔' }
+    en:{ receipt:'Payment receipt', deposit:'Cash deposit receipt', no:'Receipt no.', amount:'Amount', on:'Paid on', got_on:'Received on', method:'Payment method', ref:'Transaction ID', by:'Paid by', to:'Paid to', from:'Received from', recv_by:'Received by', period:'For orders', orders:'Orders', note:'Note', status:'Status', paid:'Paid ✓', recv:'Received ✓', print:'Print or save as PDF', close:'Close', n_orders:'orders', details:'Payment details', bd:'Pay breakdown', salary:'Monthly salary', delivery:'Delivery pay + tips', overtime:'Overtime', bonus:'Bonus', fines:'Fines', id_fee:'Rider ID fee (monthly)', month_pay:'Month pay', paid_before:'Paid before', this_pay:'This payment', left:'Still to pay after this', shop_earning:'Shop earning', shop_fee:'Monthly fee', monthly:'monthly', once:'one time', inst:'installment {k} of {n}', foot:'This receipt is made by the Dera app. Keep it for your records.' },
+    ur:{ receipt:'ادائیگی کی رسید', deposit:'نقد جمع کرانے کی رسید', no:'رسید نمبر', amount:'رقم', on:'ادائیگی کا وقت', got_on:'وصولی کا وقت', method:'طریقہ', ref:'ٹرانزیکشن آئی ڈی', by:'ادا کرنے والا', to:'وصول کنندہ', from:'جمع کرانے والا', recv_by:'وصول کرنے والا', period:'آرڈرز کی مدت', orders:'آرڈرز', note:'نوٹ', status:'حالت', paid:'ادا ہو گیا ✓', recv:'وصول ہو گیا ✓', print:'پرنٹ یا PDF محفوظ کریں', close:'بند کریں', n_orders:'آرڈرز', details:'ادائیگی کی تفصیل', bd:'تنخواہ کی تفصیل', salary:'ماہانہ تنخواہ', delivery:'ڈیلیوری کی کمائی + ٹپ', overtime:'اوور ٹائم', bonus:'بونس', fines:'جرمانے', id_fee:'رائیڈر آئی ڈی فیس (ماہانہ)', month_pay:'مہینے کی تنخواہ', paid_before:'پہلے ادا ہوا', this_pay:'یہ ادائیگی', left:'اس کے بعد باقی', shop_earning:'دکان کی کمائی', shop_fee:'ماہانہ فیس', monthly:'ماہانہ', once:'ایک بار', inst:'قسط {k} از {n}', foot:'یہ رسید Dera ایپ نے بنائی ہے۔ اپنے ریکارڈ کے لیے رکھیں۔' }
   };
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const rs = n => 'Rs ' + Math.round(Number(n) || 0).toLocaleString('en-US');
@@ -5494,8 +5494,8 @@ const Receipt = (() => {
     const dep = o.kind === 'handover';
     const rows = [[L.no, iso(no(p.receipt_no))], [L.amount, rs(p.amount), true], [dep ? L.got_on : L.on, iso(full(p.created_at))], [L.method, method(p.method, o.ur)]];
     if (p.reference) rows.push([L.ref, iso(p.reference)]);
-    if (dep){ rows.push([L.from, o.to || ''], [L.recv_by, p.received_by_name || 'Wanhar Mart']); }
-    else { rows.push([L.by, (p.paid_by_name || 'Wanhar Mart') + ' · Wanhar Mart'], [L.to, o.to || '']); }
+    if (dep){ rows.push([L.from, o.to || ''], [L.recv_by, p.received_by_name || 'Dera']); }
+    else { rows.push([L.by, (p.paid_by_name || 'Dera') + ' · Dera'], [L.to, o.to || '']); }
     if (p.period_start) rows.push([L.period, period(p)]);
     if (p.orders_count) rows.push([L.orders, String(p.orders_count)]);
     rows.push([L.status, dep ? L.recv : L.paid]);
