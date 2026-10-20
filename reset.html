@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Wanhar Mart · New password</title>
+<title>Dera · New password</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -53,9 +53,9 @@ button.btn:disabled{opacity:.6}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand">Wanhar Mart<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
+  <div class="top"><div class="brand">Dera<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
   <div class="card" id="card"></div>
-  <div class="foot">Wanhar Mart · Kallar Kahar</div>
+  <div class="foot">Dera · Kallar Kahar</div>
 </div>
 <script>
 const T = {
@@ -63,12 +63,12 @@ const T = {
        short:'Password must be at least 6 characters', nomatch:'The two passwords are not the same', wait:'Checking your link…',
        ok_t:'Password changed 🎉', ok_p:'Your new password is saved. Log in with your email and new password.',
        bad_t:'Link expired', bad_p:'This reset link has expired or was already used. Open the app, tap “Forgot password?” and get a new link.',
-       open_customer:'Open Wanhar Mart', open_rider:'Open Rider app', open_shop:'Open Shop app', open_admin:'Open Admin panel', lang:'اردو' },
+       open_customer:'Open Dera', open_rider:'Open Rider app', open_shop:'Open Shop app', open_admin:'Open Admin panel', lang:'اردو' },
   ur:{ title:'نیا پاس ورڈ بنائیں', p:'اپنے اکاؤنٹ کے لیے نیا پاس ورڈ چنیں۔', pw:'نیا پاس ورڈ', pw2:'دوبارہ لکھیں', save:'نیا پاس ورڈ محفوظ کریں', saving:'محفوظ ہو رہا ہے…', show:'دکھائیں',
        short:'پاس ورڈ کم از کم 6 حروف کا ہو', nomatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', wait:'لنک چیک ہو رہا ہے…',
        ok_t:'پاس ورڈ بدل گیا 🎉', ok_p:'نیا پاس ورڈ محفوظ ہو گیا۔ اپنی ای میل اور نئے پاس ورڈ سے لاگ اِن کریں۔',
        bad_t:'لنک کی مدت ختم', bad_p:'یہ لنک پرانا ہو گیا ہے یا استعمال ہو چکا ہے۔ ایپ کھولیں، “پاس ورڈ بھول گئے؟” دبائیں اور نیا لنک لیں۔',
-       open_customer:'Wanhar Mart کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', open_admin:'ایڈمن پینل کھولیں', lang:'English' }
+       open_customer:'Dera کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', open_admin:'ایڈمن پینل کھولیں', lang:'English' }
 };
 const APPS = { customer:'customer.html', rider:'rider.html', shop:'restaurant.html', admin:'admin.html' };
 const sb = supabase.createClient('https://ijhvlbfuyracfyfefwze.supabase.co', 'sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp', { auth:{ storageKey:'khoupeyo-reset-auth', persistSession:false } });
