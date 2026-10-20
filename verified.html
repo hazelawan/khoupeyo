@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F6F4A">
-<title>Wanhar Mart · Email verified</title>
+<title>Dera · Email verified</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@ p{margin:0 0 6px;font-size:18px}
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="brand">Wanhar Mart<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
+  <div class="top"><div class="brand">Dera<b>.</b></div><button class="lang" id="langBtn" onclick="toggleLang()">اردو</button></div>
   <div class="hero" aria-hidden="true">
     <span class="dot" style="width:90px;height:90px;top:-20px;left:-10px"></span>
     <span class="dot" style="width:60px;height:60px;bottom:14px;right:30px"></span>
@@ -54,18 +54,18 @@ p{margin:0 0 6px;font-size:18px}
     <div class="bag"><svg viewBox="0 0 24 24" fill="none" stroke="#1F6F4A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9.5 13.5l2 2 3.5-4" stroke="#F2A900" stroke-width="2.2"/></svg></div>
   </div>
   <div class="card" id="card"></div>
-  <div class="foot">Wanhar Mart · Kallar Kahar</div>
+  <div class="foot">Dera · Kallar Kahar</div>
 </div>
 <script>
 const T = {
   en:{ ok_t:'Email verified 🎉', ok_p:'Your email has been verified. You are all set.', ok_s:'Go back to the app. If it still asks, tap “I have confirmed”.',
        bad_t:'Link expired', bad_p:'This verification link has expired or was already used.', bad_s:'Open the app and log in. If it says the email is not confirmed, sign up again to get a new link.',
-       open_customer:'Open Wanhar Mart', open_rider:'Open Rider app', open_shop:'Open Shop app', other:'Other apps',
-       s1:'Open the Wanhar Mart app', s2:'Tap Log in', s3:'Enter your email and password', lang:'اردو' },
+       open_customer:'Open Dera', open_rider:'Open Rider app', open_shop:'Open Shop app', other:'Other apps',
+       s1:'Open the Dera app', s2:'Tap Log in', s3:'Enter your email and password', lang:'اردو' },
   ur:{ ok_t:'ای میل کی تصدیق ہو گئی 🎉', ok_p:'آپ کی ای میل کی تصدیق ہو گئی ہے۔ سب تیار ہے۔', ok_s:'اب ایپ پر واپس جائیں۔ اگر وہ پھر بھی پوچھے تو “میں نے تصدیق کر لی” دبائیں۔',
        bad_t:'لنک کی مدت ختم', bad_p:'یہ تصدیقی لنک پرانا ہو گیا ہے یا پہلے استعمال ہو چکا ہے۔', bad_s:'ایپ کھول کر لاگ اِن کریں۔ اگر ای میل کی تصدیق باقی ہو تو دوبارہ اکاؤنٹ بنا کر نیا لنک لیں۔',
-       open_customer:'Wanhar Mart کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', other:'دوسری ایپس',
-       s1:'Wanhar Mart ایپ کھولیں', s2:'لاگ اِن دبائیں', s3:'اپنی ای میل اور پاس ورڈ لکھیں', lang:'English' }
+       open_customer:'Dera کھولیں', open_rider:'رائیڈر ایپ کھولیں', open_shop:'دکان ایپ کھولیں', other:'دوسری ایپس',
+       s1:'Dera ایپ کھولیں', s2:'لاگ اِن دبائیں', s3:'اپنی ای میل اور پاس ورڈ لکھیں', lang:'English' }
 };
 const APPS = { customer:'customer.html', rider:'rider.html', shop:'restaurant.html' };
 let lang = 'en';
