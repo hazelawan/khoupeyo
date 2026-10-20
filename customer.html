@@ -897,7 +897,7 @@ html[dir=rtl] .grid2 .qadd{right:auto!important;left:6px!important}
 const Theme = (() => {
   const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
   const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
-  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const get = () => { try { return localStorage.getItem(KEY) || 'light'; } catch (e) { return 'light'; } };
   function walk(rules, mode){
     for (const r of rules){
       if (r.media && r.cssRules){
@@ -1016,7 +1016,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.31';
+const APP_VERSION = '5.34';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1062,8 +1062,8 @@ const I18N = {
     rider_km:'Rider is {km} km away', shop_km:'📍 Shop is {km} from your address', live_map:'Live tracking', you:'You', shop_word:'Shop', rider_word:'Rider',
     offers:'Offers', offers_invite:'🎁 Offers and invite friends', my_offers:'Your offers', no_offers:'No offers right now. Check back soon!', use_code:'Use', code_copied:'Code {c} added. It will be applied in your cart.',
     off_first:'First order only', off_min:'Min order {m}', off_upto:'up to {m}', off_expires:'Ends {d}', free_del:'Free delivery', pct_off:'{v}% off', rs_off:'{v} off',
-    invite_t:'Invite friends, get {r}', invite_s:'Your friend gets {f} off their first order. You get {r} when their first order is delivered.', invite_share:'Share my code', invite_copy:'Copy', copied:'Copied',
-    invite_msg:'Shop anything on Wanhar Mart, delivered to your door! Use my invite code {c} to get {f} off your first order: {u}', friends_joined:'{n} friends joined · {m} rewards earned',
+    invite_t:'Invite friends, get {r}', invite_s:'Your friend gets {f} off their first order. You get {r} when their first order is delivered.', invite_share:'Share my code', invite_copy:'Copy', copied:'Copied', invite_qr:'Scan — app lagayein, code khud lag jayega',
+    invite_msg:'Shop anything on Wanhar Mart, delivered to your door! Use my invite code {c} to get {f} off your first order: {u}', friends_joined:'{n} friends joined · {m} rewards earned', top_shop:'⭐ Top Shop',
     have_code:'Got an invite code from a friend?', apply_code:'Apply', ref_done:'Done! Your gift code {c} is ready in Your offers.',
     tip_t:'Tip for your rider', tip_s:'100% of the tip goes to the rider.', tip_none:'No tip', tip_other:'Other', tip_ask:'Tip amount (Rs)', tip:'Rider tip',
     when_t:'Delivery time', asap:'As soon as possible', schedule:'Schedule', sched_day:'Day', sched_time:'Time', sched_none:'No times left. Choose another day.', sched_for:'Scheduled for {d}',
@@ -1172,8 +1172,8 @@ const I18N = {
     rider_km:'رائیڈر {km} کلومیٹر دور ہے', shop_km:'📍 دکان آپ کے پتے سے {km} دور ہے', live_map:'لائیو ٹریکنگ', you:'آپ', shop_word:'دکان', rider_word:'رائیڈر',
     offers:'آفرز', offers_invite:'🎁 آفرز اور دوستوں کو بلائیں', my_offers:'آپ کی آفرز', no_offers:'ابھی کوئی آفر نہیں۔ جلد دوبارہ دیکھیں!', use_code:'لگائیں', code_copied:'کوڈ {c} لگ گیا۔ کارٹ میں رعایت ملے گی۔',
     off_first:'صرف پہلا آرڈر', off_min:'کم از کم آرڈر {m}', off_upto:'زیادہ سے زیادہ {m}', off_expires:'{d} تک', free_del:'مفت ڈیلیوری', pct_off:'{v}% رعایت', rs_off:'{v} رعایت',
-    invite_t:'دوستوں کو بلائیں، {r} پائیں', invite_s:'آپ کے دوست کو پہلے آرڈر پر {f} رعایت ملے گی۔ ان کا پہلا آرڈر پہنچنے پر آپ کو {r} ملیں گے۔', invite_share:'اپنا کوڈ بھیجیں', invite_copy:'کاپی', copied:'کاپی ہو گیا',
-    invite_msg:'Wanhar Mart سے ہر چیز گھر بیٹھے منگوائیں! میرا کوڈ {c} لگائیں اور پہلے آرڈر پر {f} رعایت پائیں: {u}', friends_joined:'{n} دوست آئے · {m} انعام ملے',
+    invite_t:'دوستوں کو بلائیں، {r} پائیں', invite_s:'آپ کے دوست کو پہلے آرڈر پر {f} رعایت ملے گی۔ ان کا پہلا آرڈر پہنچنے پر آپ کو {r} ملیں گے۔', invite_share:'اپنا کوڈ بھیجیں', invite_copy:'کاپی', copied:'کاپی ہو گیا', invite_qr:'اسکین کریں — ایپ لگے گی، کوڈ خود لگ جائے گا',
+    invite_msg:'Wanhar Mart سے ہر چیز گھر بیٹھے منگوائیں! میرا کوڈ {c} لگائیں اور پہلے آرڈر پر {f} رعایت پائیں: {u}', friends_joined:'{n} دوست آئے · {m} انعام ملے', top_shop:'⭐ ٹاپ دکان',
     have_code:'کسی دوست سے کوڈ ملا ہے؟', apply_code:'لگائیں', ref_done:'ہو گیا! آپ کا تحفہ کوڈ {c} ”آپ کی آفرز“ میں تیار ہے۔',
     tip_t:'رائیڈر کے لیے ٹپ', tip_s:'ٹپ کی پوری رقم رائیڈر کو ملتی ہے۔', tip_none:'کوئی ٹپ نہیں', tip_other:'اور', tip_ask:'ٹپ کی رقم (روپے)', tip:'رائیڈر ٹپ',
     when_t:'ڈیلیوری کا وقت', asap:'جتنی جلدی ہو سکے', schedule:'وقت مقرر کریں', sched_day:'دن', sched_time:'وقت', sched_none:'اس دن کوئی وقت باقی نہیں۔ دوسرا دن چنیں۔', sched_for:'{d} کے لیے',
@@ -1756,8 +1756,9 @@ async function loadRestaurants(){
   if (state.region) q = q.eq('region_id', state.region);
   const list = need(await q);
   const now = Date.now();
-  list.forEach(r => { r.manual_open = r.is_open; r.busy = !!(r.busy_until && new Date(r.busy_until).getTime() > now); r.ad = !!(r.sponsored_until && new Date(r.sponsored_until).getTime() > now); r.is_open = !!r.is_open && withinHours(r) && !r.busy; });
-  list.sort((a, b) => (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0) || (b.ad ? 1 : 0) - (a.ad ? 1 : 0));
+  try { const { data:ts } = await sb.from('app_settings').select('value').eq('key', 'top_shops').maybeSingle(); state.topShops = (ts && ts.value && Array.isArray(ts.value.ids)) ? ts.value.ids : []; } catch (e) { state.topShops = []; }
+  list.forEach(r => { r.manual_open = r.is_open; r.busy = !!(r.busy_until && new Date(r.busy_until).getTime() > now); r.ad = !!(r.sponsored_until && new Date(r.sponsored_until).getTime() > now); r.is_open = !!r.is_open && withinHours(r) && !r.busy; const ti = state.topShops.indexOf(r.id); r.top = ti >= 0; r.topRank = ti >= 0 ? ti : 99; });
+  list.sort((a, b) => a.topRank - b.topRank || (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0) || (b.ad ? 1 : 0) - (a.ad ? 1 : 0));
   state.restaurants = list;
 }
 function syncShopOpen(p){
@@ -1959,14 +1960,14 @@ function productCard(p, why){
 function shopMini(r){
   const rt = shopRating(r.id);
   return `<a class="shopcard" href="#/r/${r.id}"><div class="logo">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="" loading="lazy">` : noImg(r.name)}${r.is_open ? '' : `<span class="closedtag">${t('closed')}</span>`}</div>
-    <div class="nm">${r.ad ? `<span class="adtag">${t('ad')}</span> ` : ''}${esc(r.name)}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}<div class="muted" style="font-size:12px">${rt ? `<span class="star">★ ${rt.avg}</span> · ` : ''}${r.prep_time_minutes || 25} ${t('minutes')}</div></a>`;
+    <div class="nm">${r.top ? `<span class="adtag" style="background:#B8860B;color:#fff">${t('top_shop')}</span> ` : ''}${r.ad ? `<span class="adtag">${t('ad')}</span> ` : ''}${esc(r.name)}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}<div class="muted" style="font-size:12px">${rt ? `<span class="star">★ ${rt.avg}</span> · ` : ''}${r.prep_time_minutes || 25} ${t('minutes')}</div></a>`;
 }
 function restaurantCard(r){
   const rt = shopRating(r.id); const sd = shopDist(r);
   return `<a class="rcard ${r.is_open ? '' : 'closed'}" href="#/r/${r.id}">
     <div class="rimg">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="" loading="lazy">` : noImg(r.name)}</div>
     <div class="rbody">
-      <div class="rname">${r.ad ? `<span class="adtag">${t('ad')}</span>` : ''}${esc(r.name)}<span class="badge ${r.is_open ? '' : 'closed'}">${r.is_open ? t('open') : t('closed')}</span></div>
+      <div class="rname">${r.top ? `<span class="adtag" style="background:#B8860B;color:#fff">${t('top_shop')}</span>` : ''}${r.ad ? `<span class="adtag">${t('ad')}</span>` : ''}${esc(r.name)}<span class="badge ${r.is_open ? '' : 'closed'}">${r.is_open ? t('open') : t('closed')}</span></div>
       <div class="rdesc">${esc(r.description || '')}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}
       <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}${sd ? `<span class="dist">📍 ${sd}</span>` : ''}<span>${t('delivery')} ${money(zoneFee(r))}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
     </div></a>`;
@@ -2828,6 +2829,17 @@ async function showPlus(){
         <label class="f" for="plTid">${t('tid')}</label><input id="plTid" type="text" inputmode="numeric" dir="ltr" placeholder="${t('tid_ph')}">
         <button class="btn" style="margin-top:10px" onclick="A.plusOnline()">${t('plus_send')}</button></details>` : ''}`}`;
 }
+async function autoRef(){
+  try {
+    const code = ls.get('kh_ref', ''); if (!code) return;
+    ls.set('kh_ref', '');
+    const { data } = await sb.rpc('my_referral'); const ref = data && data[0];
+    if (ref && ref.is_on && !ref.used_code && ref.code !== code){
+      const c = need(await sb.rpc('apply_referral', { p_code:code }));
+      toast(t('ref_done', { c }));
+    }
+  } catch (e) {}
+}
 async function showOffers(){
   const [p, r] = await Promise.all([sb.rpc('my_promos'), sb.rpc('my_referral')]);
   state.promos = p.data || []; const ref = r.data && r.data[0];
@@ -3089,7 +3101,7 @@ const A = {
   useOffer(code){ state.promo = code; if (currentRoute === 'cart') A.applyPromo(); else { toast(t('code_copied', { c:code })); nav('/cart'); } },
   async copyCode(code){ try { await navigator.clipboard.writeText(code); toast(t('copied')); } catch (e) { await uiPrompt('', code); } },
   async shareRef(code, f){
-    const msg = t('invite_msg', { c:code, f:money(f), u:new URL('customer.html', location.href).href });
+    const msg = t('invite_msg', { c:code, f:money(f), u:new URL('customer.html?ref=' + encodeURIComponent(code), location.href).href });
     if (navigator.share){ try { await navigator.share({ text:msg }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     location.href = 'https://wa.me/?text=' + encodeURIComponent(msg);
   },
@@ -3643,6 +3655,7 @@ async function afterLogin(user){
   BackNav.init({ toast:m => toast(m), exitMsg:() => state.lang === 'ur' ? 'باہر نکلنے کے لیے دوبارہ واپس دبائیں' : 'Press back again to exit',
     overlays:[['#chatWrap', () => Chat.close()], ['#sheet', () => closeSheet()], ['#rptWrap', null], ['#receiptWrap', null], ['#slipWrap', null], ['#fbSheet', null], ['#recvSheet', () => { const el = $('recvSheet'); if (el) el.remove(); }], ['#alertSheet', () => A.alertOk()]],
     back:() => { if (currentRoute !== 'home'){ history.replaceState({ wmb:1 }, '', location.pathname + location.search + '#/'); route(); return true; } return false; } });
+  autoRef();
   const target = state.pending; state.pending = null;
   renderShell();
   if (target && target !== '#') replaceHash(target);
@@ -4081,6 +4094,7 @@ async function bootMain(){
   hideSplash();
 }
 (async function boot(){
+  try { const rp = new URLSearchParams(location.search).get('ref'); if (rp) ls.set('kh_ref', rp.trim().toUpperCase().slice(0, 32)); } catch (e) {}
   applyLang();
   let seen = 0; try { seen = ls.get('kh_onboard', 0); } catch(e){}
   if (!seen) showOnboard(); else bootMain();
