@@ -1016,7 +1016,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.35';
+const APP_VERSION = '5.36';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1291,6 +1291,14 @@ async function run(fn){ try { return await fn(); } catch (e) { logErr(e); toast(
 const cartCount = () => state.cart.items.reduce((n, i) => n + i.qty, 0);
 const cartSubtotal = () => state.cart.items.reduce((n, i) => n + i.price * i.qty, 0);
 function saveCart(){ state.promoRes = null; ls.set('kh_cart', state.cart); updateCartUI(); }
+/* Personal data (cart, favorites, searches, recents) belongs to the ACCOUNT, not the phone:
+   wipe it on logout and whenever a different account signs in on this device. */
+function wipePersonal(){
+  ['kh_cart','kh_favs','kh_recent','kh_addr'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  state.cart = { rid:null, items:[], note:'' }; state.favs = []; state.promo = ''; state.promoRes = null;
+  state.recoRecent = []; state.recoViews = {}; state.recoBuys = {}; state.recoLoaded = false; state.selAddr = null;
+  try { updateCartUI(); } catch (e) {}
+}
 function cartRestaurant(){ return state.restaurants.find(r => r.id === state.cart.rid); }
 function cartExtras(){
   const r = cartRestaurant(); const z = (r && r.zone) || {};
@@ -2988,6 +2996,7 @@ const A = {
     await Push.logout(); Chat.stop(); Chat.close(); await sb.auth.signOut(); stopPoll();
     if (channel){ sb.removeChannel(channel); channel = null; }
     state.user = null; state.profile = null; state.addresses = []; state.authMode = 'login';
+    wipePersonal(); ls.set('kh_owner', '');
     replaceHash('#/'); renderShell(); route();
   },
   guestBack(){ state.pending = null; state.authMode = 'login'; replaceHash('#/'); renderShell(); route(); },
@@ -3642,6 +3651,9 @@ function saveHomeRegion(){
 }
 async function afterLogin(user){
   state.user = user;
+  const prevOwner = ls.get('kh_owner', '');
+  if (prevOwner && prevOwner !== user.id){ wipePersonal(); try { localStorage.removeItem('kh_onboard'); } catch (e) {} }
+  ls.set('kh_owner', user.id);
   const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
   state.profile = data || {};
   saveHomeRegion();
