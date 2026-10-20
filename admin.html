@@ -552,7 +552,7 @@ main{padding-bottom:130px!important}
 const Theme = (() => {
   const KEY = 'kh_theme', DARK_Q = /prefers-color-scheme\s*:\s*dark/i, LIGHT_Q = /prefers-color-scheme\s*:\s*light/i;
   const known = new Map();   // rule -> its original media text (kept so the same rule object is found again)
-  const get = () => { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const get = () => { try { return localStorage.getItem(KEY) || 'light'; } catch (e) { return 'light'; } };
   function walk(rules, mode){
     for (const r of rules){
       if (r.media && r.cssRules){
@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.29';
+const APP_VERSION = '7.32';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1512,8 +1512,8 @@ function viewRiders(){
 
 // ================= RIDER DUTY: attendance, leave, complaints, shifts, pauses =================
 const tAt = ts => new Date(ts).toLocaleString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
-const pkToday = () => new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 10);
-const addDays = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+const pkToday = () => new Date(Date.now() + 5 * 3600000).toISOString().slice(0, 50);
+const addDays = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 50); };
 const dShort = d => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', timeZone:'UTC' });
 const riderName = id => { const r = (state.riderRows || []).find(x => x.rider_id === id); return r ? (r.full_name || 'Rider') : 'Rider'; };
 const ST = { present:'Present', late:'Late', leave:'Leave', half_leave:'Half leave', absent:'Absent', suspended:'Paused', not_yet:'Not started', no_duty:'No duty' };
@@ -2430,7 +2430,7 @@ function viewSettings(){
   if (sub === 'selfie') return wrap('🤳 Selfie & Face Verification', setSelfieCard(s));
   if (sub === 'contracts') return wrap('📋 Rider Contracts & ID Fee', setContractsCard(s));
   if (sub === 'fines') return wrap('⚖️ Rider Discipline & Fines', riderRulesCard());
-  if (sub === 'rewards') return wrap('🎁 Rewards, Referral & Loyalty', setReferralCard(s) + setLoyaltyCard(s) + setAwardsCard(s));
+  if (sub === 'rewards') return wrap('🎁 Rewards, Referral & Loyalty', setReferralCard(s) + setLoyaltyCard(s) + setAwardsCard(s) + setPointsCard(s));
   if (sub === 'booking') return wrap('📅 Bookings & Support Info', setBookingCard(s) + setSupportCard(s));
   return wrap('Settings', '');
 }
@@ -2578,6 +2578,17 @@ function setReferralCard(s){
     <div class="two"><div><label class="f" for="rf_m">Minimum order (Rs)</label><input id="rf_m" type="number" min="0" value="${num(r.min_order)}"></div>
       <div><label class="f" for="rf_d">Codes last (days)</label><input id="rf_d" type="number" min="1" value="${num(r.days)}"></div></div>`; })()}
     <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('referral', { on:$('rf_on').checked, friend_discount:num($('rf_f').value), referrer_reward:num($('rf_r').value), min_order:num($('rf_m').value), days:Math.max(1, num($('rf_d').value)) })">Save invite settings</button></div>
+  </div>`;
+}
+function setPointsCard(s){
+  const cur = (s.top_shops && Array.isArray(s.top_shops.ids)) ? s.top_shops : { ids:[] };
+  const now = new Date(); const m0 = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  return `<div class="card">
+    <b>🏆 Wanhar Points — Top 5 Shops</b>
+    <div class="muted" style="font-size:14px">Dukaan walay (points) apna invite code naye customers ko lagatay hain — yahan har mahine ki gintee banti hai. Top 5 ki dukaanen customer app mein sab se upar ⭐ badge ke sath dikhti hain. Inaam sirf promotion hai, paisay nahi.</div>
+    <div class="two"><div><label class="f" for="pt_month">Month</label><input id="pt_month" type="month" value="${esc(cur.month || m0)}"></div>
+    <div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="A.pointsBoard()">📊 Leaderboard dekho</button></div></div>
+    <div id="ptBoard" style="margin-top:10px">${cur.ids.length ? `<div class="muted" style="font-size:14px">Abhi Top Shops lagi hui hain (${esc(cur.month || '')}): ${((cur.names || []).map(esc).join(', '))} — nayi lagane ke liye pehle leaderboard banao.</div>` : `<div class="muted" style="font-size:14px">Abhi koi Top Shop nahi lagi hui.</div>`}</div>
   </div>`;
 }
 function setLoyaltyCard(s){
@@ -4233,8 +4244,8 @@ const A = {
   planPer(k){
     state.planPeriod = k; document.querySelectorAll('#plPer .chip').forEach(b => b.classList.toggle('on', b.dataset.k === k));
     const today = pkToday(); const dow = (new Date(today + 'T00:00:00Z').getUTCDay() + 6) % 7; // 0 = Monday
-    const monthEndOf = d => { const x = new Date(d + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 0)).toISOString().slice(0, 10); };
-    const nm1 = (() => { const x = new Date(today + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 1)).toISOString().slice(0, 10); })();
+    const monthEndOf = d => { const x = new Date(d + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 0)).toISOString().slice(0, 50); };
+    const nm1 = (() => { const x = new Date(today + 'T00:00:00Z'); return new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + 1, 1)).toISOString().slice(0, 50); })();
     const set = { tw:[today, addDays(today, 6 - dow)], nw:[addDays(today, 7 - dow), addDays(today, 13 - dow)], tm:[today, monthEndOf(today)], nm:[nm1, monthEndOf(nm1)] }[k];
     if (set){ $('pl_from').value = set[0]; $('pl_to').value = set[1]; }
     $('plToBox').style.display = k === 'from' ? 'none' : '';
@@ -4284,6 +4295,41 @@ const A = {
   },
   async saveSetting(key, value){
     await run(async () => { need(await putSettings({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
+  },
+  async pointsBoard(){
+    const mv = ($('pt_month') || {}).value || new Date().toISOString().slice(0, 7);
+    const parts = mv.split('-').map(Number); const y = parts[0], mo = parts[1] || 1;
+    const start = new Date(Date.UTC(y, mo - 1, 1)).toISOString();
+    const end = new Date(Date.UTC(y, mo, 1)).toISOString();
+    const el = $('ptBoard'); if (el) el.innerHTML = '<div class="muted">Loading…</div>';
+    await run(async () => {
+      const counts = new Map();
+      for (let from = 0; ; from += 1000){
+        const rows = need(await sb.from('profiles').select('referred_by,created_at').not('referred_by', 'is', null).gte('created_at', start).lt('created_at', end).range(from, from + 999));
+        (rows || []).forEach(r => counts.set(r.referred_by, (counts.get(r.referred_by) || 0) + 1));
+        if (!rows || rows.length < 1000) break;
+      }
+      const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
+      if (!ranked.length){ state.ptBoard = null; if (el) el.innerHTML = '<div class="muted">Is mahine code se koi join nahi hua.</div>'; return; }
+      const ids = ranked.map(r => r[0]);
+      const profs = need(await sb.from('profiles').select('id,full_name,phone').in('id', ids));
+      const names = {}; (profs || []).forEach(p => { names[p.id] = p.full_name || p.phone || '—'; });
+      const shops = need(await sb.from('restaurants').select('id,name,owner_id').in('owner_id', ids));
+      const shopOf = {}; (shops || []).forEach(x => { if (!shopOf[x.owner_id]) shopOf[x.owner_id] = x; });
+      state.ptBoard = ranked.map(([uid, n]) => ({ uid, n, name:names[uid] || '—', shop:shopOf[uid] || null }));
+      const shopsOnly = state.ptBoard.filter(r => r.shop);
+      const usersOnly = state.ptBoard.filter(r => !r.shop);
+      const rowHtml = (r, i) => `<div class="menu-row" style="cursor:default"><span><b>${i + 1}. ${esc(r.name)}</b><br><small class="muted">${r.n} joins${r.shop ? ' · 🏪 ' + esc(r.shop.name) : ''}</small></span><span>${r.shop && i === 0 ? '👑' : r.shop && i < 5 ? '⭐' : ''}</span></div>`;
+      if (el) el.innerHTML = `<b style="font-size:15px">🏪 Dukaan walay (Points)</b>` + (shopsOnly.length ? shopsOnly.map(rowHtml).join('') : '<div class="muted">Is mahine kisi dukaan walay ke code se join nahi hua.</div>')
+        + (shopsOnly.length ? `<div class="actions"><button class="btn block" onclick="A.pointsApply()">⭐ Top 5 ko app mein upar lagao</button></div><div class="muted" style="font-size:13px">Ye dukaanen customer app mein sab se pehle dikhti hain, poora mahina.</div>` : '')
+        + `<b style="font-size:15px;display:block;margin-top:14px">👤 Normal users</b>` + (usersOnly.length ? usersOnly.map(rowHtml).join('') : '<div class="muted">Is mahine kisi normal user ke code se join nahi hua.</div>');
+    });
+  },
+  async pointsApply(){
+    const board = state.ptBoard || [];
+    const top = board.filter(r => r.shop).slice(0, 5);
+    if (!top.length) return toast('Top mein koi shop nahi mili', true);
+    await A.saveSetting('top_shops', { ids:top.map(r => r.shop.id), names:top.map(r => r.shop.name), month:($('pt_month') || {}).value || '' });
   },
   async saveLoyalty(){
     const rows = [
