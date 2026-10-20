@@ -242,7 +242,7 @@ main{padding-bottom:140px!important}
 /* ===== Rider / Shop / Admin look ===== */
 .top,.topbar{background:var(--grad)!important;color:#fff;border-bottom:0!important;border-radius:0 0 22px 22px;box-shadow:0 10px 26px rgba(11,107,68,.22);padding:14px 16px!important}
 .riderid{display:flex;align-items:center;gap:11px;min-width:0;flex:1}
-.ravatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--marigold),#E09B00);color:#3D2E00;display:grid;place-items:center;font-weight:900;font-size:17px;flex:none;box-shadow:0 4px 12px rgba(255,179,2,.35)}
+.ravatar{overflow:hidden;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--marigold),#E09B00);color:#3D2E00;display:grid;place-items:center;font-weight:900;font-size:17px;flex:none;box-shadow:0 4px 12px rgba(255,179,2,.35)}
 .riderid b{display:block;font-size:17px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
 .riderid small{color:rgba(255,255,255,.75);font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 @keyframes goldPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,179,2,.45),var(--sh-2)}50%{box-shadow:0 0 0 10px rgba(255,179,2,0),var(--sh-2)}}
@@ -375,7 +375,7 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
   --display:"Bricolage Grotesque",system-ui,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   /* truck-art band: the one decorative signature, used under the top bar */
-  --band:repeating-linear-gradient(115deg,#FFB400 0 10px,#B34E14 10px 13px,#E2472F 13px 19px,#B34E14 19px 22px,#F0923F 22px 32px,#B34E14 32px 35px);
+  --band:linear-gradient(90deg,#FFB400,#E2472F,#F0923F);
   --ease:cubic-bezier(.2,.8,.2,1);
 }
 @media (prefers-color-scheme: dark){
@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.24';
+const APP_VERSION = '5.25';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -701,7 +701,7 @@ const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
+    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', pw_ph:'Enter your password',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
@@ -781,7 +781,7 @@ const I18N = {
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
-    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
+    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', pw_ph:'اپنا پاس ورڈ لکھیں',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
@@ -1047,7 +1047,7 @@ function dutyLabel(){
   return `<i></i>${t('on_duty')}${state.shift ? ` <small>${hm(mins)}</small>` : ''}`;
 }
 function riderName(){ const r = state.rider; return (r && r.full_name) || t('rider'); }
-function riderInitials(){ const n = riderName().trim().split(/\s+/); return ((n[0] || 'R')[0] + (n[1] || '')[0]).toUpperCase(); }
+function riderInitials(){ const n = riderName().trim().split(/\s+/); return ((n[0] || 'R')[0] + (((n[1] || '')[0]) || '')).toUpperCase(); }
 function riderSub(){ const r = state.rider || {}; const rg = state.regionName || ''; const c = r.contract_type === 'company' ? t('c_company') : t('c_freelance'); return rg ? `${rg}` : c; }
 function renderShell(){
   $('app').innerHTML = `
