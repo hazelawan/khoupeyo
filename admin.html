@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.33';
+const APP_VERSION = '7.34';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1184,6 +1184,14 @@ function orderActions(o){
 async function loadShopReport(){
   const [f, t] = range(state.period);
   state.shopReport = need(await sb.rpc('admin_shop_report', { p_from:f.toISOString(), p_to:t.toISOString() })) || [];
+  try { const cc = await sb.rpc('admin_cancel_counts', { p_from:f.toISOString(), p_to:t.toISOString() }); state.cancelCounts = {}; (cc.data || []).forEach(x => { state.cancelCounts[x.restaurant_id] = x; }); } catch (e) { state.cancelCounts = state.cancelCounts || {}; }
+}
+function cxRowHtml(e){
+  const who = { shop:'🏪 Shop', customer:'👤 Customer', admin:'🛡️ Admin', system:'⚙️ System' }[e.actor_role] || e.actor_role;
+  const what = e.kind === 'item' ? `✂️ ${num(e.qty)}× ${esc(e.item_name || '')}` : '⛔ Full order';
+  return `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">#${esc(e.code)} · ${what}</div>
+    <div class="row-sub">${who}${e.actor_name ? ' · ' + esc(e.actor_name) : ''} · ${when(e.at)}</div>
+    ${e.reason ? `<div class="row-sub">Reason: ${esc(e.reason)}</div>` : ''}</div><div class="row-side">${money(e.amount)}</div></div>`;
 }
 function viewShops(){
   const rep = {}; state.shopReport.forEach(r => { rep[r.restaurant_id] = r; });
@@ -1192,11 +1200,13 @@ function viewShops(){
   const totComm = state.shopReport.reduce((n, r) => n + num(r.commission), 0);
   const shopCard = r => {
     const s = rep[r.id] || {};
+    const c = (state.cancelCounts || {})[r.id] || {};
+    const cxLine = (num(c.by_shop) || num(c.by_customer) || num(c.by_admin) || num(c.items_qty)) ? `<div class="row-sub">🚫 Cancelled — shop ${num(c.by_shop)} · customer ${num(c.by_customer)}${num(c.by_admin) ? ' · admin ' + num(c.by_admin) : ''}${num(c.items_qty) ? ' · items ' + num(c.items_qty) : ''}</div>` : '';
     return `<div class="row" style="cursor:default">
       <div class="thumb">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
       <button class="row-main" onclick="A.openShop('${r.id}')">
         <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
-        <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>
+        <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>${cxLine}
       </button>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small>${r.is_open ? 'Open' : 'Closed'}</small></div>
     </div>`;
@@ -2886,6 +2896,7 @@ const A = {
     const r = state.restaurants.find(x => x.id === id); if (!r) return;
     if (!state.shopReport.length) await run(loadShopReport);
     const s = state.shopReport.find(x => x.restaurant_id === id) || {};
+    const cx = (state.cancelCounts || {})[id] || {};
     const zone = state.zones.find(z => z.id === r.zone_id);
     const label = (PERIODS.find(p => p[0] === state.period) || [])[1];
     if (!state.shopTab) state.shopTab = 'sales';
@@ -2902,6 +2913,10 @@ const A = {
       <div class="kv"><span class="muted">Orders</span><span>${num(s.orders)}</span></div>
       <div class="kv"><span class="muted">Delivered</span><span>${num(s.delivered)}</span></div>
       <div class="kv"><span class="muted">Cancelled or rejected</span><span>${num(s.cancelled)}</span></div>
+      <div class="kv"><span class="muted">↳ cancelled by shop</span><span>${num(cx.by_shop)}</span></div>
+      <div class="kv"><span class="muted">↳ cancelled by customer</span><span>${num(cx.by_customer)}</span></div>
+      ${num(cx.by_admin) ? `<div class="kv"><span class="muted">↳ cancelled by admin</span><span>${num(cx.by_admin)}</span></div>` : ''}
+      ${num(cx.items_qty) ? `<div class="kv"><span class="muted">Items cancelled (single)</span><span>${num(cx.items_qty)} items</span></div>` : ''}
       <div class="kv"><span class="muted">Sales</span><span>${money(s.food_sales)}</span></div>
       <div class="kv"><span class="muted">Your commission</span><span>${money(s.commission)}</span></div>
       <div class="kv"><span class="muted">Shop earning</span><span>${money(s.shop_earning)}</span></div>
@@ -2912,6 +2927,7 @@ const A = {
         <div class="two"><button class="btn ghost" onclick="A.shopStatement('${id}','pdf')">🧾 Statement PDF</button><button class="btn ghost" onclick="A.shopStatement('${id}','xlsx')">⬇️ Excel</button></div>
       </div>
       <h3>Payment history</h3><div id="payHist"><div class="empty">Loading…</div></div>
+      <h3>🚫 Recent cancellations</h3><div id="cxList"><div class="empty">Loading…</div></div>
       </div>
       <div id="st-fee" style="display:${st === 'fee' ? 'block' : 'none'}">
       <div class="card" style="margin-top:10px"><b>📢 Sponsored (shown first, with an “Ad” tag)</b>
@@ -2925,9 +2941,11 @@ const A = {
       <div id="st-products" style="display:${st === 'products' ? 'block' : 'none'}">
         <div class="actions"><button class="btn ghost block" onclick="A.shopProducts('${id}')">📦 Manage products</button></div>
       </div>`);
-    const [{ data }, fz] = await Promise.all([sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20),
-      sb.from('shop_fees').select('*').eq('restaurant_id', id).order('month', { ascending:false }).limit(12)]);
+    const [{ data }, fz, cxp] = await Promise.all([sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20),
+      sb.from('shop_fees').select('*').eq('restaurant_id', id).order('month', { ascending:false }).limit(12),
+      sb.rpc('admin_shop_cancels', { p_shop:id, p_limit:30 })]);
     const el = $('payHist'); if (el) el.innerHTML = Receipt.list(data, { kind:'payout', to:r.name }, 'No payments yet.');
+    const cxl = $('cxList'); if (cxl) cxl.innerHTML = (cxp.data && cxp.data.length) ? `<div class="list">${cxp.data.map(cxRowHtml).join('')}</div>` : '<div class="empty">No cancellations.</div>';
     const fees = fz.data || []; const due = fees.filter(f => f.status === 'due').reduce((a, f) => a + num(f.amount), 0);
     const fb = $('feeBox'); if (fb && (num(r.monthly_fee) || fees.length)) fb.innerHTML = `<h3 style="margin-top:14px">🧾 Monthly fee ${num(r.monthly_fee) ? money(r.monthly_fee) : '(off)'}</h3>
       ${due ? `<div class="kv"><b class="red">Fee due</b><b class="red">${money(due)}</b></div><div class="muted" style="font-size:12px">It is cut when you pay the shop, or receive it in cash.</div>` : '<div class="muted" style="font-size:13px">No fee due.</div>'}
