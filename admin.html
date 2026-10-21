@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.34';
+const APP_VERSION = '7.38';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1403,7 +1403,7 @@ async function loadRiderMonth(){
       sb.from('riders').select('id,suspended_until,suspend_reason').gt('suspended_until', new Date().toISOString()),
       sb.from('rider_leaves').select('id', { count:'exact', head:true }).eq('status', 'pending'),
       sb.from('rider_complaints').select('id', { count:'exact', head:true }).eq('status', 'pending'),
-      sb.from('riders').select('id,rider_code,holder_since,region_id,id_fee_override'),
+      sb.from('riders').select('id,rider_code,holder_since,region_id,id_fee_override,company_limit'),
       sb.rpc('admin_month_charges', { p_month:state.riderMonth }),
       sb.from('rider_requests').select('id', { count:'exact', head:true }).eq('status', 'pending')]);
     state.monthCharges = toChargeMap(mc.data); state.pendReq = rq.count || 0;
@@ -1414,6 +1414,7 @@ async function loadRiderMonth(){
     else if (scope() && state.settings && state.settings.rider_contracts) state.regionContracts[scope()] = state.settings.rider_contracts;
     state.pendLeaves = lv.count || 0; state.pendComplaints = cp.count || 0;
   } catch (e) { state.paused = {}; }
+  try { const lm = await sb.rpc('rider_limits', { p_month:state.riderMonth }); state.riderLimits = {}; (lm.data || []).forEach(x => { state.riderLimits[x.rider_id] = x; }); } catch (e) { state.riderLimits = {}; }
 }
 const CONTRACT_DEFAULT = { company:{ delivery_pay:0, overtime_per_hour:100, daily_hours:8 }, freelance:{ delivery_pay:70, overtime_per_hour:0, daily_hours:8 } };
 const t12 = v => { if (!v) return ''; const [h, m] = String(v).slice(0, 5).split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'AM' : 'PM'); };
@@ -1451,6 +1452,11 @@ function payBreakdown(r){
 const riderNet = (r, cm) => num(r.monthly_salary) + num(r.delivery_pay) + num(r.overtime_pay) + num(r.bonus) - num(r.fines) - idFee(r) - chargeOf(r, cm);
 const CONTRACT = { company:'Company bike · salary', freelance:'Own bike · per delivery' };
 const contractPill = r => `<span class="pill ${r.contract_type === 'company' ? 'b' : 'y'}">${CONTRACT[r.contract_type] || CONTRACT.freelance}</span>`;
+const targetOf = r => (r && r.contract_type === 'company') ? (state.riderLimits || {})[r.rider_id] : null;
+const targetLine = r => { const tg = targetOf(r); if (!tg) return ''; const n = num(tg.deliveries), l = num(tg.lim), pct = l ? Math.min(100, Math.round(n / l * 100)) : 0, done = l > 0 && n >= l;
+  return `<div class="row-sub">🎯 Target: <b>${n} / ${l}</b> orders ${done ? '· <b style="color:var(--brand)">✔ reached</b>' : `· ${l - n} to go`}</div><div style="height:7px;background:var(--line);border-radius:99px;overflow:hidden;margin:3px 0 1px"><div style="height:100%;width:${pct}%;background:${done ? 'var(--brand)' : '#d97706'}"></div></div>`; };
+const targetBlock = r => { const tg = targetOf(r); if (!tg) return ''; const n = num(tg.deliveries), l = num(tg.lim), pct = l ? Math.min(100, Math.round(n / l * 100)) : 0, done = l > 0 && n >= l;
+  return `<div class="kv"><span class="muted">🎯 Monthly target</span><span><b>${n} / ${l}</b> orders</span></div><div style="height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:2px 0 6px"><div style="height:100%;width:${pct}%;background:${done ? 'var(--brand)' : '#d97706'}"></div></div><div class="muted" style="font-size:12.5px;margin-bottom:8px">${done ? '✔ Target reached: salary applies, and Delivery pay below counts only the orders past the limit (at 35% of the freelance rate).' : 'If the target is missed, there is no salary this month: Delivery pay below is then 35% of the freelance rate on every order. This settles finally at month end.'}</div>`; };
 function viewRiders(){
   const rows = state.riderRows;
   const pending = rows.filter(r => !r.is_approved && !r.blocked);
@@ -1477,6 +1483,7 @@ function viewRiders(){
         ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
       <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}</div>
       <div class="row-sub">🕘 ${esc(timingText(r))}${r.on_break ? ' · <b style="color:#B45309">☕ On break</b>' : ''}${num(r.late_days) ? ` · <b class="red">late ${r.late_days} days</b>` : ''}</div>
+      ${targetLine(r)}
       <div class="mini">
         <div><b>${r.deliveries}</b><span>Deliveries</span></div>
         <div><b>${hours(r.online_minutes)}</b><span>On duty${num(r.overtime_minutes) ? ` · <b style="display:inline;font-size:inherit;color:var(--brand)">+${hours(r.overtime_minutes)} OT</b>` : ''}</span></div>
@@ -2172,7 +2179,7 @@ function payPanel(){
            <button class="btn ghost block" style="margin-top:10px" onclick="A.vehToggle('${ct}','${veh}',true); renderTab()">Give ${VEH[veh]} riders their own pay</button>`}
     </div>
     <div class="actions"><button class="btn block" onclick="A.savePayLevels()">Save pay for all vehicles</button></div>
-    <div class="muted" style="font-size:12.5px;text-align:center">Set each rider's vehicle in Riders → rider → Rider settings.${scope() ? ' This pay is only for ' + esc(regionName(scope())) + '.' : ''}</div>`;
+    <div class="muted" style="font-size:12.5px;text-align:center">Set each rider's vehicle in Riders → rider → Rider settings.${scope() ? ' This pay is only for ' + esc(regionName(scope())) + '.' : ''}</div>${extraPayCard()}`;
 }
 const dtLocal = ts => { const d = new Date(ts); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 const tShort = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
@@ -2381,6 +2388,40 @@ function tierEditor(k){
     <div class="note" style="font-size:13px;margin-top:8px"><b>Example: ${ex} deliveries in a month</b><br>${parts.map(x => `${x.c} × ${money(x.p)} = ${money(x.c * x.p)}`).join('<br>')}<br><b>Total ${money(tot)}</b>${k.startsWith('company') ? ' (on top of salary)' : ''} + tips</div></div>`;
 }
 function redrawTiers(k){ const el = $('tiers_' + k); if (el) el.outerHTML = tierEditor(k); }
+// ---- Extra bonus tiers (on top of normal pay; setting key rider_tier_extra) ----
+function xTierList(k){
+  if (!state.xTierEdit) state.xTierEdit = {};
+  if (!state.xTierEdit[k]){
+    const c = (state.settings && state.settings.rider_tier_extra) || {};
+    const src = c[k] && Array.isArray(c[k].tiers) ? c[k].tiers : [];
+    state.xTierEdit[k] = src.map(x => ({ from:num(x.from) || 1, pay:num(x.pay) }));
+  }
+  return state.xTierEdit[k];
+}
+function xTierEditor(k){
+  const list = xTierList(k).slice().sort((a, b) => a.from - b.from);
+  state.xTierEdit[k] = list;
+  const rows = list.map((x, i) => {
+    const to = list[i + 1] ? list[i + 1].from - 1 : null;
+    return `<div style="display:grid;grid-template-columns:auto 1fr auto 1fr auto;gap:6px;align-items:center;margin-top:8px">
+      <span class="muted" style="font-size:13px">From #</span>
+      <input type="number" min="1" value="${x.from}" onchange="A.xTierSet('${k}',${i},'from',this.value)" aria-label="From delivery number">
+      <span class="muted" style="font-size:13px">+Rs</span>
+      <input type="number" min="0" value="${x.pay}" onchange="A.xTierSet('${k}',${i},'pay',this.value)" aria-label="Extra per delivery">
+      <button type="button" class="linkbtn" style="color:var(--danger)" onclick="A.xTierDel('${k}',${i})">✕</button></div>
+      <div class="muted" style="font-size:12px">Delivery ${x.from}${to ? ' to ' + to : ' and more'} in a month: <b>+${money(x.pay)}</b> extra on each delivery</div>`;
+  }).join('');
+  return `<div id="xtiers_${k}" style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px"><b style="font-size:14px">${CT_LABEL[k]} · extra bonus by monthly count</b>
+    <div class="muted" style="font-size:12px">Paid ON TOP of the normal pay (zone pay for freelance · the 35% rule for company). Only the highest level the rider has reached counts. The count starts again on the 1st of every month.</div>${rows || '<div class="muted" style="font-size:13px;margin-top:6px">No bonus levels yet.</div>'}
+    <button type="button" class="linkbtn" style="margin-top:6px" onclick="A.xTierAdd('${k}')">+ Add a level</button></div>`;
+}
+function redrawXTiers(k){ const el = $('xtiers_' + k); if (el) el.outerHTML = xTierEditor(k); }
+function extraPayCard(){
+  return `<div class="card" style="margin-top:12px"><b>🎁 Extra bonus tiers</b>
+    <div class="muted" style="font-size:13px;margin-top:2px">Reward riders who deliver more: after so many deliveries in a month, every delivery pays extra — on top of the normal pay. Add as many levels as you like.${scope() ? ' These levels are only for ' + esc(regionName(scope())) + '.' : ' A region partner can set different levels for their own region.'}</div>
+    ${xTierEditor('freelance')}${xTierEditor('company')}
+    <div class="actions"><button class="btn block" onclick="A.saveExtraTiers()">Save bonus tiers</button></div></div>`;
+}
 function vehicleTiers(ct){
   return `<div style="margin-top:10px"><b style="font-size:14px">Different pay for other vehicles</b>
     <div class="muted" style="font-size:12px">Riders with a vehicle that is not turned on here get the ${VEH.motorbike} pay above.</div>
@@ -3267,6 +3308,7 @@ const A = {
 
         <div id="rt-pay" style="display:${rt === 'pay' ? 'block' : 'none'}">
         <h3>${monthLabel(state.riderMonth)} pay</h3>
+        ${r.contract_type === 'company' ? targetBlock(r) : ''}
         ${r.contract_type === 'company' ? `<div class="kv"><span class="muted">Monthly salary</span><span>${money(r.monthly_salary)}</span></div>` : ''}
         <div class="kv"><span class="muted">Delivery pay + tips (${r.deliveries} deliveries)</span><span>${money(r.delivery_pay)}</span></div>
         ${r.contract_type === 'company' ? `<div class="kv"><span class="muted">Overtime (${hours(r.overtime_minutes)})</span><span>${money(r.overtime_pay)}</span></div>` : ''}
@@ -3278,6 +3320,7 @@ const A = {
         <div class="kv"><span class="muted">Already paid</span><span>${money(r.paid)}</span></div>
         ${due < 0 ? `<div class="kv"><b class="red">Rider owes the company</b><b class="red">${money(-due)}</b></div><div class="muted" style="font-size:12px">ID fee, fines or charges are more than the pay this month. Collect it from the rider in cash.</div>` : `<div class="kv"><b>Still to pay</b><b>${money(Math.max(0, due))}</b></div>`}
         <div class="kv"><span class="muted">On duty</span><span>${hours(r.online_minutes)} in ${r.shifts} shifts, ${num(r.days_worked)} days</span></div>
+        ${num(r.online_minutes) > 0 ? `<div class="kv"><span class="muted">⏱️ Pay per duty hour</span><span><b>${money(Math.round(net / (num(r.online_minutes) / 60)))}</b> <span class="muted" style="font-size:12px">(${money(net)} ÷ ${hours(r.online_minutes)} duty)</span></span></div>` : ''}
         <div class="kv"><span class="muted">Duty time</span><span>${esc(timingText(r))}</span></div>
         <div class="kv"><span class="muted">Breaks used</span><span>${hours(r.break_used_minutes)}${num(r.break_over_minutes) ? ` <b class="red">(${hours(r.break_over_minutes)} over)</b>` : ''}</span></div>
         <div class="kv"><span class="muted">Late starts</span><span class="${num(r.late_days) ? 'red' : ''}">${num(r.late_days)} days${num(r.late_minutes) ? ', ' + hours(r.late_minutes) + ' total' : ''}</span></div>
@@ -3314,11 +3357,12 @@ const A = {
         <label class="f" for="rs_vehicle">Vehicle (pay can differ by vehicle)</label>
         <select id="rs_vehicle">${Object.keys(VEH).map(v => `<option value="${v}" ${(r.vehicle || 'motorbike') === v ? 'selected' : ''}>${VEH[v]}</option>`).join('')}</select>
         <label class="f" for="rs_contract">Contract</label>
-        <select id="rs_contract" onchange="$('rs_salbox').style.display = this.value === 'company' ? 'block' : 'none'">
+        <select id="rs_contract" onchange="$('rs_salbox').style.display = this.value === 'company' ? 'block' : 'none'; $('rs_limbox').style.display = this.value === 'company' ? 'block' : 'none'">
           <option value="company" ${r.contract_type === 'company' ? 'selected' : ''}>Company bike and petrol · fixed monthly salary</option>
           <option value="freelance" ${r.contract_type !== 'company' ? 'selected' : ''}>Own bike and petrol · paid per delivery</option>
         </select>
         <div id="rs_salbox" style="display:${r.contract_type === 'company' ? 'block' : 'none'}"><label class="f" for="rs_sal">Monthly salary (Rs)</label><input id="rs_sal" type="number" min="0" value="${num(r.monthly_salary)}"></div>
+        <div id="rs_limbox" style="display:${r.contract_type === 'company' ? 'block' : 'none'}"><label class="f" for="rs_ordlim">Monthly order limit (company rider)</label><input id="rs_ordlim" type="number" min="0" placeholder="450" value="${((state.riderIds || {})[id] || {}).company_limit ?? ''}"><div class="muted" style="font-size:12px">Orders the rider must finish in the month to earn the salary. Past the limit, every extra order pays 35% of the freelance rate. Empty = standard 450. Joining mid-month shrinks that month's limit by the days left.</div></div>
         <label class="f" for="rs_lim">Cash limit (Rs, 0 = none)</label><input id="rs_lim" type="number" min="0" value="${num(r.cash_limit)}">
         <label class="f" for="rs_fee">Monthly ID fee for this rider (Rs)</label><input id="rs_fee" type="number" min="0" placeholder="Contract fee: ${num(contractOf(r).id_fee)}" value="${((state.riderIds || {})[id] || {}).id_fee_override ?? ''}">
         <div class="muted" style="font-size:12px">Leave empty to use the contract fee. Write 0 to waive it.</div>
@@ -3424,6 +3468,7 @@ const A = {
       if (!!st !== !!en) throw new Error('Set both duty start and end, or leave both empty');
       const ct = $('rs_contract').value;
       need(await sb.from('riders').update({ monthly_salary:ct === 'company' ? num($('rs_sal').value) : 0, cash_limit:num($('rs_lim').value), contract_type:ct,
+        company_limit:ct === 'company' ? ($('rs_ordlim').value === '' ? null : Math.max(0, Math.round(num($('rs_ordlim').value)))) : null,
         id_fee_override:$('rs_fee').value === '' ? null : Math.max(0, num($('rs_fee').value)), vehicle:$('rs_vehicle').value,
         shift_start:st || null, shift_end:en || null, break_start:$('rs_bstart').value || null, break_minutes:Math.max(0, Math.round(num($('rs_bmin').value))) }).eq('id', id)); toast('Saved'); await A.refreshRider(id); });
   },
@@ -3709,16 +3754,17 @@ const A = {
   async zoneMatrix(){
     await run(async () => {
       const { data:charges } = await sb.from('zone_charges').select('*');
-      state.zcEdit = {};
-      (charges || []).forEach(c => { state.zcEdit[c.from_zone_id + '|' + c.to_zone_id] = num(c.delivery_fee); });
+      state.zcEdit = {}; state.zcPay = {};
+      (charges || []).forEach(c => { state.zcEdit[c.from_zone_id + '|' + c.to_zone_id] = num(c.delivery_fee); state.zcPay[c.from_zone_id + '|' + c.to_zone_id] = c.rider_pay == null ? '' : num(c.rider_pay); });
       const zs = state.zones.filter(z => z.is_active);
       const head = `<tr><th style="padding:8px">From ↓ To →</th>${zs.map(z => `<th style="padding:8px;font-size:12px">${esc(z.name)}</th>`).join('')}</tr>`;
       const body = zs.map(fz => `<tr><td style="padding:8px;font-weight:700;font-size:13px">${esc(fz.name)}</td>${zs.map(tz => {
         const k = fz.id + '|' + tz.id;
         const v = state.zcEdit[k] ?? (fz.id === tz.id ? num(fz.delivery_fee) : '');
-        return `<td style="padding:4px"><input type="number" min="0" value="${v}" data-k="${k}" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:8px" onchange="state.zcEdit[this.dataset.k]=num(this.value)"></td>`;
+        const pv = state.zcPay[k] ?? (fz.id === tz.id ? num(fz.rider_pay) : '');
+        return `<td style="padding:4px"><input type="number" min="0" value="${v}" data-k="${k}" title="Customer fee" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:8px" onchange="state.zcEdit[this.dataset.k]=num(this.value)"><input type="number" min="0" value="${pv}" data-k="${k}" title="Rider pay" placeholder="Rider" style="width:70px;padding:6px;border:1px solid #bcd8c4;border-radius:8px;margin-top:3px;background:#f2f9f3" onchange="state.zcPay[this.dataset.k]=this.value"></td>`;
       }).join('')}</tr>`).join('');
-      openSheet('Zone-to-zone delivery charges', `<p class="muted" style="font-size:13px">How much the customer pays when ordering from a shop in one zone to an address in another zone. Same zone uses the zone's own delivery fee.</p>
+      openSheet('Zone-to-zone delivery charges', `<p class="muted" style="font-size:13px">Har box mein <b>upar wala khana = customer fee</b>, <b>neeche hari (green) wala = rider pay</b> — jab koi is zone ki shop se dusre zone ke address pe order kare. Same zone walay box mein us zone ke apne rates.</p>
         <div style="overflow-x:auto"><table style="border-collapse:collapse">${head}${body}</table></div>
         <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveZoneMatrix()">Save charges</button></div>`);
     });
@@ -3726,8 +3772,10 @@ const A = {
   async saveZoneMatrix(){
     await run(async () => {
       for (const k in (state.zcEdit || {})){
-        const [fz, tz] = k.split('|'); const fee = num(state.zcEdit[k]);
-        await sb.from('zone_charges').upsert({ from_zone_id:fz, to_zone_id:tz, delivery_fee:fee }, { onConflict:'from_zone_id,to_zone_id' });
+        const [fz, tz] = k.split('|'); const row = { from_zone_id:fz, to_zone_id:tz, delivery_fee:num(state.zcEdit[k]) };
+        const pv = (state.zcPay || {})[k];
+        if (pv !== '' && pv != null) row.rider_pay = num(pv);
+        await sb.from('zone_charges').upsert(row, { onConflict:'from_zone_id,to_zone_id' });
       }
       closeSheet(); toast('Saved');
     });
@@ -3791,6 +3839,15 @@ const A = {
   tierSet(k, i, f, v){ const l = tierList(k); if (!l[i]) return; l[i][f] = num(v); if (f === 'from') redrawTiers(k); },
   tierAdd(k){ const l = tierList(k); const last = l[l.length - 1] || { from:1, pay:0 }; l.push({ from:last.from + 100, pay:last.pay + 10 }); redrawTiers(k); },
   tierDel(k, i){ const l = tierList(k); if (i > 0) l.splice(i, 1); redrawTiers(k); },
+  xTierSet(k, i, f, v){ const l = xTierList(k); if (!l[i]) return; l[i][f] = num(v); if (f === 'from') redrawXTiers(k); },
+  xTierAdd(k){ const l = xTierList(k); const last = l[l.length - 1] || { from:100, pay:0 }; l.push({ from:num(last.from) + 100, pay:num(last.pay) + 10 }); redrawXTiers(k); },
+  xTierDel(k, i){ const l = xTierList(k); l.splice(i, 1); redrawXTiers(k); },
+  async saveExtraTiers(){
+    const clean = k => { const seen = new Set(); return xTierList(k).map(x => ({ from:Math.max(1, Math.round(num(x.from))), pay:Math.max(0, num(x.pay)) })).sort((a, b) => a.from - b.from).filter(x => x.pay > 0 && !seen.has(x.from) && seen.add(x.from)); };
+    const out = { freelance:{ tiers:clean('freelance') }, company:{ tiers:clean('company') } };
+    state.xTierEdit = null;
+    await A.saveSetting('rider_tier_extra', out);
+  },
   async saveExpiry(){
     const acc = Math.max(5, num($('s_acc').value) || 15), exp = Math.max(1, num($('s_exp').value) || 3);
     await run(async () => {
