@@ -74,6 +74,10 @@ h2 a,h2 button{font-size:14px;color:var(--brand);font-weight:700;background:none
 .btn:active{background:var(--brand-dark)}
 .btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand)}
 .btn.warn{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.cxbtn{flex:none;border:1.5px solid var(--danger);color:var(--danger);background:transparent;font-weight:700;font-size:12.5px;border-radius:99px;padding:4px 10px;cursor:pointer}
+.cxstrip{display:flex;align-items:center;gap:10px;margin:2px 0 8px;background:var(--soft);border:1.5px solid var(--line);border-radius:11px;padding:5px 11px;font-size:13.5px}
+.cxstep{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--green);color:var(--green);background:var(--surface);font-weight:800;font-size:15px;line-height:1;cursor:pointer;flex:none}
+.cxstep.off{border-color:var(--line);color:var(--muted)}
 .btn.gold{background:var(--marigold);color:#1E2B25}
 .btn[disabled]{opacity:.5}
 .btn.inline{display:inline-block;width:auto;padding:10px 18px}
@@ -1016,7 +1020,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.36';
+const APP_VERSION = '5.37';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1095,6 +1099,8 @@ const I18N = {
     hero_ready:'Your order is ready, finding a rider', hero_rider_assigned:'A rider is going to the shop', hero_picked_up:'Your order is on the way',
     hero_delivered:'Delivered. Enjoy!',
     cancel_order:'Cancel order', cancel_confirm:'Cancel this order?', call:'Call shop', reorder:'Order again',
+    cx_item:'Cancel', cx_howmany:'How many to cancel?', cx_of:'of', cx_reason_q:'Why are you cancelling?', cx_done_item:'Item cancelled', cx_done_order:'Order cancelled',
+    x1:'Ordered by mistake', x2:'I do not need it anymore', x3:'It is taking too long', x4:'Other reason',
     logout:'Log out', language:'Language', saved_addresses:'Saved addresses', delete:'Delete', save:'Save', edit_profile:'Edit profile', addresses_n:'saved',
     loading:'Loading…', retry:'Try again', error:'Something went wrong. Please try again.',
     other_rest_msg:'Your cart has items from another shop. Clear it and add this item?',
@@ -1205,6 +1211,8 @@ const I18N = {
     hero_ready:'آرڈر تیار ہے، رائیڈر ڈھونڈا جا رہا ہے', hero_rider_assigned:'رائیڈر دکان کی طرف جا رہا ہے', hero_picked_up:'آپ کا آرڈر راستے میں ہے',
     hero_delivered:'پہنچ گیا۔ مزے کریں!',
     cancel_order:'آرڈر منسوخ کریں', cancel_confirm:'کیا یہ آرڈر منسوخ کریں؟', call:'دکان کو کال کریں', reorder:'دوبارہ آرڈر کریں',
+    cx_item:'منسوخ', cx_howmany:'کتنے منسوخ کرنے ہیں؟', cx_of:'میں سے', cx_reason_q:'منسوخ کرنے کی وجہ؟', cx_done_item:'آئٹم منسوخ ہو گیا', cx_done_order:'آرڈر منسوخ ہو گیا',
+    x1:'غلطی سے آرڈر ہو گیا', x2:'اب یہ نہیں چاہیے', x3:'بہت دیر ہو رہی ہے', x4:'کوئی اور وجہ',
     logout:'لاگ آؤٹ', language:'زبان', saved_addresses:'محفوظ پتے', delete:'حذف کریں', save:'محفوظ کریں', edit_profile:'پروفائل تبدیل کریں', addresses_n:'محفوظ',
     loading:'لوڈ ہو رہا ہے…', retry:'دوبارہ کوشش کریں', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔',
     other_rest_msg:'آپ کے کارٹ میں دوسری دکان کی چیزیں ہیں۔ انہیں ہٹا کر یہ شامل کریں؟',
@@ -2477,6 +2485,8 @@ function drawCheckout(){
 
 // ================= ORDERS =================
 const FINAL = ['delivered','cancelled','rejected'];
+const CX_STATUSES = ['placed','accepted','preparing','ready','rider_assigned'];
+const CXQ = {};
 function pillFor(status){
   const cls = (status === 'cancelled' || status === 'rejected') ? 'bad' : (status === 'placed' ? 'wait' : '');
   return `<span class="pill ${cls}">${t('st_' + status)}</span>`;
@@ -2637,7 +2647,13 @@ async function showOrder(id){
     <div class="riderrow"><span class="ravatar">🛵</span><div style="min-width:0;flex:1"><b style="font-size:17px">${esc(rider.full_name || '')}</b>${rider.rating ? `<div class="muted" style="font-size:13px">★ ${esc(rider.rating)}</div>` : ''}${rider.vehicle ? `<div class="muted" style="font-size:13px">${esc(rider.vehicle)}</div>` : ''}</div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">${rider.phone ? `<a class="btn" href="tel:${esc(rider.phone)}">📞 ${t('call')}</a>` : ''}
     ${rider.lat ? `<a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${rider.lat},${rider.lng}">${t('track_rider')}</a>` : ''}</div></div>` : '';
-  const items = o.order_items.map(i => `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
+  const canCx = CX_STATUSES.includes(o.status);
+  const items = o.order_items.map(i => {
+    const sel = Math.min(Math.max(CXQ[i.id] || 1, 1), i.quantity);
+    const btn = canCx ? `<button type="button" class="cxbtn" onclick="A.openItemCancel('${o.id}','${i.id}')">✕ ${t('cx_item')}</button>` : '';
+    const strip = canCx && i.quantity > 1 ? `<div class="cxstrip"><span style="font-weight:700">${t('cx_howmany')}</span><span style="display:flex;align-items:center;gap:9px;margin-inline-start:auto"><button type="button" class="cxstep ${sel <= 1 ? 'off' : ''}" onclick="A.cxQty('${i.id}',-1,${i.quantity},this)">−</button><b id="cqv-${i.id}">${sel}</b><button type="button" class="cxstep ${sel >= i.quantity ? 'off' : ''}" onclick="A.cxQty('${i.id}',1,${i.quantity},this)">+</button></span><span class="muted">${t('cx_of')} ${i.quantity}</span></div>` : '';
+    return `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span style="display:flex;align-items:center;gap:8px"><span>${money(i.price * i.quantity)}</span>${btn}</span></div>${strip}`;
+  }).join('');
   if (currentRoute !== 'order' || !location.hash.includes(id)) return;
   const heroKey = o.order_type === 'pickup' && o.status === 'ready' ? 'hero_ready_pick' : o.payment_method === 'wallet' && o.status === 'placed' && ['unpaid', 'checking'].includes(o.payment_status) ? (o.payment_status === 'unpaid' ? 'hero_pay' : 'hero_paycheck') : 'hero_' + o.status;
   $('view').innerHTML = `
@@ -2671,7 +2687,7 @@ async function showOrder(id){
     </div>
     <div style="display:grid;gap:10px;margin-top:14px">
       ${o.restaurant && o.restaurant.phone ? `<a class="btn ghost" href="tel:${esc(o.restaurant.phone)}">${t('call')}</a>` : ''}
-      ${o.status === 'placed' ? `<button class="btn warn" onclick="A.cancelOrder('${o.id}')">${t('cancel_order')}</button>` : ''}
+      ${CX_STATUSES.includes(o.status) ? `<button class="btn warn" onclick="A.cancelOrder('${o.id}')">${t('cancel_order')}</button>` : ''}
       ${FINAL.includes(o.status) ? `<button class="btn" onclick="A.reorder()">${t('reorder')}</button>` : ''}
     </div>${o.status === 'delivered' ? ratingHtml(o, review) + complainHtml(o, cmp) : ''}`;
   if (showTrackMap(o)) mountTrackMap(o, rider);
@@ -3446,9 +3462,38 @@ const A = {
     });
     if (b) b.disabled = false;
   },
-  async cancelOrder(id){
-    if (!await uiConfirm(t('cancel_confirm'))) return;
-    await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'cancelled' })); await route(true); });
+  cancelOrder(id){
+    openSheet(t('cancel_order'), `<div class="muted">${t('cx_reason_q')}</div>
+      <div style="display:grid;gap:10px;margin-top:12px">${['x1','x2','x3','x4'].map(k => `<button class="btn warn" onclick="A.doCancelOrder('${id}','${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doCancelOrder(id, key){
+    await run(async () => {
+      need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'cancelled', p_reason:I18N.en[key] }));
+      closeSheet(); toast(t('cx_done_order')); await route(true);
+    });
+  },
+  cxQty(itemId, d, max, btn){
+    const cur = Math.min(Math.max((CXQ[itemId] || 1) + d, 1), max);
+    CXQ[itemId] = cur;
+    const v = document.getElementById('cqv-' + itemId); if (v) v.textContent = cur;
+    const strip = btn && btn.closest('.cxstrip');
+    if (strip){ const bs = strip.querySelectorAll('.cxstep'); if (bs[0]) bs[0].classList.toggle('off', cur <= 1); if (bs[1]) bs[1].classList.toggle('off', cur >= max); }
+  },
+  openItemCancel(orderId, itemId){
+    const o = state.curOrder; if (!o || o.id !== orderId) return;
+    const i = (o.order_items || []).find(x => x.id === itemId); if (!i) return;
+    const q = Math.min(Math.max(CXQ[itemId] || 1, 1), i.quantity);
+    openSheet(t('cx_item') + ' — ' + esc(i.name), `<div class="muted">${q}× ${esc(i.name)} · ${money(i.price * q)}</div>
+      <div class="muted" style="margin-top:8px">${t('cx_reason_q')}</div>
+      <div style="display:grid;gap:10px;margin-top:12px">${['x1','x2','x3','x4'].map(k => `<button class="btn warn" onclick="A.doItemCancel('${orderId}','${itemId}',${q},'${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doItemCancel(orderId, itemId, qty, key){
+    await run(async () => {
+      const r = need(await sb.rpc('cancel_order_item', { p_order_id:orderId, p_item_id:itemId, p_qty:qty, p_reason:I18N.en[key] }));
+      delete CXQ[itemId]; closeSheet();
+      toast(r && r.order_cancelled ? t('cx_done_order') : t('cx_done_item'));
+      await route(true);
+    });
   },
   async reorder(){
     const o = state.curOrder; if (!o) return;
