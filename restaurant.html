@@ -396,6 +396,13 @@ html[dir=rtl] .sec .chev{transform:scaleX(-1)} html[dir=rtl] .sec.open .chev{tra
 .busybar .btn{width:auto;flex:none}
 .picktag{margin:6px 0;background:#E8F0FE;color:#1A4FB0;border-radius:10px;padding:8px 10px;font-weight:800;font-size:14px}
 .pickcode{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0;background:linear-gradient(135deg,#0B3A2B,#14532D);color:#fff;border-radius:14px;padding:12px 14px}
+.cxrow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.cxrow:last-child{border-bottom:none}
+.cxname{flex:1;min-width:0}
+.cxbtn{flex:none;border:1.5px solid var(--danger);color:var(--danger);background:#FFF5F5;font-weight:700;font-size:12.5px;border-radius:99px;padding:4px 10px;cursor:pointer}
+.cxstrip{display:flex;align-items:center;gap:10px;margin:4px 0 6px;background:#FFF7EC;border:1.5px solid #F0DDBE;border-radius:11px;padding:5px 11px;font-size:13.5px}
+.cxstep{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--brand,#E8730C);color:var(--brand,#E8730C);background:#fff;font-weight:800;font-size:15px;line-height:1;cursor:pointer;flex:none}
+.cxstep.off{border-color:#C9C0AA;color:#B4AC97}
 .pickcode b{display:block;font-size:14px}
 .pickcode small{opacity:.8;font-size:12px}
 .pickcode .code{font-size:28px;font-weight:900;letter-spacing:4px;background:rgba(255,255,255,.15);padding:6px 14px;border-radius:10px;font-variant-numeric:tabular-nums}
@@ -682,7 +689,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.24';
+const APP_VERSION = '6.25';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -784,6 +791,8 @@ const I18N = {
     accept:'Accept order', reject:'Reject', start_prep:'Start preparing', mark_ready:'Order is ready',
     prep_q:'Ready in how many minutes?', min:'min', reject_q:'Why are you rejecting this order?',
     r1:'Item not available', r2:'Too busy right now', r3:'Closing soon', r4:'Other reason',
+    cx_order:'Cancel order', cx_item:'Cancel', cx_howmany:'How many to cancel?', cx_of:'of', cx_reason_q:'Why are you cancelling?', cx_done_item:'Item cancelled', cx_done_order:'Order cancelled',
+    c1:'Customer asked to cancel', c2:'Item out of stock', c3:'Shop problem (busy / closing)', c4:'Other reason',
     waiting_rider:'Waiting for a rider', rider_coming:'Rider is coming to pick up', picked:'Picked up by the rider', pickup_code_t:'🔐 Pickup code', pickup_code_s:'Tell this code to the rider at pickup',
     st_placed:'New', st_accepted:'Accepted', st_preparing:'Preparing', st_ready:'Ready', st_rider_assigned:'Rider coming',
     st_picked_up:'Picked up', st_delivered:'Delivered', st_cancelled:'Cancelled', st_rejected:'Rejected',
@@ -857,6 +866,8 @@ const I18N = {
     accept:'آرڈر قبول کریں', reject:'مسترد کریں', start_prep:'تیاری شروع کریں', mark_ready:'آرڈر تیار ہے',
     prep_q:'کتنے منٹ میں تیار ہوگا؟', min:'منٹ', reject_q:'آرڈر مسترد کرنے کی وجہ کیا ہے؟',
     r1:'آئٹم دستیاب نہیں', r2:'ابھی بہت رش ہے', r3:'دکان بند ہونے والی ہے', r4:'کوئی اور وجہ',
+    cx_order:'آرڈر منسوخ کریں', cx_item:'منسوخ', cx_howmany:'کتنے منسوخ کرنے ہیں؟', cx_of:'میں سے', cx_reason_q:'منسوخ کرنے کی وجہ؟', cx_done_item:'آئٹم منسوخ ہو گیا', cx_done_order:'آرڈر منسوخ ہو گیا',
+    c1:'گاہک نے منسوخ کہا', c2:'آئٹم ختم ہو گیا', c3:'دکان کا مسئلہ (رش / بند)', c4:'کوئی اور وجہ',
     waiting_rider:'رائیڈر کا انتظار', rider_coming:'رائیڈر لینے آ رہا ہے', picked:'رائیڈر لے گیا', pickup_code_t:'🔐 پک اپ کوڈ', pickup_code_s:'رائیڈر کو یہ کوڈ بتائیں',
     st_placed:'نیا', st_accepted:'قبول', st_preparing:'تیاری میں', st_ready:'تیار', st_rider_assigned:'رائیڈر آ رہا ہے',
     st_picked_up:'رائیڈر لے گیا', st_delivered:'پہنچ گیا', st_cancelled:'منسوخ', st_rejected:'مسترد',
@@ -1189,7 +1200,17 @@ async function refreshOrders(){
 }
 setInterval(() => { if (state.tab === 'orders' && document.querySelector('.countdown,.bkwait')) renderTab(); }, 30000);
 setInterval(() => { if (state.tab === 'orders' && state.restaurant && isServices() && !document.querySelector('.sheet-back,.over')) loadOrders().then(() => { if (state.tab === 'orders') renderTab(); }, () => {}); }, 60000);
-function itemsHtml(o){ return `<div class="items">${(o.order_items || []).map(i => `<div><b>${i.quantity}×</b> ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('')}</div>`; }
+const CX_STATUSES = ['accepted','preparing','ready','rider_assigned'];
+const CXQ = {};
+function itemsHtml(o){
+  const can = CX_STATUSES.includes(o.status) && (o.order_items || []).length > 0;
+  if (!can) return `<div class="items">${(o.order_items || []).map(i => `<div><b>${i.quantity}×</b> ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('')}</div>`;
+  return `<div class="items">${(o.order_items || []).map(i => {
+    const sel = Math.min(Math.max(CXQ[i.id] || 1, 1), i.quantity);
+    const step = i.quantity > 1 ? `<div class="cxstrip"><span style="font-weight:700;color:#8A5A12">${t('cx_howmany')}</span><span style="display:flex;align-items:center;gap:9px;margin-inline-start:auto"><button type="button" class="cxstep ${sel <= 1 ? 'off' : ''}" onclick="A.cxQty('${i.id}',-1,${i.quantity},this)">−</button><b id="cqv-${i.id}">${sel}</b><button type="button" class="cxstep ${sel >= i.quantity ? 'off' : ''}" onclick="A.cxQty('${i.id}',1,${i.quantity},this)">+</button></span><span class="muted">${t('cx_of')} ${i.quantity}</span></div>` : '';
+    return `<div class="cxrow"><span class="cxname"><b>${i.quantity}×</b> ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</span><b>${money(num(i.price) * i.quantity)}</b><button type="button" class="cxbtn" onclick="A.openItemCancel('${o.id}','${i.id}')">✕ ${t('cx_item')}</button></div>${step}`;
+  }).join('')}</div>`;
+}
 const schedTxt = iso => new Date(iso).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { weekday:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 const isFuture = o => o.scheduled_for && new Date(o.scheduled_for).getTime() - (num(o.prep_minutes) || num(state.restaurant && state.restaurant.prep_time_minutes) || 25) * 60000 > Date.now();
 function schedBox(o){
@@ -1219,6 +1240,7 @@ function orderCard(o){
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
   const cid = JSON.stringify(o.id);
   actions += `<div style="margin-top:10px"><button class="btn ghost small" style="width:100%;display:block" onclick='A.contactSheet(${cid}, ${o.rider_id ? 'true' : 'false'})'>💬 ${t('contact')}</button></div>`;
+  if (CX_STATUSES.includes(o.status)) actions += `<div style="margin-top:8px"><button class="btn warn" style="width:100%;display:block" onclick="A.openCancelOrder('${o.id}')">⛔ ${t('cx_order')}</button></div>`;
   if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
   const pickupBox = o.pickup_code && ['ready','rider_assigned'].includes(o.status) ? `<div class="pickcode"><div><b>🔐 ${t('pickup_code_t')}</b><small>${t('pickup_code_s')}</small></div><span class="code">${esc(o.pickup_code)}</span></div>` : '';
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
@@ -1911,6 +1933,38 @@ const A = {
     await run(async () => {
       need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'rejected', p_reason:I18N.en[key] }));
       closeSheet(); await loadOrders(); renderTab(); toast(t('saved'));
+    });
+  },
+  cxQty(itemId, d, max, btn){
+    const cur = Math.min(Math.max((CXQ[itemId] || 1) + d, 1), max);
+    CXQ[itemId] = cur;
+    const v = document.getElementById('cqv-' + itemId); if (v) v.textContent = cur;
+    const strip = btn && btn.closest('.cxstrip');
+    if (strip){ const bs = strip.querySelectorAll('.cxstep'); if (bs[0]) bs[0].classList.toggle('off', cur <= 1); if (bs[1]) bs[1].classList.toggle('off', cur >= max); }
+  },
+  openItemCancel(orderId, itemId){
+    const o = (state.orders || []).find(x => x.id === orderId); if (!o) return;
+    const i = (o.order_items || []).find(x => x.id === itemId); if (!i) return;
+    const q = Math.min(Math.max(CXQ[itemId] || 1, 1), i.quantity);
+    openSheet(t('cx_item') + ' — ' + esc(i.name), `<div class="muted">${q}× ${esc(i.name)} · ${money(num(i.price) * q)}</div>
+      <div class="muted" style="margin-top:8px">${t('cx_reason_q')}</div>
+      <div class="actions">${['c1','c2','c3','c4'].map(k => `<button class="btn warn" onclick="A.doItemCancel('${orderId}','${itemId}',${q},'${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doItemCancel(orderId, itemId, qty, key){
+    await run(async () => {
+      const r = need(await sb.rpc('cancel_order_item', { p_order_id:orderId, p_item_id:itemId, p_qty:qty, p_reason:I18N.en[key] }));
+      delete CXQ[itemId]; closeSheet(); await loadOrders(); renderTab();
+      toast(r && r.order_cancelled ? t('cx_done_order') : t('cx_done_item'));
+    });
+  },
+  openCancelOrder(id){
+    openSheet(t('cx_order'), `<div class="muted">${t('cx_reason_q')}</div>
+      <div class="actions">${['c1','c2','c3','c4'].map(k => `<button class="btn warn" onclick="A.doCancelOrder('${id}','${k}')">${t(k)}</button>`).join('')}</div>`);
+  },
+  async doCancelOrder(id, key){
+    await run(async () => {
+      need(await sb.rpc('update_order_status', { p_order_id:id, p_status:'cancelled', p_reason:I18N.en[key] }));
+      closeSheet(); await loadOrders(); renderTab(); toast(t('cx_done_order'));
     });
   },
   async setStatus(id, status){
