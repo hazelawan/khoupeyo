@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.27';
+const APP_VERSION = '5.28';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -778,6 +778,9 @@ const I18N = {
     tp_title:'💰 Pay per delivery this month', tp_title_co:'💰 Extra pay per delivery (on top of your salary)', tp_row:'Delivery {a} to {b}', tp_row_last:'Delivery {a} and more', tp_each:'{p} each', tp_here:'you are here',
     tp_done:'Your deliveries this month: {n}', tp_how:'How your delivery pay is counted', tp_line:'{c} deliveries × {p}', tp_total:'Delivery pay so far', tp_extra:'Customer tips and big/heavy order extra are added on top.',
     tp_next:'Your next {k} deliveries pay {p} each. From delivery number {f}, every delivery pays {q}.', tp_top:'You are on the highest level: every delivery pays {p}.', tp_reset:'Counting starts again from delivery 1 on the 1st of every month.',
+    bx_title:'🎁 Bonus levels — extra on top of your pay', bx_each:'+{p} extra each', bx_how:'How your bonus is counted', bx_total:'Bonus so far',
+    bx_next:'Your next {k} deliveries get {p} extra each. From delivery number {f}, every delivery gets {q} extra.', bx_top:'You are on the highest bonus level: every delivery gets {p} extra.',
+    bx_pre:'Bonus starts at delivery number {f}: every delivery then gets {q} extra. {k} deliveries to go.', bx_note:'This bonus is paid on top of your normal delivery pay.',
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
@@ -858,6 +861,9 @@ const I18N = {
     tp_title:'💰 اس مہینے فی ڈیلیوری پیسے', tp_title_co:'💰 فی ڈیلیوری اضافی پیسے (تنخواہ کے علاوہ)', tp_row:'ڈیلیوری {a} سے {b} تک', tp_row_last:'ڈیلیوری {a} اور آگے', tp_each:'ہر ایک {p}', tp_here:'آپ یہاں ہیں',
     tp_done:'اس مہینے آپ کی ڈیلیوریاں: {n}', tp_how:'آپ کے ڈیلیوری کے پیسے کیسے بنتے ہیں', tp_line:'{c} ڈیلیوریاں × {p}', tp_total:'اب تک ڈیلیوری کے پیسے', tp_extra:'گاہک کی ٹپ اور بڑے/بھاری آرڈر کے اضافی پیسے اس کے علاوہ ملتے ہیں۔',
     tp_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری کے {q} ملیں گے۔', tp_top:'آپ سب سے اوپر والے لیول پر ہیں: ہر ڈیلیوری کے {p}۔', tp_reset:'ہر مہینے کی 1 تاریخ سے گنتی دوبارہ 1 سے شروع ہوتی ہے۔',
+    bx_title:'🎁 بونس لیول — معمول کے پیسوں کے علاوہ اضافی', bx_each:'ہر ایک پر +{p} اضافی', bx_how:'آپ کا بونس کیسے بنتا ہے', bx_total:'اب تک کا بونس',
+    bx_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} اضافی ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری پر {q} اضافی ملے گا۔', bx_top:'آپ سب سے اوپر والے بونس لیول پر ہیں: ہر ڈیلیوری پر {p} اضافی۔',
+    bx_pre:'بونس ڈیلیوری نمبر {f} سے شروع ہوگا: پھر ہر ڈیلیوری پر {q} اضافی ملے گا۔ ابھی {k} ڈیلیوریاں باقی ہیں۔', bx_note:'یہ بونس آپ کے معمول کے ڈیلیوری پیسوں کے علاوہ ملتا ہے۔',
     tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے'
   }
 };
@@ -1714,6 +1720,31 @@ function tierCard(){
     ${how}
     <div class="muted" style="font-size:12px;margin-top:8px">${t('tp_reset')}</div></div>`;
 }
+function bonusCard(){
+  const k = state.rider && state.rider.contract_type === 'company' ? 'company' : 'freelance';
+  const all = (state.settings && state.settings.rider_tier_extra) || {};
+  const veh = (state.rider && state.rider.vehicle) || 'motorbike';
+  const vt = all[k] && all[k].vehicles && all[k].vehicles[veh] && Array.isArray(all[k].vehicles[veh].tiers) && all[k].vehicles[veh].tiers.length ? all[k].vehicles[veh].tiers : null;
+  const rows = tierRows(vt || (all[k] && all[k].tiers));
+  if (!rows.some(x => x.pay > 0)) return '';
+  const n = state.tier ? num(state.tier.deliveries) : state.done.length;
+  const cur = rows.findIndex(x => n + 1 >= x.from && (x.to === null || n + 1 <= x.to));
+  const list = rows.map((x, i) => `<div class="line" style="padding:8px 10px;border-radius:10px;${i === cur ? 'background:rgba(31,111,74,.12);font-weight:800;color:var(--brand)' : ''}">
+      <span>${x.to === null ? t('tp_row_last', { a:x.from }) : t('tp_row', { a:x.from, b:x.to })}${i === cur ? ` <span style="font-size:12px">◀ ${t('tp_here')}</span>` : ''}</span><b>${t('bx_each', { p:money(x.pay) })}</b></div>`).join('');
+  const split = rows.map(x => { const cnt = Math.max(0, Math.min(n, x.to === null ? Infinity : x.to) - x.from + 1); return { pay:x.pay, cnt }; }).filter(x => x.cnt > 0);
+  const total = split.reduce((a, x) => a + x.cnt * x.pay, 0);
+  const how = split.length ? `<div style="margin-top:12px;background:var(--paper);border-radius:12px;padding:10px 12px"><b style="font-size:14px">${t('bx_how')}</b>
+      ${split.map(x => `<div class="line" style="font-size:15px"><span>${t('tp_line', { c:x.cnt, p:money(x.pay) })}</span><span>${money(x.cnt * x.pay)}</span></div>`).join('')}
+      <div class="line" style="border-top:1px solid var(--line);margin-top:4px;padding-top:6px;font-weight:800"><span>${t('bx_total')}</span><span>${money(total)}</span></div></div>` : '';
+  const nx = cur >= 0 ? rows[cur + 1] : null;
+  const next = cur < 0 ? t('bx_pre', { f:rows[0].from, q:money(rows[0].pay), k:rows[0].from - (n + 1) }) : nx ? t('bx_next', { k:nx.from - (n + 1), p:money(rows[cur].pay), f:nx.from, q:money(nx.pay) }) : t('bx_top', { p:money(rows[cur].pay) });
+  return `<div class="card"><b>${t('bx_title')}</b>
+    <div style="margin:6px 0 4px;font-weight:700">${t('tp_done', { n })}</div>
+    <div>${list}</div>
+    ${next ? `<div class="note" style="margin-top:10px">🎯 ${next}</div>` : ''}
+    ${how}
+    <div class="muted" style="font-size:12px;margin-top:8px">${t('bx_note')} ${t('tp_reset')}</div></div>`;
+}
 function dutyCard(){
   const c = myContract(); const goal = goalMinutes();
   const m = Math.max(0, num(state.todayMinutes) + (state.shift && state.todayAt ? (Date.now() - state.todayAt) / 60000 : 0) - breakUsed());
@@ -2000,7 +2031,7 @@ function viewEarn(){
     <h2>${t('recent')}</h2>${rows || `<div class="empty">${t('no_recent')}</div>`}
     ${dep ? `<h2>${t('deposits')}</h2>${dep}` : ''}
     ${pay ? `<h2>${t('payments')}</h2>${pay}` : ''}`;
-  else if (et === 'targets') earnBody = `${goalCard()}${targetsCard()}${tierCard()}${dutyCard()}`;
+  else if (et === 'targets') earnBody = `${goalCard()}${targetsCard()}${tierCard()}${bonusCard()}${dutyCard()}`;
   else if (et === 'history') earnBody = historyHtml();
   else earnBody = `${lbCard()}`;
   return `<h1>${t('earnings')}</h1>${boostBanner()}
