@@ -671,7 +671,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.38';
+const APP_VERSION = '7.39';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2262,9 +2262,27 @@ function viewBanners(){
 }
 
 // ---- Zones ----
+const MAINI_VILLAGES = [['Maini', 32.70803, 72.65127], ['Ransial', 32.7154327, 72.688748], ['Bhaseen', 32.7239798, 72.6322893], ['Bhalla', 32.6781236, 72.6534259], ['Phaar Khan', 32.7328837, 72.637379], ['Gaffanwala', 32.6767938, 72.6713984], ['Buchhal Kalan', 32.6798846, 72.6352477], ['Dharkanna', 32.6922176, 72.6209899], ['Chak Misri', 32.7107051, 72.7024028], ['Jhamra', 32.7132065, 72.6137576], ['Gaahi', 32.6713622, 72.6803494], ['Kahoot', 32.7331709, 72.6189676], ['Dhok Saidan', 32.7291177, 72.7058139], ['Buchhal Khurd', 32.6759713, 72.6985452], ['Makhial', 32.6613873, 72.6559377], ['Sardi', 32.687572, 72.7157835], ['Manak Pur', 32.7466549, 72.7044444]];
+function zoneVillages(){
+  const zs = (state.zones || []).filter(z => z.is_active && z.center_lat != null);
+  const win = {};
+  for (const [nm, la, ln] of MAINI_VILLAGES){
+    let best = null, bestR = null;
+    for (const z of zs){
+      const circles = [[z.center_lat, z.center_lng, num(z.radius_km) || 5]].concat((z.extra_circles || []).map(c => [c.lat, c.lng, num(c.r) || 5]));
+      for (const c of circles){
+        const d = distKmA(la, ln, Number(c[0]), Number(c[1]));
+        if (d != null && d <= num(c[2]) && (bestR === null || num(c[2]) < bestR)){ best = z.id; bestR = num(c[2]); }
+      }
+    }
+    if (best) (win[best] = win[best] || []).push(nm);
+  }
+  return win;
+}
 function viewZones(){
+  const zv = zoneVillages();
   const rows = state.zones.map(z => `<button class="row" onclick="A.editZone('${z.id}')">
-      <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div></div>
+      <div class="row-main"><div class="row-title">${esc(z.name)}${z.is_active ? '' : '<span class="pill">Off</span>'}</div><div class="row-sub">${esc(z.city || '')}</div>${(zv[z.id] || []).length ? `<div class="row-sub">🏘️ ${zv[z.id].join(' · ')}</div>` : ''}</div>
       <div class="row-side"><b>${num(z.per_km_fee) ? 'Per km' : 'Fixed'}</b> · ${money(z.delivery_fee)}<small>Min ${money(z.min_order)}${num(z.per_km_fee) ? `, +${money(z.per_km_fee)}/km after ${num(z.base_km)} km` : ''}${num(z.bulk_fee) && num(z.bulk_items) ? `, +${money(z.bulk_fee)}/item after ${num(z.bulk_items)} items` : ''}${Array.isArray(z.weight_tiers) ? `, own weight charges (${z.weight_tiers.length})` : ''}${z.max_km != null ? `, max ${num(z.max_km)} km` : ''}</small></div></button>`).join('');
   return `${backLink()}<h2>Delivery zones</h2><div class="bar"><button class="btn" onclick="A.editZone()">Add zone</button><button class="btn ghost" onclick="A.zoneMatrix()">Zone-to-zone charges</button></div>
     <div class="list">${rows || '<div class="empty">No zones yet.</div>'}</div>`;
