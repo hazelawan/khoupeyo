@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.29';
+const APP_VERSION = '5.30';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -719,7 +719,7 @@ const I18N = {
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call', nav_shop:'Go to shop', nav_cust:'Deliver to customer', navigate:'Navigate', nav_noloc:'Location not available', you:'You',
     cash_collect:'Collect cash', paid_short:'Paid online', batch_same:'➕ Same shop as your order — take both in one trip', batch_near:'➕ Shop next to your order — take both in one trip', hot_t:'🔥 Busy areas at this time', hot_n:'{n} orders', hot_s:'Wait near these places to get orders faster.', code_q:'Ask the customer for the 4-digit delivery code (it is in their app)', pickup_code_q:'Ask the shop for the 4-digit pickup code (it is on their screen)', sos:'🆘 SOS — I need help', sos_q:'Send an emergency alert to Dera with your location?', sos_sent:'Alert sent. Dera will call you now.', code_pick_note:'Customer has the code in their app', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
     qr_btn:'📲 Customer wants to pay by QR', qr_t:'Pay by QR', qr_s:'Ask the customer to scan this QR and pay {n}. Then type the Transaction ID (TID) from their phone.', qr_none:'QR payment is not set up in your area. Take cash.', tid:'Transaction ID (TID)', qr_send:'Payment done — send for check',
-    payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Dera rider for order #{n}.', your_pay:'Your pay', items:'Items', cust_note:'Customer note', order_no:'Order',
+    payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Dera rider for order #{n}.', your_pay:'Your pay', pk_parcel:'Parcel', pk_new:'New parcels', pk_mine:'My parcels', pk_sender:'Sender', pk_receiver:'Receiver', pk_call:'Call', pk_urgent:'Urgent', pk_w1:'Up to 10 kg', pk_w2:'10-15 kg', pk_w3:'15-25 kg', pk_pick_first:'Pickup first', pk_on_way:'On the way', pk_pick_btn:'Picked up — code', pk_del_btn:'Delivered — code', pk_release:'Release parcel', pk_map:'Map', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
     today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Dera at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
@@ -802,7 +802,7 @@ const I18N = {
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال', nav_shop:'دکان پر جائیں', nav_cust:'گاہک تک پہنچائیں', navigate:'راستہ دیکھیں', nav_noloc:'لوکیشن دستیاب نہیں', you:'آپ',
     cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', batch_same:'➕ آپ کے آرڈر والی دکان — ایک چکر میں دونوں لے جائیں', batch_near:'➕ آپ کے آرڈر کے ساتھ والی دکان — ایک چکر میں دونوں لے جائیں', hot_t:'🔥 اس وقت مصروف علاقے', hot_n:'{n} آرڈر', hot_s:'زیادہ آرڈر کے لیے ان جگہوں کے قریب رہیں۔', code_q:'گاہک سے 4 ہندسوں کا ڈیلیوری کوڈ پوچھیں (اس کی ایپ میں ہے)', pickup_code_q:'دکان سے 4 ہندسوں کا پک اپ کوڈ پوچھیں (ان کی سکرین پر ہے)', sos:'🆘 SOS — مجھے مدد چاہیے', sos_q:'اپنی لوکیشن کے ساتھ وانہار مارٹ کو ایمرجنسی الرٹ بھیجیں؟', sos_sent:'الرٹ بھیج دیا گیا۔ وانہار مارٹ ابھی آپ کو کال کرے گا۔', code_pick_note:'گاہک کی ایپ میں کوڈ ہے', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
     qr_btn:'📲 گاہک QR سے ادائیگی کرنا چاہتا ہے', qr_t:'QR سے ادائیگی', qr_s:'گاہک سے کہیں یہ QR اسکین کر کے {n} ادا کرے۔ پھر اس کے فون سے ٹرانزیکشن آئی ڈی (TID) لکھیں۔', qr_none:'آپ کے علاقے میں QR ادائیگی سیٹ نہیں۔ نقد لیں۔', tid:'ٹرانزیکشن آئی ڈی (TID)', qr_send:'ادائیگی ہو گئی — چیک کے لیے بھیجیں',
-    payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
+    payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', pk_parcel:'پارسل', pk_new:'نئے پارسل', pk_mine:'میرے پارسل', pk_sender:'بھیجنے والا', pk_receiver:'وصول کرنے والا', pk_call:'کال', pk_urgent:'ارجنٹ', pk_w1:'10 کلو تک', pk_w2:'10–15 کلو', pk_w3:'15–25 کلو', pk_pick_first:'پہلے پک اپ', pk_on_way:'راستے میں', pk_pick_btn:'اٹھا لیا — کوڈ', pk_del_btn:'پہنچا دیا — کوڈ', pk_release:'پارسل چھوڑ دیں', pk_map:'نقشہ', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
     today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Dera طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
@@ -870,7 +870,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
   mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
-  sound: ls.get('kh_rd_sound', true), seen:new Set(), seenOffer:new Set(), skipped:new Set(), pos:null
+  sound: ls.get('kh_rd_sound', true), seen:new Set(), seenOffer:new Set(), skipped:new Set(), parcels:[], myParcels:[], seenParcel:new Set(), pos:null
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
@@ -1198,7 +1198,7 @@ function heartbeat(){
   const v = { location_updated_at:new Date().toISOString() }; if (state.pos){ v.current_lat = state.pos.lat; v.current_lng = state.pos.lng; }
   sb.from('riders').update(v).eq('id', state.rider.id).then(() => {});
 }
-async function loadJobs(){ heartbeat(); await loadStatus(); await loadMine(); await loadAvailable(); }
+async function loadJobs(){ heartbeat(); await loadStatus(); await loadMine(); await loadAvailable(); await loadParcels(); }
 async function loadMoney(){
   const m = monthStart();
   const histFrom = new Date(); histFrom.setDate(histFrom.getDate() - 60);
@@ -1767,6 +1767,73 @@ function boostBanner(){
   return `<div class="boost ${now ? 'live' : ''}"><b>🎉 ${esc(t(now ? 'boost_now' : 'boost_soon', { t:b.title, a:money(b.extra) }))}</b>
     <div style="font-size:13px;opacity:.85">${esc(now ? t('boost_until', { d:tWhen(b.ends_at) }) : t('boost_from', { d:tWhen(b.starts_at), e:tWhen(b.ends_at) }))}</div></div>`;
 }
+
+// ================= PARCELS (rider) =================
+async function loadParcels(){
+  try {
+    state.myParcels = need(await sb.from('parcels').select('*').eq('rider_id', state.rider.id).in('status', ['rider_assigned', 'picked_up']).order('created_at')) || [];
+  } catch (e) { state.myParcels = state.myParcels || []; }
+  if (!onDuty() || state.prayerOpen || state.breakOpen){ state.parcels = []; return; }
+  sb.rpc('parcel_dispatch_tick').then(() => {}, () => {});
+  try { state.parcels = need(await sb.rpc('available_parcels')) || []; } catch (e) { state.parcels = []; }
+  const off = (state.parcels || []).find(p => p.offered_to_me && p.offer_expires_at && !state.seenParcel.has(p.parcel_id + p.offer_expires_at));
+  if (off && (state.mine.length + (state.myParcels || []).length) < 2 && !$('overlay')){
+    state.seenParcel.add(off.parcel_id + off.offer_expires_at);
+    closeJobPopup(); showParcelPopup(off);
+  }
+}
+function pkBandTxt(b){ return t('pk_w' + (b || 1)); }
+function parcelCard(p){
+  return `<div class="card ${p.offered_to_me ? 'offer' : ''}">${p.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}
+    <div class="ch"><b>📦 ${t('pk_parcel')}${p.urgent ? ' · ⚡ ' + t('pk_urgent') : ''}</b><span class="muted">${timeAgo(p.created_at)}</span></div>
+    <div style="margin-top:6px"><span class="muted">${t('pick_from')}:</span> ${esc(p.pickup_text || p.pickup_zone || '')}</div>
+    <div><span class="muted">${t('deliver_to')}:</span> ${esc(p.drop_text || p.drop_zone || '')}</div>
+    <div class="meta"><span>${esc(p.item_type || '')}</span><span>${pkBandTxt(p.weight_band)}</span><span>${num(p.total_fee) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(p.total_fee)}</b></span></div>
+    <div class="cash"><span>${t('your_pay')}</span><b>${money(p.rider_pay)}</b></div>
+    ${p.offered_to_me ? `<div class="two" style="margin-top:12px"><button class="btn ghost" onclick="A.skipParcel('${p.parcel_id}', true)">${t('decline')}</button><button class="btn" style="min-height:56px;font-size:18px" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button></div>` : `<button class="btn" style="min-height:54px" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button>`}</div>`;
+}
+function parcelActiveCard(p){
+  const maps = (lat, lng) => `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  if (p.status === 'rider_assigned') return `<div class="card" style="border:2px solid var(--brand)">
+    <div class="ch"><b>📦 ${t('pk_parcel')}${p.urgent ? ' · ⚡' : ''}</b><span class="pill">${t('pk_pick_first')}</span></div>
+    <div style="margin-top:6px"><span class="muted">${t('pick_from')}:</span> <b>${esc(p.pickup_text || '')}</b></div>
+    <div class="muted">${t('pk_sender')}: ${esc(p.sender_phone || '')} ${p.sender_phone ? `<a href="tel:${esc(p.sender_phone)}">☎️ ${t('pk_call')}</a>` : ''}</div>
+    <div><span class="muted">${t('deliver_to')}:</span> ${esc(p.drop_text || '')} — ${esc(p.receiver_name || '')} ${esc(p.receiver_phone || '')}</div>
+    <div class="meta"><span>${esc(p.item_type || '')}</span><span>${pkBandTxt(p.weight_band)}</span><span>${t('cash_collect')} <b>${cashTxt(p.total_fee)}</b></span><span>${t('your_pay')} <b>${money(p.rider_pay)}</b></span></div>
+    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.pickup_lat, p.pickup_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.parcelPickup('${p.id}')">${t('pk_pick_btn')}</button></div>
+    <button class="btn ghost" style="margin-top:8px;color:var(--danger)" onclick="A.parcelRelease('${p.id}')">${t('pk_release')}</button></div>`;
+  return `<div class="card" style="border:2px solid var(--brand)">
+    <div class="ch"><b>📦 ${t('pk_parcel')}${p.urgent ? ' · ⚡' : ''}</b><span class="pill">${t('pk_on_way')}</span></div>
+    <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> <b>${esc(p.drop_text || '')}</b></div>
+    <div class="muted">${t('pk_receiver')}: ${esc(p.receiver_name || '')} · ${esc(p.receiver_phone || '')} ${p.receiver_phone ? `<a href="tel:${esc(p.receiver_phone)}">☎️ ${t('pk_call')}</a>` : ''}</div>
+    <div class="meta"><span>${t('cash_collect')} <b>${cashTxt(p.total_fee)}</b></span><span>${t('your_pay')} <b>${money(p.rider_pay)}</b></span></div>
+    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.drop_lat, p.drop_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.parcelDeliver('${p.id}')">${t('pk_del_btn')}</button></div></div>`;
+}
+function showParcelPopup(p){
+  if ($('overlay')) return beep();
+  const el = document.createElement('div'); el.className = 'over newjob'; el.id = 'overlay';
+  el.innerHTML = `<div class="panel" role="alertdialog" aria-modal="true">
+    <div class="ch"><span class="pill y">${p.offered_to_me ? '⭐ ' + t('only_you') : '📦 ' + t('pk_parcel')}</span><span class="muted" id="popLeft">${JOB_SECONDS}s</span></div>
+    <div class="timer"><i id="popBar"></i></div>
+    <div class="line" style="align-items:flex-end"><div><div class="muted">${t('your_pay')}</div><div class="big">${money(p.rider_pay)}</div></div>
+      <div style="text-align:end"><div class="muted">${num(p.total_fee) ? t('cash_collect') : '&nbsp;'}</div><b style="font-size:20px">${cashTxt(p.total_fee)}</b></div></div>
+    <div class="meta"><span>${esc(p.item_type || '')}</span><span>${pkBandTxt(p.weight_band)}</span>${p.urgent ? `<span>⚡ ${t('pk_urgent')}</span>` : ''}</div>
+    <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(p.pickup_text || p.pickup_zone || '')}</b></div></div>
+    <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(p.drop_text || p.drop_zone || '')}</b></div></div>
+    <div class="two" style="margin-top:14px"><button class="btn ghost" onclick="A.skipParcel('${p.parcel_id}', ${p.offered_to_me ? 'true' : 'false'})">${p.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  const total = p.offered_to_me && p.offer_expires_at ? Math.max(5, Math.round((new Date(p.offer_expires_at) - Date.now()) / 1000)) : JOB_SECONDS;
+  let left = total; beep();
+  popBeep = setInterval(beep, 3000);
+  requestAnimationFrame(() => { const b = $('popBar'); if (b) b.style.width = '100%'; });
+  popTimer = setInterval(() => {
+    left--; const l = $('popLeft'), b = $('popBar');
+    if (l) l.textContent = left + 's'; if (b) b.style.width = (left / total * 100) + '%';
+    if (left <= 0) A.skipParcel(p.parcel_id, !!p.offered_to_me);
+  }, 1000);
+}
+
 function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -1782,6 +1849,9 @@ function viewJobs(){
     return `${boost}${goalCard()}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
+  const myP = (state.myParcels || []).length ? `<h2>📦 ${t('pk_mine')} <span class="count">${state.myParcels.length}</span></h2>${state.myParcels.map(parcelActiveCard).join('')}` : '';
+  const plist = (state.parcels || []);
+  const pjobs = onDuty() && plist.length ? `<h2>📦 ${t('pk_new')} <span class="count">${plist.length}</span></h2>${plist.map(parcelCard).join('')}` : '';
   const list = state.available.filter(j => !state.skipped.has(j.order_id));
   const jobs = onDuty() ? (list.length ? `<h2>${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
     : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
@@ -1791,7 +1861,7 @@ function viewJobs(){
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
   const gpsHint = onDuty() && !state.pos ? `<div class="note" style="border-color:#E2A400;margin-bottom:10px">${t('gps_hint')}</div>` : '';
-  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + (state.mine.length ? '' : stats) + hot + gpsHint + jobs;
+  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -2468,6 +2538,38 @@ const A = {
       if (error) throw error;
       toast(t('accepted')); window.scrollTo(0, 0);
     });
+  },
+  skipParcel(id, offered){ closeJobPopup(); if (offered) sb.rpc('decline_parcel', { p_id:id }).then(() => {}, () => {}); if (state.tab === 'jobs') renderTab(); },
+  async acceptParcel(id){
+    closeJobPopup();
+    await run(async () => {
+      const { data, error } = await sb.rpc('accept_parcel', { p_id:id });
+      const r = data && data[0];
+      if (error || !r || !r.ok) throw new Error((r && r.message) || t('error'));
+      await loadJobs(); if (state.tab !== 'jobs') state.tab = 'jobs'; renderTab(); toast(t('accepted')); window.scrollTo(0, 0);
+    });
+  },
+  async parcelPickup(id){
+    const code = await uiPrompt(t('pickup_code_q'), '', { type:'number', icon:'🔐' });
+    if (code === null){ renderTab(); return; }
+    const { data } = await sb.rpc('parcel_pickup', { p_id:id, p_code:String(code).trim() });
+    const r = data && data[0];
+    if (!r || !r.ok){ toast((r && r.message) || t('error'), true); renderTab(); return; }
+    await loadJobs(); renderTab(); toast(t('saved'));
+  },
+  async parcelDeliver(id){
+    const code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' });
+    if (code === null){ renderTab(); return; }
+    const { data } = await sb.rpc('parcel_deliver', { p_id:id, p_code:String(code).trim() });
+    const r = data && data[0];
+    if (!r || !r.ok){ toast((r && r.message) || t('error'), true); renderTab(); return; }
+    await loadJobs(); renderTab(); toast(t('saved'));
+  },
+  async parcelRelease(id){
+    const { data } = await sb.rpc('release_parcel', { p_id:id });
+    const r = data && data[0];
+    if (!r || !r.ok){ toast((r && r.message) || t('error'), true); return; }
+    await loadJobs(); renderTab();
   },
   async markPicked(id){
     const code = await uiPrompt(t('pickup_code_q'), '', { type:'number', icon:'🔐' });
