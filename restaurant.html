@@ -689,7 +689,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.25';
+const APP_VERSION = '6.26';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1648,9 +1648,9 @@ const A = {
   contactSheet(orderId, hasRider){
     const row = (icon, label, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b></span><span class="muted">›</span></button>`;
     openSheet(t('contact'),
-      row('💬', t('customer'), `closeSheet();Chat.open('${orderId}',"cs",null)`)
-      + (hasRider ? row('💬', t('rider_label'), `closeSheet();Chat.open('${orderId}',"rs",null)`) : '')
-      + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}',"sup_s",null)`));
+      row('💬', t('customer'), `closeSheet();Chat.open('${orderId}','cs',null)`)
+      + (hasRider ? row('💬', t('rider_label'), `closeSheet();Chat.open('${orderId}','rs',null)`) : '')
+      + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}','sup_s',null)`));
   },
   timingsSheet(){
     const r = state.restaurant; if (!state.hrsMode) state.hrsMode = 'diff';
