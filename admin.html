@@ -318,6 +318,9 @@ h2{font-size:18px}
 .regchip{display:inline-block;margin-top:4px;background:rgba(255,255,255,.18);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700}
 .regrow{display:block;width:100%;text-align:start;position:relative;cursor:pointer;color:inherit;font:inherit;padding-inline-end:34px!important}
 .regrow .go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:24px;color:var(--muted)}
+.regtog{display:inline-block;margin-top:9px;padding:6px 14px;border-radius:999px;font-size:13.5px;font-weight:800;cursor:pointer}
+.regtog.off{background:#FDECEA;color:#B3261E;border:1.5px solid #F1B8B2}
+.regtog.on{background:#E6F4EA;color:#137333;border:1.5px solid #A3D9B1}
 html[dir=rtl] .regrow .go{right:auto;left:14px}
 .regline{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:14px}
 .regcard .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
@@ -672,7 +675,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.42';
+const APP_VERSION = '7.43';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1787,6 +1790,7 @@ function viewRegions(){
       <div class="row-title">📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'} ${regContractPill(state.contracts[x.region_id])}</div>
       <div class="row-sub">👤 ${p.length ? esc(p.map(y => y.full_name || y.email).join(', ')) : '<b class="red">No incharge yet</b>'} · ${x.shops} shops · ${x.riders} riders</div>
       <div class="regline"><span>${x.delivered} delivered · ${money(x.sales)} sales</span><b>Your share ${money(share)}</b></div>
+      <span class="regtog ${x.is_active ? 'off' : 'on'}" onclick="event.stopPropagation();A.regionToggle('${x.region_id}', ${x.is_active ? 'false' : 'true'})">${x.is_active ? '⏸ Off karo' : '▶ Live karo'}</span>
       <span class="go">›</span></button>`;
   };
   return `${backLink()}<h2>🌍 Regions and partners</h2>
@@ -4089,6 +4093,10 @@ const A = {
       closeSheet(); await loadRegions(); await loadRegionFile(); renderTab(); toast('Partner file saved');
     });
     if (b) b.disabled = false;
+  },
+  async regionToggle(id, on){
+    if (!on && !confirm('Ye region OFF ho jayega — customers ko nazar nahi ayega aur naye orders band ho jayenge. Wapas Live kabhi bhi kar sakte ho. Pakka OFF karun?')) return;
+    await run(async () => { need(await sb.from('regions').update({ is_active: on }).eq('id', id)); await loadRegions(); renderTab(); toast(on ? 'Region LIVE ho gaya' : 'Region OFF ho gaya'); });
   },
   async regMonth(b){ state.regMonthBack = b; await run(async () => { await loadRegions(); if (state.tab === 'region') await loadRegionFile(); }); renderTab(); },
   regionForm(id){
