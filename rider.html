@@ -651,7 +651,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.30';
+const APP_VERSION = '5.32';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -703,6 +703,7 @@ const I18N = {
   en: {
     appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', pw_ph:'Enter your password',
+    pw_title:'Apna password banayein', pw_change:'Password change karein', pw_temp_note:'Office ne aap ko aik temporary password diya tha. Ab apna password khud banayein — is ke baad ye kisi ko nazar nahi ayega, office ko bhi nahi.', pw_vol_note:'Apna naya password banayein — ye sirf aap ko pata hoga, kisi aur ko nazar nahi ayega.', pw_new:'Naya password', pw_new_ph:'Kam az kam 6 characters', pw_confirm:'Password dobara likhein', pw_mismatch:'Dono password aik jaisay nahi hain', pw_save:'Password save karein', pw_changed:'✅ Password badal gaya',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
     submit:'Send for approval', pending_title:'Waiting for approval',
@@ -786,6 +787,7 @@ const I18N = {
   ur: {
     appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', pw_ph:'اپنا پاس ورڈ لکھیں',
+    pw_title:'اپنا پاس ورڈ بنائیں', pw_change:'پاس ورڈ بدلیں', pw_temp_note:'دفتر نے آپ کو ایک عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ خود بنائیں — اس کے بعد یہ کسی کو نظر نہیں آئے گا، دفتر کو بھی نہیں۔', pw_vol_note:'اپنا نیا پاس ورڈ بنائیں — یہ صرف آپ کو معلوم ہوگا، کسی اور کو نظر نہیں آئے گا۔', pw_new:'نیا پاس ورڈ', pw_new_ph:'کم از کم 6 حروف', pw_confirm:'پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_save:'پاس ورڈ محفوظ کریں', pw_changed:'✅ پاس ورڈ بدل گیا',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
     submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
@@ -1203,9 +1205,9 @@ async function loadMoney(){
   const m = monthStart();
   const histFrom = new Date(); histFrom.setDate(histFrom.getDate() - 60);
   const [done, doneAll, unsettled, fines, pays, hand] = await Promise.all([
-    sb.from('orders').select('id,created_at,delivered_at,total,rider_pay,boost_pay,rider_settled,address_lat,address_lng,restaurant:restaurants(name,lat,lng)')
+    sb.from('orders').select('id,created_at,picked_up_at,delivered_at,total,rider_pay,boost_pay,rider_settled,address_lat,address_lng,restaurant:restaurants(name,lat,lng)')
       .eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', m.toISOString()).order('delivered_at', { ascending:false }),
-    sb.from('orders').select('id,delivered_at,total,rider_pay,address_lat,address_lng,restaurant:restaurants(name,lat,lng)')
+    sb.from('orders').select('id,picked_up_at,delivered_at,total,rider_pay,address_lat,address_lng,restaurant:restaurants(name,lat,lng)')
       .eq('rider_id', state.rider.id).eq('status', 'delivered').gte('delivered_at', histFrom.toISOString()).order('delivered_at', { ascending:false }).limit(200),
     sb.from('orders').select('total').eq('rider_id', state.rider.id).eq('status', 'delivered').eq('rider_settled', false),
     sb.from('rider_fines').select('*').eq('rider_id', state.rider.id).gte('fined_at', m.toISOString()).order('fined_at', { ascending:false }),
@@ -1911,6 +1913,34 @@ function openSheet(title, html){
 }
 function closeSheet(){ const s = document.getElementById('sheet'); if (s) s.remove(); }
 
+// ================= PASSWORD CHANGE (Stage 5) =================
+// Admin-set passwords are temporary: a rider flagged must_change must set
+// their OWN password before the app opens. After that nobody can see it.
+let pwGateResolve = null, pwBlocking = false;
+function pwFormHtml(gate){
+  return `<div class="muted" style="font-size:14px">${t(gate ? 'pw_temp_note' : 'pw_vol_note')}</div>
+    <label class="f" for="np_pw1">${t('pw_new')}</label><input id="np_pw1" type="password" autocomplete="new-password" placeholder="${t('pw_new_ph')}">
+    <label class="f" for="np_pw2">${t('pw_confirm')}</label><input id="np_pw2" type="password" autocomplete="new-password" placeholder="${t('pw_new_ph')}">
+    <div id="npMsg" style="margin-top:10px;font-size:14px;color:#C0392B"></div>
+    <button class="btn" id="npBtn" style="margin-top:14px" onclick="A.saveNewPw()">${t('pw_save')}</button>`;
+}
+// Blocking variant of openSheet: no × button, no backdrop-click close.
+function openPwGate(){
+  closeSheet();
+  const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>🔑 ${t('pw_title')}</h3></div><div id="sheetBody">${pwFormHtml(true)}</div></div>`;
+  document.body.appendChild(back);
+}
+// Runs once per boot from afterLogin: resolves only after the password is set.
+async function pwGate(){
+  if (!state.user) return;
+  let must = false;
+  try { const { data, error } = await sb.rpc('my_account_security'); if (!error) must = !!(data && data.must_change); } catch (e) {}
+  if (!must) return;
+  pwBlocking = true; hideSplash();
+  await new Promise(res => { pwGateResolve = res; openPwGate(); });
+}
+
 // ================= DUTY TAB: timing, attendance, leave, complaints =================
 async function loadDuty(){
   const id = state.rider.id; const m = monthStart(); const today = ymd(new Date());
@@ -2042,7 +2072,7 @@ function viewEarn(){
   const paid = sum(state.payouts.filter(p => p.period_start === ms), p => p.amount);
   const lim = num(r.cash_limit), cash = num(state.cash);
   const pct = lim ? Math.min(100, cash / lim * 100) : 0;
-  const delRow = o => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}</div></div>
+  const delRow = o => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; const dm = o.picked_up_at && o.delivered_at ? Math.round((new Date(o.delivered_at) - new Date(o.picked_up_at)) / 60000) : null; return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b><div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}${dm != null && dm >= 0 ? ` · ⏱ ${dm} min` : ''}</div></div>
     <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)} ${o.rider_settled ? '✓' : ''}</div></div></div>`; };
   // Group deliveries by week
   const now = new Date(); const dayMs = 864e5;
@@ -2124,8 +2154,9 @@ function historyHtml(){
   const totalKm = list.reduce((n,o) => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : 0; return n + num(dk); }, 0);
   const rows = list.map(o => {
     const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null;
+    const dm = o.picked_up_at && o.delivered_at ? Math.round((new Date(o.delivered_at) - new Date(o.picked_up_at)) / 60000) : null;
     return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b>
-      <div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}</div></div>
+      <div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}${dm != null && dm >= 0 ? ` · ⏱ ${dm} min` : ''}</div></div>
       <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)}</div></div></div>`;
   }).join('');
   return `<div class="chips" style="margin-bottom:10px">${ftab('day', t('hist_day'))}${ftab('week', t('hist_week'))}${ftab('month', t('hist_month'))}</div>
@@ -2176,7 +2207,8 @@ function viewAcct(){
     </div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
     <div class="card">
-      <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="A.pwSheet()"><div class="row-main"><div class="row-title">🔑 ${t('pw_change')}</div></div><span class="muted">›</span></button>
+      <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
     <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p>`;
@@ -2595,6 +2627,22 @@ const A = {
     const payout = { method:m, title, number:n, bank:m === 'bank' ? ($('po_bn').value.trim() || null) : null, updated_at:new Date().toISOString() };
     await run(async () => { need(await sb.from('riders').update({ payout }).eq('id', state.rider.id)); state.rider.payout = payout; closeSheet(); renderTab(); toast(t('acc_saved')); });
   },
+  pwSheet(){
+    openSheet('🔑 ' + t('pw_change'), pwFormHtml(false));
+  },
+  async saveNewPw(){
+    const p1 = $('np_pw1') ? $('np_pw1').value : '', p2 = $('np_pw2') ? $('np_pw2').value : '';
+    const msg = $('npMsg'); const say = s => { if (msg) msg.textContent = s; else toast(s, true); };
+    if (p1.length < 6) return say(t('short_pw'));
+    if (p1 !== p2) return say(t('pw_mismatch'));
+    const btn = $('npBtn'); if (btn){ btn.disabled = true; btn.textContent = t('loading'); }
+    const { error } = await sb.auth.updateUser({ password:p1 });
+    if (error){ say(error.message); if (btn){ btn.disabled = false; btn.textContent = t('pw_save'); } return; }
+    try { await sb.rpc('i_changed_my_password'); } catch (e) {}
+    const wasGate = pwBlocking; pwBlocking = false;
+    closeSheet(); toast(t('pw_changed'));
+    if (wasGate && pwGateResolve){ const r = pwGateResolve; pwGateResolve = null; r(); }
+  },
   qrPay(id){
     const o = (state.mine || []).find(x => x.id === id) || {}; const p = state.settings.pay_accounts || {};
     if (!p.qr_url) return toast(t('qr_none'), true);
@@ -2685,7 +2733,7 @@ function faceGate(){
   openCamera(state.rider.face_descriptor ? 'login' : 'register');
 }
 function passGate(){ if (state.user) ls.set('kh_facegate_' + state.user.id, null); }
-async function afterLogin(user){ state.user = user; await loadRider(); await route(); }
+async function afterLogin(user){ state.user = user; await loadRider(); await pwGate(); await route(); }
 // ================= CHAT (same code in all four apps) =================
 const Chat = (() => {
   const L = {
