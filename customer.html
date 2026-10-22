@@ -1020,7 +1020,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.37';
+const APP_VERSION = '5.39';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1387,13 +1387,8 @@ function detectZone(lat, lng){
       if (inCircle(z, c.lat, c.lng, c.r)) return z.id;
     }
   }
-  // nearest fallback (gap between villages)
-  let best = null, bd = 1e9;
-  for (const z of zones){
-    const d = kmBetween(lat, lng, Number(z.center_lat), Number(z.center_lng));
-    if (d < bd){ bd = d; best = z.id; }
-  }
-  return bd <= 30 ? best : null; // out of region → no zone
+  // outside every village circle → no zone (shop zone's flat fee applies, same as the server quote)
+  return null;
 }
 function customerZone(){
   const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
@@ -2917,16 +2912,16 @@ const A = {
     let h = '';
     if (o.rider_id && pickedUp){
       h += sect(t('sec_rider'));
-      h += row('💬', t('chat_rider'), '', `closeSheet();Chat.open('${o.id}',"cr",null)`);
+      h += row('💬', t('chat_rider'), '', `closeSheet();Chat.open('${o.id}','cr',null)`);
       if (rider && rider.phone) h += row('📞', t('call_rider'), rider.phone, `location.href='tel:${esc(rider.phone)}'`);
       if (rider && waNum(rider.phone)) h += `<a class="menu-row" style="width:100%;text-decoration:none;color:inherit" target="_blank" rel="noopener" href="${waHref(rider.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}"><span style="font-size:20px">🟢</span><span><b>${t('wa_rider')}</b></span><span class="muted">›</span></a>`;
     }
     h += sect(t('sec_shop'));
-    h += row('💬', t('chat_shop'), '', `closeSheet();Chat.open('${o.id}',"cs",null)`);
+    h += row('💬', t('chat_shop'), '', `closeSheet();Chat.open('${o.id}','cs',null)`);
     if (o.restaurant && o.restaurant.phone) h += row('📞', t('call'), o.restaurant.phone, `location.href='tel:${esc(o.restaurant.phone)}'`);
     if (o.restaurant && waNum(o.restaurant.phone)) h += `<a class="menu-row" style="width:100%;text-decoration:none;color:inherit" target="_blank" rel="noopener" href="${waHref(o.restaurant.phone, t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}"><span style="font-size:20px">🟢</span><span><b>${t('wa_shop')}</b></span><span class="muted">›</span></a>`;
     h += sect(t('sec_support'));
-    h += row('🛟', t('chat_support'), '', `closeSheet();Chat.open('${o.id}',"sup_c",null)`);
+    h += row('🛟', t('chat_support'), '', `closeSheet();Chat.open('${o.id}','sup_c',null)`);
     openSheet(t('contact'), h);
   },
   async setRegion(id, quiet){
