@@ -672,7 +672,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.41';
+const APP_VERSION = '7.42';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -685,10 +685,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq' };
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -960,6 +960,7 @@ async function go(tab){
     if (tab === 'customers') await loadCustomers();
     if (tab === 'promos') await loadPromos();
     if (tab === 'banners') await Promise.all([loadBanners(), state.restaurants.length ? null : loadRestaurants()]);
+    if (tab === 'parcels') await Promise.all([loadParcelsAdmin(), loadSettings(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'zones') await loadZones();
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
@@ -975,7 +976,7 @@ async function go(tab){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -1936,6 +1937,7 @@ function viewMore(){
     + it('campaign', '📣 Send notification', 'Message on the phones of all customers, riders or shops in your area')
     + it('plus', '⭐ Dera Plus', 'Monthly membership with free delivery: price, members, payments to check');
   const places = it('zones', '📍 Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')
+    + it('parcels', '📦 Parcels (Samaan Bhejo)', 'Parcel bookings, rates and riders')
     + it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there');
   const people = it('customers', '👥 Customers', 'See every customer, their orders, block or unblock')
     + it('staff', '🧑‍💼 Staff', 'Helpers who can use this panel with limited access')
@@ -2278,6 +2280,46 @@ function viewStaff(){
 
 // ---- Banners ----
 async function loadBanners(){ state.banners = need(await sb.from('banners').select('*').order('sort_order').order('created_at', { ascending:false })); }
+
+// ================= PARCELS (admin) =================
+async function loadParcelsAdmin(){
+  const { data } = await sb.from('parcels').select('*').order('created_at', { ascending: false }).limit(100);
+  state.parcelRows = data || [];
+}
+function viewParcels(){
+  const rows = state.parcelRows || [];
+  const cfg = (state.settings && state.settings.parcel_config) || {};
+  const wf = Array.isArray(cfg.weight_fees) ? cfg.weight_fees : [0, 50, 100];
+  const wp = Array.isArray(cfg.weight_pays) ? cfg.weight_pays : [0, 40, 80];
+  const up = cfg.urgent_pct == null ? 50 : cfg.urgent_pct;
+  const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+  const trows = rows.filter(r => new Date(r.created_at) >= t0);
+  const active = rows.filter(r => ['placed', 'rider_assigned', 'picked_up'].includes(r.status));
+  const delT = trows.filter(r => r.status === 'delivered');
+  const stTxt = { placed: 'Finding rider', rider_assigned: 'Rider assigned', picked_up: 'Picked up', delivered: 'Delivered', cancelled: 'Cancelled' };
+  const card = r => `<div class="card"><div class="row-title">${esc(r.pickup_text || '')} → ${esc(r.drop_text || '')} <span class="st">${stTxt[r.status] || r.status}</span>${r.urgent ? ' <span class="pill b">⚡ Urgent</span>' : ''}${r.is_second ? ' <span class="pill b">2nd</span>' : ''}</div>
+    <div class="muted" style="font-size:13.5px">${esc(r.item_type || '')} · weight band ${r.weight_band} · ${new Date(r.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+    <div class="kv"><span>Fee / rider pay</span><b>${money(r.total_fee)} / ${money(r.rider_pay)}</b></div>
+    <div class="kv"><span>Receiver</span><span>${esc(r.receiver_name || '')} · ${esc(r.receiver_phone || '')}</span></div>
+    <div class="kv"><span>Sender phone</span><span>${esc(r.sender_phone || '')}</span></div>
+    <div class="kv"><span>Rider</span><span>${r.rider_id ? esc(riderName(r.rider_id)) : '—'}</span></div>
+    ${['placed', 'rider_assigned'].includes(r.status) ? `<div class="actions"><button class="btn ghost small" onclick="A.adminCancelParcel('${r.id}')">Cancel parcel</button></div>` : ''}</div>`;
+  return `${backLink()}<h2>📦 Parcels (Samaan Bhejo)</h2>
+  <div class="card">
+    <div class="kv"><span>Today bookings</span><b>${trows.length}</b></div>
+    <div class="kv"><span>Active now</span><b>${active.length}</b></div>
+    <div class="kv"><span>Delivered today</span><b>${delT.length}</b></div>
+    <div class="kv"><span>Fees today</span><b>${money(trows.filter(r => r.status !== 'cancelled').reduce((n, r) => n + num(r.total_fee), 0))}</b></div>
+  </div>
+  <div class="card"><div class="row-title">⚙️ Parcel rates</div>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">Base rate zone chart se ata hai (120/170/220, rider pay 90/130/170). Yahan sirf wazan ka extra aur urgent % hai.</div>
+    <div class="two"><div><label class="f">10–15 kg — customer extra (Rs)</label><input id="pc_wf2" type="number" value="${num(wf[1])}"></div><div><label class="f">15–25 kg — customer extra (Rs)</label><input id="pc_wf3" type="number" value="${num(wf[2])}"></div></div>
+    <div class="two"><div><label class="f">10–15 kg — rider ko extra (Rs)</label><input id="pc_wp2" type="number" value="${num(wp[1])}"></div><div><label class="f">15–25 kg — rider ko extra (Rs)</label><input id="pc_wp3" type="number" value="${num(wp[2])}"></div></div>
+    <label class="f">Urgent extra (%)</label><input id="pc_up" type="number" value="${num(up)}">
+    <div class="actions"><button class="btn" onclick="A.saveParcelCfg()">Save rates</button></div></div>
+  ${rows.length ? rows.map(card).join('') : '<div class="card">No parcels yet.</div>'}`;
+}
+
 function viewBanners(){
   const now = new Date();
   const rows = (state.banners || []).map(b => { const live = b.is_active && (!b.starts_at || new Date(b.starts_at) <= now) && (!b.ends_at || new Date(b.ends_at) > now);
@@ -4411,6 +4453,20 @@ const A = {
       { key:'delivery_time', value:{ min_per_km:Math.max(1, num($('dt_km').value)), buffer_min:Math.max(0, num($('dt_buf').value)), default_ride_min:num((state.settings.delivery_time || {}).default_ride_min) || 25 } }
     ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
     await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Rider rules saved'); });
+  },
+  async saveParcelCfg(){
+    const cfg = { weight_fees: [0, Math.max(0, num(($('pc_wf2') || {}).value)), Math.max(0, num(($('pc_wf3') || {}).value))],
+                  weight_pays: [0, Math.max(0, num(($('pc_wp2') || {}).value)), Math.max(0, num(($('pc_wp3') || {}).value))],
+                  urgent_pct: Math.max(0, num(($('pc_up') || {}).value)) };
+    state.settings = state.settings || {}; state.settings.parcel_config = cfg;
+    await A.saveSetting('parcel_config', cfg);
+  },
+  async adminCancelParcel(id){
+    if (!confirm('Cancel this parcel?')) return;
+    const { data } = await sb.rpc('cancel_parcel', { p_id: id, p_reason: 'admin' });
+    const r = data && data[0];
+    if (!r || !r.ok){ toast((r && r.message) || 'Error', true); return; }
+    await loadParcelsAdmin(); renderTab(); toast('Parcel cancelled');
   },
   async saveSetting(key, value){
     await run(async () => { need(await putSettings({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
