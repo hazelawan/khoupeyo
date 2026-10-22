@@ -94,7 +94,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .hscroll .gcard{flex:none;width:150px}
 .banner{border-radius:18px;background:linear-gradient(135deg,var(--brand),#D95F16);color:#fff;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;overflow:hidden}
 .banner b{font-size:22px;display:block;line-height:1.2}
-.banner .big{font-size:42px;font-weight:800;color:var(--marigold);flex:none}
+.banner .big{font-size:32px;font-weight:800;color:var(--marigold);flex:none;white-space:nowrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px}
 @media (min-width:560px){.grid2{grid-template-columns:repeat(3,1fr)}}
 .gcard{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;display:block}
@@ -1020,7 +1020,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.39';
+const APP_VERSION = '5.40';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2047,7 +2047,7 @@ function homeBody(){
   const banner = bn.length ? `<div class="bcar" id="bcar" onscroll="bannerDots()">${bn.map((b, i) => `<div class="bslide ${b.image_url ? 'img' : ''}" role="button" tabindex="0" onclick="A.bannerTap(${i})" style="${b.image_url ? `background-image:url('${esc(b.image_url)}');` : ''}background-color:${/^#[0-9a-f]{3,8}$/i.test(b.bg_color || '') ? b.bg_color : 'var(--brand)'}">
       <b>${esc(b.title)}</b>${b.subtitle ? `<span style="opacity:.95;font-size:14px">${esc(b.subtitle)}</span>` : ''}${b.action_type === 'promo' && b.action_value ? `<span style="margin-top:6px"><span class="schedpill">${esc(b.action_value)}</span></span>` : ''}</div>`).join('')}</div>
       ${bn.length > 1 ? `<div class="bdots" id="bdots">${bn.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>` : ''}`
-    : `<div class="banner"><div><b>${t('banner_t')}</b><span style="opacity:.9;font-size:14px">${t('banner_s')}</span></div>${maxOff ? `<div class="big">-${maxOff}%</div>` : ''}</div>`;
+    : `<div class="banner"><div><b>${t('banner_t')}</b><span style="opacity:.9;font-size:14px">${t('banner_s')}</span></div>${maxOff ? `<div class="big">${maxOff}% OFF</div>` : ''}</div>`;
   return `
     ${noRider}
     ${zoneBar}
