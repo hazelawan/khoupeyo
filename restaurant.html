@@ -689,7 +689,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.26';
+const APP_VERSION = '6.30';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -821,6 +821,9 @@ const I18N = {
     m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', shop_name:'Shop name', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
     today_hours:'Today', mode_same:'Same time every day', mode_diff:'Different time per day',
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
+    m_payacc:'Customer Payment Account', m_payacc_s:'Customers pay you directly', payacc_note:'Customers will pay into this account, and you will check and confirm each payment yourself.', payacc_on:'Customer payments into my account are on', qr_url:'QR image URL', raast_id:'Raast ID',
+    paycheck_t:'Payments to check', paycheck_s:'Check the money in your own account before confirming.', pay_amount:'Amount sent', paycheck_amount:'The amount matches my account', paycheck_date:'The payment date is today', paycheck_number:'The money came to MY number / account', pay_confirm:'Confirm payment', pay_reject:'Reject payment', pay_reject_q:'Why is this payment not accepted? (optional)', paycheck_done:'Payment confirmed', paycheck_rejected:'Payment rejected', pay_proof:'🖼️ See payment screenshot', pay_advance:'Advance mila {a} · baqi {x} cash',
+    m_stmt:'Monthly Statement', m_stmt_s:'Poora mahine ka hisaab — paisa kahan gaya', stmt_cash:'Rider ke paas cash', stmt_cash_n:'Ye paisa rider jama karega — payout mein milega', stmt_shop:'Mere account mein online', stmt_shop_n:'Pehle mil chuka hai — payout mein NAHI judega', stmt_region:'Dera account mein online', stmt_region_n:'Payout mein commission kat kar milega', stmt_pickup:'Pickup cash (dukaan par)', stmt_goods:'Samaan (goods)', stmt_days:'Roz ka hisaab', stmt_products:'Products ka hisaab', stmt_orders_t:'Is mahine ke orders', stmt_none:'Is mahine koi delivered order nahi', stmt_zone:'Area', stmt_timeline:'Order ki kahani (timeline)', stmt_del_time:'Delivery time', stmt_dest:'Paisa gaya', stmt_dest_shop:'Mere account mein', stmt_dest_region:'Dera account mein', stmt_tid:'TID', stmt_online_amt:'Online mila', stmt_balance:'Baqi cash on delivery', stmt_required:'Online bhejna tha', stmt_rule:'Commission rule', stmt_rate:'Commission rate', stmt_waiver:'Delivery fee maaf', stmt_discount:'Discount', stmt_delfee:'Delivery fee', stmt_tip:'Tip', stmt_total:'Total', stmt_riderpay:'Rider pay', stmt_pm_cod:'Cash (COD)', stmt_pm_wallet:'Online', stmt_pm_qr:'QR at door', stmt_ps_paid:'Paid', stmt_ps_advance:'Advance paid', stmt_ps_unpaid:'Not paid', stmt_ps_checking:'Checking…', stmt_items:'Items', stmt_pay:'Payment', stmt_money:'Hisaab', stmt_rider:'Rider',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Dera order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
     flash_price_q:'Flash price in Rs? (regular {p})', flash_price_bad:'Flash price must be less than regular price', flash_hours_q:'Duration in hours?', flash_req_sent:'⚡ Request sent! Admin will approve.',
     remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Dera admin approves them.',
@@ -846,7 +849,11 @@ const I18N = {
     k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
     k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
-    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Dera', k_chat_help:'Dera was asked to join a chat', contact:'Contact'
+    k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Dera', k_chat_help:'Dera was asked to join a chat', contact:'Contact',
+    pw_gate_t:'Apna password banayein', pw_gate_s:'Office ne aap ko temporary password diya tha. Ab apna password chunein — ye sirf aap ko pata hoga, koi aur nahi janega.',
+    pw_change_t:'Password change karein', pw_change_s:'Apna password badlein. Naya password sirf aap ko pata hoga — office bhi nahi dekh sakta.',
+    pw_new:'Naya password', pw_new2:'Naya password dobara likhein', pw_mismatch:'Dono password aik jaise nahi hain', pw_set:'Password set karein', pw_changed:'Password change ho gaya ✔',
+    stepup_t:'Hifazat ki tasdeeq', stepup_s:'Apna password dobara likhein — hifazat ke liye', stepup_btn:'Tasdeeq karein', pw_wrong:'Password ghalat hai'
   },
   ur: {
     appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', delete_warn:'مستقل', sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Dera چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Dera کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
@@ -896,6 +903,9 @@ const I18N = {
     m_timings:'دکان کے اوقات اور وقفے', m_timings_s:'ہر دن کے کھلنے کے اوقات', m_profile:'دکان کی پروفائل اور جگہ', m_profile_s:'نام، پتہ، لوگو، لوکیشن', shop_name:'دکان کا نام', m_orderset:'آرڈر اور پک اپ سیٹنگ', m_orderset_s:'آٹو قبول، پک اپ، دکان کی قسم', m_offer2:'دکان کی رعایت آفر', m_offer2_s:'گاہکوں کے لیے آپ کی رعایت', m_booking2:'بکنگ سیٹنگ', m_booking2_s:'کرسیاں، رعایتی وقت', m_staff2:'عملے کے لاگ اِن', m_staff2_s:'ورکرز کے اکاؤنٹس', m_payout2:'بینک / جیزکیش اکاؤنٹ', m_payout2_s:'آپ کو پیسے کہاں ملیں گے',
     today_hours:'آج', mode_same:'ہر روز ایک ہی وقت', mode_diff:'ہر دن کا الگ وقت',
     payout_t:'آپ کے پیسے کہاں بھیجیں؟', payout_s:'آپ کی کمائی اس اکاؤنٹ میں بھیجی جائے گی۔', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا',
+    m_payacc:'گاہکوں کی ادائیگی والا اکاؤنٹ', m_payacc_s:'گاہک سیدھا آپ کو ادائیگی کریں گے', payacc_note:'گاہک اسی اکاؤنٹ میں ادائیگی کریں گے، اور آپ خود ہر ادائیگی چیک کر کے اس کی تصدیق کریں گے۔', payacc_on:'میرے اکاؤنٹ میں گاہکوں کی ادائیگی چالو ہے', qr_url:'QR تصویر کا URL', raast_id:'راست ID',
+    paycheck_t:'ادائیگیاں چیک کریں', paycheck_s:'تصدیق سے پہلے اپنے اکاؤنٹ میں رقم چیک کریں۔', pay_amount:'بھیجی گئی رقم', paycheck_amount:'رقم میرے اکاؤنٹ سے ملتی ہے', paycheck_date:'ادائیگی کی تاریخ آج ہے', paycheck_number:'رقم میرے اپنے نمبر / اکاؤنٹ پر آئی ہے', pay_confirm:'ادائیگی کی تصدیق کریں', pay_reject:'ادائیگی مسترد کریں', pay_reject_q:'یہ ادائیگی کیوں قبول نہیں؟ (اختیاری)', paycheck_done:'ادائیگی کی تصدیق ہو گئی', paycheck_rejected:'ادائیگی مسترد کر دی گئی', pay_proof:'🖼️ ادائیگی کا اسکرین شاٹ دیکھیں', pay_advance:'ایڈوانس ملا {a} · باقی {x} نقد',
+    m_stmt:'ماہانہ اسٹیٹمنٹ', m_stmt_s:'پورے مہینے کا حساب — پیسہ کہاں گیا', stmt_cash:'رائیڈر کے پاس نقد', stmt_cash_n:'یہ پیسہ رائیڈر جمع کرے گا — ادائیگی میں ملے گا', stmt_shop:'میرے اکاؤنٹ میں آن لائن', stmt_shop_n:'پہلے مل چکا ہے — ادائیگی میں نہیں جڑے گا', stmt_region:'Dera اکاؤنٹ میں آن لائن', stmt_region_n:'ادائیگی میں کمیشن کٹ کر ملے گا', stmt_pickup:'پک اپ نقد (دکان پر)', stmt_goods:'سامان', stmt_days:'روز کا حساب', stmt_products:'پروڈکٹس کا حساب', stmt_orders_t:'اس مہینے کے آرڈرز', stmt_none:'اس مہینے کوئی ڈیلیور شدہ آرڈر نہیں', stmt_zone:'علاقہ', stmt_timeline:'آرڈر کی کہانی', stmt_del_time:'ڈیلیوری کا وقت', stmt_dest:'پیسہ گیا', stmt_dest_shop:'میرے اکاؤنٹ میں', stmt_dest_region:'Dera اکاؤنٹ میں', stmt_tid:'TID', stmt_online_amt:'آن لائن ملا', stmt_balance:'باقی نقد ڈیلیوری پر', stmt_required:'آن لائن بھیجنا تھا', stmt_rule:'کمیشن کا اصول', stmt_rate:'کمیشن کی شرح', stmt_waiver:'ڈیلیوری فیس معاف', stmt_discount:'رعایت', stmt_delfee:'ڈیلیوری فیس', stmt_tip:'ٹپ', stmt_total:'کل', stmt_riderpay:'رائیڈر کی اجرت', stmt_pm_cod:'نقد (COD)', stmt_pm_wallet:'آن لائن', stmt_pm_qr:'دروازے پر QR', stmt_ps_paid:'ادا شدہ', stmt_ps_advance:'ایڈوانس ادا', stmt_ps_unpaid:'ادا نہیں', stmt_ps_checking:'چیک ہو رہا ہے…', stmt_items:'اشیاء', stmt_pay:'ادائیگی', stmt_money:'حساب', stmt_rider:'رائیڈر',
     paid_online:'💳 آن لائن ادائیگی ہو چکی — نقد نہیں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں {s} سے بات کر رہا ہوں، آپ کے وانہار مارٹ آرڈر #{n} کے بارے میں', in_stock:'موجود ہے', out_stock:'ختم ہے', save:'محفوظ کریں', remove:'پروڈکٹ ہٹائیں',
     flash_price_q:'فلیش قیمت Rs میں؟ (اصل {p})', flash_price_bad:'فلیش قیمت اصل قیمت سے کم ہونی چاہیے', flash_hours_q:'کتنے گھنٹے کے لیے؟', flash_req_sent:'⚡ درخواست بھیج دی! ایڈمن منظور کرے گا۔',
     remove_q:'یہ پروڈکٹ دکان سے ہٹا دیں؟', pending:'ایڈمن کی منظوری کا انتظار', pending_note:'نئی پروڈکٹس Dera ایڈمن کی منظوری کے بعد گاہکوں کو نظر آئیں گی۔',
@@ -921,13 +931,17 @@ const I18N = {
     k_customer_unreachable:'گاہک کال نہیں اٹھا رہا', k_customer_absent:'گاہک پتے پر موجود نہیں',
     k_customer_refused_pay:'گاہک نقد رقم نہیں دے رہا', k_wrong_address:'پتہ غلط یا واضح نہیں', k_shop_delay:'رائیڈر کہتا ہے آرڈر تیار نہیں',
     k_shop_closed:'رائیڈر کہتا ہے دکان بند ہے', k_order_damaged:'آرڈر خراب ہو گیا یا گر گیا', k_accident:'رائیڈر کو حادثہ یا گاڑی کا مسئلہ',
-    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Dera سے بات کریں', k_chat_help:'Dera کو چیٹ میں بلایا گیا', contact:'رابطہ'
+    k_rider_delay:'رائیڈر کو دیر ہو جائے گی', k_other:'کوئی اور مسئلہ', help_word:'مدد', chat_support:'Dera سے بات کریں', k_chat_help:'Dera کو چیٹ میں بلایا گیا', contact:'رابطہ',
+    pw_gate_t:'اپنا پاس ورڈ بنائیں', pw_gate_s:'دفتر نے آپ کو عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ چنیں — یہ صرف آپ کو معلوم ہوگا، کوئی اور نہیں جانے گا۔',
+    pw_change_t:'پاس ورڈ تبدیل کریں', pw_change_s:'اپنا پاس ورڈ بدلیں۔ نیا پاس ورڈ صرف آپ کو معلوم ہوگا — دفتر بھی نہیں دیکھ سکتا۔',
+    pw_new:'نیا پاس ورڈ', pw_new2:'نیا پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_set:'پاس ورڈ سیٹ کریں', pw_changed:'پاس ورڈ تبدیل ہو گیا ✔',
+    stepup_t:'حفاظتی تصدیق', stepup_s:'اپنا پاس ورڈ دوبارہ لکھیں — حفاظت کے لیے', stepup_btn:'تصدیق کریں', pw_wrong:'پاس ورڈ غلط ہے'
   }
 };
 const state = {
-  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
-  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, productFilter:'all', productQ:'', alerted:new Set(),
-  settings:{},
+  lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], payChecks:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
+  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, stmt:null, stmtMonth:null, productFilter:'all', productQ:'', alerted:new Set(),
+  settings:{}, pwChecked:false, pwBlocking:false,
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -1120,7 +1134,7 @@ function noImg(name, cat){
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
 function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
 function markTab(){
-  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k); });
+  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k || (k === 'earn' && state.tab === 'stmt')); });
   const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = (isServices() ? t('bk_title') : t('orders')) + (n ? `<span class="dot">${n}</span>` : ''); }
 }
 // ================= SHELL =================
@@ -1140,7 +1154,7 @@ function renderShell(){
     </div></nav>`;
 }
 async function go(tab){
-  if (state.staffMode && (tab === 'earn' || tab === 'shop')) tab = 'orders';
+  if (state.staffMode && (tab === 'earn' || tab === 'shop' || tab === 'stmt')) tab = 'orders';
   state.tab = tab; markTab();
   const v = $('view'); if (!v) return;
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
@@ -1148,6 +1162,7 @@ async function go(tab){
     if (tab === 'orders'){ await loadOrders(); if (!state.items) loadMenu().then(() => { if (state.tab === 'orders') renderTab(); }, () => {}); }
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
+    if (tab === 'stmt') await loadStmt();
     if (tab === 'shop'){ loadStaff(); await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
@@ -1157,6 +1172,7 @@ function renderTab(){
   if (state.tab === 'orders') v.innerHTML = viewOrders();
   if (state.tab === 'menu') v.innerHTML = viewMenu();
   if (state.tab === 'earn') v.innerHTML = viewEarn();
+  if (state.tab === 'stmt') v.innerHTML = viewStmt();
   if (state.tab === 'shop') v.innerHTML = viewShop();
   markTab(); updateTitle();
 }
@@ -1165,9 +1181,11 @@ function renderTab(){
 async function loadOrders(){
   if (state.restaurant && isServices()){ try { const { data } = await sb.rpc('shop_bookings', { p_shop:state.restaurant.id }); state.appts = data || []; } catch (e) { state.appts = []; } } else state.appts = [];
   if (state.restaurant){ sb.rpc('shop_booking_terms', { p_shop:state.restaurant.id }).then(({ data }) => { if (data) state.bkTerms = data; }, () => {}); }
-  const data = need(await sb.from('orders')
+  const allOrders = need(await sb.from('orders')
     .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
-    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(120))
+    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(120));
+  state.payChecks = allOrders.filter(o => o.payment_status === 'checking' && o.pay_destination === 'shop');
+  const data = allOrders
     .filter(o => !(o.payment_method === 'wallet' && ['unpaid', 'checking'].includes(o.payment_status)));  // online orders show only after the money is received
   const active = data.filter(o => ['accepted','preparing'].includes(o.status)).map(o => o.id);
   if (active.length){
@@ -1202,6 +1220,22 @@ setInterval(() => { if (state.tab === 'orders' && document.querySelector('.count
 setInterval(() => { if (state.tab === 'orders' && state.restaurant && isServices() && !document.querySelector('.sheet-back,.over')) loadOrders().then(() => { if (state.tab === 'orders') renderTab(); }, () => {}); }, 60000);
 const CX_STATUSES = ['accepted','preparing','ready','rider_assigned'];
 const CXQ = {};
+const PAYCHECK_TICKS = {};
+function payCheckCard(o){
+  const ticks = PAYCHECK_TICKS[o.id] || [false, false, false];
+  const labels = [t('paycheck_amount'), t('paycheck_date'), t('paycheck_number')];
+  const custWa = waNum((o.customer || {}).phone);
+  return `<div class="card" style="border:2px solid var(--marigold,#F2A900)">
+    <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="muted">${timeAgo(o.created_at)}</span></div>
+    <div class="line" style="font-weight:800"><span>${t('pay_amount')}</span><span>${money(num(o.pay_submitted_amount) || num(o.total))}</span></div>
+    ${o.pay_label ? `<div class="line"><span class="muted">${t('pay_method')}</span><span>${esc(o.pay_label)}</span></div>` : ''}
+    ${o.pay_ref ? `<div class="line"><span class="muted">TID</span><b dir="ltr">${esc(o.pay_ref)}</b></div>` : ''}
+    ${o.pay_proof_path ? `<button type="button" class="btn ghost block" style="margin-top:8px" onclick="A.shopPayProof('${o.id}')">${t('pay_proof')}</button>` : ''}
+    ${custWa ? `<a class="btn ghost block" style="margin-top:8px;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${custWa}?text=${encodeURIComponent('Assalam o Alaikum! Aap ke Dera order #' + o.id.slice(-4).toUpperCase() + ' ki payment ke silsile mein rabta kar raha hoon.')}">💬 Customer ko WhatsApp</a>` : ''}
+    <div style="margin-top:10px">${labels.map((label, i) => `<label class="check" style="margin:8px 0"><input type="checkbox" ${ticks[i] ? 'checked' : ''} onchange="A.payCheckTick('${o.id}',${i},this.checked)"> ${esc(label)}</label>`).join('')}</div>
+    <div class="two" style="margin-top:12px"><button type="button" class="btn warn" onclick="A.shopPayReject('${o.id}')">${t('pay_reject')}</button><button type="button" class="btn" id="payConfirm-${o.id}" ${ticks.every(Boolean) ? '' : 'disabled'} onclick="A.shopPayCheck('${o.id}')">${t('pay_confirm')}</button></div>
+  </div>`;
+}
 function itemsHtml(o){
   const can = CX_STATUSES.includes(o.status) && (o.order_items || []).length > 0;
   if (!can) return `<div class="items">${(o.order_items || []).map(i => `<div><b>${i.quantity}×</b> ${esc(i.name)}${i.note ? ` <span class="muted">(${esc(i.note)})</span>` : ''}</div>`).join('')}</div>`;
@@ -1259,13 +1293,14 @@ function orderCard(o){
     <div class="custrow"><span class="custavatar">${esc(((cust.full_name || t('customer'))[0] || 'C').toUpperCase())}</span><div style="min-width:0;flex:1"><b>${esc(cust.full_name || t('customer'))}</b><div>${cust.phone ? `<a href="tel:${esc(cust.phone)}">${esc(cust.phone)}</a>${waNum(cust.phone) && !['delivered','cancelled','rejected'].includes(o.status) ? ` <a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(cust.phone)}?text=${encodeURIComponent(t('wa_hi', { s:state.restaurant.name, n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : `<span class="muted">${t('no_phone')}</span>`}</div></div></div>
     ${shopCustKm(o)}
     ${['wallet', 'qr_door'].includes(o.payment_method) && o.payment_status === 'paid' ? `<div class="paidtag">${t('paid_online')}</div>` : ''}
+    ${o.payment_status === 'advance_paid' ? `<div class="paidtag">${t('pay_advance', { a:money(o.pay_online_amount), x:money(o.pay_balance_due) })}</div>` : ''}
     ${num(o.shop_discount) ? `<div class="line"><span class="muted">🏷️ ${t('shop_disc')}</span><span>−${money(o.shop_discount)}</span></div>` : ''}
     <div class="line" style="font-weight:800"><span>${t('order_value')}</span><span>${money(o.subtotal)}</span></div>
     ${!['cancelled','rejected'].includes(o.status) ? `<button type="button" class="link" style="margin-top:2px" onclick="A.printSlip('${o.id}')">${t('print_b')}</button>` : ''}
     <div class="actions">${actions}</div></div>`;
 }
 function pastRow(o){
-  return `<div class="row"><div class="row-main" style="cursor:default"><b>#${esc(o.id.slice(-4).toUpperCase())}</b> <span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span>
+  return `<div class="row" style="cursor:pointer" onclick="A.openOrderFile('${o.id}')"><div class="row-main" style="cursor:pointer"><b>#${esc(o.id.slice(-4).toUpperCase())}</b> <span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span>
     <div class="muted" style="font-size:13px">${when(o.created_at)} · ${(o.order_items || []).reduce((n, i) => n + i.quantity, 0)} ${t('products').toLowerCase()}</div></div><b>${money(o.subtotal)}</b></div>`;
 }
 function staffListHtml(){
@@ -1323,12 +1358,13 @@ function viewOrders(){
       ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>
       ${(state.issues[o.id] || []).map(i => `<div class="issuebox"><b>${t('problem')}:</b> ${t('k_' + i.kind)}${i.note ? ' · ' + esc(i.note) : ''}</div>`).join('') || (o.reject_reason ? `<div class="issuebox">${esc(o.reject_reason)}</div>` : '')}
       <button class="btn" onclick="A.receivedBack('${o.id}')">${t('received_back')}</button></div>`).join('')}` : '';
+  const payChecks = (state.payChecks || []).length ? `<h2>${t('paycheck_t')} <span class="count">${state.payChecks.length}</span></h2><div class="muted" style="margin:-4px 0 10px">${t('paycheck_s')}</div>${state.payChecks.map(payCheckCard).join('')}` : '';
   const busy = r.busy_until && new Date(r.busy_until) > new Date();
   const busyHtml = busy ? `<div class="busybar"><span>${esc(t('busy_on').replace('{t}', new Date(r.busy_until).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'Asia/Karachi' })))}</span><button class="btn small" onclick="A.setBusy(0)">${t('busy_end')}</button></div>`
     : (r.is_open ? `<button type="button" class="busybtn" onclick="A.busyMenu()">${t('busy_b')}</button>` : '');
   const lowN = (state.items || []).filter(i => i.stock_qty != null && num(i.stock_qty) <= 3).length;
   const lowHtml = lowN ? `<button class="note" style="width:100%;text-align:start;border-color:#E2A400;cursor:pointer;margin-bottom:10px" onclick="go('menu')">${t('low_stock_n', { n:lowN })} ›</button>` : '';
-  return `${sound}${closed}${busyHtml}${lowHtml}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+  return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
 }
@@ -1513,8 +1549,100 @@ function viewEarn(){
     </div>
     <div class="two" style="margin-top:10px"><button class="btn ghost" onclick="A.statement('xlsx')">⬇️ Excel</button><button class="btn ghost" onclick="A.statement('pdf')">🧾 PDF</button></div>
     <div class="muted" style="font-size:13px;text-align:center">${t('statement_note')}</div>
+    <button class="btn block" style="margin-top:10px" onclick="go('stmt')">📊 ${t('m_stmt')}</button>
     <h2>${t('top_items')}</h2>${top || `<div class="empty">${t('no_sales')}</div>`}
     <h2>${t('payments')}</h2>${pays || `<div class="empty">${t('no_payments')}</div>`}`;
+}
+
+// ================= STATEMENT (monthly, Stage 3) =================
+function stmtMonths(){
+  const pkt = new Date(new Date().toLocaleString('en-US', { timeZone:'Asia/Karachi' }));
+  const out = [];
+  for (let i = 0; i < 6; i++){
+    const d = new Date(pkt.getFullYear(), pkt.getMonth() - i, 1);
+    out.push({ key:d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-01',
+      label:d.toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { month:'long', year:'numeric' }) });
+  }
+  return out;
+}
+async function loadStmt(){
+  if (!state.stmtMonth) state.stmtMonth = stmtMonths()[0].key;
+  state.stmt = need(await sb.rpc('shop_statement', { p_restaurant:state.restaurant.id, p_month:state.stmtMonth }));
+}
+const stmtPayTxt = o => {
+  const m = o.payment_method === 'cod' ? t('stmt_pm_cod') : o.payment_method === 'qr_door' ? t('stmt_pm_qr') : t('stmt_pm_wallet');
+  const sk = { paid:'stmt_ps_paid', advance_paid:'stmt_ps_advance', unpaid:'stmt_ps_unpaid', checking:'stmt_ps_checking' }[o.payment_status];
+  return m + (o.payment_status ? ' · ' + (sk ? t(sk) : esc(o.payment_status)) : '');
+};
+function viewStmt(){
+  const s = state.stmt || {}; const st = s.streams || {}; const tt = s.totals || {};
+  const months = stmtMonths();
+  const sel = `<select onchange="A.setStmtMonth(this.value)" style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;margin-bottom:12px">${months.map(m => `<option value="${m.key}" ${m.key === state.stmtMonth ? 'selected' : ''}>${esc(m.label)}</option>`).join('')}</select>`;
+  const sLine = (emoji, label, note, amt) => `<div class="line"><span>${emoji} <b>${t(label)}</b>${note ? `<div class="muted" style="font-size:12px">${t(note)}</div>` : ''}</span><b>${money(amt)}</b></div>`;
+  const days = (s.days || []).map(d => `<div class="row"><div class="row-main" style="cursor:default"><b>${esc(new Date(d.date + 'T00:00:00').toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { day:'numeric', month:'short' }))}</b><div class="muted" style="font-size:13px">${num(d.orders)} ${t('orders_n')} · ${t('commission')} ${money(d.commission)}</div></div><b>${money(d.earning)}</b></div>`).join('');
+  const prods = (s.products || []).map(p => `<div class="row"><div class="row-main" style="cursor:default"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${num(p.qty)} × · ${t('commission')} ${money(p.commission)}</div></div><b>${money(p.sales)}</b></div>`).join('');
+  const ords = (s.orders || []).map(o => `<div class="row" style="cursor:pointer" onclick="A.openOrderFile('${o.id}')"><div class="row-main"><b>#${esc(o.code || '')}</b> <span class="muted" style="font-size:13px">${when(o.delivered_at || o.created_at)}</span><div class="muted" style="font-size:13px">${esc(o.customer_name || '')} · ${stmtPayTxt(o)}</div></div><b>${money(o.total)}</b><span class="muted">›</span></div>`).join('');
+  return `<h1>📊 ${t('m_stmt')}</h1>
+    ${sel}
+    <div class="card">
+      ${sLine('💵', 'stmt_cash', 'stmt_cash_n', st.cash_by_rider)}
+      ${sLine('📱', 'stmt_shop', 'stmt_shop_n', st.online_shop)}
+      ${sLine('🏦', 'stmt_region', 'stmt_region_n', st.online_region)}
+      ${num(st.pickup_cash) > 0 ? sLine('🛍️', 'stmt_pickup', null, st.pickup_cash) : ''}
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="line"><span class="muted">${t('orders_n')}</span><span>${num(tt.orders)}</span></div>
+      <div class="line"><span class="muted">${t('stmt_goods')}</span><span>${money(tt.goods_net)}</span></div>
+      <div class="line"><span class="muted">${t('commission')}</span><span class="red">−${money(tt.commission)}</span></div>
+      <div class="line total"><span>${t('your_earning')}</span><span>${money(tt.earning)}</span></div>
+      <div class="line"><span class="muted">${t('stmt_delfee')}</span><span>${money(tt.delivery_fees)}</span></div>
+      <div class="line"><span class="muted">${t('stmt_riderpay')}</span><span>${money(tt.rider_pays)}</span></div>
+    </div>
+    <h2>${t('stmt_days')}</h2>${days || `<div class="empty">${t('stmt_none')}</div>`}
+    <h2>${t('stmt_products')}</h2>${prods || `<div class="empty">${t('stmt_none')}</div>`}
+    <h2>${t('stmt_orders_t')}</h2>${ords || `<div class="empty">${t('stmt_none')}</div>`}`;
+}
+function orderFileHtml(f){
+  const L = (k, v) => `<div class="line"><span class="muted">${k}</span><span style="text-align:end">${v}</span></div>`;
+  const H = txt => `<div style="font-weight:800;margin:14px 0 4px">${txt}</div>`;
+  const c = f.customer || {};
+  const items = (f.items || []).map(i => `<div class="line"><span><b>${num(i.qty)}×</b> ${esc(i.name)}</span><span>${money(num(i.price) * num(i.qty))}</span></div>`).join('');
+  const tl = (f.timeline || []).map(x => `<div class="line"><span>${esc(t('st_' + x.status))}</span><span class="muted">${when(x.at)}</span></div>`).join('');
+  return `<div class="ch"><span class="pill" style="background:var(--s-${f.status})">${esc(t('st_' + f.status))}</span><span class="muted">${when(f.created_at)}</span></div>
+    ${f.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
+    ${H('👤 ' + t('customer'))}
+    ${L(t('name'), esc(c.name || ''))}
+    ${c.phone ? L(t('phone'), `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`) : ''}
+    ${waNum(c.phone) ? `<div style="margin-top:8px"><a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent('Assalam o Alaikum! Aap ke Dera order #' + (f.code || '') + ' ke bare mein rabta kar raha hoon.')}">💬 WhatsApp</a></div>` : ''}
+    ${f.zone_name ? L(t('stmt_zone'), esc(f.zone_name)) : ''}
+    ${f.address_text ? L(t('address'), esc(f.address_text)) : ''}
+    ${H('🧾 ' + t('stmt_items'))}${items || `<div class="muted">—</div>`}
+    ${H('💰 ' + t('stmt_money'))}
+    ${L(t('order_value'), money(f.subtotal))}
+    ${num(f.discount) ? L(t('stmt_discount'), '−' + money(f.discount)) : ''}
+    ${num(f.shop_discount) ? L(t('shop_disc'), '−' + money(f.shop_discount)) : ''}
+    ${L(t('stmt_delfee'), money(f.delivery_fee))}
+    ${num(f.delivery_waiver) ? L(t('stmt_waiver'), '−' + money(f.delivery_waiver)) : ''}
+    ${num(f.tip) ? L(t('stmt_tip'), money(f.tip)) : ''}
+    <div class="line total"><span>${t('stmt_total')}</span><span>${money(f.total)}</span></div>
+    ${H('💳 ' + t('stmt_pay'))}
+    ${L(t('pay_method'), stmtPayTxt(f) + (f.pay_label ? ' · ' + esc(f.pay_label) : ''))}
+    ${f.pay_destination ? L(t('stmt_dest'), esc(t(f.pay_destination === 'shop' ? 'stmt_dest_shop' : 'stmt_dest_region'))) : ''}
+    ${f.pay_ref ? L(t('stmt_tid'), `<b dir="ltr">${esc(f.pay_ref)}</b>`) : ''}
+    ${num(f.pay_required_online) ? L(t('stmt_required'), money(f.pay_required_online)) : ''}
+    ${num(f.pay_online_amount) ? L(t('stmt_online_amt'), money(f.pay_online_amount)) : ''}
+    ${num(f.pay_balance_due) ? L(t('stmt_balance'), money(f.pay_balance_due)) : ''}
+    ${H('📊 ' + t('commission'))}
+    ${L(t('commission'), '−' + money(f.commission))}
+    ${f.commission_rate != null ? L(t('stmt_rate'), num(f.commission_rate) + '%') : ''}
+    ${f.commission_rule ? L(t('stmt_rule'), esc(f.commission_rule)) : ''}
+    ${L(t('your_earning'), money(f.earning))}
+    ${f.rider ? `${H('🛵 ' + t('stmt_rider'))}
+    ${L(t('name'), esc(f.rider.name || ''))}
+    ${f.rider.phone ? L(t('phone'), `<a href="tel:${esc(f.rider.phone)}">${esc(f.rider.phone)}</a>`) : ''}
+    ${L(t('stmt_riderpay'), money(f.rider.pay))}` : ''}
+    ${f.minutes != null ? L(t('stmt_del_time'), num(f.minutes) + ' ' + t('min')) : ''}
+    ${tl ? `${H('🕘 ' + t('stmt_timeline'))}${tl}` : ''}`;
 }
 
 // ================= SHOP =================
@@ -1555,6 +1683,9 @@ function viewShop(){
       ${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
       <button class="row" onclick="A.staffSheet2()"><div class="row-main"><div class="row-title">👥 ${t('m_staff2')}</div><div class="row-sub">${t('m_staff2_s')}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="A.payoutSheet2()"><div class="row-main"><div class="row-title">💳 ${t('m_payout2')}</div><div class="row-sub">${t('m_payout2_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.payAccountsSheet()"><div class="row-main"><div class="row-title">💰 ${t('m_payacc')}</div><div class="row-sub">${t('m_payacc_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.pwSheet()"><div class="row-main"><div class="row-title">🔑 ${t('pw_change_t')}</div><div class="row-sub">${t('pw_change_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="go('stmt')"><div class="row-main"><div class="row-title">📊 ${t('m_stmt')}</div><div class="row-sub">${t('m_stmt_s')}</div></div><span class="muted">›</span></button>
     </div>`; })()}
     <h2>${t('my_shops')}</h2>
     <div class="card">${(state.shops || []).length > 1 ? `<div class="muted" style="font-size:14px;margin-bottom:8px">${(state.shops || []).map(x => esc(x.name)).join(' · ')}</div><button type="button" class="btn ghost small" style="width:100%;margin-bottom:8px" onclick="shopMenu()">🔁 ${t('switch_shop')}</button>` : ''}
@@ -1756,6 +1887,90 @@ const A = {
       <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
       <div class="actions" style="margin-top:12px"><button class="btn block" id="poSave" onclick="A.savePayout()">${t('save_acc')}</button></div>`);
   },
+  payAccountsSheet(){
+    const r = state.restaurant; const p = r.pay_accounts || {}; const j = p.jazzcash || {}; const e = p.easypaisa || {}; const b = p.bank || {};
+    openSheet(`💰 ${t('m_payacc')}`, `<div class="note" style="margin-top:0">${t('payacc_note')}</div>
+      <label class="check"><input id="pa_on" type="checkbox" ${p.on ? 'checked' : ''}> ${t('payacc_on')}</label>
+      <h3 style="margin:16px 0 4px">JazzCash</h3>
+      <label class="f" for="pa_jn" style="margin-top:0">${t('acc_number')}</label><input id="pa_jn" type="tel" dir="ltr" value="${esc(j.number || '')}" placeholder="03001234567">
+      <label class="f" for="pa_jt">${t('acc_title')}</label><input id="pa_jt" type="text" value="${esc(j.title || '')}">
+      <h3 style="margin:16px 0 4px">Easypaisa</h3>
+      <label class="f" for="pa_en" style="margin-top:0">${t('acc_number')}</label><input id="pa_en" type="tel" dir="ltr" value="${esc(e.number || '')}" placeholder="03001234567">
+      <label class="f" for="pa_et">${t('acc_title')}</label><input id="pa_et" type="text" value="${esc(e.title || '')}">
+      <h3 style="margin:16px 0 4px">Bank / Raast</h3>
+      <label class="f" for="pa_bi" style="margin-top:0">${t('iban_l')}</label><input id="pa_bi" type="text" dir="ltr" value="${esc(b.iban || '')}" placeholder="PK00XXXX0000000000000000">
+      <label class="f" for="pa_br">${t('raast_id')}</label><input id="pa_br" type="text" dir="ltr" value="${esc(b.raast_id || '')}">
+      <label class="f" for="pa_bt">${t('acc_title')}</label><input id="pa_bt" type="text" value="${esc(b.title || '')}">
+      <label class="f" for="pa_qr">${t('qr_url')}</label><input id="pa_qr" type="text" dir="ltr" value="${esc(p.qr_url || '')}" placeholder="https://…">
+      <div class="actions" style="margin-top:12px"><button class="btn block" id="paSave" onclick="A.savePayAccounts()">${t('save_acc')}</button></div>`);
+  },
+  async savePayAccounts(){
+    const cleanPhone = v => String(v || '').replace(/\D/g, '').replace(/^92(?=3\d{9}$)/, '0');
+    const pay_accounts = {
+      on:$('pa_on').checked,
+      jazzcash:{ number:cleanPhone($('pa_jn').value), title:$('pa_jt').value.trim() },
+      easypaisa:{ number:cleanPhone($('pa_en').value), title:$('pa_et').value.trim() },
+      bank:{ iban:$('pa_bi').value.replace(/\s/g, '').toUpperCase(), raast_id:cleanPhone($('pa_br').value), title:$('pa_bt').value.trim() },
+      qr_url:$('pa_qr').value.trim() || null
+    };
+    for (const k of ['jazzcash', 'easypaisa']) if (pay_accounts[k].number && !/^03\d{9}$/.test(pay_accounts[k].number)) return toast('03XXXXXXXXX', true);
+    if (pay_accounts.bank.iban && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(pay_accounts.bank.iban)) return toast(t('iban_l'), true);
+    if (pay_accounts.on && !(pay_accounts.jazzcash.number || pay_accounts.easypaisa.number || pay_accounts.bank.iban || pay_accounts.bank.raast_id || pay_accounts.qr_url)) return toast(t('enter_all'), true);
+    if (!await A.askStepUp()) return;
+    await run(async () => {
+      need(await sb.from('restaurants').update({ pay_accounts }).eq('id', state.restaurant.id));
+      state.restaurant.pay_accounts = pay_accounts;
+      closeSheet(); renderTab(); toast(t('acc_saved'));
+    });
+  },
+  pwSheet(){
+    state.pwBlocking = false;
+    openSheet(`🔑 ${t('pw_change_t')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('pw_change_s')}</div>
+      ${pwChangeFormHtml()}`);
+  },
+  async submitPwChange(){
+    const p1 = $('npw1').value, p2 = $('npw2').value; const m = $('npwMsg'); if (m) m.textContent = '';
+    if (p1.length < 6){ if (m) m.textContent = t('short_pw'); return; }
+    if (p1 !== p2){ if (m) m.textContent = t('pw_mismatch'); return; }
+    const b = $('npwBtn'); if (b){ b.disabled = true; b.textContent = t('loading'); }
+    let ok = false;
+    await run(async () => {
+      const { error } = await sb.auth.updateUser({ password:p1 }); if (error) throw error;
+      try { need(await sb.rpc('i_changed_my_password')); } catch (e) {}
+      ok = true;
+      toast(t('pw_changed'));
+      if (state.pwBlocking){ state.pwBlocking = false; await afterLogin(state.user); }
+      else closeSheet();
+    });
+    if (!ok){ const b2 = $('npwBtn'); if (b2){ b2.disabled = false; b2.textContent = t('pw_set'); } }
+  },
+  askStepUp(){
+    return new Promise(res => {
+      let settled = false;
+      const done = v => { if (settled) return; settled = true; clearInterval(watch); closeSheet(); res(v); };
+      openSheet(`🔒 ${t('stepup_t')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('stepup_s')}</div>
+        <label class="f" for="su_pw" style="margin-top:0">${t('password')}</label><input id="su_pw" type="password" autocomplete="current-password">
+        <div class="err-text" id="suMsg"></div>
+        <div class="two" style="margin-top:12px"><button class="btn ghost" id="suCancel">${t('cancel')}</button><button class="btn" id="suOk">${t('stepup_btn')}</button></div>`);
+      const watch = setInterval(() => { if (!$('sheet')) done(false); }, 300);
+      $('suCancel').onclick = () => done(false);
+      $('suOk').onclick = async () => {
+        const pw = $('su_pw').value; if (!pw) return;
+        const b = $('suOk'); b.disabled = true;
+        try {
+          const { data, error } = await sb.rpc('verify_step_up', { p_password:pw });
+          if (error) throw error;
+          if (data) return done(true);
+          const mm = $('suMsg'); if (mm) mm.textContent = t('pw_wrong');
+          b.disabled = false;
+        } catch (e) {
+          logErr(e);
+          const mm = $('suMsg'); if (mm) mm.textContent = (e && e.message) || t('error');
+          b.disabled = false;
+        }
+      };
+    });
+  },
   async sendPayoutReq(){
     const note = ($('rpNote')?.value || '').trim();
     await run(async () => {
@@ -1831,7 +2046,7 @@ const A = {
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
-    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; document.title = 'Dera Shop'; showAuth();
+    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; state.pwChecked = false; state.pwBlocking = false; document.title = 'Dera Shop'; showAuth();
   },
   rqCity(id){ rqKeep(); state.rqForm.region_id = id; document.querySelectorAll('#rqCity .chip').forEach(b => b.classList.toggle('on', b.getAttribute('onclick').includes(id))); },
   rqCat(k){ const l = state.rqForm.categories; const i = l.indexOf(k); if (i > -1) l.splice(i, 1); else l.push(k);
@@ -1911,6 +2126,13 @@ const A = {
   },
   setSound(v){ state.sound = v; ls.set('kh_r_sound', v); if (v){ unlockAudio(); setTimeout(beep, 200); } },
   setPeriod(p){ state.period = p; go('earn'); },
+  setStmtMonth(v){ state.stmtMonth = v; go('stmt'); },
+  async openOrderFile(id){
+    await run(async () => {
+      const f = need(await sb.rpc('order_full_file', { p_order:id }));
+      openSheet(`🧾 #${esc(f.code || String(id).slice(-4).toUpperCase())}`, orderFileHtml(f));
+    });
+  },
 
   // ---- Orders ----
   openAccept(id){
@@ -2027,7 +2249,32 @@ const A = {
     if (m !== 'bank') n = n.replace(/^\+?92/, '0');
     if (m === 'bank' && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(n) && !/^\d{8,20}$/.test(n)) return toast(t('iban_l'), true);
     const payout = { method:m, title, number:n, bank:m === 'bank' ? ($('po_bn').value.trim() || null) : null, updated_at:new Date().toISOString() };
+    if (!await A.askStepUp()) return;
     await run(async () => { need(await sb.from('restaurants').update({ payout }).eq('id', state.restaurant.id)); state.restaurant.payout = payout; toast(t('acc_saved')); closeSheet(); renderTab(); });
+  },
+  payCheckTick(id, i, checked){
+    if (!PAYCHECK_TICKS[id]) PAYCHECK_TICKS[id] = [false, false, false];
+    PAYCHECK_TICKS[id][i] = !!checked;
+    const b = $('payConfirm-' + id); if (b) b.disabled = !PAYCHECK_TICKS[id].every(Boolean);
+  },
+  async shopPayProof(id){
+    const o = (state.payChecks || []).find(x => x.id === id); if (!o || !o.pay_proof_path) return;
+    await run(async () => { const { data, error } = await sb.storage.from('shop-docs').createSignedUrl(o.pay_proof_path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); });
+  },
+  async shopPayCheck(id){
+    await run(async () => {
+      need(await sb.rpc('shop_check_payment', { p_order:id, p_ok:true }));
+      delete PAYCHECK_TICKS[id];
+      await loadOrders(); renderTab(); toast(t('paycheck_done'));
+    });
+  },
+  async shopPayReject(id){
+    const note = await uiPrompt(t('pay_reject_q'), ''); if (note === null) return;
+    await run(async () => {
+      need(await sb.rpc('shop_check_payment', { p_order:id, p_ok:false, p_note:note.trim() || null }));
+      delete PAYCHECK_TICKS[id];
+      await loadOrders(); renderTab(); toast(t('paycheck_rejected'));
+    });
   },
   async saveShop(){
     const prep = num($('s_prep').value); if (prep < 5) return toast(t('enter_all'), true);
@@ -2265,7 +2512,7 @@ async function loadRestaurant(){
   state.restaurant = state.shops.find(x => x.id === want) || state.shops[0] || null;
 }
 // ---- more than one shop on one login ----
-function resetShopState(){ Object.assign(state, { orders:[], issues:{}, acceptedAt:{}, cats:[], items:[], earn:null, earnOrders:null, fees:null, reviews:null, hrs:null, loadedOnce:false, productQ:'', secOpen:null }); }
+function resetShopState(){ Object.assign(state, { orders:[], payChecks:[], issues:{}, acceptedAt:{}, cats:[], items:[], earn:null, earnOrders:null, fees:null, reviews:null, hrs:null, loadedOnce:false, productQ:'', secOpen:null }); }
 async function switchShop(id){
   const r = (state.shops || []).find(x => x.id === id); if (!r) return;
   closeSheet(); state.addMode = false; ls.set('kh_shop', id); state.restaurant = r; resetShopState();
@@ -2381,10 +2628,34 @@ function routeNoRestaurant(){
   if (!state.pendingKind) return showPreKindPicker();
   return showShopRequest();
 }
+// ---- Password change (Stage 5): one form, two doors — blocking first-login gate + voluntary settings sheet ----
+function pwChangeFormHtml(){
+  return `<label class="f" for="npw1" style="margin-top:0">${t('pw_new')}</label><input id="npw1" type="password" autocomplete="new-password" placeholder="${t('pw_ph')}">
+  <label class="f" for="npw2">${t('pw_new2')}</label><input id="npw2" type="password" autocomplete="new-password">
+  <div class="err-text" id="npwMsg"></div>
+  <div class="actions" style="margin-top:12px"><button class="btn block" id="npwBtn" onclick="A.submitPwChange()">${t('pw_set')}</button></div>`;
+}
+function showPwGate(){
+  state.pwBlocking = true;
+  $('app').innerHTML = `<div class="auth">
+    <div class="brand">Dera<b>.</b></div>
+    <p class="muted" style="margin:0 0 6px">Shop</p>
+    <h1 style="font-size:22px">🔑 ${t('pw_gate_t')}</h1>
+    <p class="muted" style="margin-bottom:14px">${t('pw_gate_s')}</p>
+    ${pwChangeFormHtml()}
+    <div style="margin-top:16px"><button class="link" onclick="A.logout()">🚪 ${t('logout')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+}
 async function afterLogin(user){
   state.user = user;
   { const { data:pf } = await sb.from('profiles').select('email_verified').eq('id', user.id).maybeSingle();
     if (needVerify(pf)){ let ok = false; try { ok = (await sb.rpc('mark_email_verified')).data; } catch (e) {} if (!ok) return showVerify(); } }
+  if (!state.pwChecked){
+    state.pwChecked = true;
+    let mc = false;
+    try { const { data } = await sb.rpc('my_account_security'); mc = !!(data && data.must_change); } catch (e) {}
+    if (mc) return showPwGate();
+  }
   await loadRestaurant();
   if (!state.restaurant){ await loadMyRequest(); return routeNoRestaurant(); }
   if (!shopKind()) return showKindPicker();
