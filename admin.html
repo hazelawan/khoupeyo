@@ -675,7 +675,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.43';
+const APP_VERSION = '7.48';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -859,7 +859,15 @@ async function afterLogin(user){
 
 // ---- Shared data ----
 async function loadZones(){ const q = sb.from('zones').select('*').order('created_at'); if (scope()) q.eq('region_id', scope()); state.zones = need(await q); }
-async function loadRestaurants(){ state.restaurants = need(await sb.from('restaurants').select('*').order('name')); }
+async function loadRestaurants(){ state.restaurants = need(await sb.from('restaurants').select('*').order('name')); await loadBadges(); }
+async function loadBadges(){
+  try {
+    const regs = [...new Set((state.restaurants || []).map(r => r.region_id).filter(Boolean))];
+    const set = new Set();
+    for (const rid of regs){ const { data } = await sb.rpc('shop_badges', { p_region:rid }); (data || []).forEach(id => set.add(id)); }
+    state.badgeShops = set;
+  } catch (e) { state.badgeShops = new Set(); }
+}
 async function loadRiders(){
   const { data } = await sb.from('riders').select('id,is_approved,is_online,profile:profiles(full_name,phone)').eq('is_approved', true);
   state.riders = (data || []).sort((a, b) => (b.is_online - a.is_online));
@@ -869,7 +877,7 @@ async function loadSettings(){
   state.settings = {}; rows.forEach(r => { state.settings[r.key] = r.value; });
   state.regionSet = {};
   if (scope()){ const rr = need(await sb.from('region_settings').select('key,value').eq('region_id', scope())) || []; rr.forEach(r => { state.settings[r.key] = r.value; state.regionSet[r.key] = true; }); }
-  else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes', 'plus']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
+  else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes', 'plus', 'payment_rules']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
   state.tierEdit = null; state.wtEdit = null; state.ladEdit = null; state.vehOn = null;
 }
 let channel;
@@ -1149,6 +1157,8 @@ function orderPayPanel(o){
   let h = `<div class="card paycard"><div class="kv"><b>💳 Online payment</b><span class="pill ${p[1]}">${esc(p[0])}</span></div>
     ${o.pay_label ? `<div class="kv"><span class="muted">Paid with</span><span>${esc(o.pay_label)}</span></div>` : ''}
     ${o.pay_ref ? `<div class="kv"><span class="muted">Transaction ID (TID)</span><b style="user-select:all">${esc(o.pay_ref)}</b></div>` : ''}
+    ${o.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Dukaan ka account — check dukaan karegi</span></div>` : o.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
+    ${num(o.pay_submitted_amount) > 0 && num(o.pay_submitted_amount) < num(o.total) ? `<div class="kv"><span class="muted">Advance</span><span>${money(o.pay_submitted_amount)} paid · Balance due ${money(o.pay_balance_due)}</span></div>` : ''}
     ${o.pay_note ? `<div class="kv"><span class="muted">Note</span><span>${esc(o.pay_note)}</span></div>` : ''}
     ${o.pay_verified_at ? `<div class="kv"><span class="muted">Checked</span><span>${when(o.pay_verified_at)}</span></div>` : ''}
     ${o.pay_proof_path ? `<button class="btn ghost block" style="margin-top:8px" onclick="A.payProof('${o.id}')">🖼️ See payment screenshot</button>` : ''}`;
@@ -1157,6 +1167,48 @@ function orderPayPanel(o){
   if (st === 'refund_due' && can('money')) h += `<div class="muted" style="font-size:13px;margin-top:8px">This order was cancelled after the customer paid. Send ${money(o.total)} back to the customer, then tap the button.</div>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.refundWallet('${o.id}')">💰 Put in customer wallet</button><button class="btn" onclick="A.refundDone('${o.id}')">↩️ I sent the money back</button></div>`;
   return h + '</div>';
+}
+// Full order file (Stage 3) — one renderer shared by the statement list and the Orders tab.
+function waLink(phone, text){
+  let d = String(phone || '').replace(/\D/g, '');
+  if (d.startsWith('0')) d = '92' + d.slice(1); else if (d.startsWith('3')) d = '92' + d;
+  return `https://wa.me/${d}${text ? '?text=' + encodeURIComponent(text) : ''}`;
+}
+function orderFileHtml(f){
+  const c = f.customer || {}, r = f.rider || {};
+  const ps = PAY_ST[f.payment_status] || [f.payment_status || '', ''];
+  const methTxt = f.payment_method === 'wallet' ? 'Paid online' + (f.pay_label ? ' (' + esc(f.pay_label) + ')' : '') : f.payment_method === 'qr_door' ? 'Paid by QR at the door' : 'Cash on delivery';
+  const items = (f.items || []).map(i => `<div class="kv"><span>${num(i.qty)} × ${esc(i.name)}</span><span>${money(num(i.price) * num(i.qty))}</span></div>`).join('');
+  const tl = (f.timeline || []).map(x => `<li><span>${LABEL[x.status] || x.status}</span><span class="muted">${when(x.at)}</span></li>`).join('');
+  return `
+    <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${f.status})">${LABEL[f.status] || f.status}</span> <span class="muted">${when(f.created_at)}</span></div>
+    ${f.minutes != null ? `<div class="kv"><span class="muted">⏱️ Delivery time (pickup → door)</span><span>${hours(f.minutes)}</span></div>` : ''}
+    <div class="card"><b>${esc(c.name || 'Customer')}</b>${c.phone ? ` <a href="tel:${esc(c.phone)}">${esc(c.phone)}</a> · <a href="${waLink(c.phone, 'Assalam o Alaikum! Aap ke Dera order #' + (f.code || '') + ' ke bare mein rabta hai.')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+      ${f.zone_name ? `<div class="muted" style="margin-top:4px">📍 ${esc(f.zone_name)}</div>` : ''}
+      <div class="muted" style="margin-top:4px">${esc(f.address_text || 'No address')}</div></div>
+    ${f.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : ''}
+    <h3 style="margin-top:14px">Items</h3>
+    ${items || '<div class="empty">No items</div>'}
+    <div class="kv"><span class="muted">Subtotal</span><span>${money(f.subtotal)}</span></div>
+    ${num(f.shop_discount) ? `<div class="kv"><span class="muted">🏷️ Shop offer (paid by shop)</span><span>-${money(f.shop_discount)}</span></div>` : ''}
+    ${num(f.discount) ? `<div class="kv"><span class="muted">Discount</span><span>-${money(f.discount)}</span></div>` : ''}
+    <div class="kv"><span class="muted">Delivery</span><span>${money(f.delivery_fee)}</span></div>
+    ${num(f.delivery_waiver) ? `<div class="kv"><span class="muted">🎁 Delivery FREE (paid online 20,000+)</span><span>-${money(f.delivery_waiver)}</span></div>` : ''}
+    ${num(f.tip) ? `<div class="kv"><span class="muted">Rider tip</span><span>${money(f.tip)}</span></div>` : ''}
+    <div class="kv total"><span>Total</span><span>${money(f.total)}</span></div>
+    <h3 style="margin-top:14px">💳 Payment</h3>
+    <div class="kv"><span class="muted">Method</span><span>${methTxt}</span></div>
+    ${f.payment_method !== 'cod' ? `<div class="kv"><span class="muted">Status</span><span class="pill ${ps[1]}">${esc(ps[0])}</span></div>
+    ${f.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Dukaan ka account</span></div>` : f.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
+    ${f.pay_ref ? `<div class="kv"><span class="muted">Transaction ID (TID)</span><b style="user-select:all">${esc(f.pay_ref)}</b></div>` : ''}
+    ${num(f.pay_required_online) ? `<div class="kv"><span class="muted">Online required</span><span>${money(f.pay_required_online)}</span></div>` : ''}
+    ${num(f.pay_online_amount) ? `<div class="kv"><span class="muted">Paid online</span><span>${money(f.pay_online_amount)}</span></div>` : ''}
+    ${num(f.pay_balance_due) ? `<div class="kv"><span class="muted">Balance (cash on delivery)</span><span>${money(f.pay_balance_due)}</span></div>` : ''}` : ''}
+    <h3 style="margin-top:14px">💰 Hisaab</h3>
+    <div class="kv"><span class="muted">Commission${f.commission_rule ? ' (' + esc(f.commission_rule) + ')' : ''}</span><span>${money(f.commission)}${num(f.commission_rate) ? ' · ' + num(f.commission_rate) + '%' : ''}</span></div>
+    <div class="kv"><span class="muted">Shop gets</span><span>${money(f.earning)}</span></div>
+    ${r.name || num(r.pay) ? `<div class="kv"><span class="muted">Rider</span><span>${esc(r.name || '')}${r.phone ? ' · ' + esc(r.phone) : ''} · pay ${money(r.pay)}</span></div>` : ''}
+    <h3 style="margin-top:14px">Timeline</h3><ul class="timeline">${tl || '<li class="muted">No history</li>'}</ul>`;
 }
 function accBox(acc){
   if (!acc || !acc.number) return `<div class="note">No payment account added yet. They can add it in their app.</div>`;
@@ -1210,7 +1262,7 @@ function viewShops(){
     return `<div class="row" style="cursor:default">
       <div class="thumb">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
       <button class="row-main" onclick="A.openShop('${r.id}')">
-        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
+        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? '<span class="pill g">✔️ Bharosa</span>' : ''}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
         <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>${cxLine}
       </button>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small>${r.is_open ? 'Open' : 'Closed'}</small></div>
@@ -1854,7 +1906,6 @@ function viewRegionPage(){
   const file = c ? `
       ${kv('Name', esc(c.partner_name || ''))}${kv('Father name', esc(c.father_name || ''))}${kv('CNIC', esc(c.cnic || ''))}${kv('Phone', c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : '')}${kv('Address', esc(c.address || ''))}
       ${kv('Login email', esc(c.email || ''))}
-      ${c.login_password ? `<div class="kv"><span class="muted">Login password</span><span><b id="pwShow" data-pw="${esc(c.login_password)}">••••••••</b> <button class="linkbtn" onclick="A.togglePw()">👁 Show</button> <button class="linkbtn" onclick="A.copyText(document.getElementById('pwShow').dataset.pw)">Copy</button></span></div>` : ''}
       ${(c.cnic_front_path || c.cnic_back_path) ? `<div class="two" style="margin-top:8px">${img(c.cnic_front_path, 'CNIC front')}${img(c.cnic_back_path, 'CNIC back')}</div>` : ''}
       <h3 style="margin:14px 0 4px">📝 Contract</h3>
       ${kv('Start', esc(dLong(c.start_date)))}${kv('Length', esc(monthsText(c.months)))}${kv('Ends', c.end_date ? esc(dLong(c.end_date)) + ' ' + regContractPill(c) : '')}
@@ -1910,7 +1961,8 @@ function riderIdBlock(id, rider, r){
   return `<div class="idbox"><div class="muted" style="font-size:13px">Rider ID</div><div class="code">🆔 ${esc(rider.rider_code || '—')}</div>
     ${cur ? `<div style="margin-top:4px">👤 Used by <b>${esc(cur.name)}</b>${cur.phone ? ` · <a href="tel:${esc(cur.phone)}">${esc(cur.phone)}</a>` : ''}${cur.cnic ? ' · CNIC ' + esc(cur.cnic) : ''}</div>
       <div class="muted" style="font-size:13px">Since ${esc(dayName(cur.started_at))} · ${cur.deliveries} deliveries · ${money(cur.earned)} earned with this ID</div>` : ''}
-    ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> / <b id="rpw" data-pw="${esc(cred.password || '')}">••••••••</b> <button class="linkbtn" onclick="A.toggleRpw()">👁</button></span></div>` : ''}
+    ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> · Password: set hai ✔</span></div>` : ''}
+    ${state.riderMustChange ? `<div class="note" style="margin-top:8px;font-size:13px">⚠️ Temporary password — rider ne abhi apna password change nahi kiya</div>` : ''}
     ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>
       <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.holderForm('${id}')">✏️ Name, phone, CNIC</button>${/^[A-Z0-9]+-\d{1,3}$/.test(rider.rider_code || '') ? `<button class="btn warn small" onclick="A.renewIdForm('${id}')">🔒 Make ID stronger</button>` : '<span></span>'}</div>` : ''}
     ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
@@ -2544,6 +2596,44 @@ function payAccCard(){
     <div class="actions"><button class="btn ghost block" onclick="A.savePayAcc()">Save payment accounts</button></div>
   </div>`;
 }
+const PRULES_DEF = { on:false, advance_threshold:10000, advance_pct:50, free_delivery_threshold:20000, commission_big_threshold:20000, commission_small_pct:1, commission_big_pct:1, free_months:3, fees_on:'customer', instant_fee_pct:1.5, card_fee_pct:2.9, card_fee_fixed:30 };
+function payRulesCard(){
+  const rid = payRegion();
+  if (!rid) return '';
+  const r = Object.assign({}, PRULES_DEF, state.settings.payment_rules || {});
+  return `<div class="card" style="margin-top:12px">
+    <b>📏 Payment rules for ${esc(regionName(rid))}</b>
+    <div class="muted" style="font-size:14px">The money rules for this region only: big orders pay part in advance, big fully-online orders get free delivery, and commission starts small. If the shop has its own payment account, the shop checks the payment itself; otherwise the region checks it.</div>
+    <label class="check"><input id="pr_on" type="checkbox" ${r.on ? 'checked' : ''}> Payment rules are on</label>
+    <h3 style="margin:12px 0 4px">💵 Advance on big orders</h3>
+    <div class="two"><div><label class="f" for="pr_adv_thr">Orders above (Rs)</label><input id="pr_adv_thr" type="number" min="0" step="100" value="${num(r.advance_threshold)}"></div>
+      <div><label class="f" for="pr_adv_pct">Advance to pay (%)</label><input id="pr_adv_pct" type="number" min="0" max="100" value="${num(r.advance_pct)}"></div></div>
+    <div class="muted" style="font-size:13px">The rest is cash on delivery. The customer may also pay the full amount online.</div>
+    <h3 style="margin:12px 0 4px">🆓 Free delivery</h3>
+    <label class="f" for="pr_free_thr">Fully online orders of (Rs) or more</label><input id="pr_free_thr" type="number" min="0" step="100" value="${num(r.free_delivery_threshold)}">
+    <h3 style="margin:12px 0 4px">🏷️ Commission</h3>
+    <div class="two"><div><label class="f" for="pr_com_small">Small orders (%)</label><input id="pr_com_small" type="number" min="0" step="0.1" value="${num(r.commission_small_pct)}"></div>
+      <div><label class="f" for="pr_com_big">Big orders, Rs ${num(r.commission_big_threshold)}+ (%)</label><input id="pr_com_big" type="number" min="0" step="0.1" value="${num(r.commission_big_pct)}"></div></div>
+    <label class="f" for="pr_free_months">New shop pays 0% for (months)</label><input id="pr_free_months" type="number" min="0" max="24" value="${num(r.free_months)}">
+    <div class="muted" style="font-size:13px">The free months are only for small orders. Big orders pay the big-order commission from the first day.</div>
+    <div class="actions"><button class="btn ghost block" onclick="A.savePayRules()">Save payment rules</button></div>
+  </div>`;
+}
+function gatewayCard(){
+  if (state.myRegion) return ''; // HQ only — the gateway switch is global, region incharges never see it
+  const g = Object.assign({ provider:'safepay', live:false }, state.settings.gateway || {});
+  const live = g.live === true;
+  return `<div class="card" style="margin-top:12px">
+    <b>💳 Payment Gateway (Safepay)</b>
+    <div class="muted" style="font-size:14px">Instant JazzCash / Easypaisa / card payment in the customer app, through Safepay. Ye setting poori Dera ke liye hai — har region ke liye aik jaisi. Jab tak Live na ho, customers ko ye option nazar hi nahi ata (dormant).</div>
+    <div style="margin-top:8px;font-size:15px">Provider: <b>Safepay</b> · Live: <b style="color:${live ? 'var(--green)' : 'var(--danger)'}">${live ? '🟢 ON' : '🔴 OFF'}</b></div>
+    <div class="muted" style="font-size:14px;margin-top:6px">🔑 Keys: sirf Supabase Edge Function secrets mein lagti hain (SAFEPAY_API_KEY) — app mein kabhi nazar nahi aati. Keys lagaye baghair Live NA karein.</div>
+    <div class="muted" style="font-size:13px;margin-top:6px">Live karne ke steps: 1) Safepay merchant account kholain. 2) Keys Supabase → Edge Functions → Secrets mein lagain. 3) Sandbox payment test karain — phir yahan Live karain.</div>
+    <div class="actions">${live
+      ? `<button class="btn warn block" onclick="A.saveGatewayLive(false)">🚨 Fori band karein (kill switch)</button>`
+      : `<button class="btn block" onclick="A.saveGatewayLive(true)">▶️ Live karein</button>`}</div>
+  </div>`;
+}
 function viewSettings(){
   const s = state.settings;
   const sc = scope();
@@ -2564,7 +2654,7 @@ function viewSettings(){
     ${menuRow('booking', '📅', 'Bookings & Support Info', 'Booking commission, support phone/email')}
   </div>`;
   const wrap = (title, inner) => `${backLink()}<h2>${title}</h2>${note}${back}<div style="margin-top:10px">${inner}</div>`;
-  if (sub === 'pay') return wrap('💳 Online Payment Accounts', payAccCard());
+  if (sub === 'pay') return wrap('💳 Online Payment Accounts', payAccCard() + payRulesCard() + gatewayCard());
   if (sub === 'dispatch') return wrap('🛵 Auto-Dispatch & Timing', setDispatchCard(s) + setWaitCard(s) + setCancelCard(s));
   if (sub === 'charges') return wrap('⚖️ Delivery & Weight Charges', setWeightCard(s) + setSpeedCard(s) + setMultiZoneCard(s) + setRiderShareCard(s));
   if (sub === 'safety') return wrap('🛡️ Safety & Fake Order Rules', setSafetyCard(s));
@@ -2733,6 +2823,7 @@ function setPointsCard(s){
   </div>`;
 }
 function setLoyaltyCard(s){
+  const br = s.bharosa_rules || {};
   return `<div class="card">
     <b>⭐ Loyalty points rules</b>
     <div class="muted" style="font-size:14px">Customers earn points on delivered orders and redeem them for promo codes. 0 = loyalty off.</div>
@@ -2741,6 +2832,9 @@ function setLoyaltyCard(s){
       <div><label class="f" for="s_lp_min">Min order (Rs) to earn</label><input id="s_lp_min" type="number" min="0" value="${num(s.loyalty_min_order ?? 0)}"></div>
     </div>
     <label class="f" for="s_lp_red" style="margin-top:8px">Min points to redeem</label><input id="s_lp_red" type="number" min="1" value="${num(s.loyalty_redeem_min ?? 100)}">
+    <label class="f" for="s_lp_online" style="margin-top:8px">Online payment bonus — Rs per 1 bonus point</label><input id="s_lp_online" type="number" min="0" value="${num(s.loyalty_online_per ?? 100)}">
+    <div class="muted" style="font-size:13px;margin-top:4px">Customer jitni rakam online pay karega, delivered order par us ke alag bonus points milenge. 0 = bonus band.</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">✔️ Bharosa badge: pichle ${num(br.days ?? 90)} din mein kam az kam ${num(br.min_delivered ?? 10)} delivered orders, dukaan ki cancel ${num(br.max_cancel_pct ?? 5)}% se kam, kam az kam ${num(br.min_verified ?? 3)} online payments verify, aur payment confirm ka average waqt ${num(br.max_confirm_hours ?? 6)} ghante se kam. Badge customer app mein dukaan ke naam ke sath dikhta hai.<br>Ye criteria abhi sirf database (SQL) se badle ja sakte hain — app mein in ki setting nahi hai.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.saveLoyalty()">Save</button></div>
   </div>`;
 }
@@ -2834,6 +2928,7 @@ const A = {
       <h3 style="margin-top:14px">Chats for this order</h3>
       <div class="bar">${[['cr','Customer and rider'],['cs','Customer and shop'],['rs','Rider and shop'],['sup_c','Support: customer'],['sup_r','Support: rider'],['sup_s','Support: shop']].map(([th, l]) => `<button class="btn ghost small" onclick='Chat.open(${JSON.stringify(o.id)}, "${th}", null)'>💬 ${l}</button>`).join('')}</div>
       <h3 style="margin-top:14px">Timeline</h3><ul class="timeline" id="tl"><li class="muted">Loading…</li></ul>
+      <div class="actions"><button class="btn ghost block" onclick="A.openOrderFile('${o.id}')">📁 Full order file</button></div>
       <div class="actions">${orderActions(o)}</div>`);
     sb.from('order_issues').select('*').eq('order_id', id).order('created_at').then(({ data:iss }) => {
       const el = $('issuesBox'); if (el && iss && iss.length) el.innerHTML = '<h3 style="margin-top:14px">Problems</h3>' + iss.map(i => `<div class="kv"><span>${esc(KIND[i.kind] || i.kind)}${i.note ? ' · ' + esc(i.note) : ''}<br><small class="muted">${when(i.created_at)}${i.resolution ? ' · ' + esc(i.resolution) : ''}</small></span><span class="pill ${i.status === 'resolved' ? 'g' : 'r'}">${esc(i.status)}</span></div>`).join('');
@@ -2876,6 +2971,32 @@ const A = {
     await run(async () => {
       need(await sb.from('region_settings').upsert([{ region_id:rid, key:'pay_accounts', value:v, updated_at:now }, { region_id:rid, key:'pay_wait_minutes', value:wait, updated_at:now }]));
       state.payQr = undefined; await loadSettings(); renderTab(); toast('Saved');
+    });
+  },
+  async savePayRules(){
+    const rid = payRegion(); if (!rid) return toast('Choose a region first', true);
+    const v = Object.assign({}, PRULES_DEF, state.settings.payment_rules || {}, { on:$('pr_on').checked,
+      advance_threshold:Math.max(0, Math.round(num($('pr_adv_thr').value))),
+      advance_pct:Math.min(100, Math.max(0, num($('pr_adv_pct').value))),
+      free_delivery_threshold:Math.max(0, Math.round(num($('pr_free_thr').value))),
+      commission_small_pct:Math.max(0, num($('pr_com_small').value)),
+      commission_big_pct:Math.max(0, num($('pr_com_big').value)),
+      free_months:Math.max(0, Math.round(num($('pr_free_months').value))) });
+    await run(async () => {
+      need(await sb.from('region_settings').upsert([{ region_id:rid, key:'payment_rules', value:v, updated_at:new Date().toISOString() }]));
+      await loadSettings(); renderTab(); toast('Saved');
+    });
+  },
+  async saveGatewayLive(on){
+    if (state.myRegion) return; // HQ only — gateway config is global (app_settings), never per-region
+    if (on && !await uiConfirm('Pakka Live karein? Pehle ye check kar lain: 1) Safepay merchant account khul gaya hai, 2) keys Supabase Edge Function secrets mein lag chuki hain (SAFEPAY_API_KEY), 3) aik sandbox payment test ho gaya hai. Agar keys nahi lagi to customers ko aisa payment option dikhega jo kaam nahi karega.')) return;
+    if (on && !await A.stepUp()) return;
+    const v = { provider:'safepay', live:!!on };
+    await run(async () => {
+      need(await sb.from('app_settings').upsert([{ key:'gateway', value:v, updated_at:new Date().toISOString() }]));
+      state.settings.gateway = v;
+      if (on){ try { await sb.rpc('log_security_event', { p_action:'gateway_live_on', p_target_type:'gateway', p_target_id:null, p_detail:null }); } catch (e) {} }
+      renderTab(); toast(on ? 'Gateway is LIVE' : 'Gateway band ho gaya');
     });
   },
   morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast('Up to 5 photos', true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
@@ -3035,7 +3156,7 @@ const A = {
     const stab = (key, label) => `<button class="chip ${st === key ? 'on' : ''}" onclick="state.shopTab='${key}';A.openShop('${id}')">${label}</button>`;
     openSheet(r.name, `
       <div class="card-head" style="margin-bottom:10px"><div class="thumb" style="width:64px;height:64px">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
-        <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}</div>
+        <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? ' <span class="pill g">✔️ Bharosa</span>' : ''}</div>
         <div class="muted" style="font-size:14px">${esc(r.address || '')}</div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}</div></div>
       <div class="muted" style="font-size:14px">${esc(zone ? zone.name : '')} · Commission ${num(r.commission_percent)}% · ${s.rating ? '★ ' + s.rating + ' (' + s.reviews + ' reviews)' : 'No reviews'}</div>
       <div class="chips" style="margin:10px 0">${stab('sales', '💰 Sales & Payout')}${stab('fee', '🧾 Fee & Ads')}${stab('edit', '✏️ Edit Info')}${stab('products', '📦 Products')}</div>
@@ -3055,6 +3176,7 @@ const A = {
       ${s.last_paid ? `<div class="muted" style="font-size:13px">Last paid ${when(s.last_paid)}</div>` : ''}
       <div class="actions" id="shopActs">
         ${num(s.unpaid) && can('money') ? `<button class="btn block" id="payShopBtn" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
+        <button class="btn ghost block" style="margin-bottom:8px" onclick="A.openMonthStatement('${id}')">📊 Monthly statement (3 hisaab)</button>
         <div class="two"><button class="btn ghost" onclick="A.shopStatement('${id}','pdf')">🧾 Statement PDF</button><button class="btn ghost" onclick="A.shopStatement('${id}','xlsx')">⬇️ Excel</button></div>
       </div>
       <h3>Payment history</h3><div id="payHist"><div class="empty">Loading…</div></div>
@@ -3335,18 +3457,20 @@ const A = {
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
       const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr] = await Promise.all([
-        sb.from('riders').select('face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since').eq('id', id).single(),
+        sb.from('riders').select('profile_id,face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
         sb.from('cash_handovers').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(10),
         sb.from('payouts').select('*').eq('party_type', 'rider').eq('party_id', id).order('created_at', { ascending:false }).limit(12),
         sb.rpc('rider_holder_stats', { p_rider:id }),
-        sb.from('rider_credentials').select('login_id,password,updated_at').eq('rider_id', id).maybeSingle(),
+        sb.from('rider_credentials').select('login_id,updated_at').eq('rider_id', id).maybeSingle(),
         sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(60),
         sb.from('rider_prayer_breaks').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(100)
       ]);
       state.riderChargeList = (ch && ch.data) || [];
       state.holders = hs.data || []; state.riderCred = cr.data || null;
+      state.riderMustChange = false;
+      try { const profId = (rd && rd.data || {}).profile_id; if (profId){ const asx = await sb.from('account_security').select('must_change_password').eq('user_id', profId).maybeSingle(); state.riderMustChange = !!(asx.data && asx.data.must_change_password); } } catch (e) {}
       const rider = need(rd); const fl = need(fines); const sh = need(shifts); const hd = need(hand); const py = need(pays);
       const prayerBreaks = (pbr && pbr.data) || [];
       const prayerRows = prayerBreaks.map(p => {
@@ -3797,6 +3921,57 @@ const A = {
         table:{ heading:'Orders', head:['#', 'Date', 'Status', 'Items', 'Sales', 'Commission', 'Earning'], numFrom:4, rows:rows.map(o => ['#' + o.id.slice(-4).toUpperCase(), d(o.created_at), o.status, items(o), money(o.subtotal), money(o.commission_amount), money(o.restaurant_earning)]) } });
     });
   },
+  async openMonthStatement(id, m){
+    const r = state.restaurants.find(x => x.id === id); if (!r) return;
+    const month = m || state.stmtMonth || monthStart(0);
+    state.stmtShop = id; state.stmtMonth = month;
+    openSheet('📊 Statement · ' + r.name, '<div class="empty">Loading…</div>');
+    await run(async () => {
+      const d = need(await sb.rpc('shop_statement', { p_restaurant:id, p_month:month }));
+      const body = $('sheetBody'); if (!body) return;
+      const st = d.streams || {}, tt = d.totals || {}, days = d.days || [], prods = d.products || [], ords = d.orders || [];
+      const months = [0, 1, 2, 3, 4, 5].map(b => monthStart(b)).map(mm => `<option value="${mm}" ${mm === month ? 'selected' : ''}>${monthLabel(mm)}</option>`).join('');
+      const sCard = (label, v, sub) => `<div class="card" style="flex:1 1 30%;min-width:150px;margin:0"><div class="muted" style="font-size:13px">${label}</div><div style="font-size:19px;font-weight:800">${money(v)}</div>${sub ? `<div class="muted" style="font-size:12px">${sub}</div>` : ''}</div>`;
+      const payTxt = o => {
+        if (o.payment_method === 'cod') return '💵 Cash on delivery';
+        const dest = o.pay_destination === 'shop' ? 'dukaan ke account' : o.pay_destination === 'region' ? 'Dera account' : 'online';
+        let s = `📱 Online ${money(o.pay_online_amount)} → ${dest}`;
+        if (num(o.pay_balance_due) > 0) s += ` · baqi ${money(o.pay_balance_due)} cash`;
+        if (o.pay_ref) s += ` · TID ${esc(o.pay_ref)}`;
+        return s;
+      };
+      body.innerHTML = `
+        <label class="f" for="stmtMonth">Month</label>
+        <select id="stmtMonth" onchange="A.openMonthStatement('${id}', this.value)">${months}</select>
+        <h3 style="margin-top:14px">Paisa kahan hai — 3 hisaab</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${sCard('💵 Cash — rider ke paas', st.cash_by_rider, 'COD + advance ke baad baqi cash')}
+          ${sCard('📱 Online — dukaan ke account mein', st.online_shop, 'Dukaan ko pehle hi mil gaya — payout mein nahi judega')}
+          ${sCard('🏦 Online — Dera ke account mein', st.online_region, 'Payout ke waqt milega, commission kat kar')}
+          ${num(st.pickup_cash) ? sCard('🛍️ Pickup cash', st.pickup_cash, 'Customer dukaan se le gaya') : ''}
+        </div>
+        <h3 style="margin-top:16px">Total — ${monthLabel(month)}</h3>
+        <div class="kv"><span class="muted">Orders delivered</span><span>${num(tt.orders)}</span></div>
+        <div class="kv"><span class="muted">Goods sold (net)</span><span>${money(tt.goods_net)}</span></div>
+        <div class="kv"><span class="muted">Commission</span><span>${money(tt.commission)}</span></div>
+        <div class="kv"><span class="muted">Shop earning</span><span>${money(tt.earning)}</span></div>
+        <div class="kv"><span class="muted">Delivery fees</span><span>${money(tt.delivery_fees)}</span></div>
+        <div class="kv"><span class="muted">Rider pays</span><span>${money(tt.rider_pays)}</span></div>
+        ${days.length ? `<h3 style="margin-top:16px">Din-ba-din</h3><div class="list">${days.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(dayName(x.date))} · ${num(x.orders)} orders</div><div class="row-sub">Cash ${money(x.cash_by_rider)} · Dukaan online ${money(x.online_shop)} · Dera online ${money(x.online_region)} · Commission ${money(x.commission)}</div></div><div class="row-side">${money(x.earning)}</div></div>`).join('')}</div>` : ''}
+        ${prods.length ? `<h3 style="margin-top:16px">Products</h3><div class="list">${prods.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${num(p.qty)} sold · commission ${money(p.commission)}</div></div><div class="row-side">${money(p.sales)}</div></div>`).join('')}</div>` : ''}
+        <h3 style="margin-top:16px">Orders (${ords.length}) — tap for full file</h3>
+        ${ords.length ? `<div class="list">${ords.map(o => `<button class="row" onclick="A.openOrderFile('${o.id}', 'stmt')"><div class="row-main"><div class="row-title">#${esc(o.code || '')} · ${esc(o.customer_name || 'Customer')}</div><div class="row-sub">${when(o.delivered_at)} · ${payTxt(o)}<br>Commission ${money(o.commission)}${o.commission_rate != null ? ' (' + num(o.commission_rate) + '%)' : ''}${o.rider_name ? ' · Rider: ' + esc(o.rider_name) + ' (' + money(o.rider_pay) + ')' : ''}${o.minutes != null ? ' · ' + hours(o.minutes) : ''}</div></div><div class="row-side">${money(o.total)}<small>earn ${money(o.earning)}</small></div></button>`).join('')}</div>` : '<div class="empty">No delivered orders this month.</div>'}`;
+    });
+  },
+  async openOrderFile(id, back){
+    openSheet('📁 Order file', '<div class="empty">Loading…</div>');
+    await run(async () => {
+      const f = need(await sb.rpc('order_full_file', { p_order:id }));
+      const body = $('sheetBody'); if (!body) return;
+      const h = document.querySelector('#sheet .sheet-head h3'); if (h && f.code) h.textContent = '📁 #' + f.code + ' · Order file';
+      body.innerHTML = orderFileHtml(f) + (back === 'stmt' && state.stmtShop ? `<div class="actions"><button class="btn ghost block" onclick="A.openMonthStatement(state.stmtShop, state.stmtMonth)">← Back to statement</button></div>` : '');
+    });
+  },
 
   // ---- Banners ----
   editBanner(id){
@@ -3946,6 +4121,26 @@ const A = {
     });
   },
   // ---- rider IDs ----
+  stepUp(){
+    return new Promise(res => {
+      let done = false;
+      const finish = v => { if (done) return; done = true; clearInterval(iv); res(v); };
+      openSheet('🔐 Tasdeeq karein', `<div class="muted" style="font-size:14px">Ye aik hassas kaam hai. Apni pehchan ki tasdeeq ke liye apna admin password dobara likhein.</div>
+        <label class="f" for="su_pw">Apna admin password likhein</label><input id="su_pw" type="password" autocomplete="current-password">
+        <div id="su_err" class="red" style="display:none;font-size:13px;margin-top:6px"></div>
+        <div class="actions"><button class="btn block" id="suGo">✔ Tasdeeq karein</button><button class="btn ghost block" id="suNo">Cancel</button></div>`);
+      const iv = setInterval(() => { if (!$('su_pw')) finish(false); }, 300);
+      $('suNo').onclick = () => { finish(false); closeSheet(); };
+      $('suGo').onclick = async () => {
+        const err = $('su_err'); const b = $('suGo'); b.disabled = true;
+        const { data, error } = await sb.rpc('verify_step_up', { p_password:$('su_pw').value });
+        b.disabled = false;
+        if (error){ err.textContent = (error.message || 'Error').replace(/^Error:\s*/, ''); err.style.display = ''; return; }
+        if (data){ finish(true); closeSheet(); return; }
+        err.textContent = 'Password ghalat hai — dobara koshish karein'; err.style.display = ''; $('su_pw').select();
+      };
+    });
+  },
   async riderIdForm(){
     const needPick = !scope() && (state.regions || []).length > 1;
     let code = '';
@@ -3967,6 +4162,7 @@ const A = {
     const name = $('ri_name').value.trim(); if (!name) return toast('Write the rider name', true);
     const reg = $('ri_reg') ? $('ri_reg').value : null; if ($('ri_reg') && !reg) return toast('Choose the region', true);
     const code = $('ri_code').value.trim().toUpperCase(), pw = $('ri_pw').value;
+    if (!await A.stepUp()) return;
     const b = $('riSave'); b.disabled = true;
     await run(async () => {
       const d = await callFn({ action:'create_rider', name, phone:$('ri_phone').value.trim(), cnic:$('ri_cnic').value.trim(), vehicle:$('ri_veh').value, contract:$('ri_ct').value, code, password:pw, region:reg });
@@ -3994,11 +4190,11 @@ const A = {
   },
   async saveRenewId(id){
     const pw = $('rn_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    if (!await A.stepUp()) return;
     const b = $('rnSave'); b.disabled = true;
-    await run(async () => { const d = await callFn({ action:'renew_id', rider:id, password:pw }); await loadRiderMonth(); if (state.tab === 'riders') renderTab(); riderLoginCard(d.code, pw); });
+    await run(async () => { const d = await callFn({ action:'renew_id', rider:id, password:pw }); try { const rp = await sb.from('riders').select('profile_id').eq('id', id).single(); if (rp.data && rp.data.profile_id) await sb.rpc('mark_temp_password', { p_user: rp.data.profile_id, p_kind:'rider_renew' }); } catch (e) {} await loadRiderMonth(); if (state.tab === 'riders') renderTab(); riderLoginCard(d.code, pw); });
     if (b) b.disabled = false;
   },
-  toggleRpw(){ const el = document.getElementById('rpw'); if (el) el.textContent = el.textContent.startsWith('•') ? (el.dataset.pw || '(not saved)') : '••••••••'; },
   riderPwForm(id){
     const code = ((state.riderIds || {})[id] || {}).rider_code || '';
     openSheet('New password · ' + code, `<div class="muted" style="font-size:14px">The old password stops working.</div>
@@ -4007,6 +4203,7 @@ const A = {
   },
   async saveRiderPw(id){
     const pw = $('rp_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    if (!await A.stepUp()) return;
     await run(async () => { await callFn({ action:'rider_password', rider:id, password:pw }); riderLoginCard(((state.riderIds || {})[id] || {}).rider_code || '', pw); });
   },
   handOverForm(id){
@@ -4020,6 +4217,7 @@ const A = {
   async saveHandOver(id){
     const name = $('ho_name').value.trim(); if (!name) return toast('Write the new rider name', true);
     const pw = $('ho_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    if (!await A.stepUp()) return;
     const code = ((state.riderIds || {})[id] || {}).rider_code || '';
     const b = $('hoSave'); b.disabled = true;
     await run(async () => {
@@ -4040,7 +4238,6 @@ const A = {
     });
   },
   async regionPage(id){ state.regionId = id; await go('region'); },
-  togglePw(){ const el = document.getElementById('pwShow'); if (!el) return; el.textContent = el.textContent.startsWith('•') ? el.dataset.pw : '••••••••'; },
   async copyText(t){ try { await navigator.clipboard.writeText(t || ''); toast('Copied'); } catch (e) { toast('Copy it by hand', true); } },
   fileForm(id){
     const c = state.contracts[id] || {}; const p = (state.partners || []).find(y => y.region_id === id) || {};
@@ -4052,9 +4249,8 @@ const A = {
       <div class="two"><div><label class="f" for="pf_cnic">CNIC number</label><input id="pf_cnic" type="text" inputmode="numeric" placeholder="3xxxx-xxxxxxx-x" value="${v('cnic')}"></div>
         <div><label class="f" for="pf_phone">Phone</label><input id="pf_phone" type="text" inputmode="tel" value="${v('phone', p.phone)}"></div></div>
       <label class="f" for="pf_addr">Address</label><input id="pf_addr" type="text" value="${v('address')}">
-      <div class="two"><div><label class="f" for="pf_email">Login email</label><input id="pf_email" type="text" value="${v('email', p.email)}"></div>
-        <div><label class="f" for="pf_pw">Login password</label><input id="pf_pw" type="text" value="${v('login_password')}"></div></div>
-      <div class="muted" style="font-size:12px">This only saves a note of the password. To really change it use “Login and region” → New password (it is saved here too).</div>
+      <label class="f" for="pf_email">Login email</label><input id="pf_email" type="text" value="${v('email', p.email)}">
+      <div class="muted" style="font-size:12px">Passwords are never saved in this file. To change the login password use “Login and region” → New password — the partner then sets their own password when they first sign in.</div>
       <div class="two"><div><label class="f" for="pf_f1">CNIC front photo</label><input id="pf_f1" type="file" accept="image/*"></div><div><label class="f" for="pf_f2">CNIC back photo</label><input id="pf_f2" type="file" accept="image/*"></div></div>
       <h3 style="margin:14px 0 4px">📝 Contract</h3>
       <div class="two"><div><label class="f" for="pf_start">Start date</label><input id="pf_start" type="date" value="${v('start_date')}"></div>
@@ -4084,7 +4280,7 @@ const A = {
       };
       const months = $('pf_len').value === '0' ? Math.round(num($('pf_months').value)) : num($('pf_len').value);
       const row = { region_id:id, partner_name:$('pf_name').value.trim() || null, father_name:$('pf_father').value.trim() || null, cnic:$('pf_cnic').value.trim() || null,
-        phone:$('pf_phone').value.trim() || null, address:$('pf_addr').value.trim() || null, email:$('pf_email').value.trim() || null, login_password:$('pf_pw').value || null,
+        phone:$('pf_phone').value.trim() || null, address:$('pf_addr').value.trim() || null, email:$('pf_email').value.trim() || null,
         start_date:$('pf_start').value || null, months:months > 0 ? months : null, deposit:Math.max(0, num($('pf_dep').value)), notes:$('pf_notes').value.trim() || null, is_current:true };
       const f1 = await up('pf_f1', 'cnic-front'), f2 = await up('pf_f2', 'cnic-back'), f3 = await up('pf_doc', 'contract');
       if (f1) row.cnic_front_path = f1; if (f2) row.cnic_back_path = f2; if (f3) row.contract_file_path = f3;
@@ -4182,13 +4378,15 @@ const A = {
         const name = $('pt_name').value.trim(); pw = $('pt_pw').value;
         if (!name) throw new Error('Write the incharge name');
         if (pw.length < 8) throw new Error('Password must be at least 8 characters');
+        if (!await A.stepUp()) return;
         const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'create', email, password:pw, name, phone:$('pt_phone').value.trim(), region:id, replace } });
         if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
+        if (data && data.id){ try { need(await sb.rpc('mark_temp_password', { p_user:data.id, p_kind:'partner' })); } catch (e) { toast('Incharge ban gaya, lekin temporary-password flag nahi laga — dobara try karein', true); } }
         const old = (state.contracts || {})[id];
         const same = old && (old.email || '').toLowerCase() === email.toLowerCase();
-        if (same) await sb.from('region_contracts').update({ login_password:pw, partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || old.phone }).eq('id', old.id);
+        if (same) await sb.from('region_contracts').update({ partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || old.phone }).eq('id', old.id);
         else if (old && !replace) {}
-        else await sb.from('region_contracts').insert({ region_id:id, partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || null, email, login_password:pw, is_current:true });
+        else await sb.from('region_contracts').insert({ region_id:id, partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || null, email, is_current:true });
       } else {
         const uid = need(await sb.rpc('hq_set_region_admin', { p_email:email, p_region:id, p_replace:replace }));
         const old = (state.contracts || {})[id];
@@ -4206,13 +4404,15 @@ const A = {
   },
   async savePartnerPw(uid, email){
     const pw = $('np_pw').value; if (pw.length < 8) return toast('Password must be at least 8 characters', true);
+    if (!await A.stepUp()) return;
     await run(async () => {
       const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'password', user:uid, password:pw } });
       if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
+      try { need(await sb.rpc('mark_temp_password', { p_user:uid, p_kind:'partner' })); } catch (e) { toast('Password change ho gaya, lekin temporary flag nahi laga — dobara try karein', true); }
       const p = (state.partners || []).find(x => x.id === uid);
       const c = p && (state.contracts || {})[p.region_id];
-      if (c) await sb.from('region_contracts').update({ login_password:pw, partner_user:uid }).eq('id', c.id);
-      else if (p) await sb.from('region_contracts').insert({ region_id:p.region_id, partner_user:uid, partner_name:p.full_name, phone:p.phone, email, login_password:pw, is_current:true });
+      if (c) await sb.from('region_contracts').update({ partner_user:uid }).eq('id', c.id);
+      else if (p) await sb.from('region_contracts').insert({ region_id:p.region_id, partner_user:uid, partner_name:p.full_name, phone:p.phone, email, is_current:true });
       await loadRegions(); if (state.tab === 'region') await loadRegionFile(); renderTab();
       showLoginCard(p ? regionName(p.region_id) : '', email, pw);
     });
@@ -4518,7 +4718,8 @@ const A = {
     const rows = [
       { key:'loyalty_per', value:Math.max(0, num($('s_lp_per').value || 100)) },
       { key:'loyalty_min_order', value:Math.max(0, num($('s_lp_min').value || 0)) },
-      { key:'loyalty_redeem_min', value:Math.max(1, num($('s_lp_red').value || 100)) }
+      { key:'loyalty_redeem_min', value:Math.max(1, num($('s_lp_red').value || 100)) },
+      { key:'loyalty_online_per', value:Math.max(0, num($('s_lp_online').value || 100)) }
     ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
     await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Loyalty rules saved'); });
   }
