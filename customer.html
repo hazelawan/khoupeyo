@@ -886,6 +886,16 @@ html[dir=rtl] .grid2 .qadd{right:auto!important;left:6px!important}
 .gcard .prow .qadd{position:static!important;flex:none;margin:0}
 .gcard,.grid2 .gcard{padding-bottom:10px!important}
 .grid2 .gcard .qadd{width:28px!important;height:28px!important;font-size:18px!important;border-radius:9px!important}
+.pchip{border:2px solid var(--line);border-radius:999px;padding:8px 13px;font-size:14px;background:var(--surface);cursor:pointer;color:var(--ink)}
+.pchip.on{border-color:var(--brand);background:#FFF1E3;font-weight:700;color:#C24E02}
+.pkprice{display:flex;justify-content:space-between;align-items:center;background:#FFF4E4;border:2px solid #F5C98F;border-radius:14px;padding:13px 15px}
+.pkprice b{font-size:23px;color:var(--brand)}
+.pkcode{border:2px dashed #F0B269;border-radius:14px;padding:10px 14px;background:#FFFBF3;font-size:15px;line-height:1.7}
+.pkcode b{font-size:19px;letter-spacing:2px}
+.pkhead{background:linear-gradient(135deg,#FF8A1E,#F85606);color:#fff;border-radius:20px;padding:18px;margin-bottom:14px}
+.pkhead b{font-size:21px;display:block}
+.pkhead span{font-size:13.5px;opacity:.93}
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
@@ -1020,7 +1030,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.40';
+const APP_VERSION = '5.41';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1091,6 +1101,15 @@ const I18N = {
     plus_price:'{p} for {d} days', plus_min:'On orders above {m}', plus_cap:'Up to {c} off delivery each order', plus_until:'⭐ You are a Plus member until {d}', plus_pending:'⏳ We are checking your payment. It usually takes a few minutes.',
     plus_wallet:'💰 Pay from wallet ({b})', plus_online:'📲 Pay with JazzCash / Easypaisa / Bank', plus_send:'I have paid — send', plus_done:'🎉 Welcome to Dera Plus!', plus_get:'⭐ Get free delivery with Dera Plus ›', plus_line:'⭐ Plus free delivery', plus_extend:'Add {d} more days', plus_no:'Dera Plus is not available in your city yet.', w_plus:'Dera Plus', pay_note_pick:'Pay cash at the shop when you collect.', hero_pay:'Waiting for your payment', hero_paycheck:'Checking your payment', order_placed_pay:'Order saved. Now pay to confirm it.', place_order:'Place order',
     home:'Home', shops:'Shops', orders:'Orders', account:'Account',
+    pk_tab:'Parcel', pk_title:'Send a Parcel', pk_sub:'From your village to anywhere in the area — a rider will take it',
+    pk_from:'Pickup — from which village/area?', pk_to:'Drop — to which village/area?', pk_pickd:'Pickup detail (house / street)', pk_pickd_ph:'e.g. near the mosque, blue gate', pk_myphone:'Your phone (rider will call you)',
+    pk_recv:'Who will receive it?', pk_recv_ph:'Receiver name', pk_phone:'Receiver phone', pk_item:'What is the parcel?', pk_weight:'Weight',
+    pk_band1:'Up to 10 kg — Normal', pk_band2:'10-15 kg · +Rs 50', pk_band3:'15-25 kg · +Rs 100', pk_speed:'How fast?', pk_normal:'Normal — today', pk_urgent:'Urgent (+50%)',
+    pk_add2:'Add a 2nd parcel (same trip)', pk_second_note:'2nd parcel on the same trip: half rate.', pk_choose:'Choose both places', pk_choose2:'Choose the 2nd drop',
+    pk_cash_note:'Cash on delivery — the receiver pays', pk_book:'Call Rider', pk_mine:'My Parcels', pk_none:'No parcels yet.',
+    pk_code_pick:'Pickup code — tell the rider when he comes', pk_code_drop:'Delivery code — tell the receiver', pk_cancel:'Cancel parcel', pk_cancel_q:'Cancel this parcel?', pk_cancelled_ok:'Parcel cancelled',
+    pk_sent_ok:'Booking done! A rider will be assigned.', pk_need_recv:'Add receiver name and phone', pk_need_phone:'Add your phone number',
+    pk_st_placed:'Finding a rider…', pk_st_assigned:'Rider assigned', pk_st_picked:'Picked up — on the way', pk_st_delivered:'Delivered ✓', pk_st_cancelled:'Cancelled',
     no_orders:'No orders yet. Your first order will show up here.', your_order:'Your order',
     st_placed:'Order placed', st_accepted:'Accepted', st_preparing:'Being prepared', st_ready:'Ready',
     st_rider_assigned:'Rider assigned', st_picked_up:'On the way', st_delivered:'Delivered',
@@ -1203,6 +1222,15 @@ const I18N = {
     plus_price:'{d} دن کے لیے {p}', plus_min:'{m} سے اوپر کے آرڈر پر', plus_cap:'ہر آرڈر پر ڈیلیوری میں {c} تک چھوٹ', plus_until:'⭐ آپ {d} تک پلس ممبر ہیں', plus_pending:'⏳ ہم آپ کی ادائیگی چیک کر رہے ہیں۔ عام طور پر چند منٹ لگتے ہیں۔',
     plus_wallet:'💰 والیٹ سے ادا کریں ({b})', plus_online:'📲 جاز کیش / ایزی پیسہ / بینک سے ادا کریں', plus_send:'میں نے ادائیگی کر دی — بھیجیں', plus_done:'🎉 وانہار پلس میں خوش آمدید!', plus_get:'⭐ وانہار پلس سے مفت ڈیلیوری لیں ›', plus_line:'⭐ پلس مفت ڈیلیوری', plus_extend:'{d} دن اور بڑھائیں', plus_no:'آپ کے شہر میں وانہار پلس ابھی دستیاب نہیں۔', w_plus:'وانہار پلس', pay_note_pick:'آرڈر لیتے وقت دکان پر نقد ادا کریں۔', hero_pay:'آپ کی ادائیگی کا انتظار ہے', hero_paycheck:'آپ کی ادائیگی چیک ہو رہی ہے', order_placed_pay:'آرڈر محفوظ ہو گیا۔ اب ادائیگی کر کے پکا کریں۔', place_order:'آرڈر کریں',
     home:'ہوم', shops:'دکانیں', orders:'آرڈرز', account:'اکاؤنٹ',
+    pk_tab:'پارسل', pk_title:'سامان بھیجیں', pk_sub:'اپنے گاؤں سے علاقے میں کہیں بھی — رائیڈر لے جائے گا',
+    pk_from:'اٹھانا کہاں سے ہے؟ (گاؤں/علاقہ)', pk_to:'پہنچانا کہاں ہے؟ (گاؤں/علاقہ)', pk_pickd:'پک اپ کی تفصیل (گھر/گلی)', pk_pickd_ph:'مثلاً مسجد کے قریب، نیلا دروازہ', pk_myphone:'آپ کا نمبر (رائیڈر کال کرے گا)',
+    pk_recv:'کس نے وصول کرنا ہے؟', pk_recv_ph:'وصول کرنے والے کا نام', pk_phone:'وصول کرنے والے کا نمبر', pk_item:'سامان کیا ہے؟', pk_weight:'وزن',
+    pk_band1:'10 کلو تک — نارمل', pk_band2:'10–15 کلو · +50 روپے', pk_band3:'15–25 کلو · +100 روپے', pk_speed:'کتنی جلدی؟', pk_normal:'نارمل — آج ہی', pk_urgent:'ارجنٹ (+50%)',
+    pk_add2:'دوسرا پارسل شامل کریں (اسی چکر میں)', pk_second_note:'اسی چکر کا دوسرا پارسل: آدھا ریٹ۔', pk_choose:'دونوں جگہیں چنیں', pk_choose2:'دوسری منزل چنیں',
+    pk_cash_note:'پیسے ڈیلیوری پر — وصول کرنے والا دے گا', pk_book:'رائیڈر بلائیں', pk_mine:'میرے پارسل', pk_none:'ابھی کوئی پارسل نہیں۔',
+    pk_code_pick:'پک اپ کوڈ — رائیڈر کے آنے پر بتائیں', pk_code_drop:'ڈیلیوری کوڈ — وصول کرنے والے کو بتائیں', pk_cancel:'پارسل منسوخ کریں', pk_cancel_q:'یہ پارسل منسوخ کر دیں؟', pk_cancelled_ok:'پارسل منسوخ ہو گیا',
+    pk_sent_ok:'بکنگ ہو گئی! رائیڈر مل جائے گا۔', pk_need_recv:'وصول کرنے والے کا نام اور نمبر لکھیں', pk_need_phone:'اپنا نمبر لکھیں',
+    pk_st_placed:'رائیڈر تلاش جاری…', pk_st_assigned:'رائیڈر مل گیا', pk_st_picked:'اٹھا لیا — راستے میں', pk_st_delivered:'پہنچ گیا ✓', pk_st_cancelled:'منسوخ',
     no_orders:'ابھی کوئی آرڈر نہیں۔ آپ کا پہلا آرڈر یہاں نظر آئے گا۔', your_order:'آپ کا آرڈر',
     st_placed:'آرڈر بھیج دیا گیا', st_accepted:'قبول ہو گیا', st_preparing:'تیار ہو رہا ہے', st_ready:'تیار ہے',
     st_rider_assigned:'رائیڈر مقرر ہو گیا', st_picked_up:'راستے میں ہے', st_delivered:'پہنچ گیا',
@@ -1604,6 +1632,7 @@ const ICON = {
   shops:'<svg viewBox="0 0 24 24"><path d="M4 9l1-5h14l1 5"/><path d="M4 9h16v2a3 3 0 0 1-6 0 3 3 0 0 1-4 0 3 3 0 0 1-6 0z"/><path d="M5 13v7h14v-7"/></svg>',
   cart:'<svg viewBox="0 0 24 24"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
   orders:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>',
+  parcel:'<svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>',
   account:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
   search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>'
 };
@@ -1625,6 +1654,7 @@ function renderShell(){
       <a href="#/shops" id="n_shops">${ICON.shops}${t('shops')}</a>
       <a href="#/cart" id="n_cart">${ICON.cart}${t('cart_tab')}<span class="cnt" id="cartN" style="display:none">0</span></a>
       <a href="#/orders" id="n_orders">${ICON.orders}${t('orders')}</a>
+      <a href="#/parcel" id="n_parcel">${ICON.parcel}${t('pk_tab')}</a>
       <a href="#/account" id="n_account">${ICON.account}${state.user ? t('account') : t('login')}</a>
     </div></nav>`;
   updateCartUI();
@@ -1648,8 +1678,8 @@ function skeleton(name){
   return `<div class="skhome"><div class="skel" style="height:90px;border-radius:22px;margin-bottom:14px"></div><div class="skel" style="height:64px;margin-bottom:10px"></div><div class="skel" style="height:64px;margin-bottom:10px"></div><div class="skel" style="height:64px"></div></div>`;
 }
 function highlightNav(name){
-  const map = { home:'n_home', c:'n_home', p:'n_home', shops:'n_shops', r:'n_shops', cart:'n_cart', checkout:'n_cart', orders:'n_orders', order:'n_orders', account:'n_account', saved:'n_account', offers:'n_account' };
-  ['n_home','n_shops','n_cart','n_orders','n_account'].forEach(id => { const el = $(id); if (el) el.classList.toggle('on', map[name] === id); });
+  const map = { home:'n_home', c:'n_home', p:'n_home', shops:'n_shops', r:'n_shops', cart:'n_cart', checkout:'n_cart', orders:'n_orders', order:'n_orders', parcel:'n_parcel', account:'n_account', saved:'n_account', offers:'n_account' };
+  ['n_home','n_shops','n_cart','n_orders','n_parcel','n_account'].forEach(id => { const el = $(id); if (el) el.classList.toggle('on', map[name] === id); });
   const sbx = $('searchbox'); if (sbx) sbx.style.display = ['home','c','shops'].includes(name) ? '' : 'none';
   const hl = $('hello'); if (hl) hl.style.display = name === 'home' ? '' : 'none';
   const ac = $('addrChip'); if (ac) ac.style.display = ['home','shops','c','r','cart'].includes(name) ? '' : 'none';
@@ -1677,10 +1707,147 @@ function closeSheet(){ const s = $('sheet'); if (s) s.remove(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 function getItem(id){ return (state.curMenu && state.curMenu.items.find(x => x.id === id)) || state.itemsCache[id]; }
 
+
+// ================= PARCEL (Samaan Bhejo) =================
+let PK = null;
+const PK_ITEMS = ['📄 Kagzaat', '👕 Kapray', '🍱 Khana', '💊 Dawaai', '📱 Mobile', '📦 Doosra'];
+function pkZones(){
+  const zs = (state.allZones || []).slice();
+  zs.sort((a, b) => (a.name === 'Maini Town' ? -1 : b.name === 'Maini Town' ? 1 : a.name.localeCompare(b.name)));
+  return zs;
+}
+function pkZone(id){ return pkZones().find(z => z.id === id) || null; }
+function pkInitForm(){
+  const zs = pkZones();
+  const town = zs.find(z => z.name === 'Maini Town') || zs[0];
+  PK = { from: town ? town.id : '', to: '', item: '📦 Doosra', band: 1, urgent: false,
+         second: false, to2: '', item2: '📦 Doosra', band2: 1, q1: null, q2: null, busy: false, tok: 0 };
+}
+function pkStatusPill(s){
+  const map = { placed: ['wait', 'pk_st_placed'], rider_assigned: ['', 'pk_st_assigned'], picked_up: ['', 'pk_st_picked'], delivered: ['', 'pk_st_delivered'], cancelled: ['bad', 'pk_st_cancelled'] };
+  const m = map[s] || ['wait', s];
+  return `<span class="pill ${m[0]}">${t(m[1])}</span>`;
+}
+function pkMineHtml(rows){
+  if (!rows || !rows.length) return `<div class="card"><span class="muted">${t('pk_none')}</span></div>`;
+  return rows.map(r => `
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+      <b>${esc(r.pickup_text)} → ${esc(r.drop_text)}</b>${pkStatusPill(r.status)}
+    </div>
+    <div class="muted" style="font-size:13.5px;margin-top:4px">${esc(r.item_type || '')} · ${money(r.total_fee)}${r.urgent ? ' · ⚡ Urgent' : ''} · ${new Date(r.created_at).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+    ${['placed', 'rider_assigned', 'picked_up'].includes(r.status) ? `<div class="pkcode" style="margin-top:10px">🛵 ${t('pk_code_pick')}: <b>${esc(r.pickup_code || '')}</b><br>📍 ${t('pk_code_drop')}: <b>${esc(r.delivery_code || '')}</b></div>` : ''}
+    ${['placed', 'rider_assigned'].includes(r.status) ? `<button class="btn ghost" style="margin-top:10px;color:var(--danger)" onclick="A.pkCancelP('${r.id}')">${t('pk_cancel')}</button>` : ''}
+  </div>`).join('');
+}
+async function refreshPkMine(){
+  const box = $('pkMine'); if (!box) return;
+  try {
+    const { data } = await sb.from('parcels').select('*').order('created_at', { ascending: false }).limit(20);
+    box.innerHTML = pkMineHtml(data || []);
+  } catch (e) { /* keep old */ }
+}
+function pkChipsHtml(kind){
+  if (kind === 'item') return PK_ITEMS.map(x => `<button type="button" class="pchip ${PK.item === x ? 'on' : ''}" onclick="A.pkItem('${x}')">${x}</button>`).join('');
+  if (kind === 'item2') return PK_ITEMS.map(x => `<button type="button" class="pchip ${PK.item2 === x ? 'on' : ''}" onclick="A.pkItem2('${x}')">${x}</button>`).join('');
+  if (kind === 'band') return [1, 2, 3].map(b => `<button type="button" class="pchip ${PK.band === b ? 'on' : ''}" onclick="A.pkBand(${b})">${t('pk_band' + b)}</button>`).join('');
+  if (kind === 'band2') return [1, 2, 3].map(b => `<button type="button" class="pchip ${PK.band2 === b ? 'on' : ''}" onclick="A.pkBand2(${b})">${t('pk_band' + b)}</button>`).join('');
+  if (kind === 'speed') return `<button type="button" class="pchip ${!PK.urgent ? 'on' : ''}" onclick="A.pkSpeed(false)">🐢 ${t('pk_normal')}</button><button type="button" class="pchip ${PK.urgent ? 'on' : ''}" onclick="A.pkSpeed(true)">⚡ ${t('pk_urgent')}</button>`;
+  return '';
+}
+function pkPaintChips(){
+  const m = { pkItems: 'item', pkBands: 'band', pkSpeeds: 'speed', pkItems2: 'item2', pkBands2: 'band2' };
+  Object.keys(m).forEach(id => { const el = $(id); if (el) el.innerHTML = pkChipsHtml(m[id]); });
+}
+function pkZoneOptions(sel){
+  return pkZones().map(z => `<option value="${z.id}" ${z.id === sel ? 'selected' : ''}>${esc(z.name)}</option>`).join('');
+}
+async function pkQuote(){
+  if (!PK) return;
+  const tok = ++PK.tok;
+  const box = $('pkPrice'), btn = $('pkBookBtn');
+  const from = PK.from, to = PK.to;
+  if (!from || !to) { PK.q1 = null; if (box) box.innerHTML = `<span class="muted">${t('pk_choose')}</span>`; if (btn) btn.disabled = true; return; }
+  if (box) box.innerHTML = `<span class="muted">…</span>`;
+  try {
+    const r1 = await sb.rpc('quote_parcel', { p_from_zone: from, p_to_zone: to, p_weight_band: PK.band, p_urgent: PK.urgent, p_second: false });
+    if (tok !== PK.tok) return;
+    PK.q1 = r1.data && r1.data[0] ? r1.data[0] : null;
+    PK.q2 = null;
+    if (PK.second && PK.to2) {
+      const r2 = await sb.rpc('quote_parcel', { p_from_zone: from, p_to_zone: PK.to2, p_weight_band: PK.band2, p_urgent: PK.urgent, p_second: true });
+      if (tok !== PK.tok) return;
+      PK.q2 = r2.data && r2.data[0] ? r2.data[0] : null;
+    }
+    if (!PK.q1 || !PK.q1.ok) { if (box) box.innerHTML = `<span style="color:var(--danger)">${esc((PK.q1 && PK.q1.message) || t('error'))}</span>`; if (btn) btn.disabled = true; return; }
+    if (PK.second && (!PK.q2 || !PK.q2.ok)) { if (box) box.innerHTML = `<span style="color:var(--danger)">${esc((PK.q2 && PK.q2.message) || t('pk_choose2'))}</span>`; if (btn) btn.disabled = true; return; }
+    const total = num(PK.q1.total_fee) + (PK.q2 ? num(PK.q2.total_fee) : 0);
+    if (box) box.innerHTML = `<div><b>${money(total)}</b><div class="muted" style="font-size:13px">${t('pk_cash_note')}</div></div><div style="font-size:26px">🛵</div>`;
+    if (btn) { btn.disabled = false; btn.textContent = `${t('pk_book')} — ${money(total)}`; }
+  } catch (e) { if (box) box.innerHTML = `<span style="color:var(--danger)">${t('error')}</span>`; }
+}
+async function showParcel(){
+  if (!PK) pkInitForm();
+  const v = $('view');
+  const myPhone = (state.profile && state.profile.phone) || '';
+  v.innerHTML = `
+  <div class="pkhead"><b>📦 ${t('pk_title')}</b><span>${t('pk_sub')}</span></div>
+  <div class="card">
+    <label class="f">${t('pk_from')}</label>
+    <select id="pkFrom" onchange="A.pkFrom(this.value)">${pkZoneOptions(PK.from)}</select>
+    <label class="f" style="margin-top:10px">${t('pk_pickd')}</label>
+    <div class="inpwrap"><input id="pkPickD" type="text" placeholder="${t('pk_pickd_ph')}"></div>
+    <label class="f" style="margin-top:10px">${t('pk_myphone')}</label>
+    <div class="inpwrap"><input id="pkMyPhone" type="tel" value="${esc(myPhone)}" placeholder="03xx-xxxxxxx"></div>
+  </div>
+  <div class="card">
+    <label class="f">${t('pk_to')}</label>
+    <select id="pkTo" onchange="A.pkTo(this.value)"><option value="">— ${t('pk_choose')} —</option>${pkZoneOptions(PK.to)}</select>
+    <label class="f" style="margin-top:10px">${t('pk_recv')}</label>
+    <div class="inpwrap"><input id="pkRecv" type="text" placeholder="${t('pk_recv_ph')}"></div>
+    <label class="f" style="margin-top:10px">${t('pk_phone')}</label>
+    <div class="inpwrap"><input id="pkPhone" type="tel" placeholder="03xx-xxxxxxx"></div>
+  </div>
+  <div class="card">
+    <label class="f">${t('pk_item')}</label>
+    <div id="pkItems" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    <label class="f" style="margin-top:12px">${t('pk_weight')}</label>
+    <div id="pkBands" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    <label class="f" style="margin-top:12px">${t('pk_speed')}</label>
+    <div id="pkSpeeds" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+  <div class="card">
+    <button type="button" class="pchip ${PK.second ? 'on' : ''}" onclick="A.pkSecond()">➕ ${t('pk_add2')}</button>
+    <div id="pkSecondBox" style="display:${PK.second ? 'block' : 'none'};margin-top:12px">
+      <label class="f">${t('pk_to')} (2)</label>
+      <select id="pkTo2" onchange="A.pkTo2(this.value)"><option value="">— ${t('pk_choose')} —</option>${pkZoneOptions(PK.to2)}</select>
+      <label class="f" style="margin-top:10px">${t('pk_recv')} (2)</label>
+      <div class="inpwrap"><input id="pkRecv2" type="text"></div>
+      <label class="f" style="margin-top:10px">${t('pk_phone')} (2)</label>
+      <div class="inpwrap"><input id="pkPhone2" type="tel" placeholder="03xx-xxxxxxx"></div>
+      <label class="f" style="margin-top:10px">${t('pk_item')} (2)</label>
+      <div id="pkItems2" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <label class="f" style="margin-top:10px">${t('pk_weight')} (2)</label>
+      <div id="pkBands2" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div class="muted" style="font-size:13px;margin-top:8px">${t('pk_second_note')}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="pkprice" id="pkPrice"><span class="muted">${t('pk_choose')}</span></div>
+    <button class="btn" id="pkBookBtn" style="width:100%;margin-top:12px;min-height:54px;font-size:17px" disabled onclick="A.pkBook()">${t('pk_book')}</button>
+  </div>
+  <h3 style="margin:18px 2px 10px">${t('pk_mine')}</h3>
+  <div id="pkMine"><div class="card"><span class="muted">…</span></div></div>`;
+  pkPaintChips();
+  pkQuote();
+  refreshPkMine();
+  pollTimer = setInterval(() => { if (currentRoute === 'parcel') refreshPkMine(); }, 12000);
+}
+
 // ================= ROUTER =================
 let pollTimer = null;
 function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
-const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account', 'offers', 'plus'];
+const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account', 'offers', 'plus', 'parcel'];
 async function route(soft){
   stopPoll();
   const h = location.hash.replace(/^#\/?/, '');
@@ -1701,6 +1868,7 @@ async function route(soft){
     else if (name === 'checkout') await showCheckout();
     else if (name === 'orders') await showOrders();
     else if (name === 'order') await showOrder(p[1]);
+    else if (name === 'parcel') await showParcel();
     else if (name === 'account') await showAccount();
     else if (name === 'saved') await showSaved();
     else if (name === 'offers') await showOffers();
@@ -3519,7 +3687,52 @@ const A = {
     const p = $('accProfile'), a = $('accAddresses');
     if (p) p.style.display = state.accSec === 'profile' ? 'block' : 'none';
     if (a) a.style.display = state.accSec === 'addresses' ? 'block' : 'none';
-  }
+  },
+  pkFrom(x){ PK.from = x; pkQuote(); },
+  pkTo(x){ PK.to = x; pkQuote(); },
+  pkTo2(x){ PK.to2 = x; pkQuote(); },
+  pkItem(x){ PK.item = x; pkPaintChips(); },
+  pkItem2(x){ PK.item2 = x; pkPaintChips(); },
+  pkBand(b){ PK.band = b; pkPaintChips(); pkQuote(); },
+  pkBand2(b){ PK.band2 = b; pkPaintChips(); pkQuote(); },
+  pkSpeed(u){ PK.urgent = !!u; pkPaintChips(); pkQuote(); },
+  pkSecond(){ PK.second = !PK.second; const b = $('pkSecondBox'); if (b) b.style.display = PK.second ? 'block' : 'none'; pkPaintChips(); pkQuote(); },
+  async pkCancelP(id){
+    if (!confirm(t('pk_cancel_q'))) return;
+    try { const { data } = await sb.rpc('cancel_parcel', { p_id: id, p_reason: 'customer' }); if (data && data[0] && data[0].ok) toast(t('pk_cancelled_ok')); else toast((data && data[0] && data[0].message) || t('error')); } catch (e) { toast(t('error')); }
+    refreshPkMine();
+  },
+  async pkBook(){
+    if (!PK || PK.busy) return;
+    const fz = pkZone(PK.from), tz = pkZone(PK.to);
+    const recv = ($('pkRecv') || {}).value || '', phone = ($('pkPhone') || {}).value || '', myphone = ($('pkMyPhone') || {}).value || '';
+    if (!fz || !tz) { toast(t('pk_choose')); return; }
+    if (!recv.trim() || !phone.trim()) { toast(t('pk_need_recv')); return; }
+    if (!myphone.trim()) { toast(t('pk_need_phone')); return; }
+    let second = null;
+    if (PK.second) {
+      const tz2 = pkZone(PK.to2), recv2 = ($('pkRecv2') || {}).value || '', phone2 = ($('pkPhone2') || {}).value || '';
+      if (!tz2 || !recv2.trim() || !phone2.trim()) { toast(t('pk_need_recv')); return; }
+      second = { drop_text: tz2.name, drop_lat: tz2.center_lat, drop_lng: tz2.center_lng, drop_zone: tz2.id, receiver_name: recv2.trim(), receiver_phone: phone2.trim(), item_type: PK.item2, weight_band: PK.band2 };
+    }
+    PK.busy = true;
+    const btn = $('pkBookBtn'); if (btn) btn.disabled = true;
+    try {
+      const pickD = (($('pkPickD') || {}).value || '').trim();
+      const { data, error } = await sb.rpc('create_parcel', {
+        p_pickup_text: fz.name + (pickD ? ' — ' + pickD : ''), p_pickup_lat: fz.center_lat, p_pickup_lng: fz.center_lng, p_pickup_zone: fz.id,
+        p_drop_text: tz.name, p_drop_lat: tz.center_lat, p_drop_lng: tz.center_lng, p_drop_zone: tz.id,
+        p_receiver_name: recv.trim(), p_receiver_phone: phone.trim(), p_item_type: PK.item, p_weight_band: PK.band,
+        p_urgent: PK.urgent, p_note: null, p_second: second, p_sender_phone: myphone.trim()
+      });
+      const r = data && data[0];
+      if (error || !r || !r.ok) { toast((r && r.message) || t('error')); PK.busy = false; if (btn) btn.disabled = false; return; }
+      toast(t('pk_sent_ok'));
+      PK = null; pkInitForm();
+      await showParcel();
+      window.scrollTo(0, document.body.scrollHeight);
+    } catch (e) { toast(t('error')); PK.busy = false; if (btn) btn.disabled = false; }
+  },
 };
 
 // ================= ALERTS: rider problems, arrival, failed delivery =================
