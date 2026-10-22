@@ -152,6 +152,7 @@ textarea{min-height:70px;resize:vertical}
 .check input{width:20px;height:20px}
 .actions{display:grid;gap:10px;margin-top:16px}
 .kv{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
+.glabel{font-size:12px;font-weight:800;letter-spacing:1.2px;color:var(--muted);margin:20px 2px 8px}.sharebar{display:flex;height:14px;border-radius:99px;overflow:hidden;margin:10px 0 4px;background:var(--soft)}.sharebar i{display:block;height:100%}.shareleg{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .kv.total{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:800;font-size:18px}
 .kv .neg{color:var(--danger)}
 .muted{color:var(--muted)}
@@ -671,7 +672,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.39';
+const APP_VERSION = '7.41';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1858,20 +1859,41 @@ function viewRegionPage(){
       ${c.contract_file_path ? `<div style="margin-top:8px">${img(c.contract_file_path, 'Contract paper')}</div>` : ''}
       ${c.notes ? `<div class="note" style="margin-top:8px">${esc(c.notes)}</div>` : ''}`
     : '<div class="muted" style="margin-top:6px">No partner file yet. Add the incharge details, CNIC and contract.</div>';
+  const keep = earn - share; const pct = num(x.hq_percent);
+  const barW = earn > 0 ? Math.max(0, Math.min(100, Math.round(keep / earn * 100))) : 100;
   return `<button class="linkbtn" style="padding-left:0" onclick="go('regions')">‹ Regions</button>
-    <h2>📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'}</h2>
-    <div class="card regcard"><b>${esc(state.regLabel || '')}</b>
-      <div class="nums"><div><b>${x.delivered}</b><span>Delivered</span></div><div><b>${money(x.sales)}</b><span>Sales</span></div><div><b>${money(earn)}</b><span>Platform earning</span></div></div>
-      <div class="nums"><div><b>${x.shops}</b><span>Shops</span></div><div><b>${x.riders}</b><span>Riders</span></div><div><b>${x.orders}</b><span>All orders</span></div></div>
-      ${fees ? `<div class="kv" style="margin-top:8px"><span class="muted">Shop monthly fees billed</span><span>${money(fees)}</span></div>` : ''}
-      <div class="kv" style="margin-top:8px"><span>Your share <small class="muted">(${num(x.hq_percent)}${esc(BASIS[basis])})</small></span><b>${money(share)}</b></div><div class="kv"><span class="muted">Partner keeps</span><span>${money(earn - share)}</span></div>
-      <div class="chips" style="margin-top:8px"><button class="chip ${!state.regMonthBack ? 'on' : ''}" onclick="A.regMonth(0)">This month</button><button class="chip ${state.regMonthBack === 1 ? 'on' : ''}" onclick="A.regMonth(1)">Last month</button></div>
-      <button class="btn block" style="margin-top:6px" onclick="A.viewRegion('${id}', true)">🔍 Open all data of ${esc(x.name)} (orders, shops, riders…)</button></div>
-    ${watchCard(x, ex)}
-    <div class="card"><div class="row-title">📁 Partner file <span class="pill">Only you can see this</span></div>${file}
-      <div class="two" style="margin-top:12px"><button class="btn" onclick="A.fileForm('${id}')">${c ? 'Edit partner file' : '+ Add partner file'}</button><button class="btn ghost" onclick="A.regionForm('${id}')">👤 Login and region</button></div></div>
-    ${pts.length ? `<div class="muted" style="font-size:13px">Admin login: ${pts.map(p => esc(p.email)).join(', ')}</div>` : '<div class="note">This region has no incharge login yet. Tap “Login and region” → Add incharge.</div>'}
-    ${state.oldFiles.length ? `<h3>Old partner files</h3>${state.oldFiles.map(o => `<div class="card"><b>${esc(o.partner_name || '')}</b><div class="row-sub">${esc(o.email || '')}${o.cnic ? ' · CNIC ' + esc(o.cnic) : ''}</div><div class="row-sub">${o.start_date ? esc(dLong(o.start_date)) + ' – ' + esc(dLong(o.end_date)) : ''} · saved ${when(o.created_at)}</div></div>`).join('')}` : ''}`;
+  <h2>📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'}</h2>
+  <div class="glabel">📊 REPORT — ${esc(state.regLabel || '')}</div>
+  <div class="card">
+    <div class="nums"><div><b>${x.delivered}</b><span>Delivered</span></div><div><b>${money(x.sales)}</b><span>Sales</span></div><div><b>${money(earn)}</b><span>Platform earning</span></div></div>
+    <div class="nums" style="margin-top:10px"><div><b>${x.shops}</b><span>Shops</span></div><div><b>${x.riders}</b><span>Riders</span></div><div><b>${x.orders}</b><span>All orders</span></div></div>
+    <div class="chips" style="margin-top:10px"><button class="chip ${!state.regMonthBack ? 'on' : ''}" onclick="A.regMonth(0)">This month</button><button class="chip ${state.regMonthBack === 1 ? 'on' : ''}" onclick="A.regMonth(1)">Last month</button></div>
+    <button class="btn block" style="margin-top:10px" onclick="A.viewRegion('${id}', true)">🔍 Open all data of ${esc(x.name)} (orders, shops, riders…)</button>
+  </div>
+  <div class="glabel">💰 SHARE</div>
+  <div class="card">
+    <div class="kv"><span class="muted">Platform earning</span><b>${money(earn)}</b></div>
+    ${earn > 0 ? `<div class="sharebar"><i style="width:${barW}%;background:var(--green,#3FA774)"></i><i style="width:${100 - barW}%;background:#E8722A"></i></div>
+    <div class="shareleg"><span>Partner keeps · ${money(keep)}</span><span>Your share ${pct}${esc(BASIS[basis])} · ${money(share)}</span></div>`
+    : `<div class="kv"><span class="muted">Your share (${pct}${esc(BASIS[basis])})</span><b>${money(share)}</b></div><div class="kv"><span class="muted">Partner keeps</span><span>${money(keep)}</span></div>`}
+    ${fees ? `<div class="kv" style="margin-top:6px"><span class="muted">Shop monthly fees billed</span><span>${money(fees)}</span></div>` : ''}
+  </div>
+  <div class="glabel">👁️ WATCH</div>
+  ${watchCard(x, ex)}
+  <div class="glabel">👤 INCHARGE — LOGIN</div>
+  <div class="card">
+    ${pts.length ? `<div class="kv"><span class="muted">Admin login</span><b>${pts.map(p => esc(p.email)).join(', ')}</b></div>
+    <button class="btn ghost block" style="margin-top:10px" onclick="A.regionForm('${id}')">👤 Login and region</button>`
+    : `<div class="note">This region has no incharge login yet.</div>
+    <button class="btn block" style="margin-top:10px" onclick="A.regionForm('${id}')">+ Add incharge</button>
+    <button class="btn ghost block" style="margin-top:8px" onclick="A.regionForm('${id}')">🗺️ Region settings (center · area · name)</button>`}
+  </div>
+  <div class="glabel">📁 PARTNER FILE</div>
+  <div class="card"><div class="row-title">📁 Partner file <span class="pill">Only you can see this</span></div>${file}
+    <div style="margin-top:12px"><button class="btn block" onclick="A.fileForm('${id}')">${c ? 'Edit partner file' : '+ Add partner file'}</button></div>
+  </div>
+  <div class="glabel">📂 OLD PARTNER FILES</div>
+  ${state.oldFiles.length ? state.oldFiles.map(o => `<div class="card"><b>${esc(o.partner_name || '')}</b><div class="row-sub">${esc(o.email || '')}${o.cnic ? ' · CNIC ' + esc(o.cnic) : ''}</div><div class="row-sub">${o.start_date ? esc(dLong(o.start_date)) + ' – ' + esc(dLong(o.end_date)) : ''} · saved ${when(o.created_at)}</div></div>`).join('') : '<div class="card"><div class="muted">No old partner files.</div></div>'}`;
 }
 
 // ================= RIDER IDs (made by the region office) =================
@@ -1992,7 +2014,9 @@ async function initAreaPicker(mapId, latIn, lngIn, kmIn, extraIn){
     const box = $(mapId); if (!box) return;
     box.innerHTML = '';
     const map = L.map(mapId).setView([lat, lng], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics' });
+    L.control.layers({ '🗺️ Map':osmLayer, '🛰️ Satellite':satLayer }, null, { position:'topright', collapsed:false }).addTo(map);
     let mk = L.marker([lat, lng], { draggable:true }).addTo(map);
     let circ = null;
     const mainKm = () => kmEl ? (parseFloat(kmEl.value) || 5) : 5;
@@ -2083,7 +2107,9 @@ async function drawOmap(){
     const shops = (state.restaurants || []).filter(r => r.lat != null);
     const c = pts[0] ? [pts[0].address_lat, pts[0].address_lng] : shops[0] ? [shops[0].lat, shops[0].lng] : [32.78, 72.7];
     const m = L.map(el).setView(c, 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(m);
+    const osmLayer2 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(m);
+    const satLayer2 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics' });
+    L.control.layers({ '🗺️ Map':osmLayer2, '🛰️ Satellite':satLayer2 }, null, { position:'topright', collapsed:false }).addTo(m);
     if (L.circleMarker){
       pts.forEach(o => L.circleMarker([o.address_lat, o.address_lng], { radius:9, stroke:false, fillColor:'#D23B2E', fillOpacity:.18 }).addTo(m));
       shops.forEach(r => L.circleMarker([r.lat, r.lng], { radius:7, color:'#fff', weight:2, fillColor:'#0B7D4F', fillOpacity:1 }).addTo(m).bindTooltip(r.name));
