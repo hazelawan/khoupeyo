@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.50';
+const APP_VERSION = '7.54';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1385,6 +1385,8 @@ function itemRow(i){
     <div class="side-sw"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="In stock"><span></span></label><small>${i.is_available ? 'In stock' : 'Out'}</small></div>
   </div>`;
 }
+const SEC_TYPES = { shirts:'👕 Shirts / T-Shirts', kurta:'👔 Kurta', shalwar:'👘 Shalwar Kameez', wascot:'🦺 Wascot', coat:'🧥 Coat / Jacket', burka:'🧕 Burka / Abaya (Girls)', pants:'👖 Pants', belt:'🎗️ Belt', socks:'🧦 Socks', shoes:'👟 Shoes / Chappal', kids:'🧒 Bachon ke Kapre', shawl:'🧣 Shawl / Dupatta', cap:'🧢 Cap / Topi', glasses:'🕶️ Glasses', watches:'⌚ Watches', bags:'👜 Bags', jewellery:'💍 Jewellery', toys:'🧸 Toys', fastfood:'🍔 Fast Food', desi:'🍛 Desi Khana', wazan:'⚖️ Wazan Wali Cheezain', dairy:'🥛 Dairy', drinks:'🥤 Cold Drinks', icecream:'🍦 Ice Cream', cake:'🎂 Cake', sweets:'🍬 Sweets / Mithai', packaged:'📦 Packaged', perfume:'🌸 Perfume / Attar', mobile:'📱 Mobile / Electronics', medical:'💊 Medical', pampers:'👶 Pampers / Diapers', machines:'🔌 Machines / Appliances', crockery:'🍽️ Crockery / Bartan', furniture:'🛋️ Furniture', undergarments:'🩲 Undergarments', books:'📚 Books / Stationery', services:'✂️ Services', general:'🗂️ Simple / Aam' };
+const secTypeName = k => SEC_TYPES[k] || SEC_TYPES.general;
 function viewProducts(){
   if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a shop first, then its products here.</div>';
   const opts = `<option value="all" ${state.menuRestaurant === 'all' ? 'selected' : ''}>All shops</option>` + state.restaurants.map(r => `<option value="${r.id}" ${r.id === state.menuRestaurant ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
@@ -1395,9 +1397,9 @@ function viewProducts(){
     body = `<div class="list menu-list">${items.map(itemRow).join('') || '<div class="empty">No products match.</div>'}</div>`;
   } else {
     const loose = items.filter(i => !state.categories.some(c => c.id === i.category_id));
-    const block = (title, catId, list) => `<div class="cat"><h3>${esc(title)} <span class="catcount">${list.length}</span></h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
+    const block = (title, catId, list, ctype) => `<div class="cat"><h3>${esc(title)} <span class="catcount">${list.length}</span>${ctype && ctype !== 'general' ? ' <span class="pill b">' + esc(secTypeName(ctype)) + '</span>' : ''}</h3>${catId ? `<button class="linkbtn" onclick="A.editCategory('${catId}')">Edit</button>` : ''}</div>
       <div class="list menu-list">${list.map(itemRow).join('') || '<div class="empty" style="padding:16px">No items in this section.</div>'}</div>`;
-    body = state.categories.map(c => block(c.name, c.id, items.filter(i => i.category_id === c.id))).join('') + (loose.length ? block('Other items', null, loose) : '');
+    body = state.categories.map(c => block(c.name, c.id, items.filter(i => i.category_id === c.id), c.type)).join('') + (loose.length ? block('Other items', null, loose) : '');
     if (!state.categories.length && !loose.length) body = '<div class="empty">This shop has no products. Add a section such as Burgers, then add items to it.</div>';
   }
   const pending = state.items.filter(i => !i.is_approved).length;
@@ -3336,13 +3338,14 @@ const A = {
     const c = state.categories.find(x => x.id === id);
     openSheet(c ? 'Edit section' : 'Add section', `
       <label class="f" for="c_name">Section name</label><input id="c_name" type="text" value="${esc(c?.name)}" placeholder="Burgers">
+      <label class="f" for="c_type">Section type</label><select id="c_type">${Object.entries(SEC_TYPES).map(([k, v]) => '<option value="' + k + '" ' + (((c && c.type) || 'general') === k ? 'selected' : '') + '>' + v + '</option>').join('')}</select>
       <div class="actions"><button class="btn block" onclick="A.saveCategory('${id || ''}')">Save section</button>
       ${c ? `<button class="btn warn block" onclick="A.deleteCategory('${id}')">Delete section and its products</button>` : ''}</div>`);
   },
   async saveCategory(id){
     const name = $('c_name').value.trim(); if (!name) return toast('Enter a section name', true);
     await run(async () => {
-      need(await (id ? sb.from('menu_categories').update({ name }).eq('id', id) : sb.from('menu_categories').insert({ name, restaurant_id:state.menuRestaurant, sort_order:state.categories.length + 1 })));
+      need(await (id ? sb.from('menu_categories').update({ name, type:($('c_type') || {}).value || 'general' }).eq('id', id) : sb.from('menu_categories').insert({ name, type:($('c_type') || {}).value || 'general', restaurant_id:state.menuRestaurant, sort_order:state.categories.length + 1 })));
       await loadProducts(); closeSheet(); renderTab(); toast('Section saved');
     });
   },
