@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.45';
+const APP_VERSION = '6.46';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -817,7 +817,7 @@ const I18N = {
     sub_lbl:'If out of stock', sub_similar:'give something similar', sub_call:'call the customer', sub_remove:'remove it', rx_see:'💊 See prescription', print_b:'🖨️ Print',
     offer_t:'Your shop offer', offer_s:'Give a discount on your shop. You pay it (it is taken from your earning). Customers see it on your shop.', offer_on:'Offer is on', offer_pct:'Discount %', offer_min:'Minimum order (Rs)', offer_max:'Max discount (Rs, 0 = no limit)', save_offer:'Save offer',
     pick_on:'Customers can collect orders themselves (pickup)', pick_s:'No rider. Customer comes to your shop and shows a code.', shop_disc:'Shop offer', brk:'Break', add_brk:'+ Add break', jumma:'🕌 Jumma break', brk_from:'Break from', brk_to:'to', open24:'⏰ Open 24 hours', in_break:'On break now. Customers can order again at {t}.', hrs_bad:'{d}: the break must be inside the open time',
-    my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', shop_dashboard:'Shop dashboard', back_shop:'‹ Back to my shop', back_kind:'‹ Back', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 5)', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
+    my_shops:'My shops', add_shop:'+ Add another shop', switch_shop:'Switch shop', shop_dashboard:'Shop dashboard', back_shop:'‹ Back to my shop', back_kind:'‹ Back', new_at:'🛎️ New order at {s}', open_it2:'Open', shop_pending:'Request for “{s}” is with the office', see_req:'See request', other_new:'{n} new order(s) at your other shop', photo_mode:'Photo mode', photo:'Photo', more_photos:'More photos (up to 10)', photo_limit:'Maximum 10 more photos', add_photos:'📷 Add more photos', stock_qty:'How many in stock?', stock_note:'Leave empty if there is no limit. When it reaches 0 the product goes “Out of stock” by itself. Orders lower it, cancelled orders put it back.', stock_n:'Stock: {n}',
     hours_t:'Timings for each day', same_all:'Copy Monday to all days', day_open:'Open', day_closed:'Closed', all_day_note:'Same open and close time = open all day.',
     m_timings:'Shop Timings & Breaks', m_timings_s:'Opening hours for each day', m_profile:'Shop Profile & Location', m_profile_s:'Name, address, logo, location', shop_name:'Shop name', m_orderset:'Order & Pickup Settings', m_orderset_s:'Auto-accept, pickup, shop type', m_offer2:'Shop Discount Offer', m_offer2_s:'Your discount for customers', m_booking2:'Bookings Settings', m_booking2_s:'Chairs, grace time', m_staff2:'Staff Logins', m_staff2_s:'Worker accounts', m_payout2:'Bank / JazzCash Account', m_payout2_s:'Where you get paid',
     today_hours:'Today', mode_same:'Same time every day', mode_diff:'Different time per day',
@@ -901,7 +901,7 @@ const I18N = {
     sub_lbl:'چیز ختم ہو تو', sub_similar:'ملتی جلتی دے دیں', sub_call:'گاہک کو کال کریں', sub_remove:'ہٹا دیں', rx_see:'💊 نسخہ دیکھیں', print_b:'🖨️ پرنٹ',
     offer_t:'آپ کی دکان کی آفر', offer_s:'اپنی دکان پر رعایت دیں۔ یہ آپ دیں گے (آپ کی کمائی سے کٹے گی)۔ گاہک کو دکان پر نظر آئے گی۔', offer_on:'آفر چالو ہے', offer_pct:'رعایت %', offer_min:'کم از کم آرڈر (روپے)', offer_max:'زیادہ سے زیادہ رعایت (0 = کوئی حد نہیں)', save_offer:'آفر محفوظ کریں',
     pick_on:'گاہک خود آرڈر لے جا سکتے ہیں (پک اپ)', pick_s:'رائیڈر نہیں۔ گاہک دکان پر آ کر کوڈ دکھائے گا۔', shop_disc:'دکان کی آفر', brk:'وقفہ', add_brk:'+ وقفہ شامل کریں', jumma:'🕌 جمعہ کا وقفہ', brk_from:'وقفہ', brk_to:'سے', open24:'⏰ 24 گھنٹے کھلی', in_break:'ابھی وقفہ ہے۔ گاہک {t} سے دوبارہ آرڈر کر سکیں گے۔', hrs_bad:'{d}: وقفہ کھلنے کے وقت کے اندر ہونا چاہیے',
-    my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', shop_dashboard:'دکان کا ڈیش بورڈ', back_shop:'‹ اپنی دکان پر واپس', back_kind:'‹ واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (5 تک)', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
+    my_shops:'میری دکانیں', add_shop:'+ ایک اور دکان شامل کریں', switch_shop:'دکان بدلیں', shop_dashboard:'دکان کا ڈیش بورڈ', back_shop:'‹ اپنی دکان پر واپس', back_kind:'‹ واپس', new_at:'🛎️ {s} پر نیا آرڈر', open_it2:'کھولیں', shop_pending:'”{s}“ کی درخواست دفتر کے پاس ہے', see_req:'درخواست دیکھیں', other_new:'آپ کی دوسری دکان پر {n} نئے آرڈر', photo_mode:'فوٹو موڈ', photo:'تصویر', more_photos:'مزید تصویریں (10 تک)', photo_limit:'زیادہ سے زیادہ 10 مزید تصویریں', add_photos:'📷 مزید تصویریں لگائیں', stock_qty:'اسٹاک میں کتنے ہیں؟', stock_note:'کوئی حد نہیں تو خالی چھوڑ دیں۔ 0 ہونے پر پروڈکٹ خود ”ختم ہے“ ہو جائے گی۔ آرڈر سے کم ہوں گے، منسوخ آرڈر سے واپس آ جائیں گے۔', stock_n:'اسٹاک: {n}',
     hours_t:'ہر دن کے اوقات', same_all:'پیر والا وقت سب دنوں پر لگائیں', day_open:'کھلی', day_closed:'بند', all_day_note:'کھلنے اور بند ہونے کا ایک ہی وقت = سارا دن کھلی۔',
     m_timings:'دکان کے اوقات اور وقفے', m_timings_s:'ہر دن کے کھلنے کے اوقات', m_profile:'دکان کی پروفائل اور جگہ', m_profile_s:'نام، پتہ، لوگو، لوکیشن', shop_name:'دکان کا نام', m_orderset:'آرڈر اور پک اپ سیٹنگ', m_orderset_s:'آٹو قبول، پک اپ، دکان کی قسم', m_offer2:'دکان کی رعایت آفر', m_offer2_s:'گاہکوں کے لیے آپ کی رعایت', m_booking2:'بکنگ سیٹنگ', m_booking2_s:'کرسیاں، رعایتی وقت', m_staff2:'عملے کے لاگ اِن', m_staff2_s:'ورکرز کے اکاؤنٹس', m_payout2:'بینک / جیزکیش اکاؤنٹ', m_payout2_s:'آپ کو پیسے کہاں ملیں گے',
     today_hours:'آج', mode_same:'ہر روز ایک ہی وقت', mode_diff:'ہر دن کا الگ وقت',
@@ -2851,7 +2851,7 @@ const A = {
   addBSlot(i){ state._bslotIdx = i; const inp = $('i_bslot'); if (inp) inp.click(); },
   bslotFile(inp){ const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return; if (!Array.isArray(state.bslots)) state.bslots = []; state.bslots[state._bslotIdx || 0] = { t:'a', v:f }; drawBSlots(); },
   rmBSlot(i){ if (Array.isArray(state.bslots)) state.bslots[i] = null; drawBSlots(); },
-  morePhotos(inp){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); TF.syncPics(); },
+  morePhotos(inp){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); const room = 10 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(room <= 0 ? t('photo_limit') : t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); TF.syncPics(); },
   rmPhoto(w, k){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); TF.picRemoved(w, k); if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); TF.syncPics(); },
   busyMenu(){ openSheet(t('busy_b'), `<div class="muted" style="margin-bottom:10px">${t('busy_t')}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">${[15, 30, 60].map(m => `<button class="btn ghost" onclick="A.setBusy(${m})">${t('mins').replace('{n}', m)}</button>`).join('')}</div>`); },
   async setBusy(m){
@@ -3030,8 +3030,8 @@ const A = {
       const st = $('i_stock').value.trim(); row.stock_qty = st === '' ? null : Math.max(0, Math.round(num(st)));
       const pics = (state.pics || { old:[], add:[] }); const up = [];
       for (const pf of pics.add) up.push(await uploadImage(pf, 'items'));
-      row.photos = pics.old.concat(up).slice(0, 5);
-      const slots = (Array.isArray(state.bslots) ? state.bslots : []).slice(0, 5); const barr = [];
+      row.photos = pics.old.concat(up).slice(0, 10);
+      const slots = (Array.isArray(state.bslots) ? state.bslots : []).slice(0, 11); const barr = [];
       for (const sl of slots) barr.push(!sl ? null : (sl.t === 'o' ? sl.v : await uploadImage(sl.v, 'items')));
       while (barr.length && barr[barr.length - 1] === null) barr.pop();
       row.back_photos = barr;
