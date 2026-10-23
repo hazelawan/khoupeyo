@@ -1061,7 +1061,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.59';
+const APP_VERSION = '5.60';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1101,7 +1101,7 @@ const I18N = {
     address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
     addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location', add_loc:'📍 Add location pin',
     location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
-    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', rail_hint:'Swipe — the middle one is selected', rail_back:'Back side', rail_flip:'See back', add_for:'Add · {p}', choose_options:'Choose options',
+    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_done:'✔ Done', opt_added:'Added to cart:', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', rail_hint:'Swipe — the middle one is selected', rail_back:'Back side', rail_flip:'See back', add_for:'Add · {p}', choose_options:'Choose options',
     finding_addr:'Finding your address…', addr_filled:'✅ Address filled from your location. Add house number or landmark below.', addr_not_found:'Could not find the address name. Please write it yourself.', home_word:'Home',
     pin_hint:'Drag the pin or tap the map to mark your door. This helps the rider find you.', pin_set:'📍 Location marked on map', map_loading:'Loading map…', map_fail:'Map could not load. Use “Use my location” instead.',
     rider_km:'Rider is {km} km away', shop_km:'📍 Shop is {km} from your address', live_map:'Live tracking', you:'You', shop_word:'Shop', rider_word:'Rider',
@@ -1225,7 +1225,7 @@ const I18N = {
     address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
     addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں', add_loc:'📍 لوکیشن پن لگائیں',
     location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
-    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', rail_hint:'انگلی سے سرکائیں — بیچ والا منتخب ہے', rail_back:'پیچھے سے', rail_flip:'پیچھے دیکھیں', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
+    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_done:'✔ ہو گیا', opt_added:'کارٹ میں شامل ہو گیا:', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', rail_hint:'انگلی سے سرکائیں — بیچ والا منتخب ہے', rail_back:'پیچھے سے', rail_flip:'پیچھے دیکھیں', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
     finding_addr:'آپ کا پتہ ڈھونڈا جا رہا ہے…', addr_filled:'✅ لوکیشن سے پتہ لکھ دیا گیا۔ نیچے مکان نمبر یا نشانی لکھیں۔', addr_not_found:'پتے کا نام نہیں ملا۔ براہ کرم خود لکھیں۔', home_word:'گھر',
     pin_hint:'پن کو کھینچیں یا نقشے پر ٹیپ کر کے اپنا دروازہ نشان لگائیں۔ اس سے رائیڈر آسانی سے پہنچے گا۔', pin_set:'📍 نقشے پر لوکیشن لگ گئی', map_loading:'نقشہ لوڈ ہو رہا ہے…', map_fail:'نقشہ نہیں کھل سکا۔ ”میری لوکیشن“ استعمال کریں۔',
     rider_km:'رائیڈر {km} کلومیٹر دور ہے', shop_km:'📍 دکان آپ کے پتے سے {km} دور ہے', live_map:'لائیو ٹریکنگ', you:'آپ', shop_word:'دکان', rider_word:'رائیڈر',
@@ -1397,7 +1397,7 @@ const cartQtyOf = id => state.cart.items.filter(c => c.id === id).reduce((n, c) 
 async function loadOptItems(){ try { const { data } = await sb.from('menu_option_groups').select('menu_item_id'); (data || []).forEach(g => state.optItems.add(g.menu_item_id)); } catch (e) {} }
 async function loadOptions(id){
   if (state.optCache[id]) return state.optCache[id];
-  const g = need(await sb.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg)').eq('menu_item_id', id).order('sort_order').order('created_at'));
+  const g = need(await sb.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,created_at,menu_options(id,name,price,is_available,sort_order,weight_kg,sizes)').eq('menu_item_id', id).order('sort_order').order('created_at'));
   g.forEach(x => { x.menu_options = (x.menu_options || []).sort((a, b) => a.sort_order - b.sort_order || num(a.price) - num(b.price)); });
   state.optCache[id] = g; if (g.length) state.optItems.add(id);
   return g;
@@ -2461,6 +2461,24 @@ function railPics(item){ return [item.photo_url].concat(Array.isArray(item.photo
 function isClothes(item){ const c = ((item.category && item.category.name) || '').toLowerCase(); return CLOTH_KEYS.some(k => c.includes(k)); }
 function railFor(item){ if (!item || railPics(item).length < 2) return false; return isClothes(item) || galOptsFor(item).length >= 2; }
 const isColorGroup = g => /rang|color|colour|design/i.test(g.name || '');
+function colourSizeSet(groups, sel){
+  const cg = (groups || []).find(g => isColorGroup(g)); if (!cg) return null;
+  const oid = sel && sel[cg.id] && sel[cg.id][0]; if (!oid) return null;
+  const o = (cg.menu_options || []).find(x => x.id === oid);
+  if (!o || !Array.isArray(o.sizes) || !o.sizes.length) return null;
+  return new Set(o.sizes.map(x => String(x).trim().toLowerCase()));
+}
+function optVisible(g, groups, s){
+  if (isColorGroup(g)) return g.menu_options;
+  const cs = colourSizeSet(groups, s.sel);
+  if (!cs) return g.menu_options;
+  return g.menu_options.filter(o => cs.has(String(o.name).trim().toLowerCase()));
+}
+function pruneOptSel(){
+  const s = state.optSel; if (!s) return; const groups = state.optCache[s.id] || [];
+  const cs = colourSizeSet(groups, s.sel); if (!cs) return;
+  groups.forEach(g => { if (isColorGroup(g)) return; s.sel[g.id] = (s.sel[g.id] || []).filter(oid => { const o = g.menu_options.find(x => x.id === oid); return o && cs.has(String(o.name).trim().toLowerCase()); }); });
+}
 const COLOR_DOTS = [['navy','#1D3557'],['maroon','#7B1E26'],['red','#D42B1E'],['laal','#D42B1E'],['لال','#D42B1E'],['blue','#2456C8'],['neel','#2456C8'],['نیلا','#2456C8'],['green','#1E9E50'],['har','#1E9E50'],['sabz','#1E9E50'],['سبز','#1E9E50'],['black','#232323'],['kal','#232323'],['کالا','#232323'],['yellow','#F2B705'],['peel','#F2B705'],['پیلا','#F2B705'],['white','#FFFFFF'],['safed','#FFFFFF'],['سفید','#FFFFFF'],['orange','#F97316'],['narangi','#F97316'],['pink','#EC4899'],['gulabi','#EC4899'],['گلابی','#EC4899'],['purple','#7C3AED'],['baingani','#7C3AED'],['brown','#8B5A2B'],['bhoora','#8B5A2B'],['grey','#8A8F98'],['gray','#8A8F98'],['surmai','#8A8F98']];
 function colorCss(name){ const n = String(name || '').toLowerCase(); for (const [k, v] of COLOR_DOTS) if (n.includes(k)) return v; return '#C9CDD4'; }
 function galBacks(item){ if (!item || !Array.isArray(item.back_photos)) return []; return item.back_photos; }
@@ -3197,19 +3215,21 @@ async function showAccount(){
 // ================= PRODUCT OPTIONS SHEET =================
 function drawOptions(){
   const s = state.optSel; const el = $('optBody'); if (!s || !el) return;
+  pruneOptSel();
   const groups = state.optCache[s.id] || []; const it = getItem(s.id) || {};
   let extra = 0;
+  const addedH = (s.added && s.added.length) ? `<div class="note" style="margin-bottom:10px"><b>${t('opt_added')}</b><br>${s.added.map(x => '✔ ' + esc(x)).join('<br>')}</div>` : '';
   const html = groups.map(g => {
     const sel = s.sel[g.id] || []; const single = g.max_select === 1;
     const rule = g.min_select >= 1 ? (single ? t('opt_pick1') : (g.min_select === g.max_select ? t('opt_pickn', { n:g.min_select }) : t('opt_upto', { n:g.max_select }))) : (single ? t('opt_pick1') : t('opt_upto', { n:g.max_select }));
     return `<div class="optgrp"><h4>${esc(g.name)} <small class="${g.min_select ? 'req' : ''}">${g.min_select ? t('opt_required') : t('opt_optional')} · ${rule}</small></h4>
-      ${g.menu_options.map(o => { const on = sel.includes(o.id); if (on) extra += num(o.price);
+      ${optVisible(g, groups, s).map(o => { const on = sel.includes(o.id); if (on) extra += num(o.price);
         return `<label class="optrow ${o.is_available ? '' : 'na'}"><input type="${single ? 'radio' : 'checkbox'}" name="g${g.id}" ${on ? 'checked' : ''} onclick="event.preventDefault();A.optPick('${g.id}','${o.id}')"><span>${esc(o.name)}${num(o.weight_kg) ? ` <span class="muted" style="font-size:12px">· ${kgText(o.weight_kg)}</span>` : ''}</span><b>${num(o.price) ? '+' + money(o.price) : ''}</b></label>`; }).join('')}</div>`;
   }).join('');
   const unit = num(it.price) + extra;
-  el.innerHTML = `${it.description ? `<p class="muted" style="margin-top:0">${esc(it.description)}</p>` : ''}${html}
+  el.innerHTML = `${it.description ? `<p class="muted" style="margin-top:0">${esc(it.description)}</p>` : ''}${addedH}${html}
     <div style="display:flex;gap:10px;align-items:center;margin-top:14px"><div class="stepper"><button onclick="A.optQty(-1)" aria-label="-">−</button><b>${s.qty}</b><button onclick="A.optQty(1)" aria-label="+">+</button></div>
-    <button class="btn" style="flex:1" onclick="A.optAdd()">${t('add_for', { p:money(unit * s.qty) })}</button></div>`;
+    <button class="btn" style="flex:1" onclick="A.optAdd()">${t('add_for', { p:money(unit * s.qty) })}</button>${s.added && s.added.length ? `<button class="btn ghost" style="flex:none" onclick="A.optDone()">${t('opt_done')}</button>` : ''}</div>`;
 }
 
 // ================= OFFERS =================
@@ -3485,8 +3505,9 @@ const A = {
     const it = getItem(id); if (!it) return;
     let groups; try { groups = await loadOptions(id); } catch (e) { return toast(niceErr(e), true); }
     if (!groups.length){ state.optItems.delete(id); return A.add(id); }
-    state.optSel = { id, qty:qty || 1, sel:{} };
-    groups.forEach(g => { state.optSel.sel[g.id] = []; if (g.min_select >= 1 && g.max_select === 1){ let pick = null; const it2 = getItem(id); if (state.galPid === id && it2 && railFor(it2) && isColorGroup(g) && g.menu_options.length === railPics(it2).length){ const cand = g.menu_options[state.galIdx || 0]; if (cand && cand.is_available) pick = cand; } const first = pick || g.menu_options.find(o => o.is_available); if (first) state.optSel.sel[g.id] = [first.id]; } });
+    state.optSel = { id, qty:qty || 1, sel:{}, added: [] };
+    groups.forEach(g => { state.optSel.sel[g.id] = []; if (g.min_select >= 1 && g.max_select === 1){ let pick = null; const it2 = getItem(id); if (state.galPid === id && it2 && railFor(it2) && isColorGroup(g) && g.menu_options.length === railPics(it2).length){ const cand = g.menu_options[state.galIdx || 0]; if (cand && cand.is_available) pick = cand; } const first = pick || g.menu_options.find(o => { if (!o.is_available) return false; if (isColorGroup(g)) return true; const cs = colourSizeSet(groups, state.optSel.sel); return !cs || cs.has(String(o.name).trim().toLowerCase()); }); if (first) state.optSel.sel[g.id] = [first.id]; } });
+    state.optSel.defSel = JSON.parse(JSON.stringify(state.optSel.sel));
     openSheet(it.name, `<div id="optBody"></div>`); drawOptions();
   },
   optPick(gid, oid){
@@ -3496,20 +3517,27 @@ const A = {
     else if (cur.includes(oid)) s.sel[gid] = cur.filter(x => x !== oid);
     else if (cur.length < g.max_select) s.sel[gid] = cur.concat(oid);
     else return toast(t('opt_upto', { n:g.max_select }), true);
+    pruneOptSel();
     drawOptions();
   },
   optQty(d){ const s = state.optSel; if (!s) return; s.qty = Math.max(1, Math.min(50, s.qty + d)); drawOptions(); },
   async optAdd(){
     const s = state.optSel; if (!s) return; const groups = state.optCache[s.id] || []; const it = getItem(s.id);
+    pruneOptSel();
     for (const g of groups){ if ((s.sel[g.id] || []).length < g.min_select) return toast(t('opt_need', { g:g.name }), true); }
     const chosen = []; groups.forEach(g => (s.sel[g.id] || []).forEach(oid => { const o = g.menu_options.find(x => x.id === oid); if (o) chosen.push(o); }));
     const extra = chosen.reduce((n, o) => n + num(o.price), 0);
     if (await A.addToCart(it, s.qty, { ids:chosen.map(o => o.id), extra, text:chosen.map(o => o.name).join(', '), w:chosen.reduce((n, o) => n + num(o.weight_kg), 0) })){
-      closeSheet(); toast(`${it.name} × ${s.qty} ✓`);
       const el = $('ctl-' + s.id); if (el) el.innerHTML = ctlHtml(it);
       state.qty = 1; const q = $('qtyN'); if (q) q.textContent = 1;
+      if (groups.some(g => isColorGroup(g))){
+        s.added = s.added || []; s.added.push(chosen.map(o => o.name).join(', ') + ' × ' + s.qty);
+        s.qty = 1; s.sel = JSON.parse(JSON.stringify(s.defSel || {})); pruneOptSel();
+        toast(`${it.name} ✓`); drawOptions();
+      } else { closeSheet(); toast(`${it.name} × ${s.qty} ✓`); }
     }
   },
+  optDone(){ const s = state.optSel; closeSheet(); if (s){ const it = getItem(s.id); const el = $('ctl-' + s.id); if (it && el) el.innerHTML = ctlHtml(it); } state.qty = 1; const q = $('qtyN'); if (q) q.textContent = 1; },
   // ---- Offers and invite ----
   galChip(i){ const c = $('dgal'); if (!c || !c.children[i]) return; const card = c.children[i]; c.scrollTo({ left: card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' }); },
   galFlip1(btn){ const wrap = btn.parentElement; const im = wrap.querySelector('img'); const bb = wrap.querySelector('.rlback'); if (!im) return;
