@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.58';
+const APP_VERSION = '7.59';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -814,15 +814,15 @@ function previewFile(input, imgId){ const f = input.files && input.files[0]; if 
 async function removeBg(inputId, prevId){
   const inp = $(inputId); const f = inp.files && inp.files[0];
   const msg0 = $('bgRmMsg');
-  if (!f){ if (msg0) msg0.textContent = '⚠️ Pehle photo select karo'; return; }
-  if (msg0) msg0.textContent = '⏳ AI kaam kar raha hai...';
+  if (!f){ if (msg0) msg0.textContent = state.lang === 'ur' ? '⚠️ پہلے تصویر منتخب کریں' : '⚠️ Select a photo first'; return; }
+  if (msg0) msg0.textContent = state.lang === 'ur' ? '⏳ AI کام کر رہا ہے…' : '⏳ AI is working...';
   try {
     const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
     const blob = await removeBackground(f);
     const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
     const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
     $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
-    if (msg0) msg0.textContent = '✅ Background remove ho gaya!';
+    if (msg0) msg0.textContent = state.lang === 'ur' ? '✅ بیک گراؤنڈ ہٹا دیا گیا!' : '✅ Background removed!';
   } catch(e){ if (msg0) msg0.textContent = '❌ Failed: ' + (e.message || e); }
 }
 async function signedUrls(paths){
@@ -1188,7 +1188,7 @@ function orderFileHtml(f){
   return `
     <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${f.status})">${LABEL[f.status] || f.status}</span> <span class="muted">${when(f.created_at)}</span></div>
     ${f.minutes != null ? `<div class="kv"><span class="muted">⏱️ Delivery time (pickup → door)</span><span>${hours(f.minutes)}</span></div>` : ''}
-    <div class="card"><b>${esc(c.name || 'Customer')}</b>${c.phone ? ` <a href="tel:${esc(c.phone)}">${esc(c.phone)}</a> · <a href="${waLink(c.phone, 'Assalam o Alaikum! Aap ke Dera order #' + (f.code || '') + ' ke bare mein rabta hai.')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+    <div class="card"><b>${esc(c.name || 'Customer')}</b>${c.phone ? ` <a href="tel:${esc(c.phone)}">${esc(c.phone)}</a> · <a href="${waLink(c.phone, state.lang === 'ur' ? 'السلام علیکم! آپ کے Dera آرڈر #' + (f.code || '') + ' کے بارے میں رابطہ ہے۔' : 'Hello! I am contacting you about your Dera order #' + (f.code || '') + '.')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
       ${f.zone_name ? `<div class="muted" style="margin-top:4px">📍 ${esc(f.zone_name)}</div>` : ''}
       <div class="muted" style="margin-top:4px">${esc(f.address_text || 'No address')}</div></div>
     ${f.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : f.order_type === 'dinein' ? '<div class="note" style="border-color:#F8590A">🍽️ <b>DINE-IN</b> — the customer eats at the restaurant. No rider, no delivery fee.</div>' : ''}
@@ -1385,7 +1385,7 @@ function itemRow(i){
     <div class="side-sw"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="In stock"><span></span></label><small>${i.is_available ? 'In stock' : 'Out'}</small></div>
   </div>`;
 }
-const SEC_TYPES = { shirts:'👕 Shirts / T-Shirts', kurta:'👔 Kurta', shalwar:'👘 Shalwar Kameez', wascot:'🦺 Wascot', coat:'🧥 Coat / Jacket', burka:'🧕 Burka / Abaya (Girls)', pants:'👖 Pants', belt:'🎗️ Belt', socks:'🧦 Socks', shoes:'👟 Shoes / Chappal', kids:'🧒 Bachon ke Kapre', shawl:'🧣 Shawl / Dupatta', cap:'🧢 Cap / Topi', glasses:'🕶️ Glasses', watches:'⌚ Watches', bags:'👜 Bags', jewellery:'💍 Jewellery', toys:'🧸 Toys', fastfood:'🍔 Fast Food', desi:'🍛 Desi Khana', wazan:'⚖️ Wazan Wali Cheezain', dairy:'🥛 Dairy', drinks:'🥤 Cold Drinks', icecream:'🍦 Ice Cream', cake:'🎂 Cake', sweets:'🍬 Sweets / Mithai', packaged:'📦 Packaged', perfume:'🌸 Perfume / Attar', mobile:'📱 Mobile / Electronics', medical:'💊 Medical', pampers:'👶 Pampers / Diapers', machines:'🔌 Machines / Appliances', crockery:'🍽️ Crockery / Bartan', furniture:'🛋️ Furniture', undergarments:'🩲 Undergarments', books:'📚 Books / Stationery', services:'✂️ Services', general:'🗂️ Simple / Aam' };
+const SEC_TYPES = { shirts:'👕 Shirts / T-Shirts', kurta:'👔 Kurta', shalwar:'👘 Shalwar Kameez', wascot:'🦺 Wascot', coat:'🧥 Coat / Jacket', burka:'🧕 Burka / Abaya (Girls)', pants:'👖 Pants', belt:'🎗️ Belt', socks:'🧦 Socks', shoes:'👟 Shoes / Chappal', kids:'🧒 Bachon ke Kapre', shawl:'🧣 Shawl / Dupatta', cap:'🧢 Cap / Topi', glasses:'🕶️ Glasses', watches:'⌚ Watches', bags:'👜 Bags', jewellery:'💍 Jewellery', toys:'🧸 Toys', fastfood:'🍔 Fast Food', desi:'🍛 Desi Khana', wazan:'⚖️ Weighable Items', dairy:'🥛 Dairy', drinks:'🥤 Cold Drinks', icecream:'🍦 Ice Cream', cake:'🎂 Cake', sweets:'🍬 Sweets / Mithai', packaged:'📦 Packaged', perfume:'🌸 Perfume / Attar', mobile:'📱 Mobile / Electronics', medical:'💊 Medical', pampers:'👶 Pampers / Diapers', machines:'🔌 Machines / Appliances', crockery:'🍽️ Crockery / Bartan', furniture:'🛋️ Furniture', undergarments:'🩲 Undergarments', books:'📚 Books / Stationery', services:'✂️ Services', general:'🗂️ Simple / Aam' };
 const secTypeName = k => SEC_TYPES[k] || SEC_TYPES.general;
 function viewProducts(){
   if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a shop first, then its products here.</div>';
@@ -1849,7 +1849,7 @@ function viewRegions(){
       <div class="row-title">📍 ${esc(x.name)} ${x.is_active ? '<span class="pill g">Live</span>' : '<span class="pill">Off</span>'} ${regContractPill(state.contracts[x.region_id])}</div>
       <div class="row-sub">👤 ${p.length ? esc(p.map(y => y.full_name || y.email).join(', ')) : '<b class="red">No incharge yet</b>'} · ${x.shops} shops · ${x.riders} riders</div>
       <div class="regline"><span>${x.delivered} delivered · ${money(x.sales)} sales</span><b>Your share ${money(share)}</b></div>
-      <span class="regtog ${x.is_active ? 'off' : 'on'}" onclick="event.stopPropagation();A.regionToggle('${x.region_id}', ${x.is_active ? 'false' : 'true'})">${x.is_active ? '⏸ Off karo' : '▶ Live karo'}</span>
+      <span class="regtog ${x.is_active ? 'off' : 'on'}" onclick="event.stopPropagation();A.regionToggle('${x.region_id}', ${x.is_active ? 'false' : 'true'})">${x.is_active ? (state.lang === 'ur' ? '⏸ بند کریں' : '⏸ Turn off') : (state.lang === 'ur' ? '▶ لائیو کریں' : '▶ Make live')}</span>
       <span class="go">›</span></button>`;
   };
   return `${backLink()}<h2>🌍 Regions and partners</h2>
@@ -1969,7 +1969,7 @@ function riderIdBlock(id, rider, r){
     ${cur ? `<div style="margin-top:4px">👤 Used by <b>${esc(cur.name)}</b>${cur.phone ? ` · <a href="tel:${esc(cur.phone)}">${esc(cur.phone)}</a>` : ''}${cur.cnic ? ' · CNIC ' + esc(cur.cnic) : ''}</div>
       <div class="muted" style="font-size:13px">Since ${esc(dayName(cur.started_at))} · ${cur.deliveries} deliveries · ${money(cur.earned)} earned with this ID</div>` : ''}
     ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> · Password: set hai ✔</span></div>` : ''}
-    ${state.riderMustChange ? `<div class="note" style="margin-top:8px;font-size:13px">⚠️ Temporary password — rider ne abhi apna password change nahi kiya</div>` : ''}
+    ${state.riderMustChange ? `<div class="note" style="margin-top:8px;font-size:13px">${state.lang === 'ur' ? '⚠️ عارضی پاس ورڈ — رائیڈر نے ابھی اپنا پاس ورڈ تبدیل نہیں کیا' : '⚠️ Temporary password — the rider has not changed their password yet'}</div>` : ''}
     ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>
       <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.holderForm('${id}')">✏️ Name, phone, CNIC</button>${/^[A-Z0-9]+-\d{1,3}$/.test(rider.rider_code || '') ? `<button class="btn warn small" onclick="A.renewIdForm('${id}')">🔒 Make ID stronger</button>` : '<span></span>'}</div>` : ''}
     ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
@@ -2829,8 +2829,8 @@ function setPointsCard(s){
     <b>🏆 Dera Points — Top 5 Shops</b>
     <div class="muted" style="font-size:14px">Shopkeepers (points) give their invite code to new customers — the monthly count is made here. The Top 5 shops show at the very top in the customer app with a ⭐ badge. The reward is promotion only, not money.</div>
     <div class="two"><div><label class="f" for="pt_month">Month</label><input id="pt_month" type="month" value="${esc(cur.month || m0)}"></div>
-    <div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="A.pointsBoard()">📊 Leaderboard dekho</button></div></div>
-    <div id="ptBoard" style="margin-top:10px">${cur.ids.length ? `<div class="muted" style="font-size:14px">Abhi Top Shops lagi hui hain (${esc(cur.month || '')}): ${((cur.names || []).map(esc).join(', '))} — nayi lagane ke liye pehle leaderboard banao.</div>` : `<div class="muted" style="font-size:14px">Abhi koi Top Shop nahi lagi hui.</div>`}</div>
+    <div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="A.pointsBoard()">📊 View leaderboard</button></div></div>
+    <div id="ptBoard" style="margin-top:10px">${cur.ids.length ? `<div class="muted" style="font-size:14px">Top Shops are currently set (${esc(cur.month || '')}): ${((cur.names || []).map(esc).join(', '))} — make a leaderboard first to set new ones.</div>` : `<div class="muted" style="font-size:14px">No Top Shops are set yet.</div>`}</div>
   </div>`;
 }
 function setLoyaltyCard(s){
@@ -3007,7 +3007,7 @@ const A = {
       need(await sb.from('app_settings').upsert([{ key:'gateway', value:v, updated_at:new Date().toISOString() }]));
       state.settings.gateway = v;
       if (on){ try { await sb.rpc('log_security_event', { p_action:'gateway_live_on', p_target_type:'gateway', p_target_id:null, p_detail:null }); } catch (e) {} }
-      renderTab(); toast(on ? 'Gateway is LIVE' : 'Gateway band ho gaya');
+      renderTab(); toast(on ? 'Gateway is LIVE' : 'Gateway is OFF');
     });
   },
   morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast('Up to 5 photos', true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
@@ -4304,7 +4304,7 @@ const A = {
   },
   async regionToggle(id, on){
     if (!on && !await uiConfirm('This region will turn OFF — customers will not see it and new orders will stop. You can turn it Live again any time. Turn OFF for sure?')) return;
-    await run(async () => { need(await sb.from('regions').update({ is_active: on }).eq('id', id)); await loadRegions(); renderTab(); toast(on ? 'Region LIVE ho gaya' : 'Region OFF ho gaya'); });
+    await run(async () => { need(await sb.from('regions').update({ is_active: on }).eq('id', id)); await loadRegions(); renderTab(); toast(on ? 'Region is LIVE' : 'Region is OFF'); });
   },
   async regMonth(b){ state.regMonthBack = b; await run(async () => { await loadRegions(); if (state.tab === 'region') await loadRegionFile(); }); renderTab(); },
   regionForm(id){
