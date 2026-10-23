@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.35';
+const APP_VERSION = '6.39';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -778,7 +778,7 @@ const I18N = {
     appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', delete_warn:'Permanent', sf_send:'Send for approval', receiver:'Receiver', aa_t:'⚡ Accept orders by itself', aa_s:'New orders are accepted at once with your normal ready time. Turn it off when you are busy.', staff_t:'👥 Staff logins', staff_s:'Give your workers their own login. Write their Gmail. Dera checks and approves it. Then they log in with that Gmail (after verifying it). Staff can see orders and products, not your money or settings.', staff_add:'+ Add staff', staff_email:'Staff Gmail', staff_name:'Staff name', staff_phone:'Phone (optional)', staff_sent:'Sent to Dera for approval', staff_pending:'Waiting for approval', staff_approved:'Approved · waiting for first login', staff_active:'Active', staff_rejected:'Not approved', staff_remove_q:'Remove this staff login?', staff_none:'No staff yet.', staff_mode:'Staff login', bp_btn:'💲 Change prices', bp_t:'Change many prices at once', bp_sec:'Which products', bp_all:'All products', bp_pct:'Change by percent (%)', bp_add:'Or add / remove rupees', bp_pct_ph:'10 = 10% more, -10 = 10% less', bp_add_ph:'20 = Rs 20 more, -20 = Rs 20 less', bp_round:'Round the new price to', bp_ex:'Example: {a} becomes {b}', bp_apply:'Change prices', bp_q:'Change the price of {n} products?', bp_done:'{n} prices changed', scan_btn:'📷 Scan barcode', barcode:'Barcode', scan_t:'Point the camera at the barcode', scan_no:'Camera scanning does not work here. Type the barcode.', scan_found:'Found: {n}', scan_new:'New barcode — add the product',
     kw_l:'Search words (keywords)', kw_note:'Other names customers may search, with commas. Example: doodh, milk, dairy, دودھ. This helps customers find the product.',
     bk_fee:'Dera commission on bookings: {p}%', bk_free_now:'Free for now — no commission on bookings.', bk_fee_note:'The commission is taken only on bookings that are done. If it changes, you see it here first. A new percent is used only for new bookings.', bk_month:'This month: {n} done · sales {s} · commission {c}', bk_rating:'Customer rating: ★ {a} ({n})',
-    bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
+    bk_title:'📅 Bookings', bk_set:'📅 Bookings (appointments)', bk_set_s:'For barbers, salons and other services. Customers book a time for a service. Give a service time (minutes) to the products that are services.', bk_on:'Take bookings', bk_chairs:'How many customers at the same time (chairs / workers)', bk_grace:'Cancel the booking if the customer is late more than', bk_save:'Save booking settings', bkp_t:'🔄 Back side photos', bkp_s:'Optional — add the back photo of each color in the same order as the front photos. Only those colors get the 🔄 arrow in the customer app.', bkp_add:'+ Add back photo', wi_t:'🚶 Walk-in Token', wi_s:'A customer is standing at your shop — give them a token in the same queue as app bookings.', wi_none:'First add a service that has a time (minutes).', wi_go:'Give token 🎫', wi_done:'Token given — customer is in the queue', svc_item:'Service', cust_nm:'Customer name (optional)', ph_nm:'Mobile number (optional)', hv_addr:'Home address', blk_t:'🚫 Block booking time', blk_s:'Block bookings for a lunch break, prayer, leave or any date/time — those times will stop showing to customers.', blk_date:'Date', blk_from:'From', blk_to:'To', blk_reason:'Reason', blk_add:'Block this time', blk_none:'No blocks yet', dn_t:'🍽️ Dine-in (Wahin Khana)', dn_s:'Customers order first, then come and eat at your restaurant', dn_s2:'The customer orders in the app first, then comes to your restaurant and eats there. No rider, no delivery fee.', dn_on:'Allow dine-in orders', dn_pay:'Dine-in payment', dn_spot:'At the restaurant (cash)', dn_adv:'Advance online — order only after payment', dn_choice:'Customer choice (at restaurant or online)', dn_tag:'Dine-in · Wahin Khana', win_t:'⏰ Only available in set hours', pcat_title:'What kind of shop is it?', pcat_s:'Pick one — sections for your shop will be made by themselves.', bk_dur:'Service time (minutes)', bk_dur_note:'Only for services like a haircut (for example 30). Then customers book a time instead of ordering. Leave empty for normal products.', bk_arrived:'✅ Customer came', bk_done:'✅ Work done', bk_cancel:'Cancel', bk_cancel_q:'Cancel this booking? The customer gets a message.', bk_reason:'Reason for the customer (optional)', bk_more:'Wait more', bk_waits:'Waiting until {t}', bk_late:'Late by {m} min', bk_s_booked:'Booked', bk_s_arrived:'At the shop', bk_s_done:'Done', bk_s_cancelled:'Cancelled', bk_s_no_show:'Did not come', bk_none:'No bookings yet.', bk_today:'Today', bk_extra:'+{m} min given', min_s:'min',
     kind_title:'What kind of shop is this?', kind_lock:'You can change this later in Shop settings.', kind_shop:'Shop: {s}',
     kind_products:'🛍️ Products', kind_products_s:'Sell products from your shop — grocery, food, garments and more.',
     kind_services:'💈 Services', kind_services_s:'Salon, barber, doctors — customers book appointments.',
@@ -824,7 +824,7 @@ const I18N = {
     payout_t:'Where should we send your money?', payout_s:'Your earnings are sent to this account.', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved',
     m_payacc:'Customer Payment Account', m_payacc_s:'Customers pay you directly', payacc_note:'Customers will pay into this account, and you will check and confirm each payment yourself.', payacc_on:'Customer payments into my account are on', qr_url:'QR image URL', raast_id:'Raast ID',
     paycheck_t:'Payments to check', paycheck_s:'Check the money in your own account before confirming.', pay_amount:'Amount sent', paycheck_amount:'The amount matches my account', paycheck_date:'The payment date is today', paycheck_number:'The money came to MY number / account', pay_confirm:'Confirm payment', pay_reject:'Reject payment', pay_reject_q:'Why is this payment not accepted? (optional)', paycheck_done:'Payment confirmed', paycheck_rejected:'Payment rejected', pay_proof:'🖼️ See payment screenshot', pay_advance:'Advance mila {a} · baqi {x} cash',
-    m_stmt:'Monthly Statement', m_stmt_s:'Poora mahine ka hisaab — paisa kahan gaya', stmt_cash:'Rider ke paas cash', stmt_cash_n:'Ye paisa rider jama karega — payout mein milega', stmt_shop:'Mere account mein online', stmt_shop_n:'Pehle mil chuka hai — payout mein NAHI judega', stmt_region:'Dera account mein online', stmt_region_n:'Payout mein commission kat kar milega', stmt_pickup:'Pickup cash (dukaan par)', stmt_goods:'Samaan (goods)', stmt_days:'Roz ka hisaab', stmt_products:'Products ka hisaab', stmt_orders_t:'Is mahine ke orders', stmt_none:'Is mahine koi delivered order nahi', stmt_zone:'Area', stmt_timeline:'Order ki kahani (timeline)', stmt_del_time:'Delivery time', stmt_dest:'Paisa gaya', stmt_dest_shop:'Mere account mein', stmt_dest_region:'Dera account mein', stmt_tid:'TID', stmt_online_amt:'Online mila', stmt_balance:'Baqi cash on delivery', stmt_required:'Online bhejna tha', stmt_rule:'Commission rule', stmt_rate:'Commission rate', stmt_waiver:'Delivery fee maaf', stmt_discount:'Discount', stmt_delfee:'Delivery fee', stmt_tip:'Tip', stmt_total:'Total', stmt_riderpay:'Rider pay', stmt_pm_cod:'Cash (COD)', stmt_pm_wallet:'Online', stmt_pm_qr:'QR at door', stmt_ps_paid:'Paid', stmt_ps_advance:'Advance paid', stmt_ps_unpaid:'Not paid', stmt_ps_checking:'Checking…', stmt_items:'Items', stmt_pay:'Payment', stmt_money:'Hisaab', stmt_rider:'Rider',
+    m_stmt:'Monthly Statement', m_stmt_s:'The whole month’s account — where the money went', stmt_cash:'Cash with the rider', stmt_cash_n:'The rider will deposit this cash — you will get it in the payout', stmt_shop:'Online in my account', stmt_shop_n:'Already received — will NOT be added to the payout', stmt_region:'Online in the Dera account', stmt_region_n:'Will be paid in the payout after commission', stmt_pickup:'Pickup cash (at the shop)', stmt_goods:'Goods', stmt_days:'Daily account', stmt_products:'Products account', stmt_orders_t:'This month’s orders', stmt_none:'Is mahine koi delivered order nahi', stmt_zone:'Area', stmt_timeline:'Order ki kahani (timeline)', stmt_del_time:'Delivery time', stmt_dest:'Paisa gaya', stmt_dest_shop:'Mere account mein', stmt_dest_region:'Dera account mein', stmt_tid:'TID', stmt_online_amt:'Online mila', stmt_balance:'Baqi cash on delivery', stmt_required:'Online bhejna tha', stmt_rule:'Commission rule', stmt_rate:'Commission rate', stmt_waiver:'Delivery fee maaf', stmt_discount:'Discount', stmt_delfee:'Delivery fee', stmt_tip:'Tip', stmt_total:'Total', stmt_riderpay:'Rider pay', stmt_pm_cod:'Cash (COD)', stmt_pm_wallet:'Online', stmt_pm_qr:'QR at door', stmt_ps_paid:'Paid', stmt_ps_advance:'Advance paid', stmt_ps_unpaid:'Not paid', stmt_ps_checking:'Checking…', stmt_items:'Items', stmt_pay:'Payment', stmt_money:'Hisaab', stmt_rider:'Rider',
     paid_online:'💳 Paid online — no cash', wa:'WhatsApp', wa_hi:'Hello, this is {s} about your Dera order #{n}', in_stock:'In stock', out_stock:'Out of stock', save:'Save', remove:'Remove product',
     flash_price_q:'Flash price in Rs? (regular {p})', flash_price_bad:'Flash price must be less than regular price', flash_hours_q:'Duration in hours?', flash_req_sent:'⚡ Request sent! Admin will approve.',
     remove_q:'Remove this product from your shop?', pending:'Waiting for admin approval', pending_note:'New products show to customers after the Dera admin approves them.',
@@ -862,7 +862,7 @@ const I18N = {
     appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', delete_warn:'مستقل', sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Dera چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Dera کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
     kw_l:'تلاش کے الفاظ (کی ورڈز)', kw_note:'وہ دوسرے نام جن سے گاہک ڈھونڈ سکتے ہیں، کومے سے الگ۔ مثال: doodh, milk, دودھ۔ اس سے گاہک کو پروڈکٹ آسانی سے ملتی ہے۔',
     bk_fee:'بُکنگ پر Dera کمیشن: {p}%', bk_free_now:'ابھی مفت ہے — بُکنگ پر کوئی کمیشن نہیں۔', bk_fee_note:'کمیشن صرف مکمل ہونے والی بُکنگ پر لگتا ہے۔ اگر بدلا تو آپ کو پہلے یہاں نظر آئے گا۔ نیا فیصد صرف نئی بُکنگز پر لگے گا۔', bk_month:'اس مہینے: {n} مکمل · سیل {s} · کمیشن {c}', bk_rating:'گاہکوں کی ریٹنگ: ★ {a} ({n})',
-    bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
+    bk_title:'📅 بُکنگز', bk_set:'📅 بُکنگ (اپائنٹمنٹ)', bk_set_s:'حجام، سیلون اور دوسری سروسز کے لیے۔ گاہک سروس کے لیے وقت بُک کرتے ہیں۔ جو پروڈکٹ سروس ہے اس میں سروس کا وقت (منٹ) لکھیں۔', bk_on:'بُکنگ لیں', bk_chairs:'ایک وقت میں کتنے گاہک (کرسیاں / کاریگر)', bk_grace:'گاہک اتنا لیٹ ہو تو بُکنگ منسوخ', bk_save:'بُکنگ سیٹنگ محفوظ کریں', bkp_t:'🔄 پیچھے والی تصاویر', bkp_s:'اختیاری — ہر رنگ کی پیچھے والی تصویر سامنے والی تصاویر کی اسی ترتیب میں لگائیں۔ صرف انہی رنگوں پر کسٹمر ایپ میں 🔄 تیر نظر آئے گا۔', bkp_add:'+ پیچھے کی تصویر لگائیں', wi_t:'🚶 واک اِن ٹوکن', wi_s:'گاہک تمہاری دکان پر کھڑا ہے — اسے ایپ والی بکنگز کے ساتھ اسی قطار میں ٹوکن دو۔', wi_none:'پہلے کوئی سروس شامل کریں جس کا وقت (منٹ) ہو۔', wi_go:'ٹوکن دیں 🎫', wi_done:'ٹوکن مل گیا — گاہک قطار میں ہے', svc_item:'سروس', cust_nm:'گاہک کا نام (اختیاری)', ph_nm:'موبائل نمبر (اختیاری)', hv_addr:'گھر کا پتہ', blk_t:'🚫 بکنگ کا وقت بند کریں', blk_s:'کھانے کا وقفہ، نماز، چھٹی یا کسی تاریخ/وقت کے لیے بکنگ بند کر دو — وہ وقت گاہکوں کو نظر آنا بند ہو جائے گا۔', blk_date:'تاریخ', blk_from:'سے', blk_to:'تک', blk_reason:'وجہ', blk_add:'یہ وقت بند کریں', blk_none:'ابھی کوئی بندش نہیں', dn_t:'🍽️ وہیں کھانا (Dine-in)', dn_s:'گاہک پہلے آرڈر کرے، پھر آ کر تمہارے ریسٹورنٹ میں کھائے', dn_s2:'گاہک ایپ میں پہلے آرڈر کرتا ہے، پھر تمہارے ریسٹورنٹ آ کر وہیں کھاتا ہے۔ نہ رائیڈر، نہ ڈیلیوری فیس۔', dn_on:'وہیں کھانے کے آرڈر قبول کریں', dn_pay:'وہیں کھانے کی ادائیگی', dn_spot:'ریسٹورنٹ پر (نقد)', dn_adv:'ایڈوانس آن لائن — آرڈر ادائیگی کے بعد ہی', dn_choice:'گاہک کی مرضی (ریسٹورنٹ پر یا آن لائن)', dn_tag:'وہیں کھانا · Dine-in', win_t:'⏰ صرف مقررہ اوقات میں دستیاب', pcat_title:'تمہاری دکان کس قسم کی ہے؟', pcat_s:'ایک چن لو — تمہاری دکان کے سیکشنز خود بن جائیں گے۔', bk_dur:'سروس کا وقت (منٹ)', bk_dur_note:'صرف سروس کے لیے جیسے کٹنگ (مثلاً 30)۔ پھر گاہک آرڈر کی بجائے وقت بُک کریں گے۔ عام پروڈکٹ کے لیے خالی چھوڑ دیں۔', bk_arrived:'✅ گاہک آ گیا', bk_done:'✅ کام مکمل', bk_cancel:'منسوخ', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟ گاہک کو پیغام جائے گا۔', bk_reason:'گاہک کے لیے وجہ (اختیاری)', bk_more:'مزید انتظار', bk_waits:'{t} تک انتظار', bk_late:'{m} منٹ لیٹ', bk_s_booked:'بُک ہے', bk_s_arrived:'دکان پر ہے', bk_s_done:'مکمل', bk_s_cancelled:'منسوخ', bk_s_no_show:'نہیں آیا', bk_none:'ابھی کوئی بُکنگ نہیں۔', bk_today:'آج', bk_extra:'+{m} منٹ دیے', min_s:'منٹ',
     kind_title:'یہ کس قسم کی دکان ہے؟', kind_lock:'بعد میں دکان کی سیٹنگ سے تبدیل کر سکتے ہیں۔', kind_shop:'دکان: {s}',
     kind_products:'🛍️ پروڈکٹس', kind_products_s:'اپنی دکان کے پروڈکٹس بیچیں — کریانہ، کھانا، کپڑے وغیرہ۔',
     kind_services:'💈 سروسز', kind_services_s:'سیلون، حجام، ڈاکٹر — گاہک اپائنٹمنٹ بک کریں۔',
@@ -1017,10 +1017,43 @@ function showAuth(msg, ok){
   </div>`;
 }
 const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
-const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'parlour',i:'💅',en:'Beauty parlour',ur:'بیوٹی پارلر'},{k:'doctor',i:'🩺',en:'Doctor / clinic',ur:'ڈاکٹر / کلینک'},{k:'dentist',i:'🦷',en:'Dentist',ur:'دندان ساز'},{k:'lab',i:'🔬',en:'Laboratory / tests',ur:'لیبارٹری / ٹیسٹ'},{k:'carwash',i:'🚗',en:'Car wash & detailing',ur:'کار واش'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'parlour',i:'💅',en:'Beauty parlour',ur:'بیوٹی پارلر'},{k:'doctor',i:'🩺',en:'Doctor / clinic',ur:'ڈاکٹر / کلینک'},{k:'dentist',i:'🦷',en:'Dentist',ur:'دندان ساز'},{k:'lab',i:'🔬',en:'Laboratory / tests',ur:'لیبارٹری / ٹیسٹ'},{k:'carwash',i:'🚗',en:'Car wash & detailing',ur:'کار واش'},{k:'tailor',i:'🧵',en:'Tailor / darzi',ur:'درزی'},{k:'electrician',i:'🔌',en:'Electrician',ur:'الیکٹریشن'},{k:'plumber',i:'🔧',en:'Plumber',ur:'پلمبر'},{k:'mobile',i:'📱',en:'Mobile repair',ur:'موبائل مرمت'},{k:'mechanic',i:'🏍️',en:'Mechanic',ur:'مکینک'},{k:'photo',i:'📸',en:'Photographer / studio',ur:'فوٹوگرافر'},{k:'tractor',i:'🚜',en:'Tractor / agri services',ur:'ٹریکٹر / کھیتی'},{k:'tutor',i:'📚',en:'Tutor / academy',ur:'ٹیوٹر / اکیڈمی'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
 const catName = k => { const c = SHOP_CATS.find(x => x.k === k) || SERVICE_CATS.find(x => x.k === k); return c ? c.i + ' ' + (state.lang === 'ur' ? c.ur : c.en) : k; };
 // categories shown on the request form depend on the chosen kind: products shops never see salon, services shops see service types
 const reqCats = kind => kind === 'services' ? SERVICE_CATS : SHOP_CATS.filter(c => c.k !== 'salon');
+const svcTrade = () => { const cs = (state.restaurant && state.restaurant.categories) || []; return cs.find(k => SERVICE_CATS.some(c => c.k === k)) || null; };
+
+const CAT_SECTIONS = {
+  grocery: [['Aata & Maida', 'wazan'], ['Chawal', 'wazan'], ['Ghee & Oil', 'wazan'], ['Daalain', 'wazan'], ['Cheeni, Namak & Masalay', 'packaged'], ['Sabzi & Phal', 'general'], ['Drinks', 'drinks'], ['Dairy', 'dairy']],
+  food: [['Karahi', 'desi'], ['BBQ', 'desi'], ['Biryani & Chawal', 'desi'], ['Fast Food', 'fastfood'], ['Drinks', 'drinks'], ['Meetha / Dessert', 'general']],
+  fastfood: [['Burgers', 'fastfood'], ['Pizza', 'fastfood'], ['Fries & Sides', 'general'], ['Drinks', 'drinks'], ['Deals', 'general']],
+  bakery: [['Cake', 'cake'], ['Biscuits & Rusk', 'packaged'], ['Mithai', 'sweets'], ['Bread & Kulcha', 'general']],
+  fruit_veg: [['Sabzi', 'wazan'], ['Phal', 'wazan']],
+  meat: [['Chicken', 'wazan'], ['Beef / Gosht', 'wazan'], ['Mutton', 'wazan']],
+  dairy: [['Doodh & Dahi', 'dairy'], ['Makhan & Cheese', 'dairy']],
+  pharmacy: [['Dawaiyan', 'medical'], ['Personal Care', 'packaged']],
+  clothes_men: [['Shirts', 'shirts'], ['Pants', 'pants'], ['Shalwar Kameez', 'shalwar'], ['Kurta', 'kurta']],
+  clothes_women: [['Suits', 'shalwar'], ['Dupatta / Shawl', 'shawl'], ['Burka / Abaya', 'burka']],
+  kids: [['Bachon ke Kapre', 'kids'], ['Pampers / Diapers', 'pampers'], ['Khilonay', 'toys']],
+  shoes: [['Shoes', 'shoes'], ['Chappal / Sandal', 'shoes']],
+  mobile: [['Mobile Phones', 'mobile'], ['Accessories', 'general']],
+  electronics: [['Machines / Appliances', 'machines']],
+  hardware: [['Tools', 'general'], ['Electric Items', 'machines']],
+  stationery: [['Books / Copies', 'books'], ['Stationery Items', 'general']],
+  home_kitchen: [['Bartan / Crockery', 'crockery'], ['Kitchen Items', 'general']],
+  furniture: [['Furniture', 'furniture']],
+  cosmetics: [['Makeup', 'general'], ['Perfume / Attar', 'perfume']],
+  gifts: [['Gifts', 'general']],
+  flowers: [['Phool / Flowers', 'general']],
+  pets_feed: [['Janwaron ki Khorak', 'wazan']],
+  agri: [['Beej & Khad', 'wazan']],
+  jewellery: [['Jewellery', 'jewellery']],
+  bags_belts: [['Bags', 'bags'], ['Belts', 'belt']]
+};
+function prodCat(){ const cs = (state.restaurant && state.restaurant.categories) || []; return cs.find(c => SHOP_CATS.some(x => x.k === c)) || null; }
+const TRADE_SECTIONS = { salon:['Hair','Skin / Facial','Packages'], parlour:['Facial / Skin','Hair','Mehndi / Makeup','Packages'], doctor:['Checkup (OPD)','Bachay','Ladies','Dressing / Injection'], dentist:['Checkup','Ilaj (Treatment)','Safai / Scaling'], lab:['Khoon ke Tests','Deegar Tests','Reports'], carwash:['Wash','Detailing'], tailor:['Silai','Fitting / Alteration'], electrician:['Wiring','Fan / Motor','Repair'], plumber:['Fitting','Repair / Leakage'], mobile:['Screen','Battery','Software / Deegar'], mechanic:['Tuning','Repair','Wash'], photo:['Shadi','Event','Studio / Passport'], tractor:['Hal Chalana','Thresher','Deegar Kaam'], tutor:['School ke Bachay','College / Academy'], other:[] };
+const SVC_NOTE_TRADES = ['doctor','dentist','lab','tailor','electrician','plumber','mechanic','mobile'];
+const SVC_HOME_TRADES = ['doctor','dentist','electrician','plumber','mechanic'];
 async function loadMyRequest(){
   const [r, g] = await Promise.all([sb.from('shop_requests').select('*').eq('user_id', state.user.id).order('created_at', { ascending:false }).limit(1),
     sb.from('regions').select('id,name').eq('is_active', true).order('name')]);
@@ -1184,7 +1217,7 @@ function renderTab(){
 
 // ================= ORDERS =================
 async function loadOrders(){
-  if (state.restaurant && isServices()){ try { const { data } = await sb.rpc('shop_bookings', { p_shop:state.restaurant.id }); state.appts = data || []; } catch (e) { state.appts = []; } } else state.appts = [];
+  if (state.restaurant && isServices()){ try { const { data } = await sb.rpc('shop_bookings_v2', { p_shop:state.restaurant.id }); state.appts = data || []; } catch (e) { state.appts = []; } } else state.appts = [];
   if (state.restaurant){ sb.rpc('shop_booking_terms', { p_shop:state.restaurant.id }).then(({ data }) => { if (data) state.bkTerms = data; }, () => {}); }
   const allOrders = need(await sb.from('orders')
     .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
@@ -1273,7 +1306,7 @@ function orderCard(o){
   if (o.status === 'placed') actions = `<div class="two"><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button></div>`;
   else if (o.status === 'accepted') actions = `<div class="two"><button class="btn ghost" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
   else if (o.status === 'preparing') actions = `<button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button>`;
-  else if (o.status === 'ready' && o.order_type === 'pickup') actions = `<div class="muted" style="margin-top:8px">${t('wait_collect')}</div><button class="btn" style="margin-top:8px" onclick="A.collected('${o.id}')">${t('collected_b')}</button>`;
+  else if (o.status === 'ready' && (o.order_type === 'pickup' || o.order_type === 'dinein')) actions = `<div class="muted" style="margin-top:8px">${t('wait_collect')}</div><button class="btn" style="margin-top:8px" onclick="A.collected('${o.id}')">${t('collected_b')}</button>`;
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
@@ -1286,7 +1319,7 @@ function orderCard(o){
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
     ${pickupBox}
-    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
+    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : o.order_type === 'dinein' ? `<div class="picktag" style="background:#F8590A;color:#fff">🍽️ ${t('dn_tag')}</div>` : ''}
     ${schedBox(o)}
     ${itemsHtml(o)}
     ${o.sub_pref ? `<div class="note">🔁 <b>${t('sub_lbl')}:</b> ${t('sub_' + o.sub_pref)}</div>` : ''}
@@ -1332,14 +1365,14 @@ function apptsHtml(){
       <div class="ch"><b style="font-size:18px">${dy(a.starts_at)} · ${tm(a.starts_at)}</b><span class="pill ${pc}">${t('bk_s_' + a.status)}</span></div>
       <div><b>${esc(a.item_name)}</b> · ${a.duration_min} ${t('min_s')} · ${money(a.price)}</div>
       <div class="muted">${esc(a.customer_name || '')} ${a.customer_phone ? `· <a href="tel:${esc(a.customer_phone)}">${esc(a.customer_phone)}</a>` : ''}</div>
-      ${a.note ? `<div class="note" style="margin:6px 0">${esc(a.note)}</div>` : ''}
+      ${a.is_walkin ? '<span class="pill" style="margin:4px 0">🚶 Walk-in</span>' : ''}${a.note ? `<div class="note" style="margin:6px 0">${esc(a.note)}</div>` : ''}${a.visit_address ? `<div class="note" style="margin:6px 0">📍 <b>${t('hv_addr')}:</b> ${esc(a.visit_address)}</div>` : ''}
       ${a.status === 'booked' ? `<div style="font-size:14px;margin:6px 0">${lateMs > 0 ? `<b class="red">⏰ ${t('bk_late', { m:Math.floor(lateMs / 60000) })}</b> · ` : ''}${t('bk_waits', { t:tm(a.late_until) })}${a.extended_min ? ' · ' + t('bk_extra', { m:a.extended_min }) : ''}</div>
         <div class="two"><button class="btn small" onclick="A.apptAct('${a.id}','arrived')">${t('bk_arrived')}</button><button class="btn warn small" onclick="A.apptAct('${a.id}','cancel')">${t('bk_cancel')}</button></div>
         <div style="display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap"><span class="muted" style="font-size:13px">${t('bk_more')}:</span>${[5, 10, 15, 30].map(m => `<button class="btn ghost small" style="flex:1;min-width:56px" onclick="A.apptAct('${a.id}','extend',${m})">+${m}</button>`).join('')}</div>` : ''}
       ${a.status === 'arrived' ? `<div class="two"><button class="btn small" onclick="A.apptAct('${a.id}','done')">${t('bk_done')}</button><button class="btn warn small" onclick="A.apptAct('${a.id}','cancel')">${t('bk_cancel')}</button></div>` : ''}
       ${a.cancel_reason && !['booked','arrived'].includes(a.status) ? `<div class="muted" style="font-size:13px">${esc(a.cancel_reason)}</div>` : ''}
       ${a.rating ? `<div style="margin-top:4px"><b style="color:#E2A400">${'★'.repeat(a.rating)}</b>${a.rating_comment ? ' · ' + esc(a.rating_comment) : ''}</div>` : ''}</div>`; };
-  return `<h2>${t('bk_title')} <span class="count">${live.length}</span></h2>${live.map(card).join('') || `<div class="muted" style="margin-bottom:10px">${t('bk_none')}</div>`}${recent.map(card).join('')}`;
+  return `<h2>${t('bk_title')} <span class="count">${live.length}</span></h2><button class="btn ghost block" style="margin:0 0 10px" onclick="A.walkIn()">${t('wi_t')}</button>${live.map(card).join('') || `<div class="muted" style="margin-bottom:10px">${t('bk_none')}</div>`}${recent.map(card).join('')}`;
 }
 function viewOrders(){
   const r = state.restaurant;
@@ -1378,7 +1411,7 @@ function showNewOrder(o){
   const opts = prepOptions();
   openSheet(t('new_order'), `
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><b style="font-size:20px">${money(o.subtotal)}</b></div>
-    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
+    ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : o.order_type === 'dinein' ? `<div class="picktag" style="background:#F8590A;color:#fff">🍽️ ${t('dn_tag')}</div>` : ''}
     ${shopCustKm(o)}
     ${schedBox(o)}
     ${itemsHtml(o)}
@@ -1403,6 +1436,17 @@ async function loadMenu(){
     sb.from('menu_items').select('*').eq('restaurant_id', id).order('sort_order').order('name')
   ]);
   state.cats = need(c); state.items = need(i);
+  if (!state.cats.length && !state.items.length && state._presetTriedFor !== id){
+    state._presetTriedFor = id;
+    const secs = isServices() ? (TRADE_SECTIONS[svcTrade() || ''] || []).map(n => ({ n, ty:'services' })) : (CAT_SECTIONS[prodCat() || ''] || []).map(([n, ty]) => ({ n, ty }));
+    if (secs.length){
+      try {
+        need(await sb.from('menu_categories').insert(secs.map((x, i2) => ({ restaurant_id:id, name:x.n, type:x.ty, sort_order:i2 + 1 }))));
+        state.cats = need(await sb.from('menu_categories').select('*').eq('restaurant_id', id).order('sort_order'));
+        setTimeout(() => toast(state.lang === 'ur' ? '✅ تمہاری دکان کے حساب سے سیکشنز خود بن گئے ہیں' : '✅ Sections for your shop were made automatically'), 700);
+      } catch (e) {}
+    }
+  }
 }
 function itemRow(i){
   return `<div class="row">
@@ -1518,21 +1562,22 @@ const SECTION_TYPES = [
   { k:'general', i:'🗂️', n:'Simple / Aam', photo:'', pools:[] },
 ];
 const TYPE_FAMILIES = [
-  ['👕 Kapre', ['shirts','kurta','shalwar','wascot','coat','pants','belt','socks','shoes','shawl','cap','burka','undergarments']],
-  ['🕶️ Accessories', ['glasses','watches','bags','jewellery']],
-  ['👶 Bachay', ['kids','pampers','toys']],
-  ['🍔 Khana', ['fastfood','desi','icecream','cake','sweets']],
-  ['⚖️ Kiryana', ['wazan','dairy','drinks','packaged']],
-  ['🧰 Deegar', ['perfume','mobile','machines','crockery','furniture','medical','books','services','general']],
+  ['👕 Clothes|👕 کپڑے', ['shirts','kurta','shalwar','wascot','coat','pants','belt','socks','shoes','shawl','cap','burka','undergarments']],
+  ['🕶️ Accessories|🕶️ ایکسیسریز', ['glasses','watches','bags','jewellery']],
+  ['👶 Kids|👶 بچے', ['kids','pampers','toys']],
+  ['🍔 Food|🍔 کھانا', ['fastfood','desi','icecream','cake','sweets']],
+  ['⚖️ Grocery|⚖️ کریانہ', ['wazan','dairy','drinks','packaged']],
+  ['🧰 Other|🧰 دیگر', ['perfume','mobile','machines','crockery','furniture','medical','books','services','general']],
 ];
 const typeByKey = k => SECTION_TYPES.find(x => x.k === k) || SECTION_TYPES[SECTION_TYPES.length - 1];
 const TF_MANAGED = ['Colour','Design','Rang','Size','Shoe Size','Portion','Weight','Pack Size','Pack','Flavour','Extras','Variant','For'];
 const typeDesc = ty => {
+  if (ty.k === 'services') return state.lang === 'ur' ? 'بکنگ والی سروس — فارم میں وقت (منٹ) لگے گا، گاہک وقت منتخب کر کے بکنگ کرے گا' : 'Booking service — the form takes time (minutes); the customer picks a time and books';
   const bits = [];
-  if (ty.photo === 'rang') bits.push('Har photo ka apna rang');
-  if (ty.photo === 'design') bits.push('Har photo ka apna design');
-  (ty.pools || []).forEach(pk => bits.push(POOLS[pk].label + ': ' + (POOLS[pk].custom ? 'khud likhna' : POOLS[pk].chips.slice(0, 4).join(' / ') + (POOLS[pk].chips.length > 4 ? '…' : ''))));
-  return bits.join(' · ') || 'Saada product — koi options nahi';
+  if (ty.photo === 'rang') bits.push(state.lang === 'ur' ? 'ہر تصویر کا اپنا رنگ' : 'Each photo has its own color');
+  if (ty.photo === 'design') bits.push(state.lang === 'ur' ? 'ہر تصویر کا اپنا ڈیزائن' : 'Each photo has its own design');
+  (ty.pools || []).forEach(pk => bits.push(POOLS[pk].label + ': ' + (POOLS[pk].custom ? (state.lang === 'ur' ? 'خود لکھیں' : 'write your own') : POOLS[pk].chips.slice(0, 4).join(' / ') + (POOLS[pk].chips.length > 4 ? '…' : ''))));
+  return bits.join(' · ') || (state.lang === 'ur' ? 'سادہ پروڈکٹ — کوئی آپشن نہیں' : 'Simple product — no options');
 };
 
 const TF = {
@@ -1559,8 +1604,9 @@ const TF = {
 .tfprev{margin-top:12px;background:#EFFAF3;border:1.5px dashed #9ED3AE;border-radius:12px;padding:10px 12px;font-size:13px;color:#14532D}`;
   document.head.appendChild(st); },
   pickHtml(sel){
-    return `<div class="tpnote">☝️ Sirf <b>aik</b> type select kar sakte hain — type ke hisaab se product dalne ka form khud ban jayega.</div>` +
-      TYPE_FAMILIES.map(([g, keys]) => `<div class="tpgrp">${g}</div><div class="tpstrip">${keys.map(k => { const ty = typeByKey(k); return `<div class="tpcard ${k === sel ? 'on' : ''}" onclick="A.pickType('${k}')"><div class="ic">${ty.i}</div><div class="nm">${ty.n}</div></div>`; }).join('')}</div>`).join('') +
+    const fams = (typeof isServices === 'function' && isServices()) ? [['✂️ Services', ['services','general']]] : TYPE_FAMILIES;
+    return `<div class="tpnote">${state.lang === 'ur' ? '☝️ صرف <b>ایک</b> قسم منتخب کر سکتے ہیں — قسم کے حساب سے پروڈکٹ ڈالنے کا فارم خود بن جائے گا۔' : '☝️ You can select only <b>one</b> type — the product form is made according to the type.'}</div>` +
+      fams.map(([g, keys]) => `<div class="tpgrp">${state.lang === 'ur' ? (g.split('|')[1] || g) : g.split('|')[0]}</div><div class="tpstrip">${keys.map(k => { const ty = typeByKey(k); return `<div class="tpcard ${k === sel ? 'on' : ''}" onclick="A.pickType('${k}')"><div class="ic">${ty.i}</div><div class="nm">${ty.n}</div></div>`; }).join('')}</div>`).join('') +
       `<div class="muted" style="font-size:13px;margin-top:6px">${esc(typeDesc(typeByKey(sel)))}</div>`;
   },
   photoSrcs(){
@@ -1641,7 +1687,7 @@ const TF = {
       }
     });
     h += `<div class="tfprev">👁️ <b>Customer ko ye options dikhenge:</b> ${esc(TF.previewText() || '—')}</div>`;
-    h += `<div class="muted" style="font-size:12.5px;margin-top:8px">Koi ajeeb option chahiye to section ki type <b>Simple / Aam</b> kar dein — purana wala editor wapas aa jayega.</div></div>`;
+    h += `<div class="muted" style="font-size:12.5px;margin-top:8px">${state.lang === 'ur' ? 'کوئی عجیب آپشن چاہیے تو سیکشن کی قسم <b>Simple / Aam</b> کر دیں — پرانا والا ایڈیٹر واپس آ جائے گا۔' : 'For an unusual option, set the section type to <b>Simple / General</b> — the old editor will come back.'}</div></div>`;
     area.innerHTML = h;
   },
   previewText(){
@@ -1695,6 +1741,22 @@ const TF = {
   }
 };
 
+function winFieldsHtml(i){
+  if (isServices()) return '';
+  const on = !!(i && i.avail_from);
+  return `<label class="check"><input id="i_win" type="checkbox" ${on ? 'checked' : ''} onchange="document.getElementById('winBox').style.display = this.checked ? 'grid' : 'none'"> ${t('win_t')}</label>
+  <div class="two" id="winBox" style="display:${on ? 'grid' : 'none'};gap:8px"><div><label class="f" for="i_wf">${t('blk_from')}</label><input id="i_wf" type="time" value="${i && i.avail_from ? String(i.avail_from).slice(0, 5) : '07:00'}"></div><div><label class="f" for="i_wt">${t('blk_to')}</label><input id="i_wt" type="time" value="${i && i.avail_to ? String(i.avail_to).slice(0, 5) : '11:00'}"></div></div>`;
+}
+function svcFieldsHtml(i){
+  if (!isServices()) return '';
+  const tr = svcTrade(); const sv = (i && i.svc) || {};
+  const noteLbl = ['doctor','dentist','lab'].includes(tr) ? 'Mareez apna masla likhe — lazmi' : 'Customer kaam ki tafseel likhe — lazmi';
+  let h = '';
+  if (SVC_NOTE_TRADES.includes(tr)) h += `<label class="check"><input id="sv_note" type="checkbox" ${sv.need_note ? 'checked' : ''}> 📝 ${noteLbl}</label>`;
+  if (SVC_HOME_TRADES.includes(tr)) h += `<label class="check"><input id="sv_home" type="checkbox" ${sv.home_visit ? 'checked' : ''}> 🏠 Ghar par visit (home visit) available</label>
+    <label class="f" for="sv_fee">Ghar visit ki extra fee (Rs)</label><input id="sv_fee" type="number" min="0" step="1" inputmode="numeric" value="${sv.home_fee ?? ''}" placeholder="300">`;
+  return h;
+}
 function itemForm(i){
   i = i || { is_available:true };
   const catOpts = state.cats.map(c => `<option value="${c.id}" ${i.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
@@ -1716,6 +1778,8 @@ function itemForm(i){
     <div class="muted" style="font-size:13px">${t('weight_note')}</div>
     ${isServices() ? `<label class="f" for="i_dur">${t('bk_dur')}</label><input id="i_dur" type="number" min="5" max="480" step="5" inputmode="numeric" value="${i.duration_min || ''}" placeholder="—">
     <div class="muted" style="font-size:13px">${t('bk_dur_note')}</div>` : ''}
+    ${svcFieldsHtml(i)}
+    ${winFieldsHtml(i)}
     <label class="f" for="i_photo">${t('photo')}</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev'); TF.syncPics()">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
@@ -1723,6 +1787,10 @@ function itemForm(i){
     <label class="f">${t('more_photos')}</label>
     <div class="pgrid" id="pgrid"></div>
     <label class="filebtn">${t('add_photos')}<input id="i_more" type="file" accept="image/*" multiple hidden onchange="A.morePhotos(this)"></label>
+    <label class="f">${t('bkp_t')}</label>
+    <div class="muted" style="font-size:13px">${t('bkp_s')}</div>
+    <div class="pgrid" id="pgrid2"></div>
+    <label class="filebtn">${t('bkp_add')}<input id="i_more_back" type="file" accept="image/*" multiple hidden onchange="A.moreBacks(this)"></label>
     <label class="f" for="i_stock">${t('stock_qty')}</label><input id="i_stock" type="number" min="0" step="1" inputmode="numeric" value="${i.stock_qty ?? ''}" placeholder="∞">
     <div class="muted" style="font-size:13px">${t('stock_note')}</div>
     <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> ${t('in_stock')}</label>
@@ -1855,7 +1923,7 @@ function orderFileHtml(f){
   const items = (f.items || []).map(i => `<div class="line"><span><b>${num(i.qty)}×</b> ${esc(i.name)}</span><span>${money(num(i.price) * num(i.qty))}</span></div>`).join('');
   const tl = (f.timeline || []).map(x => `<div class="line"><span>${esc(t('st_' + x.status))}</span><span class="muted">${when(x.at)}</span></div>`).join('');
   return `<div class="ch"><span class="pill" style="background:var(--s-${f.status})">${esc(t('st_' + f.status))}</span><span class="muted">${when(f.created_at)}</span></div>
-    ${f.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : ''}
+    ${f.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : f.order_type === 'dinein' ? `<div class="picktag" style="background:#F8590A;color:#fff">🍽️ ${t('dn_tag')}</div>` : ''}
     ${H('👤 ' + t('customer'))}
     ${L(t('name'), esc(c.name || ''))}
     ${c.phone ? L(t('phone'), `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`) : ''}
@@ -1934,7 +2002,7 @@ function viewShop(){
       <button class="row" onclick="A.timingsSheet()"><div class="row-main"><div class="row-title">🕘 ${t('m_timings')}</div><div class="row-sub">${t('today_hours')}: ${esc(badge)}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="A.orderSetSheet()"><div class="row-main"><div class="row-title">⚙️ ${t('m_orderset')}</div><div class="row-sub">${t('m_orderset_s')}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="A.offerSheet2()"><div class="row-main"><div class="row-title">🏷️ ${t('m_offer2')}</div><div class="row-sub">${t('m_offer2_s')}</div></div><span class="muted">›</span></button>
-      ${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
+      ${!isServices() ? `<button class="row" onclick="A.dineinSheet()"><div class="row-main"><div class="row-title">${t('dn_t')}</div><div class="row-sub">${t('dn_s')}</div></div><span class="chev">›</span></button>` : ''}${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
     </div></div>
     <div class="grp"><div class="grp-h">💰 Money</div>
     <div class="list setlist">
@@ -1981,6 +2049,12 @@ async function uploadImage(file, folder){
   const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
   need(await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' }));
   return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
+}
+function drawBPics(){
+  const g = $('pgrid2'); if (!g || !state.bpics) return;
+  const old = state.bpics.old.map((u, k) => `<div class="pth"><img src="${esc(u)}" alt=""><button type="button" onclick="A.rmBPhoto('o', ${k})" aria-label="x">×</button></div>`).join('');
+  const add = state.bpics.add.map((f, k) => `<div class="pth"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="A.rmBPhoto('a', ${k})" aria-label="x">×</button></div>`).join('');
+  g.innerHTML = old + add;
 }
 function drawPics(){
   const g = $('pgrid'); if (!g || !state.pics) return;
@@ -2143,6 +2217,66 @@ const A = {
       <label class="f" for="of_max">${t('offer_max')}</label><input id="of_max" type="number" min="0" inputmode="numeric" value="${num(f.max) || ''}" placeholder="0">
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveOffer()">${t('save_offer')}</button></div>`);
   },
+  walkIn(){
+    const items = (state.items || []).filter(i => i.duration_min);
+    if (!items.length) return toast(t('wi_none'), true);
+    openSheet(t('wi_t'), `<div class="muted" style="font-size:14px">${t('wi_s')}</div>
+      <label class="f" for="wi_item">${t('svc_item')}</label><select id="wi_item">${items.map(i => `<option value="${i.id}">${esc(i.name)} · ${i.duration_min} ${t('min_s')} · ${money(i.price)}</option>`).join('')}</select>
+      <label class="f" for="wi_name">${t('cust_nm')}</label><input id="wi_name" type="text">
+      <label class="f" for="wi_phone">${t('ph_nm')}</label><input id="wi_phone" type="tel" inputmode="tel">
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.walkInGo()">${t('wi_go')}</button></div>`);
+  },
+  async walkInGo(){
+    const item = $('wi_item').value; if (!item) return;
+    await run(async () => { need(await sb.rpc('shop_walkin', { p_shop:state.restaurant.id, p_item:item, p_name:$('wi_name').value.trim() || null, p_phone:$('wi_phone').value.trim() || null })); closeSheet(); await loadOrders(); renderTab(); toast(t('wi_done')); });
+  },
+  async loadBlocks(){
+    const el = $('blkList'); if (!el) return;
+    try { const { data } = await sb.from('booking_blocks').select('*').eq('restaurant_id', state.restaurant.id).gte('ends_at', new Date().toISOString()).order('starts_at'); state.blocks = data || []; } catch(e){ state.blocks = []; }
+    const fd = ts => new Date(ts).toLocaleDateString('en-GB', { day:'numeric', month:'short', timeZone:'Asia/Karachi' });
+    const ft = ts => new Date(ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'Asia/Karachi' });
+    el.innerHTML = (state.blocks || []).length ? state.blocks.map(b => `<div class="card" style="margin-top:8px;padding:10px 12px"><div class="ch"><b>🚫 ${fd(b.starts_at)} · ${ft(b.starts_at)} – ${ft(b.ends_at)}</b><button class="btn ghost small" style="color:#C0392B" onclick="A.blockDel('${b.id}')">✕</button></div><div class="muted" style="font-size:13px">${esc(b.reason || '')}</div></div>`).join('') : `<div class="muted" style="font-size:13.5px;margin-top:6px">${t('blk_none')}</div>`;
+  },
+  async blockAdd(){
+    const d = $('blk_d').value, f = $('blk_f').value, to = $('blk_to2').value;
+    if (!d || !f || !to) return toast(t('blk_date'), true);
+    if (to <= f) return toast('!', true);
+    await run(async () => { need(await sb.from('booking_blocks').insert({ restaurant_id:state.restaurant.id, starts_at:d + 'T' + f + ':00+05:00', ends_at:d + 'T' + to + ':00+05:00', reason:$('blk_r').value })); toast(t('saved')); A.loadBlocks(); });
+  },
+  async blockDel(id){
+    await run(async () => { need(await sb.from('booking_blocks').delete().eq('id', id)); A.loadBlocks(); });
+  },
+  dineinSheet(){
+    const r = state.restaurant;
+    openSheet(t('dn_t'), `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('dn_s2')}</div>
+      <label class="check"><input id="dn_on" type="checkbox" ${r.dinein_on ? 'checked' : ''}> ${t('dn_on')}</label>
+      <label class="f" for="dn_pay">${t('dn_pay')}</label><select id="dn_pay">
+        <option value="spot" ${r.dinein_pay === 'spot' ? 'selected' : ''}>${t('dn_spot')}</option>
+        <option value="advance" ${r.dinein_pay === 'advance' ? 'selected' : ''}>${t('dn_adv')}</option>
+        <option value="choice" ${r.dinein_pay === 'choice' ? 'selected' : ''}>${t('dn_choice')}</option>
+      </select>
+      <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveDinein()">${t('bk_save')}</button></div>`);
+  },
+  async saveDinein(){
+    const on = $('dn_on').checked, pay = $('dn_pay').value;
+    await run(async () => { need(await sb.from('restaurants').update({ dinein_on:on, dinein_pay:pay }).eq('id', state.restaurant.id)); state.restaurant.dinein_on = on; state.restaurant.dinein_pay = pay; closeSheet(); renderTab(); toast(t('saved')); });
+  },
+  pickProdCat(){
+    $('app').innerHTML = `<div class="auth">
+      <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+      <div class="brand">Dera<b>.</b></div>
+      <h1 style="font-size:24px;margin:18px 0 8px">${t('pcat_title')}</h1>
+      <p class="muted" style="margin:0 0 16px;font-size:13px">${t('pcat_s')}</p>
+      <div class="kindgrid">${SHOP_CATS.map(c => `<button type="button" class="kindcard" onclick="A.preCatPick('${c.k}')"><span class="kemoji">${c.i}</span><span><b>${state.lang === 'ur' ? c.ur : c.en}</b></span></button>`).join('')}</div>
+      <div class="actions" style="display:grid;gap:10px;margin-top:16px"><button class="btn ghost" onclick="A.backToKindPicker()">${state.lang === 'ur' ? '← واپس' : '← Back'}</button></div>
+      <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+    window.scrollTo(0, 0);
+  },
+  preCatPick(k){
+    A.preChooseKind('products');
+    if (state.rqForm) state.rqForm.categories = [k];
+    renderShopRequest(); window.scrollTo(0, 0);
+  },
   bookingSheet2(){
     const r = state.restaurant;
     openSheet(`📅 ${t('m_booking2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('bk_set_s')}</div>
@@ -2150,7 +2284,15 @@ const A = {
       <label class="check"><input id="bk_on" type="checkbox" ${r.booking_on ? 'checked' : ''}> ${t('bk_on')}</label>
       <label class="f" for="bk_ch">${t('bk_chairs')}</label><input id="bk_ch" type="number" min="1" max="20" inputmode="numeric" value="${r.chairs || 1}">
       <label class="f" for="bk_gr">${t('bk_grace')}</label><select id="bk_gr">${[5, 10, 15, 20, 30].map(m => `<option value="${m}" ${(r.grace_min ?? 10) === m ? 'selected' : ''}>${m} ${t('min_s')}</option>`).join('')}</select>
+      <div style="font-weight:900;margin:18px 0 4px">${t('blk_t')}</div>
+      <div class="muted" style="font-size:13.5px">${t('blk_s')}</div>
+      <div id="blkList"><div class="muted" style="font-size:13.5px">…</div></div>
+      <label class="f" for="blk_d">${t('blk_date')}</label><input id="blk_d" type="date">
+      <div class="two"><div><label class="f" for="blk_f">${t('blk_from')}</label><input id="blk_f" type="time" value="13:00"></div><div><label class="f" for="blk_to2">${t('blk_to')}</label><input id="blk_to2" type="time" value="14:00"></div></div>
+      <label class="f" for="blk_r">${t('blk_reason')}</label><select id="blk_r"><option value="Lunch break">🍽️ Lunch</option><option value="Prayer">🕌 Namaz</option><option value="Personal work">🏠 Zaati kaam</option><option value="Leave">🌴 Chutti</option><option value="Other">Deegar</option></select>
+      <button class="btn ghost block" style="margin-top:10px" onclick="A.blockAdd()">${t('blk_add')}</button>
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveBooking()">${t('bk_save')}</button></div>`);
+    setTimeout(() => A.loadBlocks(), 30);
   },
   staffSheet2(){
     openSheet(`👥 ${t('m_staff2')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('staff_s')}</div>
@@ -2446,6 +2588,8 @@ const A = {
     if (!await uiConfirm(t('kind_change_q'))) return;
     showKindPicker();
   },
+  pickSvcTrade(){ showTradePicker(); },
+  async preTradePick(k){ state.preTrade = k; await A.preChooseKind('services'); if (state.rqForm){ state.rqForm.categories = [k]; showShopRequest(); window.scrollTo(0, 0); } },
   async preChooseKind(kind){
     if (kind !== 'services') kind = 'products';
     const oldKind = state.sreq && state.sreq.kind;
@@ -2658,6 +2802,8 @@ const A = {
     if (!v && !await uiConfirm(t('sec_off_q', { s:c ? c.name : '', n }))) { renderTab(); return; }
     await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('category_id', id)); await loadMenu(); renderTab(); toast(v ? t('sec_on_done') : t('sec_off_done')); });
   },
+  moreBacks(inp){ const room = 5 - state.bpics.old.length - state.bpics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast('5 max', true); state.bpics.add.push(...fs); inp.value = ''; drawBPics(); },
+  rmBPhoto(w, k){ if (w === 'o') state.bpics.old.splice(k, 1); else state.bpics.add.splice(k, 1); drawBPics(); },
   morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); TF.syncPics(); },
   rmPhoto(w, k){ TF.picRemoved(w, k); if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); TF.syncPics(); },
   busyMenu(){ openSheet(t('busy_b'), `<div class="muted" style="margin-bottom:10px">${t('busy_t')}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">${[15, 30, 60].map(m => `<button class="btn ghost" onclick="A.setBusy(${m})">${t('mins').replace('{n}', m)}</button>`).join('')}</div>`); },
@@ -2820,7 +2966,9 @@ const A = {
     if (!state.cats.length) return toast(t('no_sections'), true);
     const i = state.items.find(x => x.id === id);
     state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
+    state.bpics = { old:(i && Array.isArray(i.back_photos) ? i.back_photos.slice() : []), add:[] };
     openSheet(i ? i.name : t('add_product'), itemForm(i || (catId || state.newBarcode ? { is_available:true, category_id:catId || (state.cats[0] || {}).id, barcode:state.newBarcode || null } : null))); drawPics(); state.newBarcode = null;
+    setTimeout(() => drawBPics(), 0);
     OE.init({ sb, lang:() => state.lang }); state.tfItem = i || null; TF.begin(i || null).then(h => { if (!h) OE.load(i ? i.id : null).catch(e => toast(e.message || t('error'), true)); });
   },
   async saveItem(id){
@@ -2836,6 +2984,11 @@ const A = {
       const pics = (state.pics || { old:[], add:[] }); const up = [];
       for (const pf of pics.add) up.push(await uploadImage(pf, 'items'));
       row.photos = pics.old.concat(up).slice(0, 5);
+      const bp = (state.bpics || { old:[], add:[] }); const upb = [];
+      for (const pf of bp.add) upb.push(await uploadImage(pf, 'items'));
+      row.back_photos = bp.old.concat(upb).slice(0, 5);
+      if (!isServices()){ const w = $('i_win'); row.avail_from = w && w.checked ? ($('i_wf').value || null) : null; row.avail_to = w && w.checked ? ($('i_wt').value || null) : null; }
+      if (isServices()){ const sv = {}; const nn = $('sv_note'); if (nn) sv.need_note = nn.checked; const hv = $('sv_home'); if (hv){ sv.home_visit = hv.checked; sv.home_fee = Math.max(0, Math.round(num(($('sv_fee') || {}).value))); } row.svc = sv; }
       let itemId = id;
       if (id) need(await sb.from('menu_items').update(row).eq('id', id));
       else itemId = need(await sb.from('menu_items').insert(Object.assign(row, { restaurant_id:state.restaurant.id, sort_order:state.items.length + 1 })).select('id').single()).id;
@@ -2935,6 +3088,19 @@ function showKindPicker(){
   window.scrollTo(0, 0);
 }
 // ---- kind picker BEFORE the shop request form: new shops choose first, then fill the matching form ----
+function showTradePicker(){
+  $('app').innerHTML = `<div class="auth">
+    <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
+    <div class="brand">Dera<b>.</b></div>
+    <h1 style="font-size:24px;margin:18px 0 8px">${state.lang === 'ur' ? 'کس قسم کی سروس دیں گے؟' : 'What type of service will you offer?'}</h1>
+    <p class="muted" style="margin:0 0 18px;font-size:13.5px">${state.lang === 'ur' ? 'جو منتخب کریں گے، اسی حساب سے آپ کے سیکشن خود بن جائیں گے اور فارم بھی اسی حساب سے آئے گا۔' : 'Whichever you select, your sections will be created accordingly and the form will match.'}</p>
+    <div class="kindgrid">
+      ${SERVICE_CATS.map(c => `<button type="button" class="kindcard" onclick="A.preTradePick('${c.k}')"><span class="kemoji">${c.i}</span><span><b>${state.lang === 'ur' ? c.ur : c.en}</b></span></button>`).join('')}
+    </div>
+    <div class="actions" style="display:grid;gap:10px;margin-top:16px"><button class="btn ghost" onclick="A.backToKindPicker()">${t('back_kind')}</button></div>
+    <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
+  window.scrollTo(0, 0);
+}
 function showPreKindPicker(){
   $('app').innerHTML = `<div class="auth">
     <div style="display:flex;justify-content:flex-end"><button class="pillbtn" onclick="A.toggleLang(true)">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
@@ -2942,10 +3108,10 @@ function showPreKindPicker(){
     <h1 style="font-size:24px;margin:18px 0 8px">${t('kind_title')}</h1>
     <p class="muted" style="margin:0 0 18px;font-size:13px">🔒 ${t('kind_lock')}</p>
     <div class="kindgrid">
-      <button type="button" class="kindcard" onclick="A.preChooseKind('products')">
+      <button type="button" class="kindcard" onclick="A.pickProdCat()">
         <span class="kemoji">🛍️</span><span><b>${t('kind_products')}</b><small>${t('kind_products_s')}</small></span>
       </button>
-      <button type="button" class="kindcard" onclick="A.preChooseKind('services')">
+      <button type="button" class="kindcard" onclick="A.pickSvcTrade()">
         <span class="kemoji">💈</span><span><b>${t('kind_services')}</b><small>${t('kind_services_s')}</small></span>
       </button>
     </div>
