@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.46';
+const APP_VERSION = '6.48';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1269,7 +1269,7 @@ function payCheckCard(o){
     ${o.pay_label ? `<div class="line"><span class="muted">${t('pay_method')}</span><span>${esc(o.pay_label)}</span></div>` : ''}
     ${o.pay_ref ? `<div class="line"><span class="muted">TID</span><b dir="ltr">${esc(o.pay_ref)}</b></div>` : ''}
     ${o.pay_proof_path ? `<button type="button" class="btn ghost block" style="margin-top:8px" onclick="A.shopPayProof('${o.id}')">${t('pay_proof')}</button>` : ''}
-    ${custWa ? `<a class="btn ghost block" style="margin-top:8px;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${custWa}?text=${encodeURIComponent('Assalam o Alaikum! Aap ke Dera order #' + o.id.slice(-4).toUpperCase() + ' ki payment ke silsile mein rabta kar raha hoon.')}">💬 Customer ko WhatsApp</a>` : ''}
+    ${custWa ? `<a class="btn ghost block" style="margin-top:8px;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${custWa}?text=${encodeURIComponent((state.lang === 'ur' ? 'السلام علیکم! آپ کے Dera آرڈر #' + o.id.slice(-4).toUpperCase() + ' کی ادائیگی کے سلسلے میں رابطہ کر رہا ہوں۔' : 'Hello! I am contacting you about the payment of your Dera order #' + o.id.slice(-4).toUpperCase() + '.'))}">${state.lang === 'ur' ? '💬 کسٹمر کو واٹس ایپ' : '💬 WhatsApp customer'}</a>` : ''}
     <div style="margin-top:10px">${labels.map((label, i) => `<label class="check" style="margin:8px 0"><input type="checkbox" ${ticks[i] ? 'checked' : ''} onchange="A.payCheckTick('${o.id}',${i},this.checked)"> ${esc(label)}</label>`).join('')}</div>
     <div class="two" style="margin-top:12px"><button type="button" class="btn warn" onclick="A.shopPayReject('${o.id}')">${t('pay_reject')}</button><button type="button" class="btn" id="payConfirm-${o.id}" ${ticks.every(Boolean) ? '' : 'disabled'} onclick="A.shopPayCheck('${o.id}')">${t('pay_confirm')}</button></div>
   </div>`;
@@ -1542,7 +1542,7 @@ const SECTION_TYPES = [
   { k:'toys', i:'🧸', n:'Toys', photo:'design', pools:[] },
   { k:'fastfood', i:'🍔', n:'Fast Food', photo:'', pools:['size_sml','extras_text'] },
   { k:'desi', i:'🍛', n:'Desi Khana', photo:'', pools:['portion'] },
-  { k:'wazan', i:'⚖️', n:'Wazan Wali Cheezain', photo:'', pools:['weight_g'] },
+  { k:'wazan', i:'⚖️', n:'Weighable / Loose Items', photo:'', pools:['weight_g'] },
   { k:'dairy', i:'🥛', n:'Dairy', photo:'', pools:['dairy'] },
   { k:'drinks', i:'🥤', n:'Cold Drinks', photo:'', pools:['drinks_size','pack_count'] },
   { k:'icecream', i:'🍦', n:'Ice Cream', photo:'', pools:['flavour_text','ice_pack'] },
@@ -1619,7 +1619,7 @@ const TF = {
     (state.pics ? state.pics.add : []).forEach((f, k) => out.push({ key:'a' + k, src:objUrl(f) }));
     return out;
   },
-  blankPools(ty){ const p = {}; (ty.pools || []).forEach(pk => { p[pk] = { sel:{}, custom:[] }; }); return p; },
+  blankPools(ty){ const p = {}; (ty.pools || []).forEach(pk => { const pool = POOLS[pk] || {}; const sel = {}; if (pool.min >= 1 && pool.chips) pool.chips.forEach(c => { sel[c] = ''; }); p[pk] = { sel, custom:[] }; }); return p; },
   async begin(item){
     TF.style();
     if (TF.on && TF.typeKey) TF.cache[TF.typeKey] = { meta:TF.meta, pools:TF.pools, itemId:(TF.item || {}).id || null };
@@ -1930,7 +1930,7 @@ function orderFileHtml(f){
     ${H('👤 ' + t('customer'))}
     ${L(t('name'), esc(c.name || ''))}
     ${c.phone ? L(t('phone'), `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>`) : ''}
-    ${waNum(c.phone) ? `<div style="margin-top:8px"><a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent('Assalam o Alaikum! Aap ke Dera order #' + (f.code || '') + ' ke bare mein rabta kar raha hoon.')}">💬 WhatsApp</a></div>` : ''}
+    ${waNum(c.phone) ? `<div style="margin-top:8px"><a class="wa" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent((state.lang === 'ur' ? 'السلام علیکم! آپ کے Dera آرڈر #' + (f.code || '') + ' کے بارے میں رابطہ کر رہا ہوں۔' : 'Hello! I am contacting you about your Dera order #' + (f.code || '') + '.'))}">💬 WhatsApp</a></div>` : ''}
     ${f.zone_name ? L(t('stmt_zone'), esc(f.zone_name)) : ''}
     ${f.address_text ? L(t('address'), esc(f.address_text)) : ''}
     ${H('🧾 ' + t('stmt_items'))}${items || `<div class="muted">—</div>`}
@@ -2040,6 +2040,7 @@ function resizeImage(file, max){
   return new Promise((res, rej) => {
     const img = new Image(); const url = URL.createObjectURL(file);
     img.onload = () => {
+      if (!img.width || !img.height){ URL.revokeObjectURL(url); return rej(new Error('Could not read this image')); }
       const s = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
@@ -2048,9 +2049,13 @@ function resizeImage(file, max){
     img.onerror = () => rej(new Error('Could not read this image')); img.src = url;
   });
 }
-async function uploadImage(file, folder){
-  const blob = await resizeImage(file, 900); const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  need(await sb.storage.from('food-images').upload(path, blob, { contentType:'image/jpeg' }));
+async function uploadImage(file, folder, label){
+  let blob = null, ct = 'image/jpeg', ext = 'jpg';
+  try { blob = await resizeImage(file, 900); } catch (e) { blob = null; }
+  if (!blob){ blob = file; ct = file.type || 'image/jpeg'; ext = (ct.split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace(/[^a-z0-9]/g, '') || 'jpg'; }
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  try { need(await sb.storage.from('food-images').upload(path, blob, { contentType: ct })); }
+  catch (e) { throw new Error((label ? label + ': ' : '') + ((e && e.message) || 'Upload failed')); }
   return sb.storage.from('food-images').getPublicUrl(path).data.publicUrl;
 }
 function wireDrag(g, getSt, redraw, after){
@@ -2108,19 +2113,19 @@ function drawPics(){
   g.innerHTML = old.concat(add).join('');
   wireDrag(g, () => state.pics, drawPics, seq => { try { remapBSlots(seq); drawBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} });
 }
-function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; if (id === 'i_prev') setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; if (id === 'i_prev') setTimeout(() => { try { syncBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} }, 0); const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
   const inp = $(inputId); const f = inp.files && inp.files[0];
   const msg0 = $('bgRmMsg');
-  if (!f){ if (msg0) msg0.textContent = '⚠️ Pehle photo select karo'; return; }
-  if (msg0) msg0.textContent = '⏳ AI kaam kar raha hai...';
+  if (!f){ if (msg0) msg0.textContent = state.lang === 'ur' ? '⚠️ پہلے تصویر منتخب کریں' : '⚠️ Select a photo first'; return; }
+  if (msg0) msg0.textContent = state.lang === 'ur' ? '⏳ AI کام کر رہا ہے…' : '⏳ AI is working...';
   try {
     const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
     const blob = await removeBackground(f);
     const file = new File([blob], f.name.replace(/\.[^.]+$/, '') + '_nobg.png', { type:'image/png' });
     const dt = new DataTransfer(); dt.items.add(file); inp.files = dt.files;
     $(prevId).src = URL.createObjectURL(file); $(prevId).style.display = 'block';
-    if (msg0) msg0.textContent = '✅ Background remove ho gaya!';
+    if (msg0) msg0.textContent = state.lang === 'ur' ? '✅ بیک گراؤنڈ ہٹا دیا گیا!' : '✅ Background removed!';
   } catch(e){ if (msg0) msg0.textContent = '❌ Failed: ' + (e.message || e); }
 }
 
@@ -2852,7 +2857,7 @@ const A = {
   bslotFile(inp){ const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return; if (!Array.isArray(state.bslots)) state.bslots = []; state.bslots[state._bslotIdx || 0] = { t:'a', v:f }; drawBSlots(); },
   rmBSlot(i){ if (Array.isArray(state.bslots)) state.bslots[i] = null; drawBSlots(); },
   morePhotos(inp){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); const room = 10 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(room <= 0 ? t('photo_limit') : t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); TF.syncPics(); },
-  rmPhoto(w, k){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); TF.picRemoved(w, k); if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); TF.syncPics(); },
+  rmPhoto(w, k){ setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); try { const fi = (mainPhotoOn() ? 1 : 0) + (w === 'o' ? k : state.pics.old.length + k); if (Array.isArray(state.bslots) && fi < state.bslots.length) state.bslots.splice(fi, 1); } catch (e) {} TF.picRemoved(w, k); if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); TF.syncPics(); },
   busyMenu(){ openSheet(t('busy_b'), `<div class="muted" style="margin-bottom:10px">${t('busy_t')}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">${[15, 30, 60].map(m => `<button class="btn ghost" onclick="A.setBusy(${m})">${t('mins').replace('{n}', m)}</button>`).join('')}</div>`); },
   async setBusy(m){
     const until = m ? new Date(Date.now() + m * 60000).toISOString() : null;
@@ -3026,13 +3031,13 @@ const A = {
       const row = { name, description:$('i_desc').value.trim() || null, keywords:($('i_kw').value || '').trim().slice(0, 300) || null, barcode:($('i_bc').value || '').trim().slice(0, 64) || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
         category_id:$('i_cat').value, is_available:$('i_avail').checked, weight_kg:Math.round(Math.max(0, num($('i_kg').value)) / ($('i_kgu').value === 'g' ? 1000 : 1) * 1000) / 1000 };
       const durEl = $('i_dur'); const dur = durEl ? Math.round(num(durEl.value)) : 0; row.duration_min = dur >= 5 ? Math.min(480, dur) : null;
-      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items');
+      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items', 'Main photo');
       const st = $('i_stock').value.trim(); row.stock_qty = st === '' ? null : Math.max(0, Math.round(num(st)));
       const pics = (state.pics || { old:[], add:[] }); const up = [];
-      for (const pf of pics.add) up.push(await uploadImage(pf, 'items'));
+      for (let ix = 0; ix < pics.add.length; ix++) up.push(await uploadImage(pics.add[ix], 'items', 'Photo ' + (pics.old.length + ix + 1)));
       row.photos = pics.old.concat(up).slice(0, 10);
       const slots = (Array.isArray(state.bslots) ? state.bslots : []).slice(0, 11); const barr = [];
-      for (const sl of slots) barr.push(!sl ? null : (sl.t === 'o' ? sl.v : await uploadImage(sl.v, 'items')));
+      for (let bi = 0; bi < slots.length; bi++){ const sl = slots[bi]; barr.push(!sl ? null : (sl.t === 'o' ? sl.v : await uploadImage(sl.v, 'items', 'Back of photo ' + (bi + 1)))); }
       while (barr.length && barr[barr.length - 1] === null) barr.pop();
       row.back_photos = barr;
       if (!isServices()){ const w = $('i_win'); row.avail_from = w && w.checked ? ($('i_wf').value || null) : null; row.avail_to = w && w.checked ? ($('i_wt').value || null) : null; }
@@ -3983,7 +3988,7 @@ Bulk.init({ get sb(){ return sb; }, shopId:() => state.restaurant && state.resta
 // ================= AUTO IMAGE (barcode -> OpenFoodFacts -> product photo) =================
 const AutoImg = (() => {
   let C = null, running = false, paused = false, done = 0, found = 0, total = 0, items = [];
-  const t = k => ({ found:'Tasveer mil gayi', notfound:'Nahi mili', done:'Ho gaya!', foundN:'tasveeren lag gayin', pause:'Roko', resume:'Jari rakho', close:'Band karo', start:'Tasveeren dhundo', none:'Koi product nahi mila jisme barcode ho aur tasveer na ho.' })[k] || k;
+  const t = k => { const en = { found:'Photo found', notfound:'Not found', done:'Done!', foundN:'photos added', pause:'Pause', resume:'Resume', close:'Close', start:'Find photos', none:'No product found that has a barcode and no photo.', paused:'⏸ Paused', running:'⏳ Working...' }; const ur = { found:'تصویر مل گئی', notfound:'نہیں ملی', done:'ہو گیا!', foundN:'تصویریں لگ گئیں', pause:'روکیں', resume:'جاری رکھیں', close:'بند کریں', start:'تصویریں ڈھونڈیں', none:'کوئی پروڈکٹ نہیں ملی جس میں بارکوڈ ہو اور تصویر نہ ہو۔', paused:'⏸ رکا ہوا', running:'⏳ چل رہا ہے…' }; return ((state.lang === 'ur' ? ur : en)[k]) || k; };
   async function lookup(bc){
     try {
       const r = await fetch('https://world.openfoodfacts.org/api/v2/product/' + encodeURIComponent(bc) + '.json?fields=product_name,image_url', { signal:AbortSignal.timeout(12000) });
@@ -4003,7 +4008,7 @@ const AutoImg = (() => {
     el.innerHTML = `<div style="text-align:center;padding:8px">
       <div style="font-size:15px;font-weight:800;margin-bottom:6px">🖼️ ${done} / ${total} &nbsp;·&nbsp; ✅ ${found}</div>
       <div style="height:14px;background:var(--field);border-radius:8px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--brand);border-radius:8px;transition:width .3s"></div></div>
-      <div style="font-size:13px;color:var(--muted);margin:8px 0">${running ? (paused ? '⏸ Ruka hua' : '⏳ Chal raha hai...') : t('done') + ' ' + found + ' ' + t('foundN')}</div>
+      <div style="font-size:13px;color:var(--muted);margin:8px 0">${running ? (paused ? t('paused') : t('running')) : t('done') + ' ' + found + ' ' + t('foundN')}</div>
       <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
         ${running ? `<button class="btn ghost" onclick="AutoImg.toggle()">${paused ? t('resume') : t('pause')}</button>` : ''}
         <button class="btn ghost" onclick="AutoImg.close()">${t('close')}</button>
