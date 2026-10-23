@@ -1033,7 +1033,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.45';
+const APP_VERSION = '5.46';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1911,7 +1911,13 @@ async function showParcel(){
 let pollTimer = null;
 function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
 const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account', 'offers', 'plus', 'parcel'];
+let routeRunning = false, routeQueued = false;
 async function route(soft){
+  if (routeRunning){ routeQueued = true; return; }
+  routeRunning = true;
+  try { await routeImpl(soft); } finally { routeRunning = false; if (routeQueued){ routeQueued = false; route(); } }
+}
+async function routeImpl(soft){
   stopPoll();
   const h = location.hash.replace(/^#\/?/, '');
   const p = h.split('/');
