@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.49';
+const APP_VERSION = '6.50';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1623,7 +1623,7 @@ const TF = {
   blankPools(ty){ const p = {}; (ty.pools || []).forEach(pk => { const pool = POOLS[pk] || {}; const sel = {}; if (pool.min >= 1 && pool.chips) pool.chips.forEach(c => { sel[c] = ''; }); p[pk] = { sel, custom:[] }; }); return p; },
   async begin(item){
     TF.style();
-    if (TF.on && TF.typeKey) TF.cache[TF.typeKey] = { meta:TF.meta, pools:TF.pools, itemId:(TF.item || {}).id || null };
+    if (TF.on && TF.typeKey) TF.cache[TF.typeKey] = { meta:TF.meta, pools:TF.pools, itemId:(TF.item || {}).id || null, defSizes:TF.defSizes || null };
     TF.on = false; TF.item = item || null; TF.cur = 0;
     const catId = (item && item.category_id) || ($('i_cat') ? $('i_cat').value : '');
     const cat = (state.cats || []).find(c => c.id === catId);
@@ -1641,7 +1641,7 @@ const TF = {
       if (groups.some(g => !TF_MANAGED.includes(g.name))){ if (area) area.innerHTML = ''; if (ow) ow.style.display = ''; return false; }
     }
     const cached = TF.cache[ty.k];
-    if (cached && cached.itemId === ((item || {}).id || null)){ TF.meta = cached.meta; TF.pools = cached.pools; }
+    if (cached && cached.itemId === ((item || {}).id || null)){ TF.meta = cached.meta; TF.pools = cached.pools; TF.defSizes = cached.defSizes || null; }
     else {
       TF.meta = []; TF.pools = TF.blankPools(ty);
       const srcs = TF.photoSrcs();
@@ -1659,6 +1659,7 @@ const TF = {
         });
       });
     }
+    if (!(cached && cached.itemId === ((item || {}).id || null))){ const sp0 = TF.sizePoolKey(ty); TF.defSizes = sp0 ? Object.keys((TF.pools[sp0] || {}).sel || {}) : null; }
     TF.on = true;
     if (ow) ow.style.display = 'none';
     TF.render();
@@ -1677,20 +1678,19 @@ const TF = {
       h += `<div style="display:flex;gap:8px;margin-top:9px"><input type="text" placeholder="${state.lang === 'ur' ? lblT + ' لکھیں — لال، نیلا…' : 'Write the ' + lblT + ' — Red, Blue…'}" value="${esc(m.name)}" oninput="A.tfMeta(this.value)" style="flex:1"><input type="number" inputmode="decimal" min="0" placeholder="+Rs" value="${esc(m.price)}" oninput="A.tfPrice(this.value)" style="width:88px;flex:none"></div>
       <div class="muted" style="font-size:12.5px;margin-top:5px">${state.lang === 'ur' ? `تصویر ${TF.cur + 1} از ${srcs.length} — ${lblT} کا نام لازمی لکھیں۔ <b>+Rs</b> صرف تب جب اس ${lblT} کی قیمت زیادہ ہو۔ اوپر والی پٹی سے تصویر بدل کر ہر تصویر کا ${lblT} لکھتے جائیں۔` : `Photo ${TF.cur + 1} of ${srcs.length} — the ${lblT} name is required. Add <b>+Rs</b> only if this ${lblT} costs more. Tap a photo in the strip above to switch, and write the ${lblT} for every photo.`}</div>`;
     }
-    const spk = TF.sizePoolKey(ty);
-    if (spk){
-      const allSz = Object.keys((TF.pools[spk] || {}).sel || {});
-      const eff = TF.metaSizes(TF.cur) || [];
-      const lblW = ty.photo === 'rang' ? (state.lang === 'ur' ? 'رنگ' : 'colour') : (state.lang === 'ur' ? 'ڈیزائن' : 'design');
-      h += `<div style="font-weight:800;margin:14px 0 7px">${state.lang === 'ur' ? '📏 اس ' + lblW + ' کے سائز' : '📏 Sizes for this ' + lblW}</div>`;
-      if (allSz.length) h += `<div>${allSz.map(c => `<button type="button" class="tfchip ${eff.includes(c) ? 'on' : ''}" onclick="A.tfMetaSize('${c}')">${esc(c)}</button>`).join('')}</div><div class="muted" style="font-size:12.5px;margin-top:5px">${state.lang === 'ur' ? 'صرف وہی سائز آن رکھیں جو اس ' + lblW + ' میں موجود ہیں — جو اس ' + lblW + ' میں ختم ہو گیا ہے اسے بند کر دیں۔ باقی پر کوئی اثر نہیں پڑے گا۔' : 'Keep ON only the sizes this ' + lblW + ' has — turn OFF the ones finished for this ' + lblW + '. The others are not affected.'}</div>`;
-      else h += `<div class="muted" style="font-size:12.5px">${state.lang === 'ur' ? 'پہلے نیچے سائز منتخب کریں۔' : 'First select the sizes below.'}</div>`;
-    }
     (ty.pools || []).forEach(pk => {
       const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] };
       const minSuf = state.lang === 'ur' ? '(ایک لازمی)' : '(one required)'; const optSuf = state.lang === 'ur' ? '(مرضی)' : '(optional)';
       h += `<div style="font-weight:800;margin:14px 0 7px">${pool.label} ${pool.min ? '<span class="muted" style="font-size:12px;font-weight:600">' + minSuf + '</span>' : '<span class="muted" style="font-size:12px;font-weight:600">' + optSuf + '</span>'}</div>`;
-      if (pool.chips){
+      if (pk === TF.sizePoolKey(ty)){
+        const eff2 = TF.metaSizes(TF.cur) || [];
+        const curNm = ((TF.meta[TF.cur] || {}).name || '').trim();
+        h += `<div style="margin:-2px 0 7px"><span style="display:inline-block;background:#fff2e9;color:#d35400;border:1.5px solid #f8590a;border-radius:999px;font-size:12px;font-weight:800;padding:2px 10px">${state.lang === 'ur' ? '👇 یہ سائز صرف اس رنگ کے ہیں' + (curNm ? ' — ' + esc(curNm) : '') : '👇 These sizes are for this colour only' + (curNm ? ' — ' + esc(curNm) : '')}</span></div>`;
+        h += `<div>${pool.chips.map(c => `<button type="button" class="tfchip ${eff2.includes(c) ? 'on' : ''}" onclick="A.tfMetaSize('${c}')">${esc(c)}</button>`).join('')}</div>`;
+        h += eff2.map(c => `<div class="tfsel"><span>${esc(c)}</span><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(P.sel[c] || '')}" oninput="A.tfPoolPrice('${pk}','${c}',this.value)"></span></div>`).join('');
+        h += `<div class="muted" style="font-size:12.5px;margin-top:5px">${state.lang === 'ur' ? 'جو سائز اس رنگ میں ختم ہو گیا ہے اسے بند کر دیں — باقی رنگوں پر کوئی اثر نہیں پڑے گا۔ +Rs ہر سائز کا پوری پروڈکٹ پر ایک ہی رہتا ہے۔' : 'Turn OFF the sizes finished for this colour — the other colours are not affected. The +Rs of a size stays the same for the whole product.'}</div>`;
+      }
+      else if (pool.chips){
         h += `<div>${pool.chips.map(c => `<button type="button" class="tfchip ${c in P.sel ? 'on' : ''}" onclick="A.tfPool('${pk}','${c}')">${esc(c)}</button>`).join('')}</div>`;
         h += Object.keys(P.sel).map(c => `<div class="tfsel"><span>${esc(c)}</span><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(P.sel[c])}" oninput="A.tfPoolPrice('${pk}','${c}',this.value)"></span></div>`).join('');
       }
@@ -1706,7 +1706,7 @@ const TF = {
   previewText(){
     const ty = typeByKey(TF.typeKey); const parts = [];
     if (ty.photo){ const ns = TF.meta.map(m => (m.name || '').trim()).filter(Boolean); if (ns.length) parts.push((ty.photo === 'rang' ? 'Colour' : 'Design') + ': ' + ns.join(', ')); }
-    (ty.pools || []).forEach(pk => { const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] }; const ns = Object.keys(P.sel).concat(P.custom.map(r => (r.name || '').trim()).filter(Boolean)); if (ns.length) parts.push(pool.label + ': ' + ns.join(', ')); });
+    (ty.pools || []).forEach(pk => { const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] }; const ns = pk === TF.sizePoolKey(ty) ? (pool.chips || []).filter(c => TF.photoSrcs().some((s3, i3) => (TF.metaSizes(i3) || []).includes(c))) : Object.keys(P.sel).concat(P.custom.map(r => (r.name || '').trim()).filter(Boolean)); if (ns.length) parts.push(pool.label + ': ' + ns.join(', ')); });
     return parts.join(' · ');
   },
   picRemoved(w, k){
@@ -1724,7 +1724,7 @@ const TF = {
     TF.render();
   },
   sizePoolKey(ty){ if (!ty || !ty.photo) return null; return (ty.pools || []).find(pk => { const p = POOLS[pk]; return p && p.chips && /size/i.test(p.label || ''); }) || null; },
-  metaSizes(i){ const sp = TF.sizePoolKey(typeByKey(TF.typeKey)); if (!sp) return null; const all = Object.keys((TF.pools[sp] || {}).sel || {}); const m = TF.meta[i]; if (!m || !Array.isArray(m.sz)) return all; return m.sz.filter(x => all.includes(x)); },
+  metaSizes(i){ const sp = TF.sizePoolKey(typeByKey(TF.typeKey)); if (!sp) return null; const all = (TF.defSizes && TF.defSizes.length) ? TF.defSizes : Object.keys((TF.pools[sp] || {}).sel || {}); const m = TF.meta[i]; if (!m || !Array.isArray(m.sz)) return all.slice(); return m.sz.slice(); },
   remapMeta(seq){ if (!Array.isArray(TF.meta) || !seq) return; const old = TF.meta.slice(); const off = Math.max(0, old.length - seq.length); const oldLen = state._picsOldLen || 0; const pos = k => k[0] === 'o' ? +k.slice(1) : oldLen + (+k.slice(1)); const head = old.slice(0, off); TF.meta = head.concat(seq.map(k => old[off + pos(k)] || { name:'', price:'' })); },
   groupsOut(){
     const ty = typeByKey(TF.typeKey); const out = [];
@@ -1738,7 +1738,8 @@ const TF = {
     }
     (ty.pools || []).forEach(pk => {
       const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] }; const opts = [];
-      (pool.chips || []).filter(c => c in P.sel).concat(Object.keys(P.sel).filter(c => !(pool.chips || []).includes(c))).forEach(c => opts.push({ name:c, price:Math.max(0, num(P.sel[c])), weight_kg:(pool.w && pool.w[c]) || 0 }));
+      if (pk === TF.sizePoolKey(ty)){ (pool.chips || []).forEach(c => { if (TF.photoSrcs().some((s3, i3) => (TF.metaSizes(i3) || []).includes(c))) opts.push({ name:c, price:Math.max(0, num(P.sel[c])), weight_kg:(pool.w && pool.w[c]) || 0 }); }); }
+      else (pool.chips || []).filter(c => c in P.sel).concat(Object.keys(P.sel).filter(c => !(pool.chips || []).includes(c))).forEach(c => opts.push({ name:c, price:Math.max(0, num(P.sel[c])), weight_kg:(pool.w && pool.w[c]) || 0 }));
       P.custom.forEach(r => { if ((r.name || '').trim()) opts.push({ name:r.name.trim(), price:Math.max(0, num(r.price)), weight_kg:0 }); });
       if (opts.length) out.push({ name:pool.label, min:pool.min, max:pool.max, options:opts });
     });
@@ -3041,7 +3042,7 @@ const A = {
   catChanged(){ const it = Object.assign({}, state.tfItem || {}, { category_id:$('i_cat').value }); TF.begin(it).then(h => { if (!h) OE.load(it.id || null).catch(() => {}); }); },
   tfPhoto(i){ TF.cur = i; TF.render(); },
   tfMeta(v){ if (TF.meta[TF.cur]) TF.meta[TF.cur].name = v; },
-  tfMetaSize(c){ const sp = TF.sizePoolKey(typeByKey(TF.typeKey)); if (!sp) return; const all = Object.keys((TF.pools[sp] || {}).sel || {}); const m = TF.meta[TF.cur] || (TF.meta[TF.cur] = { name:'', price:'' }); let eff = Array.isArray(m.sz) ? m.sz.filter(x => all.includes(x)) : all.slice(); if (eff.includes(c)){ if (eff.length <= 1) return toast(state.lang === 'ur' ? 'اس رنگ کے لیے کم از کم ایک سائز رکھیں' : 'Keep at least one size for this colour', true); eff = eff.filter(x => x !== c); } else eff.push(c); m.sz = (eff.length === all.length && all.every(x => eff.includes(x))) ? undefined : eff; TF.render(); },
+  tfMetaSize(c){ const sp = TF.sizePoolKey(typeByKey(TF.typeKey)); if (!sp) return; const P = TF.pools[sp] || (TF.pools[sp] = { sel:{}, custom:[] }); if (!(c in P.sel)) P.sel[c] = ''; const all = (TF.defSizes && TF.defSizes.length) ? TF.defSizes.slice() : Object.keys(P.sel); const m = TF.meta[TF.cur] || (TF.meta[TF.cur] = { name:'', price:'' }); let eff = Array.isArray(m.sz) ? m.sz.slice() : all.slice(); if (eff.includes(c)){ if (eff.length <= 1) return toast(state.lang === 'ur' ? 'اس رنگ کے لیے کم از کم ایک سائز رکھیں' : 'Keep at least one size for this colour', true); eff = eff.filter(x => x !== c); } else eff.push(c); m.sz = (eff.length === all.length && all.every(x => eff.includes(x))) ? undefined : eff; TF.render(); },
   tfPrice(v){ if (TF.meta[TF.cur]) TF.meta[TF.cur].price = v; },
   tfPool(pk, c){ const P = TF.pools[pk]; if (!P) return; if (c in P.sel) delete P.sel[c]; else P.sel[c] = ''; TF.render(); },
   tfPoolPrice(pk, c, v){ const P = TF.pools[pk]; if (P) P.sel[c] = v; },
