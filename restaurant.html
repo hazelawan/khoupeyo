@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.43';
+const APP_VERSION = '6.45';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2089,10 +2089,11 @@ function wireDrag(g, getSt, redraw, after){
   g.addEventListener('pointercancel', done);
 }
 const _objUrlCache = new WeakMap();
-function objUrl(f){ let u = _objUrlCache.get(f); if (!u){ u = objUrl(f); _objUrlCache.set(f, u); } return u; }
-function frontCount(){ return state.pics ? state.pics.old.length + state.pics.add.length : 0; }
+function objUrl(f){ let u = _objUrlCache.get(f); if (!u){ u = URL.createObjectURL(f); _objUrlCache.set(f, u); } return u; }
+function mainPhotoOn(){ const pv = $('i_prev'); if (pv && pv.style.display !== 'none' && (pv.src || '').length > 4) return true; const it = (typeof TF !== 'undefined' && TF.item) || {}; return !!it.photo_url; }
+function frontCount(){ return (mainPhotoOn() ? 1 : 0) + (state.pics ? state.pics.old.length + state.pics.add.length : 0); }
 function syncBSlots(){ if (!Array.isArray(state.bslots)) state.bslots = []; const n = frontCount(); while (state.bslots.length < n) state.bslots.push(null); state.bslots.length = n; drawBSlots(); }
-function remapBSlots(seq){ if (!Array.isArray(state.bslots) || !seq) return; const old = state.bslots.slice(); const oldLen = state._picsOldLen || 0; const pos = k => k[0] === 'o' ? +k.slice(1) : oldLen + (+k.slice(1)); state.bslots = seq.map(k => old[pos(k)] ?? null); }
+function remapBSlots(seq){ if (!Array.isArray(state.bslots) || !seq) return; const old = state.bslots.slice(); const oldLen = state._picsOldLen || 0; const off = Math.max(0, old.length - seq.length); const pos = k => k[0] === 'o' ? +k.slice(1) : oldLen + (+k.slice(1)); const head = old.slice(0, off); state.bslots = head.concat(seq.map(k => old[off + pos(k)] ?? null)); }
 function drawBSlots(){
   const g = $('pgrid2'); if (!g) return;
   if (!Array.isArray(state.bslots)) state.bslots = [];
@@ -2107,7 +2108,7 @@ function drawPics(){
   g.innerHTML = old.concat(add).join('');
   wireDrag(g, () => state.pics, drawPics, seq => { try { remapBSlots(seq); drawBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} });
 }
-function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; if (id === 'i_prev') setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0); const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
   const inp = $(inputId); const f = inp.files && inp.files[0];
   const msg0 = $('bgRmMsg');
@@ -3012,7 +3013,7 @@ const A = {
     if (!state.cats.length) return toast(t('no_sections'), true);
     const i = state.items.find(x => x.id === id);
     state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
-    state.bslots = []; { const bp = (i && Array.isArray(i.back_photos)) ? i.back_photos : []; const n = (i && Array.isArray(i.photos)) ? i.photos.length : 0; for (let k = 0; k < n; k++) state.bslots.push(bp[k] ? { t:'o', v:bp[k] } : null); }
+    state.bslots = []; { const bp = (i && Array.isArray(i.back_photos)) ? i.back_photos : []; const n = ((i && i.photo_url) ? 1 : 0) + ((i && Array.isArray(i.photos)) ? i.photos.length : 0); for (let k = 0; k < n; k++) state.bslots.push(bp[k] ? { t:'o', v:bp[k] } : null); }
     openSheet(i ? i.name : t('add_product'), itemForm(i || (catId || state.newBarcode ? { is_available:true, category_id:catId || (state.cats[0] || {}).id, barcode:state.newBarcode || null } : null))); drawPics(); state.newBarcode = null;
     setTimeout(() => { try { syncBSlots(); } catch (e) {} }, 0);
     OE.init({ sb, lang:() => state.lang }); state.tfItem = i || null; TF.begin(i || null).then(h => { if (!h) OE.load(i ? i.id : null).catch(e => toast(e.message || t('error'), true)); });
