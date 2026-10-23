@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.42';
+const APP_VERSION = '6.43';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -856,7 +856,7 @@ const I18N = {
     pw_new:'New password', pw_new2:'Write the new password again', pw_mismatch:'The two passwords do not match', pw_set:'Set password', pw_changed:'Password changed ✔',
     pw_cur:'Current password', pw_cur_ph:'The temporary password from the office', pw_cur_wrong:'Current password is wrong',
     pa_add:'+ Add account', pa_edit:'Edit', pa_delete:'Delete', pa_del2:'Tap again to confirm', pa_none:'No accounts yet. Add one below.', pa_service:'Service name', pa_type:'Account type', pa_optional:'optional',
-    stepup_t:'Hifazat ki tasdeeq', stepup_s:'Apna password dobara likhein — hifazat ke liye', stepup_btn:'Tasdeeq karein', pw_wrong:'Password ghalat hai'
+    stepup_t:'Security check', stepup_s:'Enter your password again — for your security', stepup_btn:'Verify', pw_wrong:'Wrong password'
   },
   ur: {
     appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', delete_warn:'مستقل', sf_send:'منظوری کے لیے بھیجیں', receiver:'وصول کرنے والا', aa_t:'⚡ آرڈر خود قبول ہوں', aa_s:'نئے آرڈر آپ کے عام تیاری کے وقت کے ساتھ فوراً قبول ہو جائیں گے۔ مصروف ہوں تو بند کر دیں۔', staff_t:'👥 اسٹاف لاگ اِن', staff_s:'اپنے کاریگروں کو الگ لاگ اِن دیں۔ ان کا Gmail لکھیں۔ Dera چیک کر کے منظور کرے گا۔ پھر وہ اسی Gmail سے لاگ اِن کریں گے (تصدیق کے بعد)۔ اسٹاف آرڈر اور پروڈکٹس دیکھ سکتا ہے، آپ کے پیسے اور سیٹنگز نہیں۔', staff_add:'+ اسٹاف شامل کریں', staff_email:'اسٹاف کا Gmail', staff_name:'اسٹاف کا نام', staff_phone:'فون (اختیاری)', staff_sent:'منظوری کے لیے Dera کو بھیج دیا', staff_pending:'منظوری کا انتظار', staff_approved:'منظور · پہلے لاگ اِن کا انتظار', staff_active:'فعال', staff_rejected:'منظور نہیں', staff_remove_q:'یہ اسٹاف لاگ اِن ہٹا دیں؟', staff_none:'ابھی کوئی اسٹاف نہیں۔', staff_mode:'اسٹاف لاگ اِن', bp_btn:'💲 قیمتیں بدلیں', bp_t:'ایک ساتھ کئی قیمتیں بدلیں', bp_sec:'کون سی پروڈکٹس', bp_all:'تمام پروڈکٹس', bp_pct:'فیصد سے بدلیں (%)', bp_add:'یا روپے بڑھائیں / کم کریں', bp_pct_ph:'10 = 10% زیادہ، -10 = 10% کم', bp_add_ph:'20 = 20 روپے زیادہ، -20 = 20 روپے کم', bp_round:'نئی قیمت گول کریں', bp_ex:'مثال: {a} سے {b}', bp_apply:'قیمتیں بدلیں', bp_q:'{n} پروڈکٹس کی قیمت بدلیں؟', bp_done:'{n} قیمتیں بدل گئیں', scan_btn:'📷 بارکوڈ اسکین', barcode:'بارکوڈ', scan_t:'کیمرہ بارکوڈ کی طرف کریں', scan_no:'یہاں کیمرہ اسکین کام نہیں کرتا۔ بارکوڈ لکھ دیں۔', scan_found:'مل گیا: {n}', scan_new:'نیا بارکوڈ — پروڈکٹ شامل کریں',
@@ -1616,7 +1616,7 @@ const TF = {
     const mainSrc = (prev && prev.style.display !== 'none' && prev.src) ? prev.src : (it.photo_url || '');
     out.push({ key:'m', src:mainSrc });
     (state.pics ? state.pics.old : []).forEach((u, k) => out.push({ key:'o' + k, src:u }));
-    (state.pics ? state.pics.add : []).forEach((f, k) => out.push({ key:'a' + k, src:URL.createObjectURL(f) }));
+    (state.pics ? state.pics.add : []).forEach((f, k) => out.push({ key:'a' + k, src:objUrl(f) }));
     return out;
   },
   blankPools(ty){ const p = {}; (ty.pools || []).forEach(pk => { p[pk] = { sel:{}, custom:[] }; }); return p; },
@@ -1665,28 +1665,30 @@ const TF = {
   render(){
     const area = $('tfArea'); if (!area || !TF.on) return;
     const ty = typeByKey(TF.typeKey);
-    let h = `<div class="tfbox"><b>${ty.i} ${esc(ty.n)}</b> <span class="muted" style="font-size:12.5px">— is section ka form</span>`;
+    let h = `<div class="tfbox"><b>${ty.i} ${esc(ty.n)}</b> <span class="muted" style="font-size:12.5px">${state.lang === 'ur' ? '— اس سیکشن کا فارم' : '— this section’s form'}</span>`;
     if (ty.photo){
       const srcs = TF.photoSrcs();
       const lbl = ty.photo === 'rang' ? 'Rang' : 'Design';
-      h += `<div style="font-weight:800;margin:12px 0 7px">📸 Har photo ka ${lbl}</div><div class="tfstrip">${srcs.map((s2, i) => `<div class="tfth ${i === TF.cur ? 'on' : ''}" onclick="A.tfPhoto(${i})">${s2.src ? `<img src="${esc(s2.src)}" alt="">` : '<div class="ph">🖼️</div>'}${TF.meta[i] && TF.meta[i].name ? '<span class="done">✓</span>' : ''}</div>`).join('')}</div>`;
+      const lblT = state.lang === 'ur' ? (ty.photo === 'rang' ? 'رنگ' : 'ڈیزائن') : (ty.photo === 'rang' ? 'Color' : 'Design');
+      h += `<div style="font-weight:800;margin:12px 0 7px">📸 ${state.lang === 'ur' ? 'ہر تصویر کا ' + lblT : 'Each photo’s ' + lblT}</div><div class="tfstrip">${srcs.map((s2, i) => `<div class="tfth ${i === TF.cur ? 'on' : ''}" onclick="A.tfPhoto(${i})">${s2.src ? `<img src="${esc(s2.src)}" alt="">` : '<div class="ph">🖼️</div>'}${TF.meta[i] && TF.meta[i].name ? '<span class="done">✓</span>' : ''}</div>`).join('')}</div>`;
       const m = TF.meta[TF.cur] || { name:'', price:'' };
-      h += `<div style="display:flex;gap:8px;margin-top:9px"><input type="text" placeholder="${lbl} likhein — Red, Neela…" value="${esc(m.name)}" oninput="A.tfMeta(this.value)" style="flex:1"><input type="number" inputmode="decimal" min="0" placeholder="+Rs" value="${esc(m.price)}" oninput="A.tfPrice(this.value)" style="width:88px;flex:none"></div>
-      <div class="muted" style="font-size:12.5px;margin-top:5px">Photo ${TF.cur + 1} of ${srcs.length} — ${lbl} ka naam lazmi likhein, <b>+Rs</b> sirf tab jab is ${lbl} ki price zyada ho. Uper wali photo strip se photo badal kar har photo ka ${lbl} likhte jayen.</div>`;
+      h += `<div style="display:flex;gap:8px;margin-top:9px"><input type="text" placeholder="${state.lang === 'ur' ? lblT + ' لکھیں — لال، نیلا…' : 'Write the ' + lblT + ' — Red, Blue…'}" value="${esc(m.name)}" oninput="A.tfMeta(this.value)" style="flex:1"><input type="number" inputmode="decimal" min="0" placeholder="+Rs" value="${esc(m.price)}" oninput="A.tfPrice(this.value)" style="width:88px;flex:none"></div>
+      <div class="muted" style="font-size:12.5px;margin-top:5px">${state.lang === 'ur' ? `تصویر ${TF.cur + 1} از ${srcs.length} — ${lblT} کا نام لازمی لکھیں۔ <b>+Rs</b> صرف تب جب اس ${lblT} کی قیمت زیادہ ہو۔ اوپر والی پٹی سے تصویر بدل کر ہر تصویر کا ${lblT} لکھتے جائیں۔` : `Photo ${TF.cur + 1} of ${srcs.length} — the ${lblT} name is required. Add <b>+Rs</b> only if this ${lblT} costs more. Tap a photo in the strip above to switch, and write the ${lblT} for every photo.`}</div>`;
     }
     (ty.pools || []).forEach(pk => {
       const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] };
-      h += `<div style="font-weight:800;margin:14px 0 7px">${pool.label} ${pool.min ? '<span class="muted" style="font-size:12px;font-weight:600">(aik lazmi)</span>' : '<span class="muted" style="font-size:12px;font-weight:600">(marzi)</span>'}</div>`;
+      const minSuf = state.lang === 'ur' ? '(ایک لازمی)' : '(one required)'; const optSuf = state.lang === 'ur' ? '(مرضی)' : '(optional)';
+      h += `<div style="font-weight:800;margin:14px 0 7px">${pool.label} ${pool.min ? '<span class="muted" style="font-size:12px;font-weight:600">' + minSuf + '</span>' : '<span class="muted" style="font-size:12px;font-weight:600">' + optSuf + '</span>'}</div>`;
       if (pool.chips){
         h += `<div>${pool.chips.map(c => `<button type="button" class="tfchip ${c in P.sel ? 'on' : ''}" onclick="A.tfPool('${pk}','${c}')">${esc(c)}</button>`).join('')}</div>`;
         h += Object.keys(P.sel).map(c => `<div class="tfsel"><span>${esc(c)}</span><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(P.sel[c])}" oninput="A.tfPoolPrice('${pk}','${c}',this.value)"></span></div>`).join('');
       }
       if (pool.custom){
-        h += P.custom.map((r, i) => `<div class="tfsel"><input type="text" value="${esc(r.name)}" placeholder="${pool.label} ka naam" oninput="A.tfCustom('${pk}',${i},'name',this.value)" style="flex:1;width:auto"><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(r.price)}" oninput="A.tfCustom('${pk}',${i},'price',this.value)"></span><button type="button" class="x" style="border:0;background:none;color:var(--danger);font-size:19px;cursor:pointer" onclick="A.tfDelCustom('${pk}',${i})">×</button></div>`).join('');
-        h += `<button type="button" class="btn ghost small" style="margin-top:7px" onclick="A.tfAddCustom('${pk}')">+ ${pool.label} add karein</button>`;
+        h += P.custom.map((r, i) => `<div class="tfsel"><input type="text" value="${esc(r.name)}" placeholder="${pool.label} ${state.lang === 'ur' ? 'کا نام' : 'name'}" oninput="A.tfCustom('${pk}',${i},'name',this.value)" style="flex:1;width:auto"><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(r.price)}" oninput="A.tfCustom('${pk}',${i},'price',this.value)"></span><button type="button" class="x" style="border:0;background:none;color:var(--danger);font-size:19px;cursor:pointer" onclick="A.tfDelCustom('${pk}',${i})">×</button></div>`).join('');
+        h += `<button type="button" class="btn ghost small" style="margin-top:7px" onclick="A.tfAddCustom('${pk}')">${state.lang === 'ur' ? '+ ' + pool.label + ' شامل کریں' : '+ Add ' + pool.label}</button>`;
       }
     });
-    h += `<div class="tfprev">👁️ <b>Customer ko ye options dikhenge:</b> ${esc(TF.previewText() || '—')}</div>`;
+    h += `<div class="tfprev">${state.lang === 'ur' ? '👁️ <b>گاہک کو یہ آپشنز نظر آئیں گے:</b>' : '👁️ <b>The customer will see these options:</b>'} ${esc(TF.previewText() || '—')}</div>`;
     h += `<div class="muted" style="font-size:12.5px;margin-top:8px">${state.lang === 'ur' ? 'کوئی عجیب آپشن چاہیے تو سیکشن کی قسم <b>Simple / Aam</b> کر دیں — پرانا والا ایڈیٹر واپس آ جائے گا۔' : 'For an unusual option, set the section type to <b>Simple / General</b> — the old editor will come back.'}</div></div>`;
     area.innerHTML = h;
   },
@@ -1750,11 +1752,11 @@ function winFieldsHtml(i){
 function svcFieldsHtml(i){
   if (!isServices()) return '';
   const tr = svcTrade(); const sv = (i && i.svc) || {};
-  const noteLbl = ['doctor','dentist','lab'].includes(tr) ? 'Mareez apna masla likhe — lazmi' : 'Customer kaam ki tafseel likhe — lazmi';
+  const noteLbl = state.lang === 'ur' ? (['doctor','dentist','lab'].includes(tr) ? 'مریض اپنا مسئلہ لکھے — لازمی' : 'گاہک کام کی تفصیل لکھے — لازمی') : (['doctor','dentist','lab'].includes(tr) ? 'The patient writes their problem — required' : 'The customer writes the work details — required');
   let h = '';
   if (SVC_NOTE_TRADES.includes(tr)) h += `<label class="check"><input id="sv_note" type="checkbox" ${sv.need_note ? 'checked' : ''}> 📝 ${noteLbl}</label>`;
-  if (SVC_HOME_TRADES.includes(tr)) h += `<label class="check"><input id="sv_home" type="checkbox" ${sv.home_visit ? 'checked' : ''}> 🏠 Ghar par visit (home visit) available</label>
-    <label class="f" for="sv_fee">Ghar visit ki extra fee (Rs)</label><input id="sv_fee" type="number" min="0" step="1" inputmode="numeric" value="${sv.home_fee ?? ''}" placeholder="300">`;
+  if (SVC_HOME_TRADES.includes(tr)) h += `<label class="check"><input id="sv_home" type="checkbox" ${sv.home_visit ? 'checked' : ''}> ${state.lang === 'ur' ? '🏠 گھر پر وزٹ (ہوم وزٹ) دستیاب ہے' : '🏠 Home visit available'}</label>
+    <label class="f" for="sv_fee">${state.lang === 'ur' ? 'گھر وزٹ کی اضافی فیس (Rs)' : 'Home visit extra fee (Rs)'}</label><input id="sv_fee" type="number" min="0" step="1" inputmode="numeric" value="${sv.home_fee ?? ''}" placeholder="300">`;
   return h;
 }
 function itemForm(i){
@@ -2086,6 +2088,8 @@ function wireDrag(g, getSt, redraw, after){
   g.addEventListener('pointerup', done);
   g.addEventListener('pointercancel', done);
 }
+const _objUrlCache = new WeakMap();
+function objUrl(f){ let u = _objUrlCache.get(f); if (!u){ u = objUrl(f); _objUrlCache.set(f, u); } return u; }
 function frontCount(){ return state.pics ? state.pics.old.length + state.pics.add.length : 0; }
 function syncBSlots(){ if (!Array.isArray(state.bslots)) state.bslots = []; const n = frontCount(); while (state.bslots.length < n) state.bslots.push(null); state.bslots.length = n; drawBSlots(); }
 function remapBSlots(seq){ if (!Array.isArray(state.bslots) || !seq) return; const old = state.bslots.slice(); const oldLen = state._picsOldLen || 0; const pos = k => k[0] === 'o' ? +k.slice(1) : oldLen + (+k.slice(1)); state.bslots = seq.map(k => old[pos(k)] ?? null); }
@@ -2093,17 +2097,17 @@ function drawBSlots(){
   const g = $('pgrid2'); if (!g) return;
   if (!Array.isArray(state.bslots)) state.bslots = [];
   g.innerHTML = state.bslots.map((sl, i) => sl
-    ? `<div class="pth"><img src="${sl.t === 'o' ? esc(sl.v) : URL.createObjectURL(sl.v)}" alt=""><button type="button" onclick="A.rmBSlot(${i})" aria-label="x">×</button><span style="position:absolute;bottom:4px;left:4px;background:#F85606;color:#fff;font-weight:800;font-size:10.5px;border-radius:99px;padding:2px 7px">${i + 1}</span></div>`
+    ? `<div class="pth"><img src="${sl.t === 'o' ? esc(sl.v) : objUrl(sl.v)}" alt=""><button type="button" onclick="A.rmBSlot(${i})" aria-label="x">×</button><span style="position:absolute;bottom:4px;left:4px;background:#F85606;color:#fff;font-weight:800;font-size:10.5px;border-radius:99px;padding:2px 7px">${i + 1}</span></div>`
     : `<div class="pth" style="border:2px dashed #CFC9B8;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8a8578;cursor:pointer;background:#FBFAF7" onclick="A.addBSlot(${i})"><span style="font-size:20px">＋</span><span style="font-size:10.5px;font-weight:700">${state.lang === 'ur' ? 'پیچھے' : 'Back'} ${i + 1}</span></div>`).join('');
 }
 function drawPics(){
   const g = $('pgrid'); if (!g || !state.pics) return;
   const old = state.pics.old.map((u, k) => `<div class="pth" data-k="o${k}"><img src="${esc(u)}" alt=""><button type="button" onclick="A.rmPhoto('o', ${k})" aria-label="${t('remove')}">×</button></div>`);
-  const add = state.pics.add.map((f, k) => `<div class="pth" data-k="a${k}"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" onclick="A.rmPhoto('a', ${k})" aria-label="${t('remove')}">×</button></div>`);
+  const add = state.pics.add.map((f, k) => `<div class="pth" data-k="a${k}"><img src="${objUrl(f)}" alt=""><button type="button" onclick="A.rmPhoto('a', ${k})" aria-label="${t('remove')}">×</button></div>`);
   g.innerHTML = old.concat(add).join('');
   wireDrag(g, () => state.pics, drawPics, seq => { try { remapBSlots(seq); drawBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} });
 }
-function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = URL.createObjectURL(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
   const inp = $(inputId); const f = inp.files && inp.files[0];
   const msg0 = $('bgRmMsg');
@@ -3789,7 +3793,7 @@ const Bulk = (() => {
     ['name','price','bc','section','stock','photo'].forEach(k => {
       const el = $('bkmap_' + k); if (el && el.value !== '') m[k] = Number(el.value);
     });
-    if (m.name === undefined || m.price === undefined){ C.toast('Name aur Price lazmi hain!', true); return; }
+    if (m.name === undefined || m.price === undefined){ C.toast('Name and Price are required!', true); return; }
     S.manualMap = m; buildWithMap();
   }
   async function buildWithMap(){
