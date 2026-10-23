@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.54';
+const APP_VERSION = '7.57';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -1143,7 +1143,7 @@ function viewOrders(){
     return `<button class="row" onclick="A.openOrder('${o.id}')">
       <div class="row-main">
         <div class="row-title">#${esc(o.id.slice(-4).toUpperCase())} ${esc(o.restaurant?.name || 'Shop')}<span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span>${payPill(o)}</div>
-        <div class="row-sub">${o.order_type === 'pickup' ? '🛍️ Pickup · ' : ''}${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
+        <div class="row-sub">${o.order_type === 'pickup' ? '🛍️ Pickup · ' : o.order_type === 'dinein' ? '🍽️ Dine-in · ' : ''}${esc(o.customer?.full_name || 'Customer')}${o.rider?.profile ? ' · Rider ' + esc(o.rider.profile.full_name || '') : ''}</div>
         ${FINAL.includes(o.status) ? '' : `<div class="steps">${STEPS.map((s, i) => `<i class="${i <= idx ? 'on' : ''}"></i>`).join('')}</div>`}
       </div>
       <div class="row-side">${money(o.total)}<small>${timeAgo(o.created_at)}</small></div></button>`;
@@ -1162,7 +1162,7 @@ function orderPayPanel(o){
   let h = `<div class="card paycard"><div class="kv"><b>💳 Online payment</b><span class="pill ${p[1]}">${esc(p[0])}</span></div>
     ${o.pay_label ? `<div class="kv"><span class="muted">Paid with</span><span>${esc(o.pay_label)}</span></div>` : ''}
     ${o.pay_ref ? `<div class="kv"><span class="muted">Transaction ID (TID)</span><b style="user-select:all">${esc(o.pay_ref)}</b></div>` : ''}
-    ${o.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Dukaan ka account — check dukaan karegi</span></div>` : o.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
+    ${o.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Shop account — the shop will verify it</span></div>` : o.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
     ${num(o.pay_submitted_amount) > 0 && num(o.pay_submitted_amount) < num(o.total) ? `<div class="kv"><span class="muted">Advance</span><span>${money(o.pay_submitted_amount)} paid · Balance due ${money(o.pay_balance_due)}</span></div>` : ''}
     ${o.pay_note ? `<div class="kv"><span class="muted">Note</span><span>${esc(o.pay_note)}</span></div>` : ''}
     ${o.pay_verified_at ? `<div class="kv"><span class="muted">Checked</span><span>${when(o.pay_verified_at)}</span></div>` : ''}
@@ -1191,7 +1191,7 @@ function orderFileHtml(f){
     <div class="card"><b>${esc(c.name || 'Customer')}</b>${c.phone ? ` <a href="tel:${esc(c.phone)}">${esc(c.phone)}</a> · <a href="${waLink(c.phone, 'Assalam o Alaikum! Aap ke Dera order #' + (f.code || '') + ' ke bare mein rabta hai.')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
       ${f.zone_name ? `<div class="muted" style="margin-top:4px">📍 ${esc(f.zone_name)}</div>` : ''}
       <div class="muted" style="margin-top:4px">${esc(f.address_text || 'No address')}</div></div>
-    ${f.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : ''}
+    ${f.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : f.order_type === 'dinein' ? '<div class="note" style="border-color:#F8590A">🍽️ <b>DINE-IN</b> — the customer eats at the restaurant. No rider, no delivery fee.</div>' : ''}
     <h3 style="margin-top:14px">Items</h3>
     ${items || '<div class="empty">No items</div>'}
     <div class="kv"><span class="muted">Subtotal</span><span>${money(f.subtotal)}</span></div>
@@ -1204,7 +1204,7 @@ function orderFileHtml(f){
     <h3 style="margin-top:14px">💳 Payment</h3>
     <div class="kv"><span class="muted">Method</span><span>${methTxt}</span></div>
     ${f.payment_method !== 'cod' ? `<div class="kv"><span class="muted">Status</span><span class="pill ${ps[1]}">${esc(ps[0])}</span></div>
-    ${f.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Dukaan ka account</span></div>` : f.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
+    ${f.pay_destination === 'shop' ? `<div class="kv"><span class="muted">Paid to</span><span>🏪 Shop account</span></div>` : f.pay_destination === 'region' ? `<div class="kv"><span class="muted">Paid to</span><span>🏢 Region account</span></div>` : ''}
     ${f.pay_ref ? `<div class="kv"><span class="muted">Transaction ID (TID)</span><b style="user-select:all">${esc(f.pay_ref)}</b></div>` : ''}
     ${num(f.pay_required_online) ? `<div class="kv"><span class="muted">Online required</span><span>${money(f.pay_required_online)}</span></div>` : ''}
     ${num(f.pay_online_amount) ? `<div class="kv"><span class="muted">Paid online</span><span>${money(f.pay_online_amount)}</span></div>` : ''}
@@ -1300,7 +1300,7 @@ function viewShops(){
     ${rows}`;
 }
 const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
-const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon'},{k:'parlour',i:'💅',en:'Beauty parlour'},{k:'doctor',i:'🩺',en:'Doctor / clinic'},{k:'dentist',i:'🦷',en:'Dentist'},{k:'lab',i:'🔬',en:'Laboratory / tests'},{k:'carwash',i:'🚗',en:'Car wash & detailing'},{k:'other',i:'➕',en:'Other'}];
+const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon'},{k:'parlour',i:'💅',en:'Beauty parlour'},{k:'doctor',i:'🩺',en:'Doctor / clinic'},{k:'dentist',i:'🦷',en:'Dentist'},{k:'lab',i:'🔬',en:'Laboratory / tests'},{k:'carwash',i:'🚗',en:'Car wash & detailing'},{k:'tailor',i:'🧵',en:'Tailor / darzi',ur:'درزی'},{k:'electrician',i:'🔌',en:'Electrician',ur:'الیکٹریشن'},{k:'plumber',i:'🔧',en:'Plumber',ur:'پلمبر'},{k:'mobile',i:'📱',en:'Mobile repair',ur:'موبائل مرمت'},{k:'mechanic',i:'🏍️',en:'Mechanic',ur:'مکینک'},{k:'photo',i:'📸',en:'Photographer / studio',ur:'فوٹوگرافر'},{k:'tractor',i:'🚜',en:'Tractor / agri services',ur:'ٹریکٹر / کھیتی'},{k:'tutor',i:'📚',en:'Tutor / academy',ur:'ٹیوٹر / اکیڈمی'},{k:'other',i:'➕',en:'Other'}];
 const catName = k => { const c = SHOP_CATS.find(x => x.k === k) || SERVICE_CATS.find(x => x.k === k); return c ? c.i + ' ' + c.en : k; };
 const kindName = k => k === 'services' ? '💈 Services' : k === 'products' ? '🛍️ Products' : '';
 async function loadShopRequests(){
@@ -2827,7 +2827,7 @@ function setPointsCard(s){
   const now = new Date(); const m0 = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   return `<div class="card">
     <b>🏆 Dera Points — Top 5 Shops</b>
-    <div class="muted" style="font-size:14px">Dukaan walay (points) apna invite code naye customers ko lagatay hain — yahan har mahine ki gintee banti hai. Top 5 ki dukaanen customer app mein sab se upar ⭐ badge ke sath dikhti hain. Inaam sirf promotion hai, paisay nahi.</div>
+    <div class="muted" style="font-size:14px">Shopkeepers (points) give their invite code to new customers — the monthly count is made here. The Top 5 shops show at the very top in the customer app with a ⭐ badge. The reward is promotion only, not money.</div>
     <div class="two"><div><label class="f" for="pt_month">Month</label><input id="pt_month" type="month" value="${esc(cur.month || m0)}"></div>
     <div style="display:flex;align-items:flex-end"><button class="btn ghost block" onclick="A.pointsBoard()">📊 Leaderboard dekho</button></div></div>
     <div id="ptBoard" style="margin-top:10px">${cur.ids.length ? `<div class="muted" style="font-size:14px">Abhi Top Shops lagi hui hain (${esc(cur.month || '')}): ${((cur.names || []).map(esc).join(', '))} — nayi lagane ke liye pehle leaderboard banao.</div>` : `<div class="muted" style="font-size:14px">Abhi koi Top Shop nahi lagi hui.</div>`}</div>
@@ -2845,7 +2845,7 @@ function setLoyaltyCard(s){
     <label class="f" for="s_lp_red" style="margin-top:8px">Min points to redeem</label><input id="s_lp_red" type="number" min="1" value="${num(s.loyalty_redeem_min ?? 100)}">
     <label class="f" for="s_lp_online" style="margin-top:8px">Online payment bonus — Rs per 1 bonus point</label><input id="s_lp_online" type="number" min="0" value="${num(s.loyalty_online_per ?? 100)}">
     <div class="muted" style="font-size:13px;margin-top:4px">Customer jitni rakam online pay karega, delivered order par us ke alag bonus points milenge. 0 = bonus band.</div>
-    <div class="muted" style="font-size:13px;margin-top:8px">✔️ Bharosa badge: pichle ${num(br.days ?? 90)} din mein kam az kam ${num(br.min_delivered ?? 10)} delivered orders, dukaan ki cancel ${num(br.max_cancel_pct ?? 5)}% se kam, kam az kam ${num(br.min_verified ?? 3)} online payments verify, aur payment confirm ka average waqt ${num(br.max_confirm_hours ?? 6)} ghante se kam. Badge customer app mein dukaan ke naam ke sath dikhta hai.<br>Ye criteria abhi sirf database (SQL) se badle ja sakte hain — app mein in ki setting nahi hai.</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">✔️ Bharosa badge: in the last ${num(br.days ?? 90)} days at least ${num(br.min_delivered ?? 10)} delivered orders, shop cancels below ${num(br.max_cancel_pct ?? 5)}%, at least ${num(br.min_verified ?? 3)} verified online payments, and average payment-confirm time under ${num(br.max_confirm_hours ?? 6)} hours. The badge shows next to the shop name in the customer app.<br>These criteria can currently only be changed from the database (SQL) — there is no setting for them in the app.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.saveLoyalty()">Save</button></div>
   </div>`;
 }
@@ -2912,10 +2912,10 @@ const A = {
         ${o.receiver_name ? `<div style="margin-top:4px">👤 Receiver: <b>${esc(o.receiver_name)}</b> · <a href="tel:${esc(o.receiver_phone || '')}">${esc(o.receiver_phone || '')}</a></div>` : ''}
         ${o.delivery_photo ? `<button class="btn ghost small" style="margin-top:6px" onclick='A.lostPhoto(${JSON.stringify(o.delivery_photo)})'>📷 Delivery photo</button>` : ''}
         ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}
-        ${o.order_type !== 'pickup' && o.address_lat && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:4px">📍 Shop → customer: <b>${fmtKmA(distKmA(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng))}</b></div>` : ''}</div>
+        ${!['pickup','dinein'].includes(o.order_type) && o.address_lat && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:4px">📍 Shop → customer: <b>${fmtKmA(distKmA(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng))}</b></div>` : ''}</div>
       ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
       ${o.rider && o.rider.profile ? `<div style="margin-bottom:8px"><b>Rider:</b> ${esc(o.rider.profile.full_name || '')} ${o.rider.profile.phone ? `<a href="tel:${esc(o.rider.profile.phone)}">${esc(o.rider.profile.phone)}</a>` : ''}</div>` : ''}
-      ${o.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : ''}
+      ${o.order_type === 'pickup' ? '<div class="note" style="border-color:#1A4FB0">🛍️ <b>PICKUP</b> — the customer collects from the shop. No rider.</div>' : o.order_type === 'dinein' ? '<div class="note" style="border-color:#F8590A">🍽️ <b>DINE-IN</b> — the customer eats at the restaurant. No rider, no delivery fee.</div>' : ''}
       ${o.customer_note ? `<div class="note"><b>Note:</b> ${esc(o.customer_note)}</div>` : ''}
       ${o.sub_pref ? `<div class="muted" style="font-size:13px">🔁 If out of stock: ${esc({ similar:'give something similar', call:'call the customer', remove:'remove it' }[o.sub_pref] || o.sub_pref)}</div>` : ''}
       ${o.rx_path ? `<button class="btn ghost small" onclick="A.seeFile(${esc(JSON.stringify(o.rx_path))})">💊 See prescription</button>` : ''}
@@ -3000,7 +3000,7 @@ const A = {
   },
   async saveGatewayLive(on){
     if (state.myRegion) return; // HQ only — gateway config is global (app_settings), never per-region
-    if (on && !await uiConfirm('Pakka Live karein? Pehle ye check kar lain: 1) Safepay merchant account khul gaya hai, 2) keys Supabase Edge Function secrets mein lag chuki hain (SAFEPAY_API_KEY), 3) aik sandbox payment test ho gaya hai. Agar keys nahi lagi to customers ko aisa payment option dikhega jo kaam nahi karega.')) return;
+    if (on && !await uiConfirm('Make the gateway Live for sure? Check first: 1) the Safepay merchant account is open, 2) the keys are set in the Supabase Edge Function secrets (SAFEPAY_API_KEY), 3) a sandbox payment test has passed. If the keys are not set, customers will see a payment option that does not work.')) return;
     if (on && !await A.stepUp()) return;
     const v = { provider:'safepay', live:!!on };
     await run(async () => {
@@ -3946,7 +3946,7 @@ const A = {
       const sCard = (label, v, sub) => `<div class="card" style="flex:1 1 30%;min-width:150px;margin:0"><div class="muted" style="font-size:13px">${label}</div><div style="font-size:19px;font-weight:800">${money(v)}</div>${sub ? `<div class="muted" style="font-size:12px">${sub}</div>` : ''}</div>`;
       const payTxt = o => {
         if (o.payment_method === 'cod') return '💵 Cash on delivery';
-        const dest = o.pay_destination === 'shop' ? 'dukaan ke account' : o.pay_destination === 'region' ? 'Dera account' : 'online';
+        const dest = o.pay_destination === 'shop' ? 'shop account' : o.pay_destination === 'region' ? 'Dera account' : 'online';
         let s = `📱 Online ${money(o.pay_online_amount)} → ${dest}`;
         if (num(o.pay_balance_due) > 0) s += ` · baqi ${money(o.pay_balance_due)} cash`;
         if (o.pay_ref) s += ` · TID ${esc(o.pay_ref)}`;
@@ -3957,10 +3957,10 @@ const A = {
         <select id="stmtMonth" onchange="A.openMonthStatement('${id}', this.value)">${months}</select>
         <h3 style="margin-top:14px">Paisa kahan hai — 3 hisaab</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${sCard('💵 Cash — rider ke paas', st.cash_by_rider, 'COD + advance ke baad baqi cash')}
-          ${sCard('📱 Online — dukaan ke account mein', st.online_shop, 'Dukaan ko pehle hi mil gaya — payout mein nahi judega')}
-          ${sCard('🏦 Online — Dera ke account mein', st.online_region, 'Payout ke waqt milega, commission kat kar')}
-          ${num(st.pickup_cash) ? sCard('🛍️ Pickup cash', st.pickup_cash, 'Customer dukaan se le gaya') : ''}
+          ${sCard('💵 Cash — with the rider', st.cash_by_rider, 'COD + balance cash after advance')}
+          ${sCard('📱 Online — in the shop account', st.online_shop, 'The shop already received it — not part of the payout')}
+          ${sCard('🏦 Online — in the Dera account', st.online_region, 'Paid at payout, after commission')}
+          ${num(st.pickup_cash) ? sCard('🛍️ Pickup cash', st.pickup_cash, 'Customer collected it from the shop') : ''}
         </div>
         <h3 style="margin-top:16px">Total — ${monthLabel(month)}</h3>
         <div class="kv"><span class="muted">Orders delivered</span><span>${num(tt.orders)}</span></div>
@@ -3969,7 +3969,7 @@ const A = {
         <div class="kv"><span class="muted">Shop earning</span><span>${money(tt.earning)}</span></div>
         <div class="kv"><span class="muted">Delivery fees</span><span>${money(tt.delivery_fees)}</span></div>
         <div class="kv"><span class="muted">Rider pays</span><span>${money(tt.rider_pays)}</span></div>
-        ${days.length ? `<h3 style="margin-top:16px">Din-ba-din</h3><div class="list">${days.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(dayName(x.date))} · ${num(x.orders)} orders</div><div class="row-sub">Cash ${money(x.cash_by_rider)} · Dukaan online ${money(x.online_shop)} · Dera online ${money(x.online_region)} · Commission ${money(x.commission)}</div></div><div class="row-side">${money(x.earning)}</div></div>`).join('')}</div>` : ''}
+        ${days.length ? `<h3 style="margin-top:16px">Din-ba-din</h3><div class="list">${days.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(dayName(x.date))} · ${num(x.orders)} orders</div><div class="row-sub">Cash ${money(x.cash_by_rider)} · Shop online ${money(x.online_shop)} · Dera online ${money(x.online_region)} · Commission ${money(x.commission)}</div></div><div class="row-side">${money(x.earning)}</div></div>`).join('')}</div>` : ''}
         ${prods.length ? `<h3 style="margin-top:16px">Products</h3><div class="list">${prods.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${num(p.qty)} sold · commission ${money(p.commission)}</div></div><div class="row-side">${money(p.sales)}</div></div>`).join('')}</div>` : ''}
         <h3 style="margin-top:16px">Orders (${ords.length}) — tap for full file</h3>
         ${ords.length ? `<div class="list">${ords.map(o => `<button class="row" onclick="A.openOrderFile('${o.id}', 'stmt')"><div class="row-main"><div class="row-title">#${esc(o.code || '')} · ${esc(o.customer_name || 'Customer')}</div><div class="row-sub">${when(o.delivered_at)} · ${payTxt(o)}<br>Commission ${money(o.commission)}${o.commission_rate != null ? ' (' + num(o.commission_rate) + '%)' : ''}${o.rider_name ? ' · Rider: ' + esc(o.rider_name) + ' (' + money(o.rider_pay) + ')' : ''}${o.minutes != null ? ' · ' + hours(o.minutes) : ''}</div></div><div class="row-side">${money(o.total)}<small>earn ${money(o.earning)}</small></div></button>`).join('')}</div>` : '<div class="empty">No delivered orders this month.</div>'}`;
@@ -4303,7 +4303,7 @@ const A = {
     if (b) b.disabled = false;
   },
   async regionToggle(id, on){
-    if (!on && !await uiConfirm('Ye region OFF ho jayega — customers ko nazar nahi ayega aur naye orders band ho jayenge. Wapas Live kabhi bhi kar sakte ho. Pakka OFF karun?')) return;
+    if (!on && !await uiConfirm('This region will turn OFF — customers will not see it and new orders will stop. You can turn it Live again any time. Turn OFF for sure?')) return;
     await run(async () => { need(await sb.from('regions').update({ is_active: on }).eq('id', id)); await loadRegions(); renderTab(); toast(on ? 'Region LIVE ho gaya' : 'Region OFF ho gaya'); });
   },
   async regMonth(b){ state.regMonthBack = b; await run(async () => { await loadRegions(); if (state.tab === 'region') await loadRegionFile(); }); renderTab(); },
@@ -4393,7 +4393,7 @@ const A = {
         if (!await A.stepUp()) return;
         const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'create', email, password:pw, name, phone:$('pt_phone').value.trim(), region:id, replace } });
         if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
-        if (data && data.id){ try { need(await sb.rpc('mark_temp_password', { p_user:data.id, p_kind:'partner' })); } catch (e) { toast('Incharge ban gaya, lekin temporary-password flag nahi laga — dobara try karein', true); } }
+        if (data && data.id){ try { need(await sb.rpc('mark_temp_password', { p_user:data.id, p_kind:'partner' })); } catch (e) { toast('Incharge created, but the temporary-password flag was not set — please try again', true); } }
         const old = (state.contracts || {})[id];
         const same = old && (old.email || '').toLowerCase() === email.toLowerCase();
         if (same) await sb.from('region_contracts').update({ partner_user:data && data.id, partner_name:name, phone:$('pt_phone').value.trim() || old.phone }).eq('id', old.id);
@@ -4420,7 +4420,7 @@ const A = {
     await run(async () => {
       const { data, error } = await sb.functions.invoke('partner-admin', { body:{ action:'password', user:uid, password:pw } });
       if (error || (data && data.error)) throw new Error((data && data.error) || await fnErr(error));
-      try { need(await sb.rpc('mark_temp_password', { p_user:uid, p_kind:'partner' })); } catch (e) { toast('Password change ho gaya, lekin temporary flag nahi laga — dobara try karein', true); }
+      try { need(await sb.rpc('mark_temp_password', { p_user:uid, p_kind:'partner' })); } catch (e) { toast('Password changed, but the temporary flag was not set — please try again', true); }
       const p = (state.partners || []).find(x => x.id === uid);
       const c = p && (state.contracts || {})[p.region_id];
       if (c) await sb.from('region_contracts').update({ partner_user:uid }).eq('id', c.id);
@@ -4705,7 +4705,7 @@ const A = {
         if (!rows || rows.length < 1000) break;
       }
       const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 50);
-      if (!ranked.length){ state.ptBoard = null; if (el) el.innerHTML = '<div class="muted">Is mahine code se koi join nahi hua.</div>'; return; }
+      if (!ranked.length){ state.ptBoard = null; if (el) el.innerHTML = '<div class="muted">No one joined with a code this month.</div>'; return; }
       const ids = ranked.map(r => r[0]);
       const profs = need(await sb.from('profiles').select('id,full_name,phone').in('id', ids));
       const names = {}; (profs || []).forEach(p => { names[p.id] = p.full_name || p.phone || '—'; });
@@ -4715,15 +4715,15 @@ const A = {
       const shopsOnly = state.ptBoard.filter(r => r.shop);
       const usersOnly = state.ptBoard.filter(r => !r.shop);
       const rowHtml = (r, i) => `<div class="menu-row" style="cursor:default"><span><b>${i + 1}. ${esc(r.name)}</b><br><small class="muted">${r.n} joins${r.shop ? ' · 🏪 ' + esc(r.shop.name) : ''}</small></span><span>${r.shop && i === 0 ? '👑' : r.shop && i < 5 ? '⭐' : ''}</span></div>`;
-      if (el) el.innerHTML = `<b style="font-size:15px">🏪 Dukaan walay (Points)</b>` + (shopsOnly.length ? shopsOnly.map(rowHtml).join('') : '<div class="muted">Is mahine kisi dukaan walay ke code se join nahi hua.</div>')
-        + (shopsOnly.length ? `<div class="actions"><button class="btn block" onclick="A.pointsApply()">⭐ Top 5 ko app mein upar lagao</button></div><div class="muted" style="font-size:13px">Ye dukaanen customer app mein sab se pehle dikhti hain, poora mahina.</div>` : '')
-        + `<b style="font-size:15px;display:block;margin-top:14px">👤 Normal users</b>` + (usersOnly.length ? usersOnly.map(rowHtml).join('') : '<div class="muted">Is mahine kisi normal user ke code se join nahi hua.</div>');
+      if (el) el.innerHTML = `<b style="font-size:15px">🏪 Shopkeepers (Points)</b>` + (shopsOnly.length ? shopsOnly.map(rowHtml).join('') : '<div class="muted">No one joined with a shopkeeper code this month.</div>')
+        + (shopsOnly.length ? `<div class="actions"><button class="btn block" onclick="A.pointsApply()">⭐ Put the Top 5 at the top in the app</button></div><div class="muted" style="font-size:13px">These shops show first in the customer app, for the whole month.</div>` : '')
+        + `<b style="font-size:15px;display:block;margin-top:14px">👤 Normal users</b>` + (usersOnly.length ? usersOnly.map(rowHtml).join('') : '<div class="muted">No one joined with a normal user code this month.</div>');
     });
   },
   async pointsApply(){
     const board = state.ptBoard || [];
     const top = board.filter(r => r.shop).slice(0, 5);
-    if (!top.length) return toast('Top mein koi shop nahi mili', true);
+    if (!top.length) return toast('No shop found in the Top list', true);
     await A.saveSetting('top_shops', { ids:top.map(r => r.shop.id), names:top.map(r => r.shop.name), month:($('pt_month') || {}).value || '' });
   },
   async saveLoyalty(){
