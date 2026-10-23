@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.31';
+const APP_VERSION = '6.35';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1454,6 +1454,247 @@ function viewMenu(){
     ${pending ? `<div class="note" style="margin-top:12px">${t('pending_note')}</div>` : ''}
     <div id="menuBody">${body}</div>`;
 }
+// ================= SECTION TYPES + TYPED PRODUCT FORM (v6.32) =================
+const POOLS = {
+  size_letter:{ label:'Size', min:1, max:1, chips:['XS','S','M','L','XL','XXL'] },
+  size_waist:{ label:'Size', min:1, max:1, chips:['28','30','32','34','36','38','40'] },
+  size_shoe:{ label:'Shoe Size', min:1, max:1, chips:['6','7','8','9','10','11'] },
+  size_age:{ label:'Size', min:1, max:1, chips:['0-3 Months','3-6 Months','6-9 Months','9-12 Months','1-2 Years','3-4 Years','5-6 Years','7-8 Years','9-10 Years','11-12 Years'] },
+  size_sml:{ label:'Size', min:1, max:1, chips:['Small','Medium','Large'] },
+  portion:{ label:'Portion', min:1, max:1, chips:['Half','Full'], w:{ 'Half':0.5, 'Full':1 } },
+  weight_g:{ label:'Weight', min:1, max:1, chips:['250 g','500 g','1 kg','2 kg','5 kg'], w:{ '250 g':0.25, '500 g':0.5, '1 kg':1, '2 kg':2, '5 kg':5 } },
+  dairy:{ label:'Pack Size', min:1, max:1, chips:['250 g','500 g','1 kg','500 ml','1 Litre'], w:{ '250 g':0.25, '500 g':0.5, '1 kg':1, '500 ml':0.5, '1 Litre':1 } },
+  drinks_size:{ label:'Size', min:1, max:1, chips:['330 ml','500 ml','1 Litre','1.5 Litre','2.25 Litre'] },
+  pack_count:{ label:'Pack', min:0, max:1, chips:['Single','6 Pack','12 Pack','24 Pack (Peti)'] },
+  pack_pairs:{ label:'Pack', min:1, max:1, chips:['1 Pair','3 Pairs Pack','6 Pairs Pack','12 Pairs Pack'] },
+  pack_simple:{ label:'Pack Size', min:0, max:1, chips:['Small Pack','Large Pack','Family Pack'] },
+  cake_lb:{ label:'Size', min:1, max:1, chips:['1 Pound','2 Pound','3 Pound','5 Pound'], w:{ '1 Pound':0.45, '2 Pound':0.9, '3 Pound':1.35, '5 Pound':2.25 } },
+  ml_size:{ label:'Size', min:1, max:1, chips:['30 ml','50 ml','100 ml','200 ml'] },
+  ice_pack:{ label:'Pack Size', min:1, max:1, chips:['Cup','Cone','Family Pack 1 Litre','Family Pack 2 Litre'] },
+  flavour_text:{ label:'Flavour', min:1, max:1, custom:true },
+  extras_text:{ label:'Extras', min:0, max:3, custom:true },
+  variant_text:{ label:'Variant', min:1, max:1, custom:true },
+  diaper_size:{ label:'Size', min:1, max:1, chips:['Newborn','Size 1','Size 2','Size 3','Size 4','Size 5','Size 6'] },
+  audience:{ label:'For', min:1, max:1, chips:['Men','Women','Boys','Girls'] },
+};
+const SECTION_TYPES = [
+  { k:'shirts', i:'👕', n:'Shirts / T-Shirts', photo:'rang', pools:['size_letter'] },
+  { k:'kurta', i:'👔', n:'Kurta', photo:'rang', pools:['size_letter'] },
+  { k:'shalwar', i:'👘', n:'Shalwar Kameez', photo:'rang', pools:['size_letter'] },
+  { k:'wascot', i:'🦺', n:'Wascot', photo:'rang', pools:['size_letter'] },
+  { k:'coat', i:'🧥', n:'Coat / Jacket', photo:'rang', pools:['size_letter'] },
+  { k:'pants', i:'👖', n:'Pants', photo:'rang', pools:['size_waist'] },
+  { k:'belt', i:'🎗️', n:'Belt', photo:'rang', pools:['size_waist'] },
+  { k:'socks', i:'🧦', n:'Socks', photo:'rang', pools:['pack_pairs'] },
+  { k:'shoes', i:'👟', n:'Shoes / Chappal', photo:'rang', pools:['size_shoe'] },
+  { k:'kids', i:'🧒', n:'Bachon ke Kapre', photo:'rang', pools:['size_age'] },
+  { k:'shawl', i:'🧣', n:'Shawl / Dupatta', photo:'rang', pools:[] },
+  { k:'cap', i:'🧢', n:'Cap / Topi', photo:'rang', pools:[] },
+  { k:'burka', i:'🧕', n:'Burka / Abaya (Girls)', photo:'rang', pools:['size_letter'] },
+  { k:'glasses', i:'🕶️', n:'Glasses', photo:'design', pools:[] },
+  { k:'watches', i:'⌚', n:'Watches', photo:'design', pools:[] },
+  { k:'bags', i:'👜', n:'Bags', photo:'design', pools:[] },
+  { k:'jewellery', i:'💍', n:'Jewellery', photo:'design', pools:[] },
+  { k:'toys', i:'🧸', n:'Toys', photo:'design', pools:[] },
+  { k:'fastfood', i:'🍔', n:'Fast Food', photo:'', pools:['size_sml','extras_text'] },
+  { k:'desi', i:'🍛', n:'Desi Khana', photo:'', pools:['portion'] },
+  { k:'wazan', i:'⚖️', n:'Wazan Wali Cheezain', photo:'', pools:['weight_g'] },
+  { k:'dairy', i:'🥛', n:'Dairy', photo:'', pools:['dairy'] },
+  { k:'drinks', i:'🥤', n:'Cold Drinks', photo:'', pools:['drinks_size','pack_count'] },
+  { k:'icecream', i:'🍦', n:'Ice Cream', photo:'', pools:['flavour_text','ice_pack'] },
+  { k:'cake', i:'🎂', n:'Cake', photo:'', pools:['cake_lb','flavour_text'] },
+  { k:'sweets', i:'🍬', n:'Sweets / Mithai', photo:'', pools:['weight_g'] },
+  { k:'packaged', i:'📦', n:'Packaged', photo:'', pools:['pack_simple'] },
+  { k:'perfume', i:'🌸', n:'Perfume / Attar', photo:'', pools:['ml_size'] },
+  { k:'mobile', i:'📱', n:'Mobile / Electronics', photo:'rang', pools:['variant_text'] },
+  { k:'medical', i:'💊', n:'Medical', photo:'', pools:['pack_simple'] },
+  { k:'books', i:'📚', n:'Books / Stationery', photo:'', pools:[] },
+  { k:'services', i:'✂️', n:'Services', photo:'', pools:[] },
+  { k:'pampers', i:'👶', n:'Pampers / Diapers', photo:'', pools:['diaper_size'] },
+  { k:'machines', i:'🔌', n:'Machines / Appliances', photo:'', pools:['variant_text'] },
+  { k:'crockery', i:'🍽️', n:'Crockery / Bartan', photo:'design', pools:[] },
+  { k:'furniture', i:'🛋️', n:'Furniture', photo:'design', pools:[] },
+  { k:'undergarments', i:'🩲', n:'Undergarments', photo:'rang', pools:['audience','size_letter'] },
+  { k:'general', i:'🗂️', n:'Simple / Aam', photo:'', pools:[] },
+];
+const TYPE_FAMILIES = [
+  ['👕 Kapre', ['shirts','kurta','shalwar','wascot','coat','pants','belt','socks','shoes','shawl','cap','burka','undergarments']],
+  ['🕶️ Accessories', ['glasses','watches','bags','jewellery']],
+  ['👶 Bachay', ['kids','pampers','toys']],
+  ['🍔 Khana', ['fastfood','desi','icecream','cake','sweets']],
+  ['⚖️ Kiryana', ['wazan','dairy','drinks','packaged']],
+  ['🧰 Deegar', ['perfume','mobile','machines','crockery','furniture','medical','books','services','general']],
+];
+const typeByKey = k => SECTION_TYPES.find(x => x.k === k) || SECTION_TYPES[SECTION_TYPES.length - 1];
+const TF_MANAGED = ['Colour','Design','Rang','Size','Shoe Size','Portion','Weight','Pack Size','Pack','Flavour','Extras','Variant','For'];
+const typeDesc = ty => {
+  const bits = [];
+  if (ty.photo === 'rang') bits.push('Har photo ka apna rang');
+  if (ty.photo === 'design') bits.push('Har photo ka apna design');
+  (ty.pools || []).forEach(pk => bits.push(POOLS[pk].label + ': ' + (POOLS[pk].custom ? 'khud likhna' : POOLS[pk].chips.slice(0, 4).join(' / ') + (POOLS[pk].chips.length > 4 ? '…' : ''))));
+  return bits.join(' · ') || 'Saada product — koi options nahi';
+};
+
+const TF = {
+  on:false, typeKey:'', item:null, meta:[], cur:0, pools:{}, cache:{},
+  style(){ if (TF._st) return; TF._st = 1; const st = document.createElement('style'); st.textContent = `
+.tpnote{background:#FFF6EC;border:1.5px solid #FFD9B0;color:#8A5200;border-radius:12px;padding:10px 12px;font-size:13.5px;font-weight:700;margin-top:12px}
+.tpgrp{font-weight:800;font-size:12.5px;color:var(--brand2,#0E8A4D);margin:14px 0 7px}
+.tpstrip{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 6px;scrollbar-width:none}.tpstrip::-webkit-scrollbar{display:none}
+.tpcard{flex:0 0 74px;border:2px solid var(--line);border-radius:13px;padding:8px 3px 7px;text-align:center;background:var(--field,#FBFAF7);cursor:pointer;position:relative}
+.tpcard .ic{font-size:20px;line-height:1.15}.tpcard .nm{font-weight:700;font-size:10.5px;margin-top:3px;line-height:1.2}
+.tpcard.on{border-color:var(--brand,#F85606);background:#FFF3EA}
+.tpcard.on::after{content:'✔';position:absolute;top:2px;right:5px;color:var(--brand,#F85606);font-weight:900;font-size:11px}
+.tfbox{margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--surface)}
+.tfstrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.tfth{flex:0 0 62px;height:62px;border-radius:12px;overflow:hidden;border:3px solid var(--line);position:relative;cursor:pointer;background:var(--field,#FBFAF7)}
+.tfth img{width:100%;height:100%;object-fit:cover;display:block}
+.tfth.on{border-color:var(--brand,#F85606)}
+.tfth .done{position:absolute;left:3px;bottom:3px;background:#0E8A4D;color:#fff;border-radius:50%;width:17px;height:17px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:900}
+.tfth .ph{font-size:22px;display:flex;align-items:center;justify-content:center;height:100%}
+.tfchip{display:inline-block;border:2px solid var(--line);background:var(--paper,#fff);border-radius:99px;padding:7px 12px;font-weight:700;font-size:13px;cursor:pointer;margin:0 6px 6px 0}
+.tfchip.on{background:var(--brand2,#0E8A4D);border-color:var(--brand2,#0E8A4D);color:#fff}
+.tfsel{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--field,#F1F4F0);border-radius:11px;padding:7px 10px;margin-top:6px;font-weight:700;font-size:13.5px}
+.tfsel input{width:90px;padding:7px 9px;border:1.5px solid var(--line);border-radius:9px;font:inherit;background:var(--paper,#fff)}
+.tfprev{margin-top:12px;background:#EFFAF3;border:1.5px dashed #9ED3AE;border-radius:12px;padding:10px 12px;font-size:13px;color:#14532D}`;
+  document.head.appendChild(st); },
+  pickHtml(sel){
+    return `<div class="tpnote">☝️ Sirf <b>aik</b> type select kar sakte hain — type ke hisaab se product dalne ka form khud ban jayega.</div>` +
+      TYPE_FAMILIES.map(([g, keys]) => `<div class="tpgrp">${g}</div><div class="tpstrip">${keys.map(k => { const ty = typeByKey(k); return `<div class="tpcard ${k === sel ? 'on' : ''}" onclick="A.pickType('${k}')"><div class="ic">${ty.i}</div><div class="nm">${ty.n}</div></div>`; }).join('')}</div>`).join('') +
+      `<div class="muted" style="font-size:13px;margin-top:6px">${esc(typeDesc(typeByKey(sel)))}</div>`;
+  },
+  photoSrcs(){
+    const out = [];
+    const it = TF.item || {};
+    const prev = $('i_prev');
+    const mainSrc = (prev && prev.style.display !== 'none' && prev.src) ? prev.src : (it.photo_url || '');
+    out.push({ key:'m', src:mainSrc });
+    (state.pics ? state.pics.old : []).forEach((u, k) => out.push({ key:'o' + k, src:u }));
+    (state.pics ? state.pics.add : []).forEach((f, k) => out.push({ key:'a' + k, src:URL.createObjectURL(f) }));
+    return out;
+  },
+  blankPools(ty){ const p = {}; (ty.pools || []).forEach(pk => { p[pk] = { sel:{}, custom:[] }; }); return p; },
+  async begin(item){
+    TF.style();
+    if (TF.on && TF.typeKey) TF.cache[TF.typeKey] = { meta:TF.meta, pools:TF.pools, itemId:(TF.item || {}).id || null };
+    TF.on = false; TF.item = item || null; TF.cur = 0;
+    const catId = (item && item.category_id) || ($('i_cat') ? $('i_cat').value : '');
+    const cat = (state.cats || []).find(c => c.id === catId);
+    const ty = cat ? typeByKey(cat.type || 'general') : typeByKey('general');
+    const area = $('tfArea'), ow = $('oeWrap');
+    if (!ty.photo && !(ty.pools || []).length){ if (area) area.innerHTML = ''; if (ow) ow.style.display = ''; return false; }
+    TF.typeKey = ty.k;
+    let groups = [];
+    if (item && item.id){
+      try {
+        const { data, error } = await sb.from('menu_option_groups').select('id,name,min_select,max_select,sort_order,menu_options(name,price,weight_kg,sort_order)').eq('menu_item_id', item.id).order('sort_order');
+        if (error) throw error;
+        groups = data || [];
+      } catch (e) { if (area) area.innerHTML = ''; if (ow) ow.style.display = ''; return false; }
+      if (groups.some(g => !TF_MANAGED.includes(g.name))){ if (area) area.innerHTML = ''; if (ow) ow.style.display = ''; return false; }
+    }
+    const cached = TF.cache[ty.k];
+    if (cached && cached.itemId === ((item || {}).id || null)){ TF.meta = cached.meta; TF.pools = cached.pools; }
+    else {
+      TF.meta = []; TF.pools = TF.blankPools(ty);
+      const srcs = TF.photoSrcs();
+      const pg = groups.find(g => /^(colour|color|rang|design)$/i.test(g.name || ''));
+      const opts = pg ? (pg.menu_options || []).slice().sort((a, b) => a.sort_order - b.sort_order) : [];
+      srcs.forEach((s2, i) => TF.meta.push(opts.length === srcs.length && opts[i] ? { name:opts[i].name || '', price:opts[i].price ? String(opts[i].price) : '' } : { name:'', price:'' }));
+      (ty.pools || []).forEach(pk => {
+        const pool = POOLS[pk]; const g = groups.find(x => x.name === pool.label); if (!g) return;
+        (g.menu_options || []).slice().sort((a, b) => a.sort_order - b.sort_order).forEach(o => {
+          const nm = o.name || ''; const pr = o.price ? String(o.price) : '';
+          if (pool.chips && pool.chips.includes(nm)) TF.pools[pk].sel[nm] = pr;
+          else if (pool.custom) TF.pools[pk].custom.push({ name:nm, price:pr });
+          else TF.pools[pk].sel[nm] = pr;
+        });
+      });
+    }
+    TF.on = true;
+    if (ow) ow.style.display = 'none';
+    TF.render();
+    return true;
+  },
+  render(){
+    const area = $('tfArea'); if (!area || !TF.on) return;
+    const ty = typeByKey(TF.typeKey);
+    let h = `<div class="tfbox"><b>${ty.i} ${esc(ty.n)}</b> <span class="muted" style="font-size:12.5px">— is section ka form</span>`;
+    if (ty.photo){
+      const srcs = TF.photoSrcs();
+      const lbl = ty.photo === 'rang' ? 'Rang' : 'Design';
+      h += `<div style="font-weight:800;margin:12px 0 7px">📸 Har photo ka ${lbl}</div><div class="tfstrip">${srcs.map((s2, i) => `<div class="tfth ${i === TF.cur ? 'on' : ''}" onclick="A.tfPhoto(${i})">${s2.src ? `<img src="${esc(s2.src)}" alt="">` : '<div class="ph">🖼️</div>'}${TF.meta[i] && TF.meta[i].name ? '<span class="done">✓</span>' : ''}</div>`).join('')}</div>`;
+      const m = TF.meta[TF.cur] || { name:'', price:'' };
+      h += `<div style="display:flex;gap:8px;margin-top:9px"><input type="text" placeholder="${lbl} likhein — Red, Neela…" value="${esc(m.name)}" oninput="A.tfMeta(this.value)" style="flex:1"><input type="number" inputmode="decimal" min="0" placeholder="+Rs" value="${esc(m.price)}" oninput="A.tfPrice(this.value)" style="width:88px;flex:none"></div>
+      <div class="muted" style="font-size:12.5px;margin-top:5px">Photo ${TF.cur + 1} of ${srcs.length} — ${lbl} ka naam lazmi likhein, <b>+Rs</b> sirf tab jab is ${lbl} ki price zyada ho. Uper wali photo strip se photo badal kar har photo ka ${lbl} likhte jayen.</div>`;
+    }
+    (ty.pools || []).forEach(pk => {
+      const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] };
+      h += `<div style="font-weight:800;margin:14px 0 7px">${pool.label} ${pool.min ? '<span class="muted" style="font-size:12px;font-weight:600">(aik lazmi)</span>' : '<span class="muted" style="font-size:12px;font-weight:600">(marzi)</span>'}</div>`;
+      if (pool.chips){
+        h += `<div>${pool.chips.map(c => `<button type="button" class="tfchip ${c in P.sel ? 'on' : ''}" onclick="A.tfPool('${pk}','${c}')">${esc(c)}</button>`).join('')}</div>`;
+        h += Object.keys(P.sel).map(c => `<div class="tfsel"><span>${esc(c)}</span><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(P.sel[c])}" oninput="A.tfPoolPrice('${pk}','${c}',this.value)"></span></div>`).join('');
+      }
+      if (pool.custom){
+        h += P.custom.map((r, i) => `<div class="tfsel"><input type="text" value="${esc(r.name)}" placeholder="${pool.label} ka naam" oninput="A.tfCustom('${pk}',${i},'name',this.value)" style="flex:1;width:auto"><span style="display:flex;align-items:center;gap:5px">+Rs <input type="number" inputmode="decimal" min="0" value="${esc(r.price)}" oninput="A.tfCustom('${pk}',${i},'price',this.value)"></span><button type="button" class="x" style="border:0;background:none;color:var(--danger);font-size:19px;cursor:pointer" onclick="A.tfDelCustom('${pk}',${i})">×</button></div>`).join('');
+        h += `<button type="button" class="btn ghost small" style="margin-top:7px" onclick="A.tfAddCustom('${pk}')">+ ${pool.label} add karein</button>`;
+      }
+    });
+    h += `<div class="tfprev">👁️ <b>Customer ko ye options dikhenge:</b> ${esc(TF.previewText() || '—')}</div>`;
+    h += `<div class="muted" style="font-size:12.5px;margin-top:8px">Koi ajeeb option chahiye to section ki type <b>Simple / Aam</b> kar dein — purana wala editor wapas aa jayega.</div></div>`;
+    area.innerHTML = h;
+  },
+  previewText(){
+    const ty = typeByKey(TF.typeKey); const parts = [];
+    if (ty.photo){ const ns = TF.meta.map(m => (m.name || '').trim()).filter(Boolean); if (ns.length) parts.push((ty.photo === 'rang' ? 'Colour' : 'Design') + ': ' + ns.join(', ')); }
+    (ty.pools || []).forEach(pk => { const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] }; const ns = Object.keys(P.sel).concat(P.custom.map(r => (r.name || '').trim()).filter(Boolean)); if (ns.length) parts.push(pool.label + ': ' + ns.join(', ')); });
+    return parts.join(' · ');
+  },
+  picRemoved(w, k){
+    if (!TF.on) return;
+    const idx = w === 'o' ? 1 + k : 1 + (state.pics ? state.pics.old.length : 0) + k;
+    TF.meta.splice(idx, 1);
+    if (TF.cur >= TF.meta.length) TF.cur = Math.max(0, TF.meta.length - 1);
+  },
+  syncPics(){
+    if (!TF.on) return;
+    const n = TF.photoSrcs().length;
+    while (TF.meta.length < n) TF.meta.push({ name:'', price:'' });
+    TF.meta.length = n;
+    if (TF.cur >= n) TF.cur = Math.max(0, n - 1);
+    TF.render();
+  },
+  groupsOut(){
+    const ty = typeByKey(TF.typeKey); const out = [];
+    if (ty.photo){
+      const srcs = TF.photoSrcs();
+      const named = TF.meta.filter(m => (m.name || '').trim()).length;
+      if (srcs.length >= 2 || named){
+        const lbl = ty.photo === 'rang' ? 'Colour' : 'Design';
+        out.push({ name:lbl, min:1, max:1, options:srcs.map((s2, i) => ({ name:(TF.meta[i] && TF.meta[i].name || '').trim() || (lbl + ' ' + (i + 1)), price:Math.max(0, num(TF.meta[i] ? TF.meta[i].price : 0)), weight_kg:0 })) });
+      }
+    }
+    (ty.pools || []).forEach(pk => {
+      const pool = POOLS[pk]; const P = TF.pools[pk] || { sel:{}, custom:[] }; const opts = [];
+      Object.keys(P.sel).forEach(c => opts.push({ name:c, price:Math.max(0, num(P.sel[c])), weight_kg:(pool.w && pool.w[c]) || 0 }));
+      P.custom.forEach(r => { if ((r.name || '').trim()) opts.push({ name:r.name.trim(), price:Math.max(0, num(r.price)), weight_kg:0 }); });
+      if (opts.length) out.push({ name:pool.label, min:pool.min, max:pool.max, options:opts });
+    });
+    return out;
+  },
+  async save(itemId){
+    const rows = TF.groupsOut();
+    const { data:ex } = await sb.from('menu_option_groups').select('id,name').eq('menu_item_id', itemId);
+    const del = (ex || []).filter(g => TF_MANAGED.includes(g.name)).map(g => g.id);
+    if (del.length) need(await sb.from('menu_option_groups').delete().in('id', del));
+    for (let gi = 0; gi < rows.length; gi++){
+      const g = rows[gi];
+      const gr = need(await sb.from('menu_option_groups').insert({ menu_item_id:itemId, name:g.name, min_select:Math.min(g.min, g.options.length), max_select:g.max, sort_order:gi }).select('id').single());
+      need(await sb.from('menu_options').insert(g.options.map((o, i) => ({ group_id:gr.id, name:o.name, price:o.price, weight_kg:o.weight_kg || 0, is_available:true, sort_order:i }))));
+    }
+  }
+};
+
 function itemForm(i){
   i = i || { is_available:true };
   const catOpts = state.cats.map(c => `<option value="${c.id}" ${i.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
@@ -1468,7 +1709,7 @@ function itemForm(i){
       <div><label class="f" for="i_price">${t('price')}</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
       <div><label class="f" for="i_cmp">${t('compare')}</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}"></div>
     </div>
-    <label class="f" for="i_cat">${t('section')}</label><select id="i_cat">${catOpts}</select>
+    <label class="f" for="i_cat">${t('section')}</label><select id="i_cat" onchange="A.catChanged()">${catOpts}</select>
     <label class="f" for="i_kg">${t('weight_kg')}</label>
     <div style="display:flex;gap:6px"><input id="i_kg" type="number" min="0" step="any" inputmode="decimal" value="${num(i.weight_kg) ? (num(i.weight_kg) < 1 ? Math.round(num(i.weight_kg) * 1000) : num(i.weight_kg)) : ''}" placeholder="0" style="flex:1">
       <select id="i_kgu" style="width:84px;flex:none"><option value="g" ${num(i.weight_kg) && num(i.weight_kg) < 1 ? 'selected' : ''}>g</option><option value="kg" ${num(i.weight_kg) && num(i.weight_kg) < 1 ? '' : 'selected'}>kg</option></select></div>
@@ -1476,7 +1717,7 @@ function itemForm(i){
     ${isServices() ? `<label class="f" for="i_dur">${t('bk_dur')}</label><input id="i_dur" type="number" min="5" max="480" step="5" inputmode="numeric" value="${i.duration_min || ''}" placeholder="—">
     <div class="muted" style="font-size:13px">${t('bk_dur_note')}</div>` : ''}
     <label class="f" for="i_photo">${t('photo')}</label>
-    <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev')">
+    <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev'); TF.syncPics()">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
     <div id="bgRmBox" style="margin:8px 0;${(typeof state !== "undefined" && state.settings && state.settings.ai_bg_remove === "false") ? "display:none" : ""}"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">${t('more_photos')}</label>
@@ -1485,7 +1726,7 @@ function itemForm(i){
     <label class="f" for="i_stock">${t('stock_qty')}</label><input id="i_stock" type="number" min="0" step="1" inputmode="numeric" value="${i.stock_qty ?? ''}" placeholder="∞">
     <div class="muted" style="font-size:13px">${t('stock_note')}</div>
     <label class="check"><input id="i_avail" type="checkbox" ${i.is_available ? 'checked' : ''}> ${t('in_stock')}</label>
-    ${OE.html()}
+    <div id="tfArea"></div><div id="oeWrap">${OE.html()}</div>
     ${i.id ? '' : `<div class="muted" style="font-size:14px">${t('pending_note')}</div>`}
     <div class="actions"><button class="btn" id="saveBtn" onclick="A.saveItem('${i.id || ''}')">${t('save')}</button>
     ${i.id ? `<button class="btn warn" onclick="A.deleteItem('${i.id}')">${t('remove')}</button>` : ''}</div>`;
@@ -2417,8 +2658,8 @@ const A = {
     if (!v && !await uiConfirm(t('sec_off_q', { s:c ? c.name : '', n }))) { renderTab(); return; }
     await run(async () => { need(await sb.from('menu_items').update({ is_available:v }).eq('category_id', id)); await loadMenu(); renderTab(); toast(v ? t('sec_on_done') : t('sec_off_done')); });
   },
-  morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); },
-  rmPhoto(w, k){ if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); },
+  morePhotos(inp){ const room = 5 - state.pics.old.length - state.pics.add.length; const fs = [...(inp.files || [])].slice(0, Math.max(0, room)); if (!fs.length) return toast(t('more_photos'), true); state.pics.add = state.pics.add.concat(fs); inp.value = ''; drawPics(); TF.syncPics(); },
+  rmPhoto(w, k){ TF.picRemoved(w, k); if (w === 'o') state.pics.old.splice(k, 1); else state.pics.add.splice(k, 1); drawPics(); TF.syncPics(); },
   busyMenu(){ openSheet(t('busy_b'), `<div class="muted" style="margin-bottom:10px">${t('busy_t')}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">${[15, 30, 60].map(m => `<button class="btn ghost" onclick="A.setBusy(${m})">${t('mins').replace('{n}', m)}</button>`).join('')}</div>`); },
   async setBusy(m){
     const until = m ? new Date(Date.now() + m * 60000).toISOString() : null;
@@ -2527,8 +2768,10 @@ const A = {
   },
   editCategory(id){
     const c = state.cats.find(x => x.id === id);
+    TF.style(); state.catType = (c && c.type) || 'general';
     openSheet(c ? t('edit_section') : t('add_section'), `
       <label class="f" for="c_name" style="margin-top:0">${t('section_name')}</label><input id="c_name" type="text" value="${esc(c ? c.name : '')}" placeholder="Burgers">
+      <div id="catPick">${TF.pickHtml(state.catType)}</div>
       <div class="actions"><button class="btn" onclick="A.saveCategory('${id || ''}')">${t('save')}</button>
       ${c ? `<button class="btn warn" onclick="A.deleteCategory('${id}')">🗑️ ${t('del_section')}</button>` : ''}</div>`);
   },
@@ -2558,17 +2801,27 @@ const A = {
   async saveCategory(id){
     const name = $('c_name').value.trim(); if (!name) return toast(t('enter_all'), true);
     await run(async () => {
-      need(await (id ? sb.from('menu_categories').update({ name }).eq('id', id)
-        : sb.from('menu_categories').insert({ name, restaurant_id:state.restaurant.id, sort_order:state.cats.length + 1 })));
+      need(await (id ? sb.from('menu_categories').update({ name, type:state.catType || 'general' }).eq('id', id)
+        : sb.from('menu_categories').insert({ name, type:state.catType || 'general', restaurant_id:state.restaurant.id, sort_order:state.cats.length + 1 })));
       await loadMenu(); closeSheet(); renderTab(); toast(t('saved'));
     });
   },
+  pickType(k){ state.catType = k; const el = $('catPick'); if (el) el.innerHTML = TF.pickHtml(k); },
+  catChanged(){ const it = Object.assign({}, state.tfItem || {}, { category_id:$('i_cat').value }); TF.begin(it).then(h => { if (!h) OE.load(it.id || null).catch(() => {}); }); },
+  tfPhoto(i){ TF.cur = i; TF.render(); },
+  tfMeta(v){ if (TF.meta[TF.cur]) TF.meta[TF.cur].name = v; },
+  tfPrice(v){ if (TF.meta[TF.cur]) TF.meta[TF.cur].price = v; },
+  tfPool(pk, c){ const P = TF.pools[pk]; if (!P) return; if (c in P.sel) delete P.sel[c]; else P.sel[c] = ''; TF.render(); },
+  tfPoolPrice(pk, c, v){ const P = TF.pools[pk]; if (P) P.sel[c] = v; },
+  tfAddCustom(pk){ if (TF.pools[pk]){ TF.pools[pk].custom.push({ name:'', price:'' }); TF.render(); } },
+  tfDelCustom(pk, i){ if (TF.pools[pk]){ TF.pools[pk].custom.splice(i, 1); TF.render(); } },
+  tfCustom(pk, i, f2, v){ const P = TF.pools[pk]; if (P && P.custom[i]) P.custom[i][f2] = v; },
   editItem(id, catId){
     if (!state.cats.length) return toast(t('no_sections'), true);
     const i = state.items.find(x => x.id === id);
     state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
     openSheet(i ? i.name : t('add_product'), itemForm(i || (catId || state.newBarcode ? { is_available:true, category_id:catId || (state.cats[0] || {}).id, barcode:state.newBarcode || null } : null))); drawPics(); state.newBarcode = null;
-    OE.init({ sb, lang:() => state.lang }); OE.load(i ? i.id : null).catch(e => toast(e.message || t('error'), true));
+    OE.init({ sb, lang:() => state.lang }); state.tfItem = i || null; TF.begin(i || null).then(h => { if (!h) OE.load(i ? i.id : null).catch(e => toast(e.message || t('error'), true)); });
   },
   async saveItem(id){
     const name = $('i_name').value.trim(), price = $('i_price').value, cmp = $('i_cmp').value;
@@ -2586,7 +2839,7 @@ const A = {
       let itemId = id;
       if (id) need(await sb.from('menu_items').update(row).eq('id', id));
       else itemId = need(await sb.from('menu_items').insert(Object.assign(row, { restaurant_id:state.restaurant.id, sort_order:state.items.length + 1 })).select('id').single()).id;
-      await OE.save(itemId);
+      if (TF.on) await TF.save(itemId); else await OE.save(itemId);
       await loadMenu(); closeSheet(); renderTab(); toast(t('saved'));
     });
     const b = $('saveBtn'); if (b){ b.disabled = false; b.textContent = t('save'); }
