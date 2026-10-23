@@ -619,6 +619,15 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 .rldots i{width:7px;height:7px;border-radius:4px;background:#C9CFCB;transition:width .2s}
 .rldots i.on{background:var(--brand);width:18px}
 .rlhint{text-align:center;color:var(--muted);font-size:12.5px;margin-top:7px}
+.rlname{text-align:center;font-weight:800;font-size:16.5px;margin-top:10px}
+.rlchips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.rlchip{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;border:1.5px solid #E3DCCB;background:#fff;font:inherit;font-weight:700;font-size:13.5px;color:var(--ink);cursor:pointer}
+.rlchip.on{background:var(--green);border-color:var(--green);color:#fff}
+.rldot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.18);flex:none;display:inline-block}
+.rlcname{font-weight:700;font-size:14.5px;margin-top:8px;text-align:center}
+.rlcprice{color:var(--accent);font-weight:800;font-size:15.5px;text-align:center}
+.rlsec{margin:0 0 12px}
+.rlsect{font-weight:800;font-size:15.5px}
 .wabtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;background:#25D366;color:#fff!important;border-radius:12px;padding:10px 14px;font-weight:700;text-decoration:none}
 .wabtn.wide{display:flex;min-height:48px;margin-top:0}
 .typerow{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;margin:4px 0}
@@ -1049,7 +1058,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.49';
+const APP_VERSION = '5.52';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2441,14 +2450,18 @@ function railPics(item){ return [item.photo_url].concat(Array.isArray(item.photo
 function isClothes(item){ const c = ((item.category && item.category.name) || '').toLowerCase(); return CLOTH_KEYS.some(k => c.includes(k)); }
 function railFor(item){ return !!item && isClothes(item) && railPics(item).length >= 2; }
 const isColorGroup = g => /rang|color|colour/i.test(g.name || '');
+const COLOR_DOTS = [['navy','#1D3557'],['maroon','#7B1E26'],['red','#D42B1E'],['laal','#D42B1E'],['لال','#D42B1E'],['blue','#2456C8'],['neel','#2456C8'],['نیلا','#2456C8'],['green','#1E9E50'],['har','#1E9E50'],['sabz','#1E9E50'],['سبز','#1E9E50'],['black','#232323'],['kal','#232323'],['کالا','#232323'],['yellow','#F2B705'],['peel','#F2B705'],['پیلا','#F2B705'],['white','#FFFFFF'],['safed','#FFFFFF'],['سفید','#FFFFFF'],['orange','#F97316'],['narangi','#F97316'],['pink','#EC4899'],['gulabi','#EC4899'],['گلابی','#EC4899'],['purple','#7C3AED'],['baingani','#7C3AED'],['brown','#8B5A2B'],['bhoora','#8B5A2B'],['grey','#8A8F98'],['gray','#8A8F98'],['surmai','#8A8F98']];
+function colorCss(name){ const n = String(name || '').toLowerCase(); for (const [k, v] of COLOR_DOTS) if (n.includes(k)) return v; return '#C9CDD4'; }
+function galOptsFor(item){ if (!item) return []; const pics = railPics(item); const g = (state.optCache[item.id] || []).find(x => isColorGroup(x) && (x.menu_options || []).length === pics.length); return g ? g.menu_options : []; }
+function galNamesFor(item){ return galOptsFor(item).map(o => o.name); }
 function galRail(fromScroll){ const c = $('dgal'); if (!c) return; if (fromScroll){ clearTimeout(window._galT); window._galT = setTimeout(() => galRail(), 130); } const cards = c.children; if (!cards.length) return; const mid = c.scrollLeft + c.clientWidth / 2; let best = 0, bd = 1e9;
   for (let i = 0; i < cards.length; i++){ const card = cards[i]; const cc = card.offsetLeft + card.offsetWidth / 2; const d = Math.abs(cc - mid); const r = Math.min(1, d / (card.offsetWidth || 1)); card.style.transform = `scale(${1 - r * 0.18}) rotate(${r * 3 * (cc < mid ? -1 : 1)}deg)`; card.style.opacity = String(1 - r * 0.4); if (d < bd){ bd = d; best = i; } }
-  if (best !== state.galIdx){ state.galIdx = best; const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
+  if (best !== state.galIdx){ state.galIdx = best; const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); const nm = $('galName'); if (nm && state.galNames) nm.textContent = state.galNames[best] || ''; const ch = $('galChips'); if (ch) [...ch.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
 function galHtml(item){
   const pics = railPics(item);
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
   if (pics.length === 1) return `<img src="${esc(pics[0])}" alt="">`;
-  if (railFor(item)) return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})"><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}></div></div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`;
+  if (railFor(item)) return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})"><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}></div>${galOptsFor(item)[i] ? `<div class="rlcname">${esc(galOptsFor(item)[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(galOptsFor(item)[i].price))}</div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`;
   return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 }
 function zoomOpen(){
@@ -2479,9 +2492,11 @@ async function showProduct(id){
   trackView(item.id, shop.id || item.restaurant_id);
   const canBuy = item.is_available && full.is_active !== false;
   try { await loadOptions(item.id); } catch (e) {}
+  state.galNames = galNamesFor(item);
   $('view').innerHTML = `
     <div class="${railFor(item) ? 'railbox' : 'dimg'}">${galHtml(item)}${off ? `<span class="off" style="font-size:15px">-${off}%</span>` : ''}
       <button class="heart ${isFav(item.id) ? 'on' : ''}" onclick="A.fav('${item.id}', this)" aria-label="Save">${isFav(item.id) ? '♥' : '♡'}</button></div>
+    ${(railFor(item) && galNamesFor(item).length) ? `<div class="rlsec"><div class="rlsect">Rang (Color)</div><div class="rlchips" id="galChips">${galNamesFor(item).map((n, i) => `<button type="button" class="rlchip${i === 0 ? ' on' : ''}" onclick="A.galChip(${i})"><span class="rldot" style="background:${colorCss(n)}"></span>${esc(n)}</button>`).join('')}</div></div>` : ''}
     <div class="dprice ${off ? '' : 'plain'}">${money(item.price)}${off ? `<span class="strike" style="font-size:16px">${money(item.compare_price)}</span><span class="save">${t('you_save', { n:money(num(item.compare_price) - num(item.price)) })}</span>` : ''}</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h1 style="margin:6px 0 4px">${esc(item.name)}</h1><button class="pillbtn sharebtn" onclick="A.share('p','${item.id}')">${t('share')}</button></div>
     ${s || itemRate(item.id) ? `<div class="muted">${itemRate(item.id) ? `<span class="star">★ ${itemRate(item.id).avg}</span> · ${t('rev_n', { n:itemRate(item.id).n })}${s ? ' · ' : ''}` : ''}${s ? t('sold_n', { n:s }) : ''}</div>` : ''}
@@ -3477,6 +3492,7 @@ const A = {
     }
   },
   // ---- Offers and invite ----
+  galChip(i){ const c = $('dgal'); if (!c || !c.children[i]) return; const card = c.children[i]; c.scrollTo({ left: card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' }); },
   galTap(i){ const c = $('dgal'); if (!c || !c.children.length) return; if (i === (state.galIdx || 0)){ zoomOpen(); return; } const card = c.children[i]; if (card) c.scrollTo({ left:card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior:'smooth' }); },
   useOffer(code){ state.promo = code; if (currentRoute === 'cart') A.applyPromo(); else { toast(t('code_copied', { c:code })); nav('/cart'); } },
   async copyCode(code){ try { await navigator.clipboard.writeText(code); toast(t('copied')); } catch (e) { await uiPrompt('', code); } },
