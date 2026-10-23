@@ -88,6 +88,8 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .catcount{display:inline-block;background:var(--brand);color:#fff;font-size:12px;font-weight:700;min-width:24px;height:24px;line-height:24px;text-align:center;border-radius:12px;padding:0 6px;margin-left:6px;vertical-align:middle}
 .grp{margin:18px 0}
 .grp-h{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 4px 8px}
+.acct .row{padding-top:9px;padding-bottom:9px}
+.acct .grp{margin:14px 0}
 .row.danger .row-title{color:#C0392B}
 .card.live{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
@@ -651,7 +653,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.32';
+const APP_VERSION = '5.33';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -701,9 +703,9 @@ const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
+    grp_profile:'Profile', appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', pw_ph:'Enter your password',
-    pw_title:'Apna password banayein', pw_change:'Password change karein', pw_temp_note:'Office ne aap ko aik temporary password diya tha. Ab apna password khud banayein — is ke baad ye kisi ko nazar nahi ayega, office ko bhi nahi.', pw_vol_note:'Apna naya password banayein — ye sirf aap ko pata hoga, kisi aur ko nazar nahi ayega.', pw_new:'Naya password', pw_new_ph:'Kam az kam 6 characters', pw_confirm:'Password dobara likhein', pw_mismatch:'Dono password aik jaisay nahi hain', pw_save:'Password save karein', pw_changed:'✅ Password badal gaya',
+    pw_title:'Create your password', pw_change:'Password change karein', pw_temp_note:'The office gave you a temporary password. Enter it below, then choose your own password. Choose carefully — this password cannot be changed again. If you forget it, ask the Dera office for a new one.', pw_current:'Current password', pw_current_ph:'The temporary password from the office', pw_current_wrong:'Current password is wrong', pw_new:'New password', pw_new_ph:'At least 6 characters', pw_confirm:'Type the new password again', pw_mismatch:'The two passwords do not match', pw_save:'Save password', pw_changed:'✅ Password changed',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
     rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
     submit:'Send for approval', pending_title:'Waiting for approval',
@@ -785,9 +787,9 @@ const I18N = {
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
-    appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
+    grp_profile:'پروفائل', appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', pw_ph:'اپنا پاس ورڈ لکھیں',
-    pw_title:'اپنا پاس ورڈ بنائیں', pw_change:'پاس ورڈ بدلیں', pw_temp_note:'دفتر نے آپ کو ایک عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ خود بنائیں — اس کے بعد یہ کسی کو نظر نہیں آئے گا، دفتر کو بھی نہیں۔', pw_vol_note:'اپنا نیا پاس ورڈ بنائیں — یہ صرف آپ کو معلوم ہوگا، کسی اور کو نظر نہیں آئے گا۔', pw_new:'نیا پاس ورڈ', pw_new_ph:'کم از کم 6 حروف', pw_confirm:'پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_save:'پاس ورڈ محفوظ کریں', pw_changed:'✅ پاس ورڈ بدل گیا',
+    pw_title:'اپنا پاس ورڈ بنائیں', pw_change:'پاس ورڈ بدلیں', pw_temp_note:'دفتر نے آپ کو ایک عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ خود بنائیں — اس کے بعد یہ کسی کو نظر نہیں آئے گا، دفتر کو بھی نہیں۔', pw_current:'موجودہ پاس ورڈ', pw_current_ph:'دفتر کی طرف سے دیا گیا عارضی پاس ورڈ', pw_current_wrong:'موجودہ پاس ورڈ غلط ہے', pw_vol_note:'اپنا نیا پاس ورڈ بنائیں — یہ صرف آپ کو معلوم ہوگا، کسی اور کو نظر نہیں آئے گا۔', pw_new:'نیا پاس ورڈ', pw_new_ph:'کم از کم 6 حروف', pw_confirm:'پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_save:'پاس ورڈ محفوظ کریں', pw_changed:'✅ پاس ورڈ بدل گیا',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
     rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
     submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
@@ -1917,8 +1919,9 @@ function closeSheet(){ const s = document.getElementById('sheet'); if (s) s.remo
 // Admin-set passwords are temporary: a rider flagged must_change must set
 // their OWN password before the app opens. After that nobody can see it.
 let pwGateResolve = null, pwBlocking = false;
-function pwFormHtml(gate){
-  return `<div class="muted" style="font-size:14px">${t(gate ? 'pw_temp_note' : 'pw_vol_note')}</div>
+function pwFormHtml(){
+  return `<div class="muted" style="font-size:14px">${t('pw_temp_note')}</div>
+    <label class="f" for="np_pw0">${t('pw_current')}</label><input id="np_pw0" type="password" autocomplete="current-password" placeholder="${t('pw_current_ph')}">
     <label class="f" for="np_pw1">${t('pw_new')}</label><input id="np_pw1" type="password" autocomplete="new-password" placeholder="${t('pw_new_ph')}">
     <label class="f" for="np_pw2">${t('pw_confirm')}</label><input id="np_pw2" type="password" autocomplete="new-password" placeholder="${t('pw_new_ph')}">
     <div id="npMsg" style="margin-top:10px;font-size:14px;color:#C0392B"></div>
@@ -1928,7 +1931,7 @@ function pwFormHtml(gate){
 function openPwGate(){
   closeSheet();
   const back = document.createElement('div'); back.className = 'sheet-back'; back.id = 'sheet';
-  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>🔑 ${t('pw_title')}</h3></div><div id="sheetBody">${pwFormHtml(true)}</div></div>`;
+  back.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-head"><h3>🔑 ${t('pw_title')}</h3></div><div id="sheetBody">${pwFormHtml()}</div></div>`;
   document.body.appendChild(back);
 }
 // Runs once per boot from afterLogin: resolves only after the password is set.
@@ -2182,7 +2185,8 @@ function viewRules(){
 // ================= ACCOUNT TAB =================
 function viewAcct(){
   const p = state.profile || {}, r = state.rider; const reg = !!r.face_descriptor;
-  return `<h1>${t('account')}</h1>
+  return `<div class="acct"><h1>${t('account')}</h1>
+    <div class="grp"><div class="grp-h">👤 ${t('grp_profile')}</div>
     <div class="card" style="display:flex;gap:14px;align-items:center">
       <div class="face" id="myFace">${esc((p.full_name || '?')[0])}</div>
       <div>${r.rider_code ? `<div style="font-weight:800;color:var(--brand)">🆔 ${esc(r.rider_code)}</div>` : ''}<b>${esc(p.full_name || '')}</b><div class="muted">${esc(p.phone || '')}</div>${/@rider\.wanharmart\.app$/.test(state.user.email || '') ? '' : `<div class="muted" style="font-size:14px">${esc(state.user.email)}</div>`}
@@ -2192,6 +2196,7 @@ function viewAcct(){
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
       <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
+    </div>
     <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
     ${Theme.picker(state.lang)}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>🔔 ${t('sound')}</b>
@@ -2207,11 +2212,10 @@ function viewAcct(){
     </div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
     <div class="card">
-      <button class="row" style="width:100%;border:none;background:none" onclick="A.pwSheet()"><div class="row-main"><div class="row-title">🔑 ${t('pw_change')}</div></div><span class="muted">›</span></button>
-      <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
+      <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
-    <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p>`;
+    <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p></div>`;
 }
 async function showMyFace(){
   if (!state.rider || !state.rider.face_photo_path) return;
@@ -2627,15 +2631,15 @@ const A = {
     const payout = { method:m, title, number:n, bank:m === 'bank' ? ($('po_bn').value.trim() || null) : null, updated_at:new Date().toISOString() };
     await run(async () => { need(await sb.from('riders').update({ payout }).eq('id', state.rider.id)); state.rider.payout = payout; closeSheet(); renderTab(); toast(t('acc_saved')); });
   },
-  pwSheet(){
-    openSheet('🔑 ' + t('pw_change'), pwFormHtml(false));
-  },
   async saveNewPw(){
-    const p1 = $('np_pw1') ? $('np_pw1').value : '', p2 = $('np_pw2') ? $('np_pw2').value : '';
+    const p0 = $('np_pw0') ? $('np_pw0').value : '', p1 = $('np_pw1') ? $('np_pw1').value : '', p2 = $('np_pw2') ? $('np_pw2').value : '';
     const msg = $('npMsg'); const say = s => { if (msg) msg.textContent = s; else toast(s, true); };
     if (p1.length < 6) return say(t('short_pw'));
     if (p1 !== p2) return say(t('pw_mismatch'));
     const btn = $('npBtn'); if (btn){ btn.disabled = true; btn.textContent = t('loading'); }
+    const { data:u } = await sb.auth.getUser(); const em = u && u.user && u.user.email;
+    const { error:cErr } = await sb.auth.signInWithPassword({ email:em, password:p0 });
+    if (cErr){ say(t('pw_current_wrong')); if (btn){ btn.disabled = false; btn.textContent = t('pw_save'); } return; }
     const { error } = await sb.auth.updateUser({ password:p1 });
     if (error){ say(error.message); if (btn){ btn.disabled = false; btn.textContent = t('pw_save'); } return; }
     try { await sb.rpc('i_changed_my_password'); } catch (e) {}
