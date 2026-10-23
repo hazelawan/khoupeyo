@@ -88,6 +88,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
 .grp{margin:18px 0}
 .grp-h{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 4px 8px}
+.setlist .row{padding:9px 2px}
 .row.danger .row-title{color:#C0392B}
 .row.danger .row-sub{color:#C0392B;opacity:.7}
 .card.new{border:2px solid var(--marigold);box-shadow:0 0 0 4px rgba(242,169,0,.18)}
@@ -689,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.30';
+const APP_VERSION = '6.31';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -850,9 +851,11 @@ const I18N = {
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Rider says the order is not ready',
     k_shop_closed:'Rider says the shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Rider had an accident or vehicle problem',
     k_rider_delay:'Rider will be late', k_other:'Other problem', help_word:'Help', chat_support:'Chat with Dera', k_chat_help:'Dera was asked to join a chat', contact:'Contact',
-    pw_gate_t:'Apna password banayein', pw_gate_s:'Office ne aap ko temporary password diya tha. Ab apna password chunein — ye sirf aap ko pata hoga, koi aur nahi janega.',
-    pw_change_t:'Password change karein', pw_change_s:'Apna password badlein. Naya password sirf aap ko pata hoga — office bhi nahi dekh sakta.',
-    pw_new:'Naya password', pw_new2:'Naya password dobara likhein', pw_mismatch:'Dono password aik jaise nahi hain', pw_set:'Password set karein', pw_changed:'Password change ho gaya ✔',
+    pw_gate_t:'Make your password', pw_gate_s:'The office gave you a temporary password. Enter it first, then choose your own password.',
+    pw_change_t:'Change password',
+    pw_new:'New password', pw_new2:'Write the new password again', pw_mismatch:'The two passwords do not match', pw_set:'Set password', pw_changed:'Password changed ✔',
+    pw_cur:'Current password', pw_cur_ph:'The temporary password from the office', pw_cur_wrong:'Current password is wrong',
+    pa_add:'+ Add account', pa_edit:'Edit', pa_delete:'Delete', pa_del2:'Tap again to confirm', pa_none:'No accounts yet. Add one below.', pa_service:'Service name', pa_type:'Account type', pa_optional:'optional',
     stepup_t:'Hifazat ki tasdeeq', stepup_s:'Apna password dobara likhein — hifazat ke liye', stepup_btn:'Tasdeeq karein', pw_wrong:'Password ghalat hai'
   },
   ur: {
@@ -935,6 +938,8 @@ const I18N = {
     pw_gate_t:'اپنا پاس ورڈ بنائیں', pw_gate_s:'دفتر نے آپ کو عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ چنیں — یہ صرف آپ کو معلوم ہوگا، کوئی اور نہیں جانے گا۔',
     pw_change_t:'پاس ورڈ تبدیل کریں', pw_change_s:'اپنا پاس ورڈ بدلیں۔ نیا پاس ورڈ صرف آپ کو معلوم ہوگا — دفتر بھی نہیں دیکھ سکتا۔',
     pw_new:'نیا پاس ورڈ', pw_new2:'نیا پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_set:'پاس ورڈ سیٹ کریں', pw_changed:'پاس ورڈ تبدیل ہو گیا ✔',
+    pw_cur:'موجودہ پاس ورڈ', pw_cur_ph:'دفتر سے ملا عارضی پاس ورڈ', pw_cur_wrong:'موجودہ پاس ورڈ غلط ہے',
+    pa_add:'+ اکاؤنٹ شامل کریں', pa_edit:'تبدیل کریں', pa_delete:'ختم کریں', pa_del2:'تصدیق کے لیے دوبارہ دبائیں', pa_none:'ابھی کوئی اکاؤنٹ نہیں۔ نیچے شامل کریں۔', pa_service:'سروس کا نام', pa_type:'اکاؤنٹ کی قسم', pa_optional:'اختیاری',
     stepup_t:'حفاظتی تصدیق', stepup_s:'اپنا پاس ورڈ دوبارہ لکھیں — حفاظت کے لیے', stepup_btn:'تصدیق کریں', pw_wrong:'پاس ورڈ غلط ہے'
   }
 };
@@ -1675,18 +1680,25 @@ function viewShop(){
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
     </div>
     ${(() => { const x = weekHours(r)[todayDw()]; const badge = x.off ? t('day_closed') : `${time12(x.o)} – ${time12(x.c)}`; return `
-    <div class="list">
-      <button class="row" onclick="A.timingsSheet()"><div class="row-main"><div class="row-title">🕘 ${t('m_timings')}</div><div class="row-sub">${t('today_hours')}: ${esc(badge)}</div></div><span class="muted">›</span></button>
+    <div class="grp" style="margin-top:6px"><div class="grp-h">👤 Profile &amp; Account</div>
+    <div class="list setlist">
       <button class="row" onclick="A.profileSheet()"><div class="row-main"><div class="row-title">🏪 ${t('m_profile')}</div><div class="row-sub">${t('m_profile_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.pwSheet()"><div class="row-main"><div class="row-title">🔑 ${t('pw_change_t')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.payoutSheet2()"><div class="row-main"><div class="row-title">💳 ${t('m_payout2')}</div><div class="row-sub">${t('m_payout2_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.payAccountsSheet()"><div class="row-main"><div class="row-title">💰 ${t('m_payacc')}</div><div class="row-sub">${t('m_payacc_s')}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="A.staffSheet2()"><div class="row-main"><div class="row-title">👥 ${t('m_staff2')}</div><div class="row-sub">${t('m_staff2_s')}</div></div><span class="muted">›</span></button>
+    </div></div>
+    <div class="grp"><div class="grp-h">🏪 Shop</div>
+    <div class="list setlist">
+      <button class="row" onclick="A.timingsSheet()"><div class="row-main"><div class="row-title">🕘 ${t('m_timings')}</div><div class="row-sub">${t('today_hours')}: ${esc(badge)}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="A.orderSetSheet()"><div class="row-main"><div class="row-title">⚙️ ${t('m_orderset')}</div><div class="row-sub">${t('m_orderset_s')}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="A.offerSheet2()"><div class="row-main"><div class="row-title">🏷️ ${t('m_offer2')}</div><div class="row-sub">${t('m_offer2_s')}</div></div><span class="muted">›</span></button>
       ${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
-      <button class="row" onclick="A.staffSheet2()"><div class="row-main"><div class="row-title">👥 ${t('m_staff2')}</div><div class="row-sub">${t('m_staff2_s')}</div></div><span class="muted">›</span></button>
-      <button class="row" onclick="A.payoutSheet2()"><div class="row-main"><div class="row-title">💳 ${t('m_payout2')}</div><div class="row-sub">${t('m_payout2_s')}</div></div><span class="muted">›</span></button>
-      <button class="row" onclick="A.payAccountsSheet()"><div class="row-main"><div class="row-title">💰 ${t('m_payacc')}</div><div class="row-sub">${t('m_payacc_s')}</div></div><span class="muted">›</span></button>
-      <button class="row" onclick="A.pwSheet()"><div class="row-main"><div class="row-title">🔑 ${t('pw_change_t')}</div><div class="row-sub">${t('pw_change_s')}</div></div><span class="muted">›</span></button>
+    </div></div>
+    <div class="grp"><div class="grp-h">💰 Money</div>
+    <div class="list setlist">
       <button class="row" onclick="go('stmt')"><div class="row-main"><div class="row-title">📊 ${t('m_stmt')}</div><div class="row-sub">${t('m_stmt_s')}</div></div><span class="muted">›</span></button>
-    </div>`; })()}
+    </div></div>`; })()}
     <h2>${t('my_shops')}</h2>
     <div class="card">${(state.shops || []).length > 1 ? `<div class="muted" style="font-size:14px;margin-bottom:8px">${(state.shops || []).map(x => esc(x.name)).join(' · ')}</div><button type="button" class="btn ghost small" style="width:100%;margin-bottom:8px" onclick="shopMenu()">🔁 ${t('switch_shop')}</button>` : ''}
       ${state.sreqPending ? `<div class="note" style="margin:0 0 8px">⏳ ${esc(t('shop_pending').replace('{s}', state.sreqPending.shop_name))} <button type="button" class="link" onclick="A.addShop()">${t('see_req')}</button></div>` : ''}
@@ -1752,6 +1764,32 @@ async function removeBg(inputId, prevId){
 }
 
 // ================= ACTIONS =================
+// ---- Customer payment accounts: new accounts[] shape + legacy shape (jazzcash/easypaisa/bank) normalizer ----
+const PAY_TYPES = [['jazzcash','JazzCash'],['easypaisa','Easypaisa'],['sadapay','Sadapay'],['nayapay','NayaPay'],['upaisa','UPaisa'],['zindigi','Zindigi'],['bank','Bank / Raast'],['other','Other']];
+function payAccList(p){
+  p = p || {};
+  const norm = a => ({ type:a.type || 'other', label:a.label || '', number:a.number || '', title:a.title || '', bank:a.bank || '', iban:a.iban || '', raast_id:a.raast_id || '', qr_url:a.qr_url || '' });
+  if (Array.isArray(p.accounts) && p.accounts.length) return p.accounts.map(norm);
+  const out = [];
+  const j = p.jazzcash || {}; if (j.number || j.title) out.push(norm({ type:'jazzcash', number:j.number, title:j.title }));
+  const e = p.easypaisa || {}; if (e.number || e.title) out.push(norm({ type:'easypaisa', number:e.number, title:e.title }));
+  const b = p.bank || {}; if (b.iban || b.raast_id || b.title || b.bank || p.qr_url) out.push(norm({ type:'bank', title:b.title, bank:b.bank, iban:b.iban, raast_id:b.raast_id, qr_url:p.qr_url }));
+  return out;
+}
+function payTypeName(a){
+  if (!a) return '';
+  if (a.type === 'bank') return a.bank || 'Bank / Raast';
+  if (a.type === 'other') return a.label || 'Other';
+  const f = PAY_TYPES.find(x => x[0] === a.type);
+  return f ? f[1] : (a.label || a.type || '');
+}
+function payAccSub(a){
+  const bits = [];
+  if (a.type === 'bank'){ if (a.iban) bits.push(a.iban); if (a.raast_id) bits.push(a.raast_id); }
+  else if (a.number) bits.push(a.number);
+  if (a.title) bits.push(a.title);
+  return bits.join(' · ');
+}
 const A = {
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
@@ -1887,52 +1925,126 @@ const A = {
       <label class="f" for="po_n" id="po_nl">${m === 'bank' ? t('iban_l') : t('acc_number')}</label><input id="po_n" type="text" dir="ltr" inputmode="${m === 'bank' ? 'text' : 'tel'}" value="${esc(p.number || '')}" placeholder="${m === 'bank' ? 'PK00XXXX0000000000000000' : '03001234567'}">
       <div class="actions" style="margin-top:12px"><button class="btn block" id="poSave" onclick="A.savePayout()">${t('save_acc')}</button></div>`);
   },
-  payAccountsSheet(){
-    const r = state.restaurant; const p = r.pay_accounts || {}; const j = p.jazzcash || {}; const e = p.easypaisa || {}; const b = p.bank || {};
+  payAccountsSheet(keep){
+    const r = state.restaurant;
+    if (!keep || !state.paDraft) state.paDraft = { on:!!(r.pay_accounts && r.pay_accounts.on), accounts:payAccList(r.pay_accounts) };
+    const d = state.paDraft;
+    const rows = d.accounts.length ? d.accounts.map((a, i) => `<div class="card" style="margin-top:8px;padding:10px 12px">
+      <b>${esc(payTypeName(a))}</b>${payAccSub(a) ? `<div class="muted" style="font-size:13px">${esc(payAccSub(a))}</div>` : ''}
+      <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.payAccEdit(${i})">${t('pa_edit')}</button><button class="btn ghost small" style="color:#C0392B" onclick="A.payAccDel(${i})">${state.paDelArm === i ? t('pa_del2') : t('pa_delete')}</button></div>
+    </div>`).join('') : `<div class="muted" style="font-size:14px;margin-top:8px">${t('pa_none')}</div>`;
     openSheet(`💰 ${t('m_payacc')}`, `<div class="note" style="margin-top:0">${t('payacc_note')}</div>
-      <label class="check"><input id="pa_on" type="checkbox" ${p.on ? 'checked' : ''}> ${t('payacc_on')}</label>
-      <h3 style="margin:16px 0 4px">JazzCash</h3>
-      <label class="f" for="pa_jn" style="margin-top:0">${t('acc_number')}</label><input id="pa_jn" type="tel" dir="ltr" value="${esc(j.number || '')}" placeholder="03001234567">
-      <label class="f" for="pa_jt">${t('acc_title')}</label><input id="pa_jt" type="text" value="${esc(j.title || '')}">
-      <h3 style="margin:16px 0 4px">Easypaisa</h3>
-      <label class="f" for="pa_en" style="margin-top:0">${t('acc_number')}</label><input id="pa_en" type="tel" dir="ltr" value="${esc(e.number || '')}" placeholder="03001234567">
-      <label class="f" for="pa_et">${t('acc_title')}</label><input id="pa_et" type="text" value="${esc(e.title || '')}">
-      <h3 style="margin:16px 0 4px">Bank / Raast</h3>
-      <label class="f" for="pa_bi" style="margin-top:0">${t('iban_l')}</label><input id="pa_bi" type="text" dir="ltr" value="${esc(b.iban || '')}" placeholder="PK00XXXX0000000000000000">
-      <label class="f" for="pa_br">${t('raast_id')}</label><input id="pa_br" type="text" dir="ltr" value="${esc(b.raast_id || '')}">
-      <label class="f" for="pa_bt">${t('acc_title')}</label><input id="pa_bt" type="text" value="${esc(b.title || '')}">
-      <label class="f" for="pa_qr">${t('qr_url')}</label><input id="pa_qr" type="text" dir="ltr" value="${esc(p.qr_url || '')}" placeholder="https://…">
+      <label class="check"><input id="pa_on" type="checkbox" ${d.on ? 'checked' : ''} onchange="state.paDraft.on = this.checked"> ${t('payacc_on')}</label>
+      <div id="paList">${rows}</div>
+      <button class="btn ghost block" style="margin-top:10px" onclick="A.payAccEdit(-1)">${t('pa_add')}</button>
       <div class="actions" style="margin-top:12px"><button class="btn block" id="paSave" onclick="A.savePayAccounts()">${t('save_acc')}</button></div>`);
   },
-  async savePayAccounts(){
+  payAccDel(i){
+    if (state.paDelArm === i){ state.paDraft.accounts.splice(i, 1); state.paDelArm = null; }
+    else state.paDelArm = i;
+    A.payAccountsSheet(true);
+  },
+  payAccEdit(i){
+    const d = state.paDraft; if (!d) return A.payAccountsSheet();
+    state.paDelArm = null;
+    const src = i >= 0 ? d.accounts[i] : { type:'jazzcash', label:'', number:'', title:'', bank:'', iban:'', raast_id:'', qr_url:'' };
+    state.paEdit = { idx:i, entry:Object.assign({}, src) };
+    A.payAccEditor();
+  },
+  payAccEditor(){
+    const ed = state.paEdit; if (!ed) return A.payAccountsSheet(true);
+    const a = ed.entry;
+    const chips = PAY_TYPES.map(([k, l]) => `<button type="button" class="chip${a.type === k ? ' on' : ''}" onclick="A.payAccType('${k}')">${l}</button>`).join('');
+    let fields;
+    if (a.type === 'bank'){
+      fields = `<label class="f" for="pae_bank">${t('bank_name')}</label><input id="pae_bank" type="text" value="${esc(a.bank || '')}" placeholder="Meezan, HBL, UBL…">
+      <label class="f" for="pae_title">${t('acc_title')}</label><input id="pae_title" type="text" value="${esc(a.title || '')}">
+      <label class="f" for="pae_iban">${t('iban_l')}</label><input id="pae_iban" type="text" dir="ltr" value="${esc(a.iban || '')}" placeholder="PK00XXXX0000000000000000">
+      <label class="f" for="pae_raast">${t('raast_id')}</label><input id="pae_raast" type="text" dir="ltr" value="${esc(a.raast_id || '')}">`;
+    } else {
+      fields = `${a.type === 'other' ? `<label class="f" for="pae_label" style="margin-top:0">${t('pa_service')}</label><input id="pae_label" type="text" value="${esc(a.label || '')}">` : ''}
+      <label class="f" for="pae_num"${a.type === 'other' ? '' : ' style="margin-top:0"'}>${t('acc_number')}</label><input id="pae_num" type="tel" dir="ltr" value="${esc(a.number || '')}" placeholder="03001234567">
+      <label class="f" for="pae_title">${t('acc_title')}</label><input id="pae_title" type="text" value="${esc(a.title || '')}">`;
+    }
+    openSheet(`💰 ${ed.idx >= 0 ? t('pa_edit') : t('pa_add')}`, `
+      <label class="f" style="margin-top:0">${t('pa_type')}</label>
+      <div class="chips">${chips}</div>
+      ${fields}
+      <label class="f" for="pae_qr">${t('qr_url')} (${t('pa_optional')})</label><input id="pae_qr" type="text" dir="ltr" value="${esc(a.qr_url || '')}" placeholder="https://…">
+      <div class="two" style="margin-top:12px"><button class="btn ghost" onclick="A.payAccountsSheet(true)">${t('cancel')}</button><button class="btn" onclick="A.payAccSaveEdit()">${t('save')}</button></div>`);
+  },
+  payAccHarvest(){
+    const ed = state.paEdit; if (!ed) return;
+    const g = id => { const el = $(id); return el ? el.value : null; };
+    const a = ed.entry; let v;
+    if ((v = g('pae_label')) !== null) a.label = v;
+    if ((v = g('pae_num')) !== null) a.number = v;
+    if ((v = g('pae_title')) !== null) a.title = v;
+    if ((v = g('pae_bank')) !== null) a.bank = v;
+    if ((v = g('pae_iban')) !== null) a.iban = v;
+    if ((v = g('pae_raast')) !== null) a.raast_id = v;
+    if ((v = g('pae_qr')) !== null) a.qr_url = v;
+  },
+  payAccType(k){
+    A.payAccHarvest();
+    state.paEdit.entry.type = k;
+    A.payAccEditor();
+  },
+  payAccSaveEdit(){
+    A.payAccHarvest();
+    const ed = state.paEdit; if (!ed) return;
+    const a = ed.entry;
     const cleanPhone = v => String(v || '').replace(/\D/g, '').replace(/^92(?=3\d{9}$)/, '0');
-    const pay_accounts = {
-      on:$('pa_on').checked,
-      jazzcash:{ number:cleanPhone($('pa_jn').value), title:$('pa_jt').value.trim() },
-      easypaisa:{ number:cleanPhone($('pa_en').value), title:$('pa_et').value.trim() },
-      bank:{ iban:$('pa_bi').value.replace(/\s/g, '').toUpperCase(), raast_id:cleanPhone($('pa_br').value), title:$('pa_bt').value.trim() },
-      qr_url:$('pa_qr').value.trim() || null
-    };
-    for (const k of ['jazzcash', 'easypaisa']) if (pay_accounts[k].number && !/^03\d{9}$/.test(pay_accounts[k].number)) return toast('03XXXXXXXXX', true);
-    if (pay_accounts.bank.iban && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(pay_accounts.bank.iban)) return toast(t('iban_l'), true);
-    if (pay_accounts.on && !(pay_accounts.jazzcash.number || pay_accounts.easypaisa.number || pay_accounts.bank.iban || pay_accounts.bank.raast_id || pay_accounts.qr_url)) return toast(t('enter_all'), true);
+    if (a.type === 'bank'){
+      a.iban = String(a.iban || '').replace(/\s/g, '').toUpperCase();
+      a.raast_id = cleanPhone(a.raast_id);
+      a.number = '';
+      if (a.iban && !/^PK\d{2}[A-Z]{4}\d{16}$/.test(a.iban)) return toast(t('iban_l'), true);
+    } else {
+      a.number = cleanPhone(a.number);
+      a.iban = ''; a.raast_id = ''; a.bank = '';
+      if (a.number && !/^03\d{9}$/.test(a.number)) return toast('03XXXXXXXXX', true);
+    }
+    a.title = String(a.title || '').trim(); a.label = String(a.label || '').trim(); a.bank = String(a.bank || '').trim(); a.qr_url = String(a.qr_url || '').trim();
+    if (ed.idx >= 0) state.paDraft.accounts[ed.idx] = a; else state.paDraft.accounts.push(a);
+    state.paEdit = null;
+    A.payAccountsSheet(true);
+  },
+  async savePayAccounts(){
+    const d = state.paDraft || { on:!!(state.restaurant.pay_accounts && state.restaurant.pay_accounts.on), accounts:payAccList(state.restaurant.pay_accounts) };
+    const on = $('pa_on') ? $('pa_on').checked : !!d.on;
+    const accounts = d.accounts.map(a => ({ type:a.type || 'other', label:a.label || '', number:a.number || '', title:a.title || '', bank:a.bank || '', iban:a.iban || '', raast_id:a.raast_id || '', qr_url:a.qr_url || '' }));
+    if (on && !accounts.some(a => a.number || a.iban || a.raast_id || a.qr_url)) return toast(t('enter_all'), true);
+    const pay_accounts = { on, accounts };
     if (!await A.askStepUp()) return;
     await run(async () => {
       need(await sb.from('restaurants').update({ pay_accounts }).eq('id', state.restaurant.id));
       state.restaurant.pay_accounts = pay_accounts;
+      state.paDraft = null; state.paEdit = null; state.paDelArm = null;
       closeSheet(); renderTab(); toast(t('acc_saved'));
     });
   },
   pwSheet(){
     state.pwBlocking = false;
-    openSheet(`🔑 ${t('pw_change_t')}`, `<div class="muted" style="font-size:14px;margin-bottom:8px">${t('pw_change_s')}</div>
-      ${pwChangeFormHtml()}`);
+    openSheet(`🔑 ${t('pw_change_t')}`, `${pwChangeFormHtml()}`);
   },
   async submitPwChange(){
+    const cur = $('npw0') ? $('npw0').value : '';
     const p1 = $('npw1').value, p2 = $('npw2').value; const m = $('npwMsg'); if (m) m.textContent = '';
+    if (!cur){ if (m) m.textContent = t('enter_all'); return; }
     if (p1.length < 6){ if (m) m.textContent = t('short_pw'); return; }
     if (p1 !== p2){ if (m) m.textContent = t('pw_mismatch'); return; }
     const b = $('npwBtn'); if (b){ b.disabled = true; b.textContent = t('loading'); }
+    try {
+      const { data:gu } = await sb.auth.getUser();
+      const email = gu && gu.user && gu.user.email;
+      const { error:ce } = await sb.auth.signInWithPassword({ email, password:cur });
+      if (ce) throw ce;
+    } catch (e) {
+      if (m) m.textContent = t('pw_cur_wrong');
+      if (b){ b.disabled = false; b.textContent = t('pw_set'); }
+      return;
+    }
     let ok = false;
     await run(async () => {
       const { error } = await sb.auth.updateUser({ password:p1 }); if (error) throw error;
@@ -2630,7 +2742,8 @@ function routeNoRestaurant(){
 }
 // ---- Password change (Stage 5): one form, two doors — blocking first-login gate + voluntary settings sheet ----
 function pwChangeFormHtml(){
-  return `<label class="f" for="npw1" style="margin-top:0">${t('pw_new')}</label><input id="npw1" type="password" autocomplete="new-password" placeholder="${t('pw_ph')}">
+  return `<label class="f" for="npw0" style="margin-top:0">${t('pw_cur')}</label><input id="npw0" type="password" autocomplete="current-password" placeholder="${t('pw_cur_ph')}">
+  <label class="f" for="npw1">${t('pw_new')}</label><input id="npw1" type="password" autocomplete="new-password" placeholder="${t('pw_ph')}">
   <label class="f" for="npw2">${t('pw_new2')}</label><input id="npw2" type="password" autocomplete="new-password">
   <div class="err-text" id="npwMsg"></div>
   <div class="actions" style="margin-top:12px"><button class="btn block" id="npwBtn" onclick="A.submitPwChange()">${t('pw_set')}</button></div>`;
