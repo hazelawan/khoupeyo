@@ -603,6 +603,22 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 .gdots{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:6px;pointer-events:none}
 .gdots i{width:7px;height:7px;border-radius:4px;background:rgba(255,255,255,.65);box-shadow:0 0 0 1px rgba(0,0,0,.18);transition:width .2s}
 .gdots i.on{background:#fff;width:18px}
+.railbox{position:relative;border-radius:26px;box-shadow:var(--sh-2);background:linear-gradient(#FCFBF8,#F0EDE6);margin-bottom:12px;padding:34px 0 12px;overflow:hidden}
+.railrod{position:absolute;top:13px;left:10px;right:10px;height:9px;border-radius:6px;background:linear-gradient(#9aa0a6,#6f7478);box-shadow:0 2px 3px rgba(0,0,0,.25);z-index:1}
+.railbox:has(> .off) .railrod{left:74px}
+.railbox .off{z-index:3}
+.railbox .heart{z-index:3}
+.railgal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 19%;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.railgal>*{min-width:0}
+.railgal::-webkit-scrollbar{display:none}
+.rlcard{flex:0 0 62%;scroll-snap-align:center;padding:0 5px;text-align:center;transform-origin:top center;will-change:transform,opacity;cursor:pointer}
+.rlhook{width:20px;height:26px;margin:0 auto;border:5px solid #767C83;border-bottom:none;border-radius:12px 12px 0 0;position:relative;z-index:2}
+.rlphoto{background:#fff;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.13);padding:6px;margin-top:-3px}
+.rlphoto img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:9px;display:block}
+.rldots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.rldots i{width:7px;height:7px;border-radius:4px;background:#C9CFCB;transition:width .2s}
+.rldots i.on{background:var(--brand);width:18px}
+.rlhint{text-align:center;color:var(--muted);font-size:12.5px;margin-top:7px}
 .wabtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;background:#25D366;color:#fff!important;border-radius:12px;padding:10px 14px;font-weight:700;text-decoration:none}
 .wabtn.wide{display:flex;min-height:48px;margin-top:0}
 .typerow{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none;margin:4px 0}
@@ -1033,7 +1049,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.46';
+const APP_VERSION = '5.49';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1073,7 +1089,7 @@ const I18N = {
     address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
     addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location', add_loc:'📍 Add location pin',
     location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
-    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', add_for:'Add · {p}', choose_options:'Choose options',
+    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', rail_hint:'Swipe — the middle one is selected', add_for:'Add · {p}', choose_options:'Choose options',
     finding_addr:'Finding your address…', addr_filled:'✅ Address filled from your location. Add house number or landmark below.', addr_not_found:'Could not find the address name. Please write it yourself.', home_word:'Home',
     pin_hint:'Drag the pin or tap the map to mark your door. This helps the rider find you.', pin_set:'📍 Location marked on map', map_loading:'Loading map…', map_fail:'Map could not load. Use “Use my location” instead.',
     rider_km:'Rider is {km} km away', shop_km:'📍 Shop is {km} from your address', live_map:'Live tracking', you:'You', shop_word:'Shop', rider_word:'Rider',
@@ -1197,7 +1213,7 @@ const I18N = {
     address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
     addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں', add_loc:'📍 لوکیشن پن لگائیں',
     location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
-    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
+    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', rail_hint:'انگلی سے سرکائیں — بیچ والا منتخب ہے', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
     finding_addr:'آپ کا پتہ ڈھونڈا جا رہا ہے…', addr_filled:'✅ لوکیشن سے پتہ لکھ دیا گیا۔ نیچے مکان نمبر یا نشانی لکھیں۔', addr_not_found:'پتے کا نام نہیں ملا۔ براہ کرم خود لکھیں۔', home_word:'گھر',
     pin_hint:'پن کو کھینچیں یا نقشے پر ٹیپ کر کے اپنا دروازہ نشان لگائیں۔ اس سے رائیڈر آسانی سے پہنچے گا۔', pin_set:'📍 نقشے پر لوکیشن لگ گئی', map_loading:'نقشہ لوڈ ہو رہا ہے…', map_fail:'نقشہ نہیں کھل سکا۔ ”میری لوکیشن“ استعمال کریں۔',
     rider_km:'رائیڈر {km} کلومیٹر دور ہے', shop_km:'📍 دکان آپ کے پتے سے {km} دور ہے', live_map:'لائیو ٹریکنگ', you:'آپ', shop_word:'دکان', rider_word:'رائیڈر',
@@ -2420,14 +2436,23 @@ function itemHtml(i){
 }
 
 // ================= PRODUCT PAGE =================
+const CLOTH_KEYS = ['cloth', 'kapr', 'fashion', 'wear', 'garment', 'shalwar', 'kameez', 'kurta', 'shirt', 'suits', 'dress', 'jeans', 'trousers', 'pants', 'abaya', 'hijab', 'لباس', 'کپڑ', 'شلوار', 'قمیض', 'کرتا'];
+function railPics(item){ return [item.photo_url].concat(Array.isArray(item.photos) ? item.photos : []).filter((x, i, a) => x && a.indexOf(x) === i); }
+function isClothes(item){ const c = ((item.category && item.category.name) || '').toLowerCase(); return CLOTH_KEYS.some(k => c.includes(k)); }
+function railFor(item){ return !!item && isClothes(item) && railPics(item).length >= 2; }
+const isColorGroup = g => /rang|color|colour/i.test(g.name || '');
+function galRail(fromScroll){ const c = $('dgal'); if (!c) return; if (fromScroll){ clearTimeout(window._galT); window._galT = setTimeout(() => galRail(), 130); } const cards = c.children; if (!cards.length) return; const mid = c.scrollLeft + c.clientWidth / 2; let best = 0, bd = 1e9;
+  for (let i = 0; i < cards.length; i++){ const card = cards[i]; const cc = card.offsetLeft + card.offsetWidth / 2; const d = Math.abs(cc - mid); const r = Math.min(1, d / (card.offsetWidth || 1)); card.style.transform = `scale(${1 - r * 0.18}) rotate(${r * 3 * (cc < mid ? -1 : 1)}deg)`; card.style.opacity = String(1 - r * 0.4); if (d < bd){ bd = d; best = i; } }
+  if (best !== state.galIdx){ state.galIdx = best; const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
 function galHtml(item){
-  const pics = [item.photo_url].concat(Array.isArray(item.photos) ? item.photos : []).filter((x, i, a) => x && a.indexOf(x) === i);
+  const pics = railPics(item);
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
   if (pics.length === 1) return `<img src="${esc(pics[0])}" alt="">`;
+  if (railFor(item)) return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})"><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}></div></div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`;
   return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 }
 function zoomOpen(){
-  const dz = document.querySelector('.dimg'); if (!dz) return;
+  const dz = document.querySelector('.dimg, .railbox'); if (!dz) return;
   const imgs = [...dz.querySelectorAll('img')].map(i => i.currentSrc || i.src).filter(Boolean);
   if (!imgs.length) return;
   const ov = document.createElement('div');
@@ -2450,12 +2475,12 @@ async function showProduct(id){
   let rel = [];
   try { rel = need(await sb.from('menu_items').select('id,name,price,compare_price,photo_url,restaurant_id,is_available,heavy_fee,weight_kg,stock_qty,restaurants!inner(id,name,logo_url,is_open,is_active)').eq('restaurant_id', shop.id).eq('is_available', true).neq('id', id).limit(8)); rel.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = p; }); } catch (e) { logErr(e); }
   const off = pctOff(item); const s = sold(item.id); const rt = shopRating(shop.id);
-  state.qty = 1;
+  state.qty = 1; state.galIdx = 0; state.galPid = item.id;
   trackView(item.id, shop.id || item.restaurant_id);
   const canBuy = item.is_available && full.is_active !== false;
   try { await loadOptions(item.id); } catch (e) {}
   $('view').innerHTML = `
-    <div class="dimg">${galHtml(item)}${off ? `<span class="off" style="font-size:15px">-${off}%</span>` : ''}
+    <div class="${railFor(item) ? 'railbox' : 'dimg'}">${galHtml(item)}${off ? `<span class="off" style="font-size:15px">-${off}%</span>` : ''}
       <button class="heart ${isFav(item.id) ? 'on' : ''}" onclick="A.fav('${item.id}', this)" aria-label="Save">${isFav(item.id) ? '♥' : '♡'}</button></div>
     <div class="dprice ${off ? '' : 'plain'}">${money(item.price)}${off ? `<span class="strike" style="font-size:16px">${money(item.compare_price)}</span><span class="save">${t('you_save', { n:money(num(item.compare_price) - num(item.price)) })}</span>` : ''}</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><h1 style="margin:6px 0 4px">${esc(item.name)}</h1><button class="pillbtn sharebtn" onclick="A.share('p','${item.id}')">${t('share')}</button></div>
@@ -2480,6 +2505,7 @@ async function showProduct(id){
       <button class="btn" onclick="A.addQty('${item.id}')">${t('add_to_cart')}</button></div></div>` : ''}`;
   const dz = document.querySelector('.dimg');
   if (dz) dz.addEventListener('click', e => { if (e.target.closest('.heart')) return; zoomOpen(); });
+  if (railFor(item)) requestAnimationFrame(() => { try { galRail(); } catch (e) {} });
   if (itemRate(item.id)) sb.rpc('item_reviews_list', { p_item:item.id }).then(({ data }) => { const box = $('revBox'); if (!box) return;
     box.innerHTML = (data || []).map(v => `<div class="revrow"><div><b class="star">${'★'.repeat(v.rating)}</b> <span class="muted" style="font-size:13px">${esc(v.name)} · ${esc(new Date(v.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }))}</span></div>${v.comment ? `<div>${esc(v.comment)}</div>` : ''}</div>`).join('') || `<div class="muted">${t('no_reviews')}</div>`; }, () => {});
 }
@@ -3426,7 +3452,7 @@ const A = {
     let groups; try { groups = await loadOptions(id); } catch (e) { return toast(niceErr(e), true); }
     if (!groups.length){ state.optItems.delete(id); return A.add(id); }
     state.optSel = { id, qty:qty || 1, sel:{} };
-    groups.forEach(g => { state.optSel.sel[g.id] = []; if (g.min_select >= 1 && g.max_select === 1){ const first = g.menu_options.find(o => o.is_available); if (first) state.optSel.sel[g.id] = [first.id]; } });
+    groups.forEach(g => { state.optSel.sel[g.id] = []; if (g.min_select >= 1 && g.max_select === 1){ let pick = null; const it2 = getItem(id); if (state.galPid === id && it2 && railFor(it2) && isColorGroup(g) && g.menu_options.length === railPics(it2).length){ const cand = g.menu_options[state.galIdx || 0]; if (cand && cand.is_available) pick = cand; } const first = pick || g.menu_options.find(o => o.is_available); if (first) state.optSel.sel[g.id] = [first.id]; } });
     openSheet(it.name, `<div id="optBody"></div>`); drawOptions();
   },
   optPick(gid, oid){
@@ -3451,6 +3477,7 @@ const A = {
     }
   },
   // ---- Offers and invite ----
+  galTap(i){ const c = $('dgal'); if (!c || !c.children.length) return; if (i === (state.galIdx || 0)){ zoomOpen(); return; } const card = c.children[i]; if (card) c.scrollTo({ left:card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior:'smooth' }); },
   useOffer(code){ state.promo = code; if (currentRoute === 'cart') A.applyPromo(); else { toast(t('code_copied', { c:code })); nav('/cart'); } },
   async copyCode(code){ try { await navigator.clipboard.writeText(code); toast(t('copied')); } catch (e) { await uiPrompt('', code); } },
   async shareRef(code, f){
