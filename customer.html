@@ -615,6 +615,9 @@ html[dir=rtl] .statushero::after{right:auto;left:10px}
 .rlhook{width:20px;height:26px;margin:0 auto;border:5px solid #767C83;border-bottom:none;border-radius:12px 12px 0 0;position:relative;z-index:2}
 .rlphoto{background:#fff;border-radius:14px;box-shadow:0 6px 16px rgba(0,0,0,.13);padding:6px;margin-top:-3px}
 .rlphoto img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:9px;display:block}
+.rlphoto{position:relative}
+.rlflip{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:50%;background:#F85606;color:#fff;font-size:18px;border:2.5px solid #fff;box-shadow:0 3px 9px rgba(0,0,0,.28);display:none;align-items:center;justify-content:center;cursor:pointer;z-index:3;padding:0}
+.rlback{display:inline-block;background:#1c1c1c;color:#fff;border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:800;margin-top:4px}
 .rldots{display:flex;justify-content:center;gap:6px;margin-top:10px}
 .rldots i{width:7px;height:7px;border-radius:4px;background:#C9CFCB;transition:width .2s}
 .rldots i.on{background:var(--brand);width:18px}
@@ -1058,7 +1061,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.53';
+const APP_VERSION = '5.57';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1098,13 +1101,13 @@ const I18N = {
     address:'Delivery address', add_address:'Add a new address', addr_label:'Address name (for example Home or Shop)',
     addr_full:'Full address (street, area, town)', addr_note:'Landmark or house number', use_location:'Use my location', add_loc:'📍 Add location pin',
     location_added:'Location added', save_address:'Save address', payment:'Payment', cod:'Cash on delivery',
-    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', rail_hint:'Swipe — the middle one is selected', add_for:'Add · {p}', choose_options:'Choose options',
+    opt_required:'Required', opt_optional:'Optional', opt_pick1:'Choose 1', opt_upto:'Up to {n}', opt_pickn:'Choose {n}', opt_need:'Please choose {g}', customizable:'Customizable', rail_hint:'Swipe — the middle one is selected', rail_back:'Back side', rail_flip:'See back', add_for:'Add · {p}', choose_options:'Choose options',
     finding_addr:'Finding your address…', addr_filled:'✅ Address filled from your location. Add house number or landmark below.', addr_not_found:'Could not find the address name. Please write it yourself.', home_word:'Home',
     pin_hint:'Drag the pin or tap the map to mark your door. This helps the rider find you.', pin_set:'📍 Location marked on map', map_loading:'Loading map…', map_fail:'Map could not load. Use “Use my location” instead.',
     rider_km:'Rider is {km} km away', shop_km:'📍 Shop is {km} from your address', live_map:'Live tracking', you:'You', shop_word:'Shop', rider_word:'Rider',
     offers:'Offers', offers_invite:'🎁 Offers and invite friends', my_offers:'Your offers', no_offers:'No offers right now. Check back soon!', use_code:'Use', code_copied:'Code {c} added. It will be applied in your cart.',
     off_first:'First order only', off_min:'Min order {m}', off_upto:'up to {m}', off_expires:'Ends {d}', free_del:'Free delivery', pct_off:'{v}% off', rs_off:'{v} off',
-    invite_t:'Invite friends, get {r}', invite_s:'Your friend gets {f} off their first order. You get {r} when their first order is delivered.', invite_share:'Share my code', invite_copy:'Copy', copied:'Copied', invite_qr:'Scan — app lagayein, code khud lag jayega',
+    invite_t:'Invite friends, get {r}', invite_s:'Your friend gets {f} off their first order. You get {r} when their first order is delivered.', invite_share:'Share my code', invite_copy:'Copy', copied:'Copied', invite_qr:'Scan — install the app, the code applies automatically',
     invite_msg:'Shop anything on Dera, delivered to your door! Use my invite code {c} to get {f} off your first order: {u}', friends_joined:'{n} friends joined · {m} rewards earned', top_shop:'⭐ Top Shop',
     have_code:'Got an invite code from a friend?', apply_code:'Apply', ref_done:'Done! Your gift code {c} is ready in Your offers.',
     tip_t:'Tip for your rider', tip_s:'100% of the tip goes to the rider.', tip_none:'No tip', tip_other:'Other', tip_ask:'Tip amount (Rs)', tip:'Rider tip',
@@ -1120,10 +1123,10 @@ const I18N = {
     pay_send:'I have paid — send', pay_checking:'We are checking your payment. This usually takes a few minutes.', pay_paid:'Paid online', pay_bad:'Payment not found',
     adv_paid_t:'Advance received', adv_paid_s:'Advance {a} paid online · Balance {b} is cash on delivery', adv_due_t:'Advance to pay now', adv_steps:'Send the advance {n} now to confirm your order. The remaining {b} is cash on delivery. Then write the Transaction ID (TID) from your payment SMS.', pay_to:'Pay to: {s}',
     plan_t:'How will you pay?', plan_full:'Pay fully online', plan_full_s:'Pay {n} now — nothing to pay on delivery', plan_adv:'Advance {p}% — rest cash on delivery', plan_adv_s:'Pay {n} now · {b} cash when your order arrives', fee_free:'FREE',
-    gw_instant:'Instant JazzCash / Easypaisa', gw_instant_s:'Confirmed at once · +{f}% charges', gw_card:'Debit / Credit Card', gw_card_s:'Confirmed at once · +{f}% + {x} charges', gw_fee:'Online charges', gw_fee_note:'Ye charges gateway ko jate hain', gw_pay_t:'Online payment', gw_pay_s:'Payment link is order ke liye gateway se ayega. Aap ko payment page par le jaya jayega — card ya wallet ki tafseel Dera ke paas nahi aati.',
+    gw_instant:'Instant JazzCash / Easypaisa', gw_instant_s:'Confirmed at once · +{f}% charges', gw_card:'Debit / Credit Card', gw_card_s:'Confirmed at once · +{f}% + {x} charges', gw_fee:'Online charges', gw_fee_note:'Ye charges gateway ko jate hain', gw_pay_t:'Online payment', gw_pay_s:'The payment link for this order will come from the gateway. You will be taken to the payment page — your card or wallet details never come to Dera.',
     pay_refund_due:'This order was cancelled. Your money will be sent back to you.', pay_refunded:'Your money was sent back.', paid_qr:'Paid by QR at the door',
-    all_types:'All', only_left:'Only {n} left', stock_max:'Sorry, only {n} available', wa_shop:'WhatsApp shop', wa_rider:'WhatsApp rider', wa_hi:'Hello, this is about my Dera order #{n}', bharosa:'Bharosa', bharosa_line:'Bharosa dukaan — payments waqt par confirm karti hai, cancel bohat kam.', wa_pay_btn:'WhatsApp par dukaan ko bataein', wa_pay_msg:'Assalam o Alaikum! Maine Dera par order #{c} ki payment Rs {a} bhej di hai. TID: {tid}. Meherbani karke confirm kar dein.',
-    day_off:'Closed', all_day:'Open all day', brk_w:'break', o_delivery:'🛵 Delivery', o_pickup:'🛍️ Pickup', pick_from:'Collect from', pick_note:'No delivery fee. Collect your order from the shop when it is ready. Show your code at the shop.',
+    all_types:'All', only_left:'Only {n} left', stock_max:'Sorry, only {n} available', wa_shop:'WhatsApp shop', wa_rider:'WhatsApp rider', wa_hi:'Hello, this is about my Dera order #{n}', bharosa:'Bharosa', bharosa_line:'A trusted shop — confirms payments on time, cancels are very rare.', wa_pay_btn:'Tell the shop on WhatsApp', wa_pay_msg:'Hello! I have sent the payment of Rs {a} for my Dera order #{c}. TID: {tid}. Please confirm it.',
+    day_off:'Closed', all_day:'Open all day', brk_w:'break', o_delivery:'🛵 Delivery', o_pickup:'🛍️ Pickup', o_dinein:'🍽️ Dine-in', win_only:'Only', dn_guests:'How many people are coming?', dn_time_note:'Choose below the time you will reach the restaurant.', dn_rule_spot:'Payment: cash at the restaurant.', dn_rule_adv:'This restaurant takes payment online in advance.', dn_rule_choice:'Payment: at the restaurant or online — your choice.', hero_dinein:'Your food is ready at the restaurant 🍽️', pick_from:'Collect from', pick_note:'No delivery fee. Collect your order from the shop when it is ready. Show your code at the shop.',
     sub_t:'If something is out of stock', sub_similar:'Give something similar', sub_call:'Call me', sub_remove:'Remove it', rx_t:'Prescription (if your medicine needs one)', rx_btn:'📷 Add prescription photo', rx_ok:'✅ Prescription added',
     use_wallet:'Use my wallet', wallet:'Dera wallet', wallet_used:'Wallet', shop_offer:'Shop offer', offer_pct:'{p}% off', offer_min:'above {m}', busy_msg:'This shop is very busy right now. Back at {t}.',
     code_t:'🔐 Your delivery code', code_s:'Give this code to the rider only when you have your order.', code_pick:'Show this code at the shop to collect your order.', st_ready_pick:'Ready to collect', st_collected:'Collected',
@@ -1222,7 +1225,7 @@ const I18N = {
     address:'ڈیلیوری کا پتہ', add_address:'نیا پتہ شامل کریں', addr_label:'پتے کا نام (جیسے گھر یا دکان)',
     addr_full:'مکمل پتہ (گلی، علاقہ، شہر)', addr_note:'نشانی یا مکان نمبر', use_location:'میری لوکیشن استعمال کریں', add_loc:'📍 لوکیشن پن لگائیں',
     location_added:'لوکیشن شامل ہو گئی', save_address:'پتہ محفوظ کریں', payment:'ادائیگی', cod:'کیش آن ڈیلیوری',
-    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', rail_hint:'انگلی سے سرکائیں — بیچ والا منتخب ہے', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
+    opt_required:'ضروری', opt_optional:'اختیاری', opt_pick1:'1 چنیں', opt_upto:'زیادہ سے زیادہ {n}', opt_pickn:'{n} چنیں', opt_need:'براہ کرم {g} چنیں', customizable:'اپنی مرضی سے', rail_hint:'انگلی سے سرکائیں — بیچ والا منتخب ہے', rail_back:'پیچھے سے', rail_flip:'پیچھے دیکھیں', add_for:'شامل کریں · {p}', choose_options:'آپشن چنیں',
     finding_addr:'آپ کا پتہ ڈھونڈا جا رہا ہے…', addr_filled:'✅ لوکیشن سے پتہ لکھ دیا گیا۔ نیچے مکان نمبر یا نشانی لکھیں۔', addr_not_found:'پتے کا نام نہیں ملا۔ براہ کرم خود لکھیں۔', home_word:'گھر',
     pin_hint:'پن کو کھینچیں یا نقشے پر ٹیپ کر کے اپنا دروازہ نشان لگائیں۔ اس سے رائیڈر آسانی سے پہنچے گا۔', pin_set:'📍 نقشے پر لوکیشن لگ گئی', map_loading:'نقشہ لوڈ ہو رہا ہے…', map_fail:'نقشہ نہیں کھل سکا۔ ”میری لوکیشن“ استعمال کریں۔',
     rider_km:'رائیڈر {km} کلومیٹر دور ہے', shop_km:'📍 دکان آپ کے پتے سے {km} دور ہے', live_map:'لائیو ٹریکنگ', you:'آپ', shop_word:'دکان', rider_word:'رائیڈر',
@@ -1247,7 +1250,7 @@ const I18N = {
     gw_instant:'فوری جاز کیش / ایزی پیسہ', gw_instant_s:'فوراً کنفرم · +{f}% چارجز', gw_card:'ڈیبٹ / کریڈٹ کارڈ', gw_card_s:'فوراً کنفرم · +{f}% + {x} چارجز', gw_fee:'آن لائن چارجز', gw_fee_note:'یہ چارجز گیٹ وے کو جاتے ہیں', gw_pay_t:'آن لائن ادائیگی', gw_pay_s:'اس آرڈر کے لیے ادائیگی کا لنک گیٹ وے سے آئے گا۔ آپ کو ادائیگی والے صفحے پر لے جایا جائے گا — کارڈ یا والیٹ کی تفصیل ڈیرہ کے پاس نہیں آتی۔',
     pay_refund_due:'یہ آرڈر منسوخ ہو گیا۔ آپ کے پیسے واپس بھیجے جائیں گے۔', pay_refunded:'آپ کے پیسے واپس بھیج دیے گئے۔', paid_qr:'دروازے پر QR سے ادائیگی',
     all_types:'سب', only_left:'صرف {n} باقی', stock_max:'معذرت، صرف {n} دستیاب ہیں', wa_shop:'دکان کو واٹس ایپ', wa_rider:'رائیڈر کو واٹس ایپ', wa_hi:'السلام علیکم، یہ میرے وانہار مارٹ آرڈر #{n} کے بارے میں ہے', bharosa:'بھروسا', bharosa_line:'بھروسا دکان — ادائیگیاں وقت پر کنفرم کرتی ہے، کینسل بہت کم۔', wa_pay_btn:'دکان کو واٹس ایپ پر بتائیں', wa_pay_msg:'السلام علیکم! میں نے ڈیرہ پر آرڈر #{c} کی ادائیگی Rs {a} بھیج دی ہے۔ TID: {tid}۔ مہربانی کرکے تصدیق کر دیں۔',
-    day_off:'بند', all_day:'سارا دن کھلا', brk_w:'وقفہ', o_delivery:'🛵 ڈیلیوری', o_pickup:'🛍️ خود لے جائیں', pick_from:'یہاں سے لیں', pick_note:'کوئی ڈیلیوری فیس نہیں۔ آرڈر تیار ہونے پر دکان سے خود لے لیں۔ دکان پر اپنا کوڈ دکھائیں۔',
+    day_off:'بند', all_day:'سارا دن کھلا', brk_w:'وقفہ', o_delivery:'🛵 ڈیلیوری', o_pickup:'🛍️ خود لے جائیں', o_dinein:'🍽️ وہیں کھانا', win_only:'صرف', dn_guests:'کتنے لوگ آئیں گے؟', dn_time_note:'نیچے وہ وقت چنو جب تم ریسٹورنٹ پہنچو گے۔', dn_rule_spot:'ادائیگی: ریسٹورنٹ پر نقد۔', dn_rule_adv:'یہ ریسٹورنٹ پہلے آن لائن ادائیگی لیتا ہے۔', dn_rule_choice:'ادائیگی: ریسٹورنٹ پر یا آن لائن — تمہاری مرضی۔', hero_dinein:'تمہارا کھانا ریسٹورنٹ میں تیار ہے 🍽️', pick_from:'یہاں سے لیں', pick_note:'کوئی ڈیلیوری فیس نہیں۔ آرڈر تیار ہونے پر دکان سے خود لے لیں۔ دکان پر اپنا کوڈ دکھائیں۔',
     sub_t:'اگر کوئی چیز ختم ہو', sub_similar:'ملتی جلتی دے دیں', sub_call:'مجھے کال کریں', sub_remove:'ہٹا دیں', rx_t:'نسخہ (اگر دوائی کے لیے ضروری ہو)', rx_btn:'📷 نسخے کی تصویر لگائیں', rx_ok:'✅ نسخہ لگ گیا',
     use_wallet:'میرا والیٹ استعمال کریں', wallet:'وانہار والیٹ', wallet_used:'والیٹ', shop_offer:'دکان کی آفر', offer_pct:'{p}% رعایت', offer_min:'{m} سے اوپر', busy_msg:'دکان ابھی بہت مصروف ہے۔ {t} پر واپس۔',
     code_t:'🔐 آپ کا ڈیلیوری کوڈ', code_s:'یہ کوڈ رائیڈر کو تب ہی دیں جب آرڈر آپ کے ہاتھ میں ہو۔', code_pick:'آرڈر لینے کے لیے یہ کوڈ دکان پر دکھائیں۔', st_ready_pick:'لینے کے لیے تیار', st_collected:'لے لیا',
@@ -1550,6 +1553,9 @@ const waHref = (p, msg) => 'https://wa.me/' + waNum(p) + (msg ? '?text=' + encod
 const WA_IC = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.2z"/></svg>';
 // Shop types (same list as the shop app)
 const SHOP_CATS = [{k:'food',i:'🍛',en:'Food',ur:'کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery',ur:'بیکری'},{k:'grocery',i:'🛒',en:'Grocery',ur:'کریانہ'},{k:'fruit_veg',i:'🥬',en:'Fruit & veg',ur:'پھل سبزی'},{k:'meat',i:'🍗',en:'Meat',ur:'گوشت'},{k:'dairy',i:'🥛',en:'Dairy',ur:'دودھ دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy',ur:'میڈیکل'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents',ur:'مردانہ'},{k:'clothes_women',i:'👗',en:'Ladies',ur:'زنانہ'},{k:'kids',i:'🧸',en:'Kids',ur:'بچے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags',ur:'بیگ'},{k:'cosmetics',i:'💄',en:'Beauty',ur:'بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles',ur:'موبائل'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Hardware',ur:'ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery',ur:'اسٹیشنری'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home & kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor',ur:'درزی'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Farming',ur:'زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const SERVICE_CATS = [{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'parlour',i:'💅',en:'Beauty parlour',ur:'بیوٹی پارلر'},{k:'doctor',i:'🩺',en:'Doctor / clinic',ur:'ڈاکٹر / کلینک'},{k:'dentist',i:'🦷',en:'Dentist',ur:'دندان ساز'},{k:'lab',i:'🔬',en:'Laboratory / tests',ur:'لیبارٹری / ٹیسٹ'},{k:'carwash',i:'🚗',en:'Car wash & detailing',ur:'کار واش'},{k:'tailor',i:'🧵',en:'Tailor / darzi',ur:'درزی'},{k:'electrician',i:'🔌',en:'Electrician',ur:'الیکٹریشن'},{k:'plumber',i:'🔧',en:'Plumber',ur:'پلمبر'},{k:'mobile',i:'📱',en:'Mobile repair',ur:'موبائل مرمت'},{k:'mechanic',i:'🏍️',en:'Mechanic',ur:'مکینک'},{k:'photo',i:'📸',en:'Photographer / studio',ur:'فوٹوگرافر'},{k:'tractor',i:'🚜',en:'Tractor / agri services',ur:'ٹریکٹر / کھیتی'},{k:'tutor',i:'📚',en:'Tutor / academy',ur:'ٹیوٹر / اکیڈمی'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
+const svcTrade = r => { const k = ((r && r.categories) || []).find(x => SERVICE_CATS.some(c => c.k === x)); const c = SERVICE_CATS.find(c => c.k === k); return c ? { k, label:c.i + ' ' + (state.lang === 'ur' ? c.ur : c.en) } : null; };
+const tradeChip = r => { const tr = r && r.shop_kind === 'services' ? svcTrade(r) : null; return tr ? `<div style="margin-top:6px"><span class="pill" style="background:#E8F5EE;color:#176B45">${esc(tr.label)}</span></div>` : ''; };
 const shopDisc = (r, sub) => { const f = r && r.offer; if (!f || !f.on || !num(f.pct) || sub < num(f.min)) return 0; let d = Math.round(sub * Math.min(90, num(f.pct)) / 100); if (num(f.max) > 0) d = Math.min(d, num(f.max)); return d; };
 const offerText = r => { const f = r && r.offer; if (!f || !f.on || !num(f.pct)) return ''; return t('offer_pct', { p:num(f.pct) }) + (num(f.min) ? ' ' + t('offer_min', { m:money(f.min) }) : '') + (num(f.max) ? ' · ' + t('off_upto', { m:money(f.max) }) : ''); };
 const isPharma = r => ((r && r.categories) || []).includes('pharmacy');
@@ -1565,6 +1571,9 @@ function typeChips(){
 }
 // Stock: null = no limit
 const stockOf = it => it && it.stock_qty != null ? num(it.stock_qty) : null;
+const fmtWinT = x => { const pp = String(x).slice(0, 5).split(':'); const h = +pp[0], mm = +pp[1]; const ap = h >= 12 ? 'PM' : 'AM'; return (h % 12 || 12) + (mm ? ':' + String(mm).padStart(2, '0') : '') + ' ' + ap; };
+const winOff = i => { if (!i || !i.avail_from || !i.avail_to) return false; const f = String(i.avail_from).slice(0, 5), u = String(i.avail_to).slice(0, 5); if (f === u) return false; const nw = new Date(new Date().toLocaleString('en-US', { timeZone:'Asia/Karachi' })); const m = nw.getHours() * 60 + nw.getMinutes(); const fm = +f.slice(0, 2) * 60 + +f.slice(3), um = +u.slice(0, 2) * 60 + +u.slice(3); return fm <= um ? (m < fm || m >= um) : (m < fm && m >= um); };
+const winBadge = i => i && i.avail_from && i.avail_to ? `<span class="leftb">⏰ ${t('win_only')} ${fmtWinT(i.avail_from)}–${fmtWinT(i.avail_to)}</span>` : '';
 const leftBadge = it => { const n = stockOf(it); return n != null && n > 0 && n <= 5 && it.is_available !== false ? `<span class="leftb">${t('only_left', { n })}</span>` : ''; };
 function stockOk(it, add){
   const n = stockOf(it); if (n == null) return true;
@@ -1582,6 +1591,7 @@ function showOrderSuccess(data, kind){
     <h1>${book ? t('succ_book') : t('succ_title')}</h1>
     <p class="osub">${book ? t('bk_ok') : t('succ_sub')}</p>
     ${book ? '' : `<div class="ono">Order #${esc(String(data))}</div>`}
+    ${book && state.bkToken ? `<div class="ono">🎫 Token #${esc(String(state.bkToken))}</div>` : ''}
     <button class="btn otrack" onclick="A.succGo('${book ? '/orders' : '/order/' + encodeURIComponent(data)}')">${book ? t('succ_view') : t('succ_track')}</button>
     <button class="olink" onclick="A.succGo('/')">${t('succ_home')}</button>
   </div>`);
@@ -2028,7 +2038,7 @@ function refreshCityBtn(){ const el = document.getElementById('cityBtn'); if (el
 async function loadRestaurants(){
   if (!state.regions) await loadRegionsC();
   let q = sb.from('restaurants')
-    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,hours,categories,busy_until,offer,sponsored_until,allow_pickup,booking_on,chairs,grace_min,is_open,is_active,prep_time_minutes,zone:zones(id,name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers,center_lat,center_lng,radius_km)')
+    .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,hours,categories,shop_kind,busy_until,offer,sponsored_until,allow_pickup,booking_on,chairs,grace_min,is_open,is_active,prep_time_minutes,dinein_on,dinein_pay,zone:zones(id,name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers,center_lat,center_lng,radius_km)')
     .eq('is_active', true).order('name');
   if (state.region) q = q.eq('region_id', state.region);
   const list = need(await q);
@@ -2044,7 +2054,7 @@ function syncShopOpen(p){
 }
 async function loadProducts(){
   const [items, stats] = await Promise.all([
-    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,keywords,duration_min,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,stock_qty,photos,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
+    sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,keywords,duration_min,svc,avail_from,avail_to,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,stock_qty,photos,back_photos,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
       .eq('is_available', true).eq('restaurants.is_active', true).eq('restaurants.region_id', state.region || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending:false }).limit(400),
     sb.rpc('public_stats')
   ]);
@@ -2405,6 +2415,7 @@ async function showRestaurant(id){
       <h1>${esc(r.name)} ${bharosaChip(r)}</h1>
       ${state.badges && state.badges.has(r.id) ? `<div class="muted" style="font-size:13px;margin-top:2px">✔️ ${t('bharosa_line')}</div>` : ''}
       <div class="muted">${esc(r.description || '')}</div>
+      ${tradeChip(r)}
       <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${money(zoneFee(r))}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
       ${offerText(r) ? `<div class="offtag big">🏷️ ${esc(t('shop_offer'))}: ${esc(offerText(r))}</div>` : ''}${r.allow_pickup !== false ? `<div class="muted" style="font-size:13px;margin-top:6px">🛍️ ${t('o_pickup').replace('🛍️ ', '')} ✓</div>` : ''}
       ${hoursHtml(r)}
@@ -2424,7 +2435,7 @@ function menuBody(){
   return blocks + loose.map(itemHtml).join('');
 }
 function ctlHtml(i){
-  if (!i.is_available) return `<span class="soldout">${t('sold_out')}</span><button class="add bell ${(state.alerts || new Set()).has(i.id) ? 'on' : ''}" onclick="A.notifyMe('${i.id}')" aria-label="${t('notify_me')}">🔔</button>`;
+  if (!i.is_available || winOff(i)) return `<span class="soldout">${t('sold_out')}</span><button class="add bell ${(state.alerts || new Set()).has(i.id) ? 'on' : ''}" onclick="A.notifyMe('${i.id}')" aria-label="${t('notify_me')}">🔔</button>`;
   if (!state.curRest) return '';
   if (i.duration_min && state.curRest.booking_on) return `<button class="add" onclick="A.bookOpen('${i.id}')">${t('book')}</button>`;
   if (hasOpts(i.id)){ const n = state.cart.items.filter(c => c.id === i.id && (c.rid || state.cart.rid) === i.restaurant_id).reduce((a, c) => a + c.qty, 0); return `<button class="add" onclick="A.add('${i.id}')">${t('add')}${n ? ' · ' + n : ''}</button>`; }
@@ -2435,7 +2446,7 @@ function ctlHtml(i){
 function itemHtml(i){
   const off = pctOff(i);
   return `<div class="item ${i.is_available ? '' : 'off-stock'}">
-    <a class="item-text" href="#/p/${i.id}"><div class="item-name">${esc(i.name)}</div>
+    <a class="item-text" href="#/p/${i.id}"><div class="item-name">${esc(i.name)}</div>${winBadge(i)}
       ${i.description ? `<div class="item-desc">${esc(i.description)}</div>` : ''}
       <div class="item-price">${money(i.price)}${off ? `<span class="strike">${money(i.compare_price)}</span> <span class="save">-${off}%</span>` : ''}</div>${num(i.weight_kg) ? `<div class="muted" style="font-size:12px">⚖️ ${kgText(i.weight_kg)}</div>` : ''}${i.duration_min ? `<div class="muted" style="font-size:12px">⏱️ ${i.duration_min} ${t('min_s')}</div>` : ''}${itemRate(i.id) ? `<div style="font-size:12px"><span class="star">★ ${itemRate(i.id).avg}</span> <span class="muted">(${itemRate(i.id).n})</span></div>` : ''}${leftBadge(i)}${hasOpts(i.id) ? `<div class="custom">${t('customizable')}</div>` : ''}</a>
     <div class="item-media">
@@ -2452,18 +2463,19 @@ function railFor(item){ if (!item || railPics(item).length < 2) return false; re
 const isColorGroup = g => /rang|color|colour|design/i.test(g.name || '');
 const COLOR_DOTS = [['navy','#1D3557'],['maroon','#7B1E26'],['red','#D42B1E'],['laal','#D42B1E'],['لال','#D42B1E'],['blue','#2456C8'],['neel','#2456C8'],['نیلا','#2456C8'],['green','#1E9E50'],['har','#1E9E50'],['sabz','#1E9E50'],['سبز','#1E9E50'],['black','#232323'],['kal','#232323'],['کالا','#232323'],['yellow','#F2B705'],['peel','#F2B705'],['پیلا','#F2B705'],['white','#FFFFFF'],['safed','#FFFFFF'],['سفید','#FFFFFF'],['orange','#F97316'],['narangi','#F97316'],['pink','#EC4899'],['gulabi','#EC4899'],['گلابی','#EC4899'],['purple','#7C3AED'],['baingani','#7C3AED'],['brown','#8B5A2B'],['bhoora','#8B5A2B'],['grey','#8A8F98'],['gray','#8A8F98'],['surmai','#8A8F98']];
 function colorCss(name){ const n = String(name || '').toLowerCase(); for (const [k, v] of COLOR_DOTS) if (n.includes(k)) return v; return '#C9CDD4'; }
+function galBacks(item){ if (!item || !Array.isArray(item.back_photos)) return []; return item.back_photos; }
 function galOptsFor(item){ if (!item) return []; const pics = railPics(item); const g = (state.optCache[item.id] || []).find(x => isColorGroup(x) && (x.menu_options || []).length === pics.length); return g ? g.menu_options : []; }
 function galNamesFor(item){ return galOptsFor(item).map(o => o.name); }
 function galGroupFor(item){ if (!item) return null; const pics = railPics(item); return (state.optCache[item.id] || []).find(x => isColorGroup(x) && (x.menu_options || []).length === pics.length) || null; }
 function galGroupName(item){ const g = galGroupFor(item); if (!g) return 'Rang (Color)'; if (/design/i.test(g.name || '')) return 'Design'; if (/rang|colou?r/i.test(g.name || '')) return 'Rang (Color)'; return g.name; }
 function galRail(fromScroll){ const c = $('dgal'); if (!c) return; if (fromScroll){ clearTimeout(window._galT); window._galT = setTimeout(() => galRail(), 130); } const cards = c.children; if (!cards.length) return; const mid = c.scrollLeft + c.clientWidth / 2; let best = 0, bd = 1e9;
   for (let i = 0; i < cards.length; i++){ const card = cards[i]; const cc = card.offsetLeft + card.offsetWidth / 2; const d = Math.abs(cc - mid); const r = Math.min(1, d / (card.offsetWidth || 1)); card.style.transform = `scale(${1 - r * 0.18}) rotate(${r * 3 * (cc < mid ? -1 : 1)}deg)`; card.style.opacity = String(1 - r * 0.4); if (d < bd){ bd = d; best = i; } }
-  if (best !== state.galIdx){ state.galIdx = best; const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); const nm = $('galName'); if (nm && state.galNames) nm.textContent = state.galNames[best] || ''; const ch = $('galChips'); if (ch) [...ch.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
+  if (best !== state.galIdx){ state.galIdx = best; [...cards].forEach((cd, k) => { const fb = cd.querySelector('.rlflip'); if (fb) fb.style.display = k === best ? 'flex' : 'none'; if (k !== best && cd.dataset.flipped){ cd.dataset.flipped = ''; const im = cd.querySelector('.rlphoto img'); if (im && cd.dataset.front) im.src = cd.dataset.front; const bb = cd.querySelector('.rlback'); if (bb) bb.style.display = 'none'; } }); const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); const nm = $('galName'); if (nm && state.galNames) nm.textContent = state.galNames[best] || ''; const ch = $('galChips'); if (ch) [...ch.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
 function galHtml(item){
   const pics = railPics(item);
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
   if (pics.length === 1) return `<img src="${esc(pics[0])}" alt="">`;
-  if (railFor(item)) return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})"><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}></div>${galOptsFor(item)[i] ? `<div class="rlcname">${esc(galOptsFor(item)[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(galOptsFor(item)[i].price))}</div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`;
+  if (railFor(item)){ const backs = galBacks(item); const opts = galOptsFor(item); return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})" ${backs[i] ? `data-front="${esc(u)}" data-back="${esc(backs[i])}"` : ''}><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>${backs[i] ? `<button class="rlflip" style="display:${i ? 'none' : 'flex'}" onclick="event.stopPropagation();A.galFlip(this)" aria-label="${t('rail_flip')}">🔄</button>` : ''}</div>${opts[i] ? `<div class="rlcname">${esc(opts[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(opts[i].price))}</div>` : ''}${backs[i] ? `<div><span class="rlback" style="display:none">${t('rail_back')}</span></div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`; }
   return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 }
 function zoomOpen(){
@@ -2492,7 +2504,7 @@ async function showProduct(id){
   const off = pctOff(item); const s = sold(item.id); const rt = shopRating(shop.id);
   state.qty = 1; state.galIdx = 0; state.galPid = item.id;
   trackView(item.id, shop.id || item.restaurant_id);
-  const canBuy = item.is_available && full.is_active !== false;
+  const canBuy = item.is_available && !winOff(item) && full.is_active !== false;
   try { await loadOptions(item.id); } catch (e) {}
   state.galNames = galNamesFor(item);
   $('view').innerHTML = `
@@ -2505,9 +2517,9 @@ async function showProduct(id){
     ${item.duration_min ? `<div class="muted" style="font-size:14px">⏱️ ${item.duration_min} ${t('min_s')}</div>` : ''}
     ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
     ${num(item.weight_kg) ? `<div class="muted" style="font-size:14px">⚖️ ${kgText(item.weight_kg)}</div>` : ''}
-    ${leftBadge(item)}
+    ${leftBadge(item)}${winBadge(item)}
     ${hasOpts(item.id) ? `<div class="custom" style="font-size:14px">${t('customizable')}: ${esc((state.optCache[item.id] || []).map(g => g.name).join(', '))}</div>` : ''}
-    ${item.is_available ? '' : `<div class="closed-note">${t('sold_out')}</div><button class="btn ghost" id="nmBtn" style="margin:8px 0" onclick="A.notifyMe('${item.id}')">${(state.alerts || new Set()).has(item.id) ? t('notify_on') : t('notify_me')}</button>`}
+    ${item.is_available && !winOff(item) ? '' : `<div class="closed-note">${t('sold_out')}</div><button class="btn ghost" id="nmBtn" style="margin:8px 0" onclick="A.notifyMe('${item.id}')">${(state.alerts || new Set()).has(item.id) ? t('notify_on') : t('notify_me')}</button>`}
     ${full.is_open === false ? `<div class="closed-note">${esc(closedText(full))}</div>` : ''}
     <a class="shopstrip" href="#/r/${shop.id}">
       <div class="thumb">${shop.logo_url ? `<img src="${esc(shop.logo_url)}" alt="">` : noImg(shop.name)}</div>
@@ -2729,7 +2741,9 @@ function drawCheckout(){
   if ((state.payM === 'instant' || state.payM === 'card') && !gwLive) state.payM = 'cod';
   const r = cartRestaurant() || {};
   if (r.allow_pickup === false) state.otype = 'delivery';
-  const pick = state.otype === 'pickup';
+  const dine = state.otype === 'dinein';
+  const pick = state.otype === 'pickup' || dine;
+  if (dine && r.dinein_pay === 'advance' && state.payM === 'cod' && payOn()) state.payM = 'wallet';
   if (state.user && plusSet() && state.plus === undefined){ state.plus = {}; loadPlus().then(() => { if (currentRoute === 'checkout') drawCheckout(); }); }
   if (state.user && state.walletBal === undefined){ state.walletBal = 0; sb.rpc('my_wallet').then(({ data }) => { state.walletBal = num(data); if (currentRoute === 'checkout') drawCheckout(); }, () => {}); }
   const qKey = quoteKey();
@@ -2773,6 +2787,7 @@ function drawCheckout(){
     ${state.when === 'later' ? (days.length ? `<div class="two" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
       <div><label class="f" for="s_day">${t('sched_day')}</label><select id="s_day" onchange="A.setDay(this.value)">${days.map(k => `<option value="${k}" ${k === state.schedDay ? 'selected' : ''}>${esc(dayLabel(k))}</option>`).join('')}</select></div>
       <div><label class="f" for="s_time">${t('sched_time')}</label><select id="s_time" onchange="A.setTime(this.value)">${(slots[state.schedDay] || []).map(x => `<option value="${x}" ${x === state.schedAt ? 'selected' : ''}>${esc(timeLabel(x))}</option>`).join('')}</select></div></div>` : `<div class="closed-note">${t('sched_none')}</div>`) : ''}`;
+  const dineHtml = dine ? `<div class="box"><b>🍽️ ${t('o_dinein')} — ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${t('dn_time_note')}</div><label class="f">${t('dn_guests')}</label><div class="tipchips">${[1, 2, 3, 4, 6, 8].map(g => `<button class="chip2 ${(state.guests || 2) === g ? 'on' : ''}" onclick="A.setGuests(${g})">${g}</button>`).join('')}</div><div class="muted" style="font-size:13.5px;margin-top:6px">${r.dinein_pay === 'advance' ? t('dn_rule_adv') : r.dinein_pay === 'choice' ? t('dn_rule_choice') : t('dn_rule_spot')}</div></div>` : '';
   const tipHtml = pick ? '' : `<h2>${t('tip_t')}</h2><div class="muted" style="font-size:14px">${t('tip_s')}</div>
     <div class="tipchips">${TIPS.map(x => `<button class="chip2 ${tip === x ? 'on' : ''}" onclick="A.setTip(${x})">${x ? money(x) : t('tip_none')}</button>`).join('')}<button class="chip2 ${tip && !TIPS.includes(tip) ? 'on' : ''}" onclick="A.otherTip()">${tip && !TIPS.includes(tip) ? money(tip) : t('tip_other')}</button></div>`;
   const list = state.addresses.map(a => addressRow(a, true)).join('');
@@ -2780,7 +2795,7 @@ function drawCheckout(){
   const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
   v.innerHTML = `<h1>${t('checkout')}</h1>
     <div class="costeps"><span class="done">✓ ${t('cart_tab')}</span><span class="on">● ${t('your_details')}</span><span>${t('place_order')}</span></div>
-    ${r.allow_pickup !== false ? `<div class="seg big">${['delivery', 'pickup'].map(k => `<button class="${(state.otype || 'delivery') === k ? 'on' : ''}" onclick="A.setOtype('${k}')">${t('o_' + k)}</button>`).join('')}</div>` : ''}
+    ${r.allow_pickup !== false ? `<div class="seg big">${(r.dinein_on && state.cart.rid ? ['delivery', 'pickup', 'dinein'] : ['delivery', 'pickup']).map(k => `<button class="${(state.otype || 'delivery') === k ? 'on' : ''}" onclick="A.setOtype('${k}')">${t('o_' + k)}</button>`).join('')}</div>` : ''}
     <div class="box"><b>${t('your_details')}</b>${needsDetails ? `<div class="muted" style="font-size:14px">${t('need_details')}</div>` : ''}
       <label class="f" for="d_name">${t('name')}</label><input id="d_name" type="text" value="${esc(pr.full_name)}">
       <label class="f" for="d_phone">${t('phone')}</label><input id="d_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(pr.phone)}">
@@ -2788,7 +2803,7 @@ function drawCheckout(){
       ${state.forOther ? `<div class="muted" style="font-size:13px">${t('for_other_s')}</div>
         <label class="f" for="r_name">${t('rcv_name')}</label><input type="text" id="r_name" value="${esc(state.rcvName || '')}" oninput="state.rcvName=this.value" maxlength="60">
         <label class="f" for="r_phone">${t('rcv_phone')}</label><input id="r_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(state.rcvPhone || '')}" oninput="state.rcvPhone=this.value">` : ''}` : ''}</div>
-    ${pick ? `<div class="box"><b>🛍️ ${t('pick_from')}: ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${esc(r.address || '')}</div><div class="muted" style="font-size:13px;margin-top:6px">${t('pick_note')}</div>
+    ${dine ? dineHtml : pick ? `<div class="box"><b>🛍️ ${t('pick_from')}: ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${esc(r.address || '')}</div><div class="muted" style="font-size:13px;margin-top:6px">${t('pick_note')}</div>
       ${r.lat != null ? `<a class="link" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}">${t('pick_dir')}</a>` : ''}</div>`
     : `<h2 style="margin-top:8px">${t('address')}</h2>
     <div id="addrList">${list || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
@@ -2836,7 +2851,7 @@ function pillFor(status){
 }
 async function showOrders(){
   const orders = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone,logo_url,lat,lng), order_items(menu_item_id,name,quantity,price)').order('created_at', { ascending:false }).limit(50));
-  const rows = orders.map(o => { const dkm = o.order_type !== 'pickup' && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<a class="orow" href="#/order/${o.id}">
+  const rows = orders.map(o => { const dkm = !['pickup','dinein'].includes(o.order_type) && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<a class="orow" href="#/order/${o.id}">
     <div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:52px;height:52px;font-size:20px">${o.restaurant && o.restaurant.logo_url ? `<img src="${esc(o.restaurant.logo_url)}" alt="">` : esc(((o.restaurant && o.restaurant.name) || '?')[0])}</div>
     <div style="min-width:0"><div style="font-weight:700">${esc(o.restaurant ? o.restaurant.name : '')}</div><small class="muted">${when(o.created_at)} · ${t('items_n', { n:(o.order_items || []).reduce((n, i) => n + i.quantity, 0) })}${dkm != null ? ` · 📍 ${fmtKmC(dkm)}` : ''}</small>${o.scheduled_for && !FINAL.includes(o.status) ? `<div><span class="schedpill">🗓️ ${esc(schedLabel(o.scheduled_for))}</span></div>` : ''}</div></div>
     <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a>`; }).join('');
@@ -2870,13 +2885,14 @@ const FAQ = {
 const tKar = ts => new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 function bookingsHtml(list){
   const live = list.filter(b => ['booked','arrived'].includes(b.status)), old = list.filter(b => !['booked','arrived'].includes(b.status)).slice(0, 5);
+  state._liveBk = live; setTimeout(() => A.loadQueues(), 80);
   if (!live.length && !old.length) return '';
   const card = b => { const on = b.status === 'booked';
     const cls = { booked:'', arrived:'', done:'', cancelled:'bad', no_show:'bad' }[b.status];
     return `<div class="bkcard ${on ? 'on' : ''}"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>${esc(b.item_name)}</b><div class="muted" style="font-size:14px">${esc(b.shop_name)} · ${money(b.price)}</div></div><span class="pill ${cls}">${t('bk_' + b.status)}</span></div>
       <div style="font-weight:800;font-size:17px;margin-top:6px">📅 ${esc(tKar(b.starts_at))}</div>
       ${on ? `<div class="muted" style="font-size:13px;margin-top:4px">⏳ ${t('bk_wait_till', { t:new Date(b.late_until).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' }) })}</div><div class="muted" style="font-size:13px">${t('bk_rule', { m:b.grace_min })} · ${t('bk_pay')}</div>
-        <div style="display:flex;gap:8px;margin-top:10px">${b.shop_phone ? `<a class="btn ghost inline" href="tel:${esc(b.shop_phone)}">📞</a>` : ''}<button class="btn warn inline" onclick="A.bookCancel('${b.id}')">${t('bk_cancel')}</button></div>` : ''}
+        ${['booked','arrived'].includes(b.status) ? `<div id="q-${b.id}" style="margin-top:8px"></div>` : ''}<div style="display:flex;gap:8px;margin-top:10px">${b.shop_phone ? `<a class="btn ghost inline" href="tel:${esc(b.shop_phone)}">📞</a>` : ''}<button class="btn warn inline" onclick="A.bookCancel('${b.id}')">${t('bk_cancel')}</button></div>` : ''}
       ${b.cancel_reason && !on ? `<div class="muted" style="font-size:13px;margin-top:4px">${esc(b.cancel_reason)}</div>` : ''}
       ${b.status === 'done' ? (b.rating ? `<div style="margin-top:6px"><b class="star">${'★'.repeat(b.rating)}</b>${b.rating_comment ? ' · ' + esc(b.rating_comment) : ''}</div>`
         : `<div style="margin-top:8px"><b>${t('rate_bk')}</b><div class="stars" id="stars-bk${esc(b.id.slice(0, 8))}" style="text-align:center">${starsHtml('bk' + b.id.slice(0, 8), 0)}</div>
@@ -2886,7 +2902,7 @@ function bookingsHtml(list){
 const TRACK = ['placed','accepted','preparing','ready','picked_up','delivered'];
 function trackerHtml(o){
   if (o.status === 'cancelled' || o.status === 'rejected') return `<div class="banner2 bad">${t('st_' + o.status)}${o.reject_reason ? ': ' + esc(o.reject_reason) : ''}</div>`;
-  if (o.order_type === 'pickup'){ const P = ['placed','accepted','preparing','ready','delivered']; let c = P.indexOf(o.status); if (o.status === 'delivered') c = P.length;
+  if (o.order_type === 'pickup' || o.order_type === 'dinein'){ const P = ['placed','accepted','preparing','ready','delivered']; let c = P.indexOf(o.status); if (o.status === 'delivered') c = P.length;
     return `<ol class="track">` + P.map((x, i) => `<li class="${i < c ? 'done' : i === c ? 'now' : ''}"><i></i><span>${x === 'ready' ? t('st_ready_pick') : x === 'delivered' ? t('st_collected') : t('st_' + x)}</span></li>`).join('') + `</ol>`; }
   let cur = o.status === 'rider_assigned' ? 3 : TRACK.indexOf(o.status);
   if (o.status === 'delivered') cur = TRACK.length;
@@ -3022,15 +3038,15 @@ async function showOrder(id){
     return `<div class="line"><span>${i.quantity} × ${esc(i.name)}</span><span style="display:flex;align-items:center;gap:8px"><span>${money(i.price * i.quantity)}</span>${btn}</span></div>${strip}`;
   }).join('');
   if (currentRoute !== 'order' || !location.hash.includes(id)) return;
-  const heroKey = o.order_type === 'pickup' && o.status === 'ready' ? 'hero_ready_pick' : o.payment_method === 'wallet' && o.status === 'placed' && ['unpaid', 'checking'].includes(o.payment_status) ? (o.payment_status === 'unpaid' ? 'hero_pay' : 'hero_paycheck') : 'hero_' + o.status;
+  const heroKey = (o.order_type === 'pickup' || o.order_type === 'dinein') && o.status === 'ready' ? (o.order_type === 'dinein' ? 'hero_dinein' : 'hero_ready_pick') : o.payment_method === 'wallet' && o.status === 'placed' && ['unpaid', 'checking'].includes(o.payment_status) ? (o.payment_status === 'unpaid' ? 'hero_pay' : 'hero_paycheck') : 'hero_' + o.status;
   $('view').innerHTML = `
     ${I18N.en[heroKey] ? `<div class="statushero"><span style="opacity:.85">${esc(o.restaurant ? o.restaurant.name : '')} · #${esc(o.id.slice(-4).toUpperCase())}</span><b>${t(heroKey)}</b>${eta ? `<span style="opacity:.9">${t('ready_by', { time:eta })}</span>` : ''}${arriveLine(o)}${o.scheduled_for && !FINAL.includes(o.status) ? `<span style="display:block;margin-top:6px"><span class="schedpill">🗓️ ${esc(t('sched_for', { d:schedLabel(o.scheduled_for) }))}</span></span>` : ''}</div>` : `<h1>${esc(o.restaurant ? o.restaurant.name : t('order_no'))}</h1>`}
     ${!FINAL.includes(o.status) ? `<div class="etabanner"><span style="font-size:28px">🛵</span><div><b>${t('expected_by')}</b><div style="font-size:22px;font-weight:800">${etaTime(o)}</div><div class="muted" style="font-size:13px">${t('eta_note')}</div></div></div>` : ''}
     <div class="muted">${when(o.created_at)}</div>
-    ${o.order_type !== 'pickup' && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:2px">${t('shop_km', { km:fmtKmC(kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng)) })}</div>` : ''}
+    ${!['pickup','dinein'].includes(o.order_type) && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:2px">${t('shop_km', { km:fmtKmC(kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng)) })}</div>` : ''}
     ${payBox(o, payAcc)}
-    ${code && (o.order_type === 'pickup' ? o.status !== 'placed' : ['rider_assigned', 'picked_up', 'ready', 'preparing', 'accepted'].includes(o.status)) ? `<div class="codebox"><div><b>${o.order_type === 'pickup' ? t('code_t').replace('delivery ', '') : t('code_t')}</b><small>${o.order_type === 'pickup' ? t('code_pick') : t('code_s')}</small></div><span class="code">${esc(code)}</span></div>` : ''}
-    ${o.order_type === 'pickup' && !FINAL.includes(o.status) && o.restaurant && o.restaurant.lat != null ? `<a class="btn ghost" style="margin:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${o.restaurant.lat},${o.restaurant.lng}">${t('pick_dir')}</a>` : ''}
+    ${code && ((o.order_type === 'pickup' || o.order_type === 'dinein') ? o.status !== 'placed' : ['rider_assigned', 'picked_up', 'ready', 'preparing', 'accepted'].includes(o.status)) ? `<div class="codebox"><div><b>${o.order_type === 'pickup' ? t('code_t').replace('delivery ', '') : t('code_t')}</b><small>${o.order_type === 'pickup' ? t('code_pick') : t('code_s')}</small></div><span class="code">${esc(code)}</span></div>` : ''}
+    ${['pickup','dinein'].includes(o.order_type) && !FINAL.includes(o.status) && o.restaurant && o.restaurant.lat != null ? `<a class="btn ghost" style="margin:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${o.restaurant.lat},${o.restaurant.lng}">${t('pick_dir')}</a>` : ''}
     ${waitHtml}
     ${o.delivery_photo ? `<div class="box" id="dphotoBox" style="text-align:center"><b>📷 ${t('dphoto_cap')}</b><div style="margin-top:8px"><img id="dphotoImg" style="max-width:100%;border-radius:10px;max-height:300px" alt=""></div></div>` : ''}
     ${trackerHtml(o)}
@@ -3048,7 +3064,7 @@ async function showOrder(id){
       <div class="line total"><span>${t('total')}</span><span>${money(o.total)}</span></div>
       <div class="muted">${o.payment_method === 'wallet' ? t('pay_online') + (o.pay_label ? ' · ' + esc(o.pay_label) : '') : o.payment_method === 'qr_door' ? t('paid_qr') : t('cod')}</div>
       <button class="btn ghost" style="margin-top:10px" onclick="A.receipt()">${t('receipt')}</button></div>
-    <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.receiver_name ? `<div style="margin-top:4px">👤 ${t('receiver')}: <b>${esc(o.receiver_name)}</b> · ${esc(o.receiver_phone || '')}</div>` : ''}${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
+    <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : o.order_type === 'dinein' ? t('o_dinein') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.receiver_name ? `<div style="margin-top:4px">👤 ${t('receiver')}: <b>${esc(o.receiver_name)}</b> · ${esc(o.receiver_phone || '')}</div>` : ''}${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
     <div style="display:grid;gap:10px;margin-top:10px">
       <button class="btn ghost" onclick="A.contactSheet('${o.id}')">💬 ${t('contact')}</button>
     </div>
@@ -3084,7 +3100,7 @@ async function showOrder(id){
 // ---- Delivery time and complaints about the rider ----
 const tAt = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 function arriveLine(o){
-  if (o.order_type === 'pickup') return '';
+  if (o.order_type === 'pickup' || o.order_type === 'dinein') return '';
   if (o.status === 'picked_up' && o.rider_due_at) return `<span style="display:block;opacity:.95;font-weight:700;margin-top:4px">🛵 ${t('arrive_by', { t:tAt(o.rider_due_at) })}</span>`;
   if (o.deliver_by && !FINAL.includes(o.status)) return `<span style="display:block;opacity:.9;margin-top:4px">🕒 ${t('deliver_around', { t:tAt(o.deliver_by) })}</span>`;
   return '';
@@ -3098,7 +3114,7 @@ function complainHtml(o, c){
 }
 // ---- Live tracking map ----
 let track = null, riderTimer = null;
-const showTrackMap = o => o.order_type !== 'pickup' && !FINAL.includes(o.status) && ((o.address_lat != null) || (o.restaurant && o.restaurant.lat != null));
+const showTrackMap = o => !['pickup','dinein'].includes(o.order_type) && !FINAL.includes(o.status) && ((o.address_lat != null) || (o.restaurant && o.restaurant.lat != null));
 async function mountTrackMap(o, rider){
   const slot = $('mapSlot'); if (!slot) return;
   if (track && track.id === o.id && track.el){ slot.appendChild(track.el); setTimeout(() => track.map.invalidateSize(), 50); if (rider && rider.lat) updateRiderPin(rider); return; }
@@ -3495,6 +3511,13 @@ const A = {
   },
   // ---- Offers and invite ----
   galChip(i){ const c = $('dgal'); if (!c || !c.children[i]) return; const card = c.children[i]; c.scrollTo({ left: card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' }); },
+  galFlip(btn){
+    const card = btn.closest('.rlcard'); if (!card) return;
+    const im = card.querySelector('.rlphoto img'); if (!im) return;
+    const bb = card.querySelector('.rlback');
+    if (card.dataset.flipped){ card.dataset.flipped = ''; im.src = card.dataset.front; if (bb) bb.style.display = 'none'; }
+    else { card.dataset.flipped = '1'; im.src = card.dataset.back; if (bb) bb.style.display = 'inline-block'; }
+  },
   galTap(i){ const c = $('dgal'); if (!c || !c.children.length) return; if (i === (state.galIdx || 0)){ zoomOpen(); return; } const card = c.children[i]; if (card) c.scrollTo({ left:card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior:'smooth' }); },
   useOffer(code){ state.promo = code; if (currentRoute === 'cart') A.applyPromo(); else { toast(t('code_copied', { c:code })); nav('/cart'); } },
   async copyCode(code){ try { await navigator.clipboard.writeText(code); toast(t('copied')); } catch (e) { await uiPrompt('', code); } },
@@ -3517,7 +3540,8 @@ const A = {
   setTip(x){ state.tip = x; drawCheckout(); },
   setPay(m){ state.payM = m; drawCheckout(); },
   setPayPlan(p){ state.payPlan = p; drawCheckout(); },
-  setOtype(k){ state.otype = k; drawCheckout(); },
+  setOtype(k){ state.otype = k; if (k === 'dinein') state.when = 'later'; drawCheckout(); },
+  setGuests(g){ state.guests = g; drawCheckout(); },
   async plusWallet(){ const p = plusSet(); if (!p || !await uiConfirm(t('plus_wallet', { b:money(p.price) }) + '?')) return;
     await run(async () => { state.plus = need(await sb.rpc('plus_join', { p_method:'wallet' })); state.walletBal = undefined; toast(t('plus_done')); await showPlus(); }); },
   async plusOnline(){ const ref = ($('plTid').value || '').trim(); if (ref.length < 4) return toast(t('tid'), true);
@@ -3626,7 +3650,8 @@ const A = {
     });
   },
   async placeOrder(){
-    const pick = state.otype === 'pickup';
+    const dine = state.otype === 'dinein';
+    const pick = state.otype === 'pickup' || dine;
     if (!pick && !state.selAddr) return toast(t('pick_address'), true);
     const newName = $('d_name').value.trim(), newPhone = normalizePhone($('d_phone').value);
     if (state.forOther && ((state.rcvName || '').trim().length < 2 || !normalizePhone(state.rcvPhone || ''))) return toast(t('rcv_name') + ' / ' + t('rcv_phone'), true);
@@ -3639,14 +3664,15 @@ const A = {
         need(await sb.from('profiles').update({ full_name:newName, phone:newPhone }).eq('id', state.user.id));
         state.profile = Object.assign({}, pr, { full_name:newName, phone:newPhone });
       }
-      const pm = (state.payM === 'instant' || state.payM === 'card') && state.gateway && state.gateway.live ? state.payM : (state.payM === 'wallet' && payOn() ? 'wallet' : 'cod');
+      let pm = (state.payM === 'instant' || state.payM === 'card') && state.gateway && state.gateway.live ? state.payM : (state.payM === 'wallet' && payOn() ? 'wallet' : 'cod');
+      if (dine && (cartRestaurant() || {}).dinein_pay === 'advance' && pm === 'cod' && payOn()) pm = 'wallet';
       const shops = A.cartShops();
       const data = need(await sb.rpc('place_multi_order', {
         p_groups:shops.map(s => ({ restaurant_id:s.rid, items:s.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })) })),
         p_address_id:pick ? null : state.selAddr, p_payment_method:pm,
-        p_promo:(shops.length === 1 && state.promoRes && state.promoRes.ok ? state.promo.trim() : null) || null, p_note:(state.cart.note || '').trim() || null,
+        p_promo:(shops.length === 1 && state.promoRes && state.promoRes.ok ? state.promo.trim() : null) || null, p_note:dine ? ('🍽️ Dine-in · ' + (state.guests || 2) + ' people' + ((state.cart.note || '').trim() ? ' · ' + (state.cart.note || '').trim() : '')) : ((state.cart.note || '').trim() || null),
         p_tip:pick ? 0 : num(state.tip), p_scheduled_for:state.when === 'later' ? state.schedAt : null,
-        p_extra:{ type:pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet, pay_plan:(pm === 'wallet' || pm === 'instant' || pm === 'card') ? (state.payPlan || 'full') : null }
+        p_extra:{ type:dine ? 'dinein' : pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet, pay_plan:(pm === 'wallet' || pm === 'instant' || pm === 'card') ? (state.payPlan || 'full') : null }
       }));
       const orderIds = (data.orders || []).map(o => o.order_id);
       for (const oid of orderIds){
@@ -3732,14 +3758,18 @@ const A = {
   bookOpen(itemId){
     if (!state.user){ toast(t('bk_login')); state.pending = location.hash; return showAuth(); }
     const it = state.itemsCache[itemId]; const r = state.curRest; if (!it || !r) return;
-    state.bk = { item:itemId, day:0, slot:null };
+    state.bk = { item:itemId, day:0, slot:null, svc:it.svc || null, basePrice:num(it.price) };
+    state.bkToken = null;
     const days = [...Array(7)].map((_, k) => { const d = new Date(Date.now() + k * 864e5); return { k, iso:d.toLocaleDateString('en-CA', { timeZone:'Asia/Karachi' }), label:k === 0 ? t('today') : k === 1 ? t('tomorrow') : d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', timeZone:'Asia/Karachi' }) }; });
     state.bkDays = days;
-    openSheet(t('book_title'), `<div style="font-weight:800">${esc(it.name)} · ${money(it.price)} · ⏱️ ${it.duration_min} ${t('min_s')}</div><div class="muted" style="font-size:13px">${esc(r.name)} · ${t('bk_pay')}</div>
+    const sv = it.svc || {}; const tr = svcTrade(r); const health = tr && ['doctor','dentist','lab'].includes(tr.k);
+    const noteLabel = sv.need_note ? (state.lang === 'ur' ? (health ? 'اپنا مسئلہ لکھیں (لازمی)' : 'کام کی تفصیل لکھیں (لازمی)') : (health ? 'Your problem / symptoms (required)' : 'Booking details (required)')) : t('bk_note');
+    const homeHtml = sv.home_visit ? `<label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;font-weight:700"><input type="checkbox" id="bkHome" onchange="A.bkHomeTgl()" style="width:20px;height:20px;margin:0;flex:none"><span>🏠 ${state.lang === 'ur' ? 'گھر پر وزٹ چاہیے' : 'Home visit'} <span class="muted">(+${money(num(sv.home_fee))})</span></span></label><div class="muted" id="bkTotal" style="font-size:13px;margin-top:6px">${state.lang === 'ur' ? 'کل فیس: ' : 'Total payable: '}${money(num(it.price))}</div><div id="bkAddrBox" style="display:none;margin-top:8px"><label class="f" for="bkAddr">${state.lang === 'ur' ? 'گھر کا ایڈریس (لازمی)' : 'Home address (required)'}</label><input type="text" id="bkAddr" maxlength="300" style="width:100%" placeholder="${state.lang === 'ur' ? 'گھر نمبر، گلی، قریبی مشہور جگہ' : 'House, street, nearby landmark'}"></div>` : '';
+    openSheet(t('book_title'), `<div style="font-weight:800">${esc(it.name)} · <span id="bkPrice">${money(it.price)}</span> · ⏱️ ${it.duration_min} ${t('min_s')}</div><div class="muted" style="font-size:13px">${esc(r.name)} · ${t('bk_pay')}</div>
       <label class="f" style="margin-top:10px">${t('bk_day')}</label><div class="chips" id="bkDays">${days.map(d => `<button class="chip ${d.k ? '' : 'on'}" onclick="A.bookDay(${d.k})">${esc(d.label)}</button>`).join('')}</div>
       <label class="f">${t('bk_time')}</label><div id="bkSlots" class="bkslots"><div class="muted">${t('bk_loading')}</div></div>
       <div class="muted" style="font-size:13px;margin:8px 0">${t('bk_rule', { m:r.grace_min })}</div>
-      <label class="f" for="bkNote">${t('bk_note')}</label><input type="text" id="bkNote" maxlength="200" style="width:100%">
+      <label class="f" for="bkNote">${esc(noteLabel)}</label><input type="text" id="bkNote" maxlength="200" style="width:100%">${homeHtml}
       <button class="btn" id="bkGo" style="margin-top:12px" disabled onclick="A.bookGo()">${t('bk_confirm')}</button>`);
     A.bookDay(0);
   },
@@ -3755,15 +3785,35 @@ const A = {
     } catch (e) { box.innerHTML = `<div class="muted">${esc(niceErr(e))}</div>`; }
   },
   bookPick(i, btn){ state.bk.slot = state.bkSlots[i].starts_at; document.querySelectorAll('#bkSlots .chip').forEach(c => c.classList.toggle('on', c === btn)); const go = $('bkGo'); if (go) go.disabled = false; },
+  bkHomeTgl(){ const b = state.bk; if (!b) return; const on = !!($('bkHome') && $('bkHome').checked); const ab = $('bkAddrBox'); if (ab) ab.style.display = on ? 'block' : 'none'; const total = num(b.basePrice) + (on ? num(b.svc && b.svc.home_fee) : 0); const pr = $('bkPrice'); if (pr) pr.textContent = money(total); const el = $('bkTotal'); if (el) el.textContent = (state.lang === 'ur' ? 'کل فیس: ' : 'Total payable: ') + money(total); },
   async bookGo(){
     const b = state.bk; if (!b || !b.slot) return;
     const go = $('bkGo'); const oldGo = bikeBtn(go, t('loading'));
     await run(async () => {
-      try { need(await sb.rpc('book_appointment', { p_shop:state.curRest.id, p_item:b.item, p_start:b.slot, p_note:($('bkNote').value || '').trim() || null })); }
+      const note = (($('bkNote') || {}).value || '').trim();
+      if (b.svc && b.svc.need_note && !note) return toast(state.lang === 'ur' ? 'پہلے اپنا مسئلہ / کام کی تفصیل لکھیں' : 'Please write your problem / booking details first', true);
+      const home = !!($('bkHome') && $('bkHome').checked);
+      const addr = home ? ((($('bkAddr') || {}).value || '').trim()) : '';
+      if (home && !addr) return toast(state.lang === 'ur' ? 'گھر کا ایڈریس لازمی ہے' : 'Home address is required', true);
+      let apptId = null;
+      try { apptId = need(await sb.rpc(home ? 'book_service' : 'book_appointment', home ? { p_shop:state.curRest.id, p_item:b.item, p_start:b.slot, p_note:note || null, p_home:true, p_address:addr } : { p_shop:state.curRest.id, p_item:b.item, p_start:b.slot, p_note:note || null })); }
       catch (e) { if (/not free/i.test(e.message || '')) A.bookDay(b.day); throw e; }
+      state.bkToken = null;
+      if (apptId){ try { state.bkToken = need(await sb.rpc('my_token', { p_appt:apptId })); } catch (e) {} }
       closeSheet(); state.bk = null; askNotify(); showOrderSuccess(null, 'book');
     });
     if (go){ go.classList.remove('bike-load'); go.innerHTML = oldGo; go.disabled = !(state.bk && state.bk.slot); }
+  },
+  async loadQueues(){
+    const list = state._liveBk || [];
+    for (const b of list){
+      const el = $('q-' + b.id); if (!el) continue;
+      try {
+        const q = need(await sb.rpc('bk_queue', { p_appt:b.id })); if (!q || !$('q-' + b.id)) continue;
+        const ur = state.lang === 'ur';
+        el.innerHTML = `<div style="background:#FFF6EC;border:1.5px solid #FFD9B0;border-radius:12px;padding:9px 11px;font-size:13.5px">🎫 ${ur ? 'تمہارا ٹوکن' : 'Your token'} <b>#${q.token != null ? q.token : '—'}</b>${q.current ? ` · ${ur ? 'ابھی چل رہا' : 'Now serving'} <b>#${q.current}</b>` : ''}${num(q.ahead) > 0 ? ` · ${ur ? 'تم سے پہلے' : 'Ahead of you'} <b>${q.ahead}</b>${num(q.eta_min) > 0 ? ` · ~${q.eta_min} ${ur ? 'منٹ' : 'min'}` : ''}` : ` · <b>${ur ? 'تمہاری باری ہے!' : 'Your turn!'}</b>`}</div>`;
+      } catch (e) {}
+    }
   },
   async bookCancel(id){
     if (!await uiConfirm(t('bk_cancel_q'))) return;
