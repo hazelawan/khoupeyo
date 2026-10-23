@@ -1061,7 +1061,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.57';
+const APP_VERSION = '5.58';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2474,7 +2474,8 @@ function galRail(fromScroll){ const c = $('dgal'); if (!c) return; if (fromScrol
 function galHtml(item){
   const pics = railPics(item);
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
-  if (pics.length === 1) return `<img src="${esc(pics[0])}" alt="">`;
+  if (pics.length === 1){ const b0 = galBacks(item)[0]; if (!b0) return `<img src="${esc(pics[0])}" alt="">`;
+    return `<img src="${esc(pics[0])}" alt="" data-f="${esc(pics[0])}" data-b="${esc(b0)}"><button class="rlflip" style="display:flex;position:absolute;top:10px;inset-inline-end:10px;z-index:3" onclick="event.stopPropagation();A.galFlip1(this)" aria-label="${t('rail_flip')}">🔄</button><span class="rlback" style="display:none;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:3">${t('rail_back')}</span>`; }
   if (railFor(item)){ const backs = galBacks(item); const opts = galOptsFor(item); return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})" ${backs[i] ? `data-front="${esc(u)}" data-back="${esc(backs[i])}"` : ''}><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>${backs[i] ? `<button class="rlflip" style="display:${i ? 'none' : 'flex'}" onclick="event.stopPropagation();A.galFlip(this)" aria-label="${t('rail_flip')}">🔄</button>` : ''}</div>${opts[i] ? `<div class="rlcname">${esc(opts[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(opts[i].price))}</div>` : ''}${backs[i] ? `<div><span class="rlback" style="display:none">${t('rail_back')}</span></div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`; }
   return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 }
@@ -3511,6 +3512,9 @@ const A = {
   },
   // ---- Offers and invite ----
   galChip(i){ const c = $('dgal'); if (!c || !c.children[i]) return; const card = c.children[i]; c.scrollTo({ left: card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' }); },
+  galFlip1(btn){ const wrap = btn.parentElement; const im = wrap.querySelector('img'); const bb = wrap.querySelector('.rlback'); if (!im) return;
+    if (im.dataset.flipped){ im.dataset.flipped = ''; im.src = im.dataset.f; if (bb) bb.style.display = 'none'; }
+    else { im.dataset.flipped = '1'; im.src = im.dataset.b; if (bb) bb.style.display = 'inline-block'; } },
   galFlip(btn){
     const card = btn.closest('.rlcard'); if (!card) return;
     const im = card.querySelector('.rlphoto img'); if (!im) return;
