@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.57';
+const APP_VERSION = '7.58';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2632,13 +2632,13 @@ function gatewayCard(){
   const live = g.live === true;
   return `<div class="card" style="margin-top:12px">
     <b>💳 Payment Gateway (Safepay)</b>
-    <div class="muted" style="font-size:14px">Instant JazzCash / Easypaisa / card payment in the customer app, through Safepay. Ye setting poori Dera ke liye hai — har region ke liye aik jaisi. Jab tak Live na ho, customers ko ye option nazar hi nahi ata (dormant).</div>
+    <div class="muted" style="font-size:14px">Instant JazzCash / Easypaisa / card payment in the customer app, through Safepay. This setting is for all of Dera — the same for every region. Until it is Live, customers do not see this option at all (dormant).</div>
     <div style="margin-top:8px;font-size:15px">Provider: <b>Safepay</b> · Live: <b style="color:${live ? 'var(--green)' : 'var(--danger)'}">${live ? '🟢 ON' : '🔴 OFF'}</b></div>
-    <div class="muted" style="font-size:14px;margin-top:6px">🔑 Keys: sirf Supabase Edge Function secrets mein lagti hain (SAFEPAY_API_KEY) — app mein kabhi nazar nahi aati. Keys lagaye baghair Live NA karein.</div>
-    <div class="muted" style="font-size:13px;margin-top:6px">Live karne ke steps: 1) Safepay merchant account kholain. 2) Keys Supabase → Edge Functions → Secrets mein lagain. 3) Sandbox payment test karain — phir yahan Live karain.</div>
+    <div class="muted" style="font-size:14px;margin-top:6px">🔑 Keys go only in the Supabase Edge Function secrets (SAFEPAY_API_KEY) — they never appear in the app. Do NOT make it Live without the keys.</div>
+    <div class="muted" style="font-size:13px;margin-top:6px">Steps to go Live: 1) Open a Safepay merchant account. 2) Put the keys in Supabase → Edge Functions → Secrets. 3) Run a sandbox payment test — then make it Live here.</div>
     <div class="actions">${live
-      ? `<button class="btn warn block" onclick="A.saveGatewayLive(false)">🚨 Fori band karein (kill switch)</button>`
-      : `<button class="btn block" onclick="A.saveGatewayLive(true)">▶️ Live karein</button>`}</div>
+      ? `<button class="btn warn block" onclick="A.saveGatewayLive(false)">🚨 Turn OFF now (kill switch)</button>`
+      : `<button class="btn block" onclick="A.saveGatewayLive(true)">▶️ Make Live</button>`}</div>
   </div>`;
 }
 function viewSettings(){
@@ -4137,10 +4137,10 @@ const A = {
     return new Promise(res => {
       let done = false;
       const finish = v => { if (done) return; done = true; clearInterval(iv); res(v); };
-      openSheet('🔐 Tasdeeq karein', `<div class="muted" style="font-size:14px">Ye aik hassas kaam hai. Apni pehchan ki tasdeeq ke liye apna admin password dobara likhein.</div>
-        <label class="f" for="su_pw">Apna admin password likhein</label><input id="su_pw" type="password" autocomplete="current-password">
+      openSheet('🔐 Verify yourself', `<div class="muted" style="font-size:14px">This is a sensitive action. For your security, enter your admin password again.</div>
+        <label class="f" for="su_pw">Your admin password</label><input id="su_pw" type="password" autocomplete="current-password">
         <div id="su_err" class="red" style="display:none;font-size:13px;margin-top:6px"></div>
-        <div class="actions"><button class="btn block" id="suGo">✔ Tasdeeq karein</button><button class="btn ghost block" id="suNo">Cancel</button></div>`);
+        <div class="actions"><button class="btn block" id="suGo">✔ Verify</button><button class="btn ghost block" id="suNo">Cancel</button></div>`);
       const iv = setInterval(() => { if (!$('su_pw')) finish(false); }, 300);
       $('suNo').onclick = () => { finish(false); closeSheet(); };
       $('suGo').onclick = async () => {
@@ -4149,7 +4149,7 @@ const A = {
         b.disabled = false;
         if (error){ err.textContent = (error.message || 'Error').replace(/^Error:\s*/, ''); err.style.display = ''; return; }
         if (data){ finish(true); closeSheet(); return; }
-        err.textContent = 'Password ghalat hai — dobara koshish karein'; err.style.display = ''; $('su_pw').select();
+        err.textContent = 'Wrong password — please try again'; err.style.display = ''; $('su_pw').select();
       };
     });
   },
@@ -5363,7 +5363,7 @@ const Bulk = (() => {
     ['name','price','bc','section','stock','photo'].forEach(k => {
       const el = $('bkmap_' + k); if (el && el.value !== '') m[k] = Number(el.value);
     });
-    if (m.name === undefined || m.price === undefined){ C.toast('Name aur Price lazmi hain!', true); return; }
+    if (m.name === undefined || m.price === undefined){ C.toast('Name and Price are required!', true); return; }
     S.manualMap = m; buildWithMap();
   }
 
