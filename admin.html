@@ -138,6 +138,9 @@ h3{font-size:18px;margin:22px 0 8px}
 .btngroup-t{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;flex:0 0 100%;margin-bottom:2px}
 .staffgroup{margin-bottom:18px}
 .staffgroup-h{font-size:16px;font-weight:800;margin:14px 0 8px;padding:8px 12px;background:var(--field);border-radius:12px;display:flex;align-items:center;gap:8px}
+.setgroup-h{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--muted,#5E6D65);text-transform:uppercase;margin:16px 0 2px}
+.setgroup-h:first-child{margin-top:2px}
+.setmenu .row{padding:10px 2px}
 .cat h3{margin:0}
 .sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:820px;max-height:92%;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(28px + env(safe-area-inset-bottom,0px))}
@@ -675,7 +678,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.48';
+const APP_VERSION = '7.49';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2642,15 +2645,19 @@ function viewSettings(){
   const back = `<button class="row" onclick="state.setTab=null;go('settings')"><div class="row-main"><div class="row-title">‹ Back to Settings</div></div></button>`;
   const note = sc ? `<div class="note" style="border-color:var(--brand)">📍 <b>Settings for ${esc(regionName(sc))}</b>. What you save here is only for this region. Anything not changed here uses the general Dera settings.${Object.keys(state.regionSet || {}).length ? ` Changed for this region: ${Object.keys(state.regionSet).length}.` : ''}</div>`
       : (state.regions || []).length > 1 ? '<div class="note">🌍 <b>General settings for all regions.</b> A region partner can change them for their own region. To change one region only, choose it at the top.</div>' : '';
-  if (!sub) return `${backLink()}<h2>Settings</h2>${note}<div class="list">
+  if (!sub) return `${backLink()}<h2>Settings</h2>${note}<div class="list setmenu">
+    <div class="setgroup-h">Payments</div>
     ${menuRow('pay', '💳', 'Online Payment Accounts', 'JazzCash, Easypaisa, Bank, Raast, QR')}
+    <div class="setgroup-h">Operations</div>
     ${menuRow('dispatch', '🛵', 'Auto-Dispatch & Timing', 'Nearest rider, waiting time, auto-cancel')}
     ${menuRow('charges', '⚖️', 'Delivery & Weight Charges', 'Weight tiers, multi-zone fee, rider share')}
     ${menuRow('safety', '🛡️', 'Safety & Fake Order Rules', 'Delivery code, photo proof, COD limits')}
     ${menuRow('selfie', '🤳', 'Selfie & Face Verification', 'Duty start check, match strictness')}
+    <div class="setgroup-h">Riders</div>
     ${menuRow('contracts', '📋', 'Rider Contracts & ID Fee', 'Company / freelance rules, monthly fee')}
     ${menuRow('fines', '⚖️', 'Rider Discipline & Fines', 'Fine rules, pause ladder')}
     ${menuRow('rewards', '🎁', 'Rewards, Referral & Loyalty', 'Invite codes, loyalty points, rider prizes')}
+    <div class="setgroup-h">General</div>
     ${menuRow('booking', '📅', 'Bookings & Support Info', 'Booking commission, support phone/email')}
   </div>`;
   const wrap = (title, inner) => `${backLink()}<h2>${title}</h2>${note}${back}<div style="margin-top:10px">${inner}</div>`;
@@ -4291,7 +4298,7 @@ const A = {
     if (b) b.disabled = false;
   },
   async regionToggle(id, on){
-    if (!on && !confirm('Ye region OFF ho jayega — customers ko nazar nahi ayega aur naye orders band ho jayenge. Wapas Live kabhi bhi kar sakte ho. Pakka OFF karun?')) return;
+    if (!on && !await uiConfirm('Ye region OFF ho jayega — customers ko nazar nahi ayega aur naye orders band ho jayenge. Wapas Live kabhi bhi kar sakte ho. Pakka OFF karun?')) return;
     await run(async () => { need(await sb.from('regions').update({ is_active: on }).eq('id', id)); await loadRegions(); renderTab(); toast(on ? 'Region LIVE ho gaya' : 'Region OFF ho gaya'); });
   },
   async regMonth(b){ state.regMonthBack = b; await run(async () => { await loadRegions(); if (state.tab === 'region') await loadRegionFile(); }); renderTab(); },
@@ -4670,7 +4677,7 @@ const A = {
     await A.saveSetting('parcel_config', cfg);
   },
   async adminCancelParcel(id){
-    if (!confirm('Cancel this parcel?')) return;
+    if (!await uiConfirm('Cancel this parcel?')) return;
     const { data } = await sb.rpc('cancel_parcel', { p_id: id, p_reason: 'admin' });
     const r = data && data[0];
     if (!r || !r.ok){ toast((r && r.message) || 'Error', true); return; }
