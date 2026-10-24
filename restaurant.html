@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.50';
+const APP_VERSION = '6.51';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1615,7 +1615,7 @@ const TF = {
     const it = TF.item || {};
     const prev = $('i_prev');
     const mainSrc = (prev && prev.style.display !== 'none' && prev.src) ? prev.src : (it.photo_url || '');
-    out.push({ key:'m', src:mainSrc });
+    if (mainPhotoOn()) out.push({ key:'m', src:mainSrc });
     (state.pics ? state.pics.old : []).forEach((u, k) => out.push({ key:'o' + k, src:u }));
     (state.pics ? state.pics.add : []).forEach((f, k) => out.push({ key:'a' + k, src:objUrl(f) }));
     return out;
@@ -1646,7 +1646,8 @@ const TF = {
       TF.meta = []; TF.pools = TF.blankPools(ty);
       const srcs = TF.photoSrcs();
       const pg = groups.find(g => /^(colour|color|rang|design)$/i.test(g.name || ''));
-      const opts = pg ? (pg.menu_options || []).slice().sort((a, b) => a.sort_order - b.sort_order) : [];
+      let opts = pg ? (pg.menu_options || []).slice().sort((a, b) => a.sort_order - b.sort_order) : [];
+      if (opts.length === srcs.length + 1 && !srcs.some(s2 => s2.key === 'm')) opts = opts.slice(1);
       srcs.forEach((s2, i) => TF.meta.push(opts.length === srcs.length && opts[i] ? { name:opts[i].name || '', price:opts[i].price ? String(opts[i].price) : '', sz:(Array.isArray(opts[i].sizes) ? opts[i].sizes.slice() : undefined) } : { name:'', price:'' }));
       (ty.pools || []).forEach(pk => { const pool = POOLS[pk]; if (pool && groups.some(x => x.name === pool.label)) TF.pools[pk].sel = {}; });
       (ty.pools || []).forEach(pk => {
