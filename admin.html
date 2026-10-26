@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.61';
+const APP_VERSION = '7.63';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2652,6 +2652,7 @@ function viewSettings(){
   if (!sub) return `${backLink()}<h2>Settings</h2>${note}<div class="list setmenu">
     <div class="setgroup-h">Payments</div>
     ${menuRow('pay', '💳', 'Online Payment Accounts', 'JazzCash, Easypaisa, Bank, Raast, QR')}
+    ${menuRow('withdrawals', '💸', 'Wallet Withdrawals', 'Requests, approve, mark paid')}
     <div class="setgroup-h">Operations</div>
     ${menuRow('dispatch', '🛵', 'Auto-Dispatch & Timing', 'Nearest rider, waiting time, auto-cancel')}
     ${menuRow('charges', '⚖️', 'Delivery & Weight Charges', 'Weight tiers, multi-zone fee, rider share')}
@@ -2667,6 +2668,7 @@ function viewSettings(){
   </div>`;
   const wrap = (title, inner) => `${backLink()}<h2>${title}</h2>${note}${back}<div style="margin-top:10px">${inner}</div>`;
   if (sub === 'pay') return wrap('💳 Online Payment Accounts', payAccCard() + payRulesCard() + gatewayCard());
+  if (sub === 'withdrawals') return wrap('💸 Wallet Withdrawals', withdrawCard());
   if (sub === 'dispatch') return wrap('🛵 Auto-Dispatch & Timing', setDispatchCard(s) + setWaitCard(s) + setCancelCard(s));
   if (sub === 'charges') return wrap('⚖️ Delivery & Weight Charges', setWeightCard(s) + setSpeedCard(s) + setMultiZoneCard(s) + setRiderShareCard(s));
   if (sub === 'safety') return wrap('🛡️ Safety & Fake Order Rules', setSafetyCard(s));
@@ -2677,6 +2679,13 @@ function viewSettings(){
   if (sub === 'booking') return wrap('📅 Bookings & Support Info', setBookingCard(s) + setSupportCard(s));
   if (sub === 'push') return wrap('📣 Push Notifications', pushCard());
   return wrap('Settings', '');
+}
+function withdrawCard(){
+  setTimeout(() => { try { A.loadWithdrawals(); } catch (e) {} }, 0);
+  return `<div class="card"><b>💸 Withdrawal requests</b>
+    <div class="muted" style="font-size:14px">Customer requests go to their own number only (fee Rs 10 from the customer). Rider withdrawals have no minimum and Dera pays the fee. Pay manually via JazzCash/Easypaisa first, then tap Mark paid. Payout within 24 hours of the request.</div>
+    <div id="wdAdminList" style="margin-top:10px"><div class="muted">Loading…</div></div>
+    <div class="actions"><button class="btn ghost block" onclick="A.loadWithdrawals()">Refresh</button></div></div>`;
 }
 function pushCard(){
   return `<div class="card">
@@ -2866,13 +2875,14 @@ function setLoyaltyCard(s){
   const br = s.bharosa_rules || {};
   return `<div class="card">
     <b>⭐ Loyalty points rules</b>
-    <div class="muted" style="font-size:14px">Customers earn points on delivered orders and redeem them for promo codes. 0 = loyalty off.</div>
+    <div class="muted" style="font-size:14px">Customers earn points on delivered orders. Points appear in the wallet after delivery and can be used as checkout discount (max 40% of the order) or withdrawn. 0 = loyalty off. Shop promo codes stay separate.</div>
     <div class="two">
       <div><label class="f" for="s_lp_per">Rs per 1 point</label><input id="s_lp_per" type="number" min="0" value="${num(s.loyalty_per ?? 100)}"></div>
       <div><label class="f" for="s_lp_min">Min order (Rs) to earn</label><input id="s_lp_min" type="number" min="0" value="${num(s.loyalty_min_order ?? 0)}"></div>
     </div>
     <label class="f" for="s_lp_red" style="margin-top:8px">Min points to redeem</label><input id="s_lp_red" type="number" min="1" value="${num(s.loyalty_redeem_min ?? 100)}">
     <label class="f" for="s_lp_online" style="margin-top:8px">Online payment bonus — Rs per 1 bonus point</label><input id="s_lp_online" type="number" min="0" value="${num(s.loyalty_online_per ?? 100)}">
+    <label class="f" for="s_wd_min" style="margin-top:8px">Minimum withdrawal (Rs) — changeable here</label><input id="s_wd_min" type="number" min="0" value="${num(s.wallet_min_withdrawal ?? 500)}">
     <div class="muted" style="font-size:13px;margin-top:4px">Customer jitni rakam online pay karega, delivered order par us ke alag bonus points milenge. 0 = bonus band.</div>
     <div class="muted" style="font-size:13px;margin-top:8px">✔️ Bharosa badge: in the last ${num(br.days ?? 90)} days at least ${num(br.min_delivered ?? 10)} delivered orders, shop cancels below ${num(br.max_cancel_pct ?? 5)}%, at least ${num(br.min_verified ?? 3)} verified online payments, and average payment-confirm time under ${num(br.max_confirm_hours ?? 6)} hours. The badge shows next to the shop name in the customer app.<br>These criteria can currently only be changed from the database (SQL) — there is no setting for them in the app.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.saveLoyalty()">Save</button></div>
@@ -4760,9 +4770,26 @@ const A = {
       { key:'loyalty_per', value:Math.max(0, num($('s_lp_per').value || 100)) },
       { key:'loyalty_min_order', value:Math.max(0, num($('s_lp_min').value || 0)) },
       { key:'loyalty_redeem_min', value:Math.max(1, num($('s_lp_red').value || 100)) },
-      { key:'loyalty_online_per', value:Math.max(0, num($('s_lp_online').value || 100)) }
+      { key:'loyalty_online_per', value:Math.max(0, num($('s_lp_online').value || 100)) },
+      { key:'wallet_min_withdrawal', value:Math.max(0, num($('s_wd_min').value || 500)) }
     ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
     await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Loyalty rules saved'); });
+  },
+  async loadWithdrawals(){
+    try {
+      const el = $('wdAdminList'); if (!el) return;
+      const rows = need(await sb.rpc('admin_withdrawal_list'));
+      if (!rows || !rows.length){ el.innerHTML = '<div class="muted">No withdrawal requests.</div>'; return; }
+      el.innerHTML = rows.map(x => `<div class="row" style="align-items:flex-start"><div class="row-main"><div class="row-title">${esc(x.user_name || '')} (${esc(x.user_type)}) — ${money(x.amount)}</div><div class="row-sub">To ${esc(x.account)} · Payout ${money(x.payout_amount)} · Fee ${money(x.fee)} · ${esc(x.status)} · ${esc(when(x.requested_at))}</div></div><span style="display:flex;gap:6px;flex-wrap:wrap">${x.status === 'requested' ? `<button class="btn ghost" onclick="A.wdAct('${x.id}','approve')">Approve</button><button class="btn warn" onclick="A.wdAct('${x.id}','reject')">Reject</button>` : ''}${x.status === 'approved' ? `<button class="btn" onclick="A.wdAct('${x.id}','paid')">Mark paid</button><button class="btn warn" onclick="A.wdAct('${x.id}','reject')">Reject</button>` : ''}</span></div>`).join('');
+    } catch (e) { const el = $('wdAdminList'); if (el) el.innerHTML = '<div class="muted">Could not load withdrawals.</div>'; }
+  },
+  async wdAct(id, act){
+    await run(async () => {
+      if (act === 'approve'){ need(await sb.rpc('admin_withdrawal_approve', { p_id:id })); toast('Approved'); }
+      else if (act === 'reject'){ const note = await uiPrompt('Reason (optional)', ''); if (note === null) return; need(await sb.rpc('admin_withdrawal_reject', { p_id:id, p_note:note })); toast('Rejected'); }
+      else if (act === 'paid'){ if (!await uiConfirm('Have you already sent this money via JazzCash/Easypaisa?')) return; need(await sb.rpc('admin_withdrawal_mark_paid', { p_id:id })); toast('Marked paid'); }
+      await A.loadWithdrawals();
+    });
   }
 };
 
@@ -4896,7 +4923,8 @@ const Chat = (() => {
       q_admin_sup:['Hello, how can we help you?','We are looking into it','Thank you for waiting','Please call us'],
       q_admin:['We are looking into it','Thank you for waiting','Please call us'],
       ask_join:'Call Dera', ask_reason:'Tell Dera what the problem is (for example: customer paid less cash):', ask_sent:'Dera has been asked to join this chat',
-      sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
+      sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.',
+      call:'Voice call', calling:'Calling…', incoming:'Incoming voice call', accept:'Accept', decline:'Decline', busy:'The other person is busy on another call.', busy_self:'You are already on a call.', declined:'Call declined.', no_answer:'No answer.', mic_denied:'Microphone permission was not allowed. Please allow the microphone and try again.', call_ended:'Call ended.', connecting:'Connecting…', mute:'Mute', unmute:'Unmute', end_call:'End call', cancel_call:'Cancel', call_failed:'Call failed. Please try again.', video_call:'Video call', speaker:'Speaker', earpiece:'Earpiece', speaker_sys:'Speaker switching uses your phone’s own call controls.'
     },
     ur: {
       messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔',
@@ -4961,6 +4989,20 @@ const Chat = (() => {
 .chatin button{border:0;background:var(--brand);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
     document.head.appendChild(st);
   }
+  if (!document.getElementById('callCss')){
+    const st = document.createElement('style'); st.id = 'callCss';
+    st.textContent = `.callwrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.callcard{background:var(--paper);width:100%;max-width:360px;border-radius:20px;padding:28px 22px;text-align:center}
+.callav{width:88px;height:88px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:40px;font-weight:800;margin:0 auto 14px}
+.callcard b{font-size:20px;display:block}
+.callcard .cst{color:var(--muted);margin:8px 0 20px;font-size:15px}
+.callbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.callbtns button{border:0;border-radius:999px;padding:12px 18px;font-size:15px;cursor:pointer}
+.callbtns .mut{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.callbtns .dec{background:#B3261E;color:#fff}
+.callbtns .acc{background:#1a7f37;color:#fff}`;
+    document.head.appendChild(st);
+  }
   function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
   function paintBadge(){
     const n = Object.values(unread).reduce((a, b) => a + b, 0);
@@ -4971,14 +5013,16 @@ const Chat = (() => {
     cfg = c; stop();
     chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
     refresh();
+    try { setTimeout(() => { try { consumePendingCall(); } catch (x) {} }, 800); } catch (x) {}
   }
-  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } try { Object.values(callChans).forEach(c => { try { sb.removeChannel(c); } catch (x) {} }); Object.keys(callChans).forEach(k => delete callChans[k]); } catch (x) {} callEnd(null); }
   async function refresh(){
     if (!me()) return;
     const since = new Date(Date.now() - 7 * 864e5).toISOString();
     const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
     unread = {};
     (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    (data || []).forEach(m => callSubFor(m.order_id, m.thread, m.user_id));
     paintBadge();
   }
   function onMsg(m){
@@ -5008,6 +5052,7 @@ const Chat = (() => {
     let names = {};
     const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
     if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    Object.values(groups).forEach(g => callSubFor(g.order_id, g.thread, g.user_id));
     const rows = Object.values(groups).map(g => {
       const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
       return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
@@ -5020,6 +5065,9 @@ const Chat = (() => {
     else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
   }
   async function open(orderId, thread, userId, title){
+    callSubFor(orderId, thread, userId);
+    let supVideo = false;
+    if (thread && thread.startsWith('sup') && userId) { try { const pr = await sb.from('profiles').select('role').eq('id', userId).single(); supVideo = !!(pr.data && pr.data.role === 'rider'); } catch (x) {} }
     const k = (orderId || '') + '|' + thread + '|' + (userId || '');
     cur = { orderId, thread, userId, k, msgs:[] };
     const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
@@ -5027,7 +5075,7 @@ const Chat = (() => {
     shell(title || label(thread, orderId), `<div style="font-size:13px;color:#7a5b00;background:#fff8e1;border-bottom:1px solid #f0dfa8;padding:8px 10px">⚠️ ${e(tr('warn'))}</div><div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
       ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
       <div class="chatin"><button onclick="document.getElementById('chatPhoto').click()" title="${e(tr('attach_photo'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📷</button><button onclick="Chat.sendLoc()" title="${e(tr('send_loc'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📍</button><input type="file" id="chatPhoto" accept="image/*" style="display:none" onchange="Chat.sendPhoto(this)"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
-      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : (thread && thread.startsWith('sup') && supVideo) ? `<button class="callbtn" onclick="Chat.callStart(null, 'sup', true)" title="${e(tr('video_call'))}" aria-label="${e(tr('video_call'))}">📹</button>` : '');
     cur = { orderId, thread, userId, k, msgs:[] };
     let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
     q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
@@ -5143,7 +5191,327 @@ function draw(){
     const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
-  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc };
+  const CALL_NOANSWER_MS = 30000;
+  const CALL_STUN = 'stun:stun.l.google.com:19302';
+  let callSt = null;
+  const callChans = {};
+  function supPeerKey(){
+    try { return cfg.role === 'admin' ? (cur && cur.userId) : me(); } catch (x) { return null; }
+  }
+  function callChanKey(orderId, thread, peerKey){
+    if (thread && thread.startsWith('sup')) return 'call:sup:' + (peerKey || supPeerKey() || 'x');
+    return 'call:' + thread + ':' + orderId;
+  }
+  function callEnsureChan(orderId, thread, peerKey){
+    try {
+      const key = callChanKey(orderId, thread, peerKey);
+      if (callChans[key]) return callChans[key];
+      const ch = sb.channel(key).on('broadcast', { event: 'call-signal' }, p => {
+        try { callOnSignal(orderId, thread, (p && p.payload) || {}, peerKey); } catch (x) {}
+      }).subscribe();
+      callChans[key] = ch;
+      return ch;
+    } catch (x) { return null; }
+  }
+  function callSubFor(orderId, thread, peerKey){
+    try {
+      if (orderId && ['cr','cs','rs'].includes(thread)) callEnsureChan(orderId, thread);
+      else if (thread && thread.startsWith('sup')) callEnsureChan(orderId, thread, peerKey);
+    } catch (x) {}
+  }
+  async function callSend(orderId, thread, msg, peerKey){
+    try {
+      const ch = callEnsureChan(orderId, thread, peerKey);
+      if (!ch) return false;
+      await ch.send({ type: 'broadcast', event: 'call-signal', payload: Object.assign({}, msg, { from: me() }) });
+      return true;
+    } catch (x) { return false; }
+  }
+  function callPushNotify(orderId, thread, peerKey, video){
+    try {
+      sb.auth.getSession().then(({ data: sess }) => {
+        try {
+          const tok = sess && sess.session && sess.session.access_token; if (!tok) return;
+          fetch(SUPABASE_URL + '/functions/v1/call-push', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + tok }, body: JSON.stringify({ thread, orderId, peerId: peerKey || null, video: !!video }) }).catch(() => {});
+        } catch (x) {}
+      }).catch(() => {});
+    } catch (x) {}
+  }
+  function consumePendingCall(){
+    try {
+      const raw = localStorage.getItem('dera_pending_call'); if (!raw) return;
+      const rec = JSON.parse(raw);
+      if (!rec || Date.now() - rec.ts > 120000){ try { localStorage.removeItem('dera_pending_call'); } catch (x) {} return; }
+      if (callSt && callSt.orderId === rec.orderId && callSt.thread === rec.thread) return;
+      if (cur && cur.orderId === rec.orderId && cur.thread === rec.thread) {
+        try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+        setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+        return;
+      }
+      try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+      open(rec.orderId, rec.thread, (rec.thread && rec.thread.startsWith('sup') && cfg.role === 'rider') ? me() : undefined);
+      setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+    } catch (x) {}
+  }
+  // NAME ONLY: this resolver never selects a phone column and never returns a
+  // number. On any failure it falls back to the role label (e.g. 'Shop').
+  async function callPeerName(orderId, thread){
+    const roleLabel = thread && thread.startsWith('sup') ? (cfg.role === 'admin' ? tr('as_admin.sup_r') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    try {
+      if (!orderId && thread && thread.startsWith('sup') && cfg.role === 'admin' && cur && cur.userId) {
+        try { const { data } = await sb.from('profiles').select('full_name').eq('id', cur.userId).single(); if (data && data.full_name) return data.full_name; } catch (x) {}
+        return roleLabel;
+      }
+      if (!orderId) return roleLabel;
+      if (cfg.role === 'customer' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+      if (cfg.role === 'customer' && thread === 'cr') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('customer_name').eq('id', orderId).single();
+        return (data && data.customer_name) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'rs') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'cr') {
+        const { data } = await sb.from('orders').select('customer:profiles!customer_id(full_name)').eq('id', orderId).single();
+        return (data && data.customer && data.customer.full_name) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'rs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+    } catch (x) {}
+    return roleLabel;
+  }
+  function callDur(sec){ const m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s); }
+  function callShow(){
+    try {
+      const s = callSt; if (!s) return;
+      let w = document.getElementById('callWrap');
+      if (!w) { w = document.createElement('div'); w.className = 'callwrap'; w.id = 'callWrap'; document.body.appendChild(w); }
+      let status = '', btns = '';
+      if (s.state === 'calling') { status = tr('calling'); btns = `<button class="mut" onclick="Chat.callCancel()">${e(tr('cancel_call'))}</button>`; }
+      else if (s.state === 'incoming') { status = tr('incoming'); btns = `<button class="dec" onclick="Chat.callDecline()">${e(tr('decline'))}</button><button class="acc" onclick="Chat.callAccept()">${e(tr('accept'))}</button>`; }
+      else if (s.state === 'connecting') { status = tr('connecting'); btns = `<button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      else { status = callDur(s.durSec || 0); btns = `<button class="mut" onclick="Chat.callMute()">${e(s.muted ? tr('unmute') : tr('mute'))}</button><button class="mut" onclick="Chat.callSpeaker()">${e(s.speaker ? tr('earpiece') : tr('speaker'))}</button><button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      const nm = (s.peerName || '?').trim();
+      w.innerHTML = `<div class="callcard"><div class="callav">${e(nm[0] || '?')}</div><b>${s.video ? '📹 ' : ''}${e(s.peerName)}</b>${s.video ? `<video id="callRemoteV" autoplay playsinline style="width:100%;max-height:52vh;background:#000;border-radius:14px;margin:12px 0 0"></video><video id="callLocalV" autoplay muted playsinline style="width:110px;height:82px;object-fit:cover;border-radius:10px;margin:8px auto 0"></video>` : ''}<div class="cst" id="callDur">${e(status)}</div><div class="callbtns">${btns}</div></div>`;
+      try {
+        if (s.video) {
+          const rv = document.getElementById('callRemoteV'); if (rv && s.remoteStream && !rv.srcObject) rv.srcObject = s.remoteStream;
+          const lv = document.getElementById('callLocalV'); if (lv && s.stream && !lv.srcObject) lv.srcObject = s.stream;
+        }
+      } catch (x) {}
+    } catch (x) {}
+  }
+  function callEnd(msg){
+    try {
+      const s = callSt; callSt = null;
+      if (s) {
+        if (s.noAnsTimer) clearTimeout(s.noAnsTimer);
+        if (s.ringTimer) clearInterval(s.ringTimer);
+        if (s.durTimer) clearInterval(s.durTimer);
+        try { if (s.stream) s.stream.getTracks().forEach(t => t.stop()); } catch (x) {}
+        try { if (s.pc) s.pc.close(); } catch (x) {}
+        try { if (s.remoteEl) s.remoteEl.remove(); } catch (x) {}
+      }
+      const w = document.getElementById('callWrap'); if (w) w.remove();
+      if (msg && cfg.toast) cfg.toast(msg);
+    } catch (x) {}
+  }
+  function callNewPc(s){
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: CALL_STUN }] });
+    pc.onicecandidate = ev => {
+      try { if (ev.candidate) callSend(s.orderId, s.thread, { type: 'ice-candidate', candidate: ev.candidate }, s.peerKey); } catch (x) {}
+    };
+    pc.ontrack = ev => {
+      try {
+        s.remoteStream = ev.streams[0];
+        if (s.video) { const rv = document.getElementById('callRemoteV'); if (rv) rv.srcObject = ev.streams[0]; return; }
+        let el = s.remoteEl;
+        if (!el) { el = document.createElement('audio'); el.autoplay = true; el.style.display = 'none'; document.body.appendChild(el); s.remoteEl = el; }
+        el.srcObject = ev.streams[0];
+      } catch (x) {}
+    };
+    pc.onconnectionstatechange = () => {
+      try {
+        const st = pc.connectionState;
+        if (st === 'connected' && callSt === s && (s.state === 'connecting' || s.state === 'calling')) {
+          s.state = 'in-call'; s.durSec = 0;
+          if (s.durTimer) clearInterval(s.durTimer);
+          s.durTimer = setInterval(() => { try { if (callSt === s && s.state === 'in-call') { s.durSec++; const dEl = document.getElementById('callDur'); if (dEl) dEl.textContent = callDur(s.durSec); else callShow(); } } catch (x) {} }, 1000);
+          callShow();
+        } else if (st === 'failed' && callSt === s && s.state === 'in-call') {
+          callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey);
+          callEnd(tr('call_ended'));
+        }
+      } catch (x) {}
+    };
+    return pc;
+  }
+  async function callStart(orderId, thread, video){
+    try {
+      const isSup = thread && thread.startsWith('sup');
+      if (isSup) {
+        if (cfg.role !== 'rider' && cfg.role !== 'admin') return;
+        video = true;
+      } else {
+        if (cfg.role === 'admin') return;
+        if (!orderId || !['cr','cs','rs'].includes(thread)) return;
+        video = false;
+      }
+      if (callSt) { if (cfg.toast) cfg.toast(tr('busy_self')); return; }
+      if (!isSup) {
+        try {
+          const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+          if (od && ['delivered','cancelled'].includes(od.status)) { if (cfg.toast) cfg.toast(tr('closed')); return; }
+        } catch (x) {}
+      }
+      const peerName = await callPeerName(orderId, thread);
+      const peerKey = isSup ? supPeerKey() : null;
+      callSt = { orderId, thread, state: 'calling', peerName, muted: false, pendCand: [], durSec: null, video: !!video, peerKey, speaker: false };
+      callShow();
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!video }); }
+      catch (x) { callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt.state !== 'calling') { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      callSt.stream = stream;
+      const pc = callNewPc(callSt);
+      callSt.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      if (callSt) callSt.noAnsTimer = setTimeout(() => {
+        try { if (callSt && callSt.state === 'calling') { callSend(callSt.orderId, callSt.thread, { type: 'hangup' }, callSt.peerKey); callEnd(tr('no_answer')); } } catch (x) {}
+      }, CALL_NOANSWER_MS);
+      const ok = await callSend(orderId, thread, { type: 'offer', sdp: offer, video: !!video }, peerKey);
+      if (!ok) { callEnd(tr('call_failed')); return; }
+      callPushNotify(orderId, thread, peerKey, !!video);
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callOnSignal(orderId, thread, p, peerKey){
+    try {
+      if (!p || p.from === me()) return;
+      const type = p.type;
+      if (type === 'offer') {
+        if (callSt && callSt.orderId === orderId && callSt.thread === thread && callSt.state === 'incoming' && (!thread.startsWith('sup') || !peerKey || !callSt.peerKey || callSt.peerKey === peerKey)) return;
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        if (orderId) {
+          try {
+            const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+            if (od && ['delivered','cancelled'].includes(od.status)) { await callSend(orderId, thread, { type: 'decline' }, peerKey); return; }
+          } catch (x) {}
+        }
+        const peerName = await callPeerName(orderId, thread);
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        callSt = { orderId, thread, state: 'incoming', peerName, muted: false, pendCand: [], durSec: null, offer: p.sdp, video: !!p.video, peerKey: peerKey || null, speaker: false };
+        callShow();
+        try { if (cfg.ding) cfg.ding(); } catch (x) {}
+        if (callSt) callSt.ringTimer = setInterval(() => { try { if (callSt && callSt.state === 'incoming' && cfg.ding) cfg.ding(); } catch (x) {} }, 3000);
+        return;
+      }
+      if (type === 'call-ready') {
+        const cs = callSt;
+        if (cs && cs.state === 'calling' && cs.orderId === orderId && cs.thread === thread && cs.pc && cs.pc.localDescription) {
+          try { await callSend(orderId, thread, { type: 'offer', sdp: cs.pc.localDescription, video: !!cs.video }, cs.peerKey); } catch (x) {}
+        }
+        return;
+      }
+      const s = callSt;
+      if (!s || s.orderId !== orderId || s.thread !== thread) return;
+      if (thread && thread.startsWith('sup') && peerKey && s.peerKey && s.peerKey !== peerKey) return;
+      if (type === 'answer') {
+        if (s.state !== 'calling') return;
+        if (s.noAnsTimer) { clearTimeout(s.noAnsTimer); s.noAnsTimer = null; }
+        try {
+          await s.pc.setRemoteDescription(p.sdp);
+          if (s.state === 'calling') { s.state = 'connecting'; callShow(); }
+          const q = s.pendCand; s.pendCand = [];
+          for (const c of q) { try { await s.pc.addIceCandidate(c); } catch (x) {} }
+        } catch (x) { callEnd(tr('call_failed')); }
+        return;
+      }
+      if (type === 'ice-candidate') {
+        try {
+          if (!s.pc) { s.pendCand.push(p.candidate); return; }
+          if (s.pc.remoteDescription) await s.pc.addIceCandidate(p.candidate);
+          else s.pendCand.push(p.candidate);
+        } catch (x) {}
+        return;
+      }
+      if (type === 'hangup') { callEnd(s.state === 'in-call' ? tr('call_ended') : null); return; }
+      if (type === 'decline') { if (s.state === 'calling') callEnd(tr('declined')); return; }
+      if (type === 'busy') { if (s.state === 'calling') callEnd(tr('busy')); return; }
+    } catch (x) {}
+  }
+  async function callAccept(){
+    try {
+      const s = callSt; if (!s || s.state !== 'incoming' || !s.offer) return;
+      if (s.ringTimer) { clearInterval(s.ringTimer); s.ringTimer = null; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!s.video }); }
+      catch (x) { await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt !== s) { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      s.stream = stream;
+      const pc = callNewPc(s); s.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      try {
+        await pc.setRemoteDescription(s.offer);
+        const ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        if (s.state === 'incoming') { s.state = 'connecting'; callShow(); }
+        const q = s.pendCand; s.pendCand = [];
+        for (const c of q) { try { await pc.addIceCandidate(c); } catch (x) {} }
+        const ok = await callSend(s.orderId, s.thread, { type: 'answer', sdp: ans }, s.peerKey);
+        if (!ok) { callEnd(tr('call_failed')); return; }
+      } catch (x) { callEnd(tr('call_failed')); }
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callDecline(){
+    try { const s = callSt; if (s && s.state === 'incoming') await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callCancel(){
+    try { const s = callSt; if (s && s.state === 'calling') await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callHangup(){
+    try { const s = callSt; if (s) await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  function callMute(){
+    try {
+      const s = callSt; if (!s || !s.stream) return;
+      s.muted = !s.muted;
+      s.stream.getAudioTracks().forEach(t => { t.enabled = !s.muted; });
+      callShow();
+    } catch (x) {}
+  }
+  async function callSpeaker(){
+    try {
+      const s = callSt; if (!s) return; s.speaker = !s.speaker;
+      const el = s.remoteEl || document.getElementById('callRemoteV');
+      if (el && el.setSinkId) {
+        try {
+          const devs = await navigator.mediaDevices.enumerateDevices();
+          const outs = devs.filter(d => d.kind === 'audiooutput');
+          const spk = outs.find(d => /speaker/i.test(d.label || ''));
+          await el.setSinkId(s.speaker && spk ? spk.deviceId : 'default');
+        } catch (x) {}
+      } else if (cfg.toast && s.speaker) cfg.toast(tr('speaker_sys'));
+      callShow();
+    } catch (x) {}
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc, callStart, callAccept, callDecline, callCancel, callHangup, callMute, callSpeaker, consumePendingCall };
 })();
 
 // ================= PUSH + INSTALL (same code in all four apps) =================
