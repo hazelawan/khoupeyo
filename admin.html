@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.70';
+const APP_VERSION = '7.71';
 const APP_DATE = '27 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -867,7 +867,7 @@ async function afterLogin(user){
   try { const { data:pm } = await sb.rpc('my_perms'); state.perms = pm || []; } catch (e) { state.perms = ['owner']; }
   state.myRegion = data.region_id || null; state.viewRegion = data.view_region || null;
   try { state.regions = need(await sb.from('regions').select('id,name,center_lat,center_lng,radius_km,is_active,created_at').order('created_at')) || []; } catch (e) { state.regions = []; }
-  await Promise.all([loadZones(), loadRestaurants(), loadRiders()]);
+  await Promise.all([loadZones(), loadRestaurants()]);
   Chat.init({ me:() => state.userId, lang:() => 'en', role:'admin', toast:(m, err) => toast(m, err) });
   Push.init({ sb, app:'admin', me:() => state.userId, lang:() => 'en', toast:(m, err) => toast(m, err) });
   BackNav.init({ toast:m => toast(m), exitMsg:() => 'Press back again to exit',
@@ -4431,7 +4431,7 @@ const A = {
     await run(async () => {
       need(await sb.rpc('set_view_region', { p_region:id || null }));
       state.viewRegion = id || null; state.riderRows = []; state.shopReport = []; state.settings = {};
-      await Promise.all([loadZones(), loadRestaurants(), loadRiders(), loadSettings()]);
+      await Promise.all([loadZones(), loadRestaurants(), loadSettings()]);
       toast(id ? 'Now showing ' + regionName(id) : 'Now showing all regions');
       showApp(); if (goHome) go('home');
     });
