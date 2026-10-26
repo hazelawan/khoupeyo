@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.58';
+const APP_VERSION = '6.59';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -953,7 +953,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], payChecks:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
   sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, orderFilter:'live', period:'today', earn:null, stmt:null, stmtMonth:null, productFilter:'all', productQ:'', alerted:new Set(),
-  settings:{}, specialHours:[], pwChecked:false, pwBlocking:false,
+  settings:{}, specialHours:[], promoRequests:[], pwChecked:false, pwBlocking:false,
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -1209,7 +1209,7 @@ async function go(tab){
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
     if (tab === 'stmt') await loadStmt();
-    if (tab === 'shop'){ loadStaff(); await loadReviews(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
+    if (tab === 'shop'){ loadStaff(); await loadReviews(); await loadPromoRequests(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
 }
@@ -2025,8 +2025,19 @@ function orderFileHtml(f){
 async function loadReviews(){
   state.reviews = need(await sb.from('reviews').select('restaurant_rating,comment,created_at,shop_tags').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
 }
+async function loadPromoRequests(){
+  state.promoRequests = need(await sb.rpc('shop_my_promo_requests')) || [];
+  return state.promoRequests;
+}
 function viewShop(){
   const r = state.restaurant; const rv = state.reviews || [];
+  const promoRows = (state.promoRequests || []).map(p => `<div class="card">
+    <div class="ch"><b>${esc(p.title || '')}</b><span class="pill ${p.status === 'approved' ? 'g' : p.status === 'rejected' ? 'r' : 'y'}">${esc(p.status || 'pending')}</span></div>
+    ${p.subtitle ? `<div>${esc(p.subtitle)}</div>` : ''}
+    <div class="muted" style="font-size:13px;margin-top:6px">${esc(p.created_at ? when(p.created_at) : '')}${p.starts_at || p.ends_at ? ` · ${esc(p.starts_at ? new Date(p.starts_at).toLocaleString() : 'No start')} – ${esc(p.ends_at ? new Date(p.ends_at).toLocaleString() : 'No end')}` : ''}</div>
+    ${p.admin_note ? `<div class="note"><b>${state.lang === 'ur' ? 'انتظامیہ کا نوٹ' : 'Admin note'}:</b> ${esc(p.admin_note)}</div>` : ''}
+    ${p.banner_id ? `<div class="muted" style="font-size:13px">${state.lang === 'ur' ? 'بینر شائع ہو گیا' : 'Banner published'}</div>` : ''}
+  </div>`).join('');
   const avg = rv.length ? (rv.reduce((n, x) => n + num(x.restaurant_rating), 0) / rv.length).toFixed(1) : null;
   const revs = rv.slice(0, 15).map(x => `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${(x.shop_tags || []).length ? `<div class="muted" style="font-size:13px">${esc(x.shop_tags.join(' · '))}</div>` : ''}${x.comment ? `<div>${esc(x.comment)}</div>` : ''}</div>`).join('');
   return `<h1>${t('shop')}</h1>
@@ -2051,6 +2062,19 @@ function viewShop(){
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
     </div>
     <button type="button" class="btn ghost" style="margin:8px 0 12px" onclick="A.shopPreview()">👁️ ${state.lang === 'ur' ? 'کسٹمر ویو دیکھیں' : 'Preview customer view'}</button>
+    <h2>${state.lang === 'ur' ? '📣 تشہیر کی درخواست' : '📣 Request a promotion'}</h2>
+    <div class="card">
+      <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے تشہیری بینر کی درخواست دیں۔ بینر انتظامیہ کی منظوری کے بعد ہی شائع ہوگا۔' : 'Request a promotional banner for your shop. It will only be published after admin approval.'}</p>
+      <label class="f" for="promoTitle">${state.lang === 'ur' ? 'عنوان (ضروری)' : 'Title (required, 3–80 characters)'}</label><input id="promoTitle" type="text" minlength="3" maxlength="80" required>
+      <label class="f" for="promoSubtitle">${state.lang === 'ur' ? 'ذیلی عنوان (اختیاری)' : 'Subtitle (optional, up to 180 characters)'}</label><input id="promoSubtitle" type="text" maxlength="180">
+      <label class="f" for="promoImage">${state.lang === 'ur' ? 'تصویر کا URL (اختیاری)' : 'Image URL (optional)'}</label><input id="promoImage" type="url" inputmode="url" placeholder="https://…">
+      <label class="f" for="promoStarts">${state.lang === 'ur' ? 'شروع ہونے کا وقت (اختیاری)' : 'Starts at (optional)'}</label><input id="promoStarts" type="datetime-local">
+      <label class="f" for="promoEnds">${state.lang === 'ur' ? 'ختم ہونے کا وقت (اختیاری)' : 'Ends at (optional)'}</label><input id="promoEnds" type="datetime-local">
+      <div id="promoError" class="err-text" role="alert" aria-live="polite"></div>
+      <button type="button" class="btn" id="promoSubmit" onclick="A.submitPromoRequest()">${state.lang === 'ur' ? 'منظوری کے لیے بھیجیں' : 'Submit for approval'}</button>
+    </div>
+    <div class="ch"><h2 style="margin:12px 0 8px">${state.lang === 'ur' ? 'پچھلی درخواستیں' : 'Previous requests'}</h2><button type="button" class="linkbtn" onclick="A.refreshPromoRequests()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh'}</button></div>
+    ${promoRows || `<div class="empty">${state.lang === 'ur' ? 'ابھی کوئی درخواست نہیں۔' : 'No promotion requests yet.'}</div>`}
     ${(() => { const x = weekHours(r)[todayDw()]; const badge = x.off ? t('day_closed') : `${time12(x.o)} – ${time12(x.c)}`; return `
     <div class="card academy" style="margin:12px 0"><b>🎓 ${state.lang === 'ur' ? 'دکان سیکھنے کی مختصر تربیت' : 'Shop quick-start academy'}</b>
       <details><summary>${state.lang === 'ur' ? '1. پروڈکٹ اور اچھی تصویر شامل کریں' : '1. Add a product and a clear photo'}</summary><p>${state.lang === 'ur' ? 'مینو / پروڈکٹس کھولیں، سیکشن چنیں اور نام، قیمت اور دستیابی درج کریں۔ روشن، صاف تصویر اپ لوڈ کریں؛ کراپ ایڈیٹر میں تناسب، زوم اور جگہ درست کر کے استعمال کریں۔' : 'Open Menu / Products, choose a section, then enter the name, price and availability. Upload a bright, clear photo; use the crop editor to adjust framing, zoom and aspect ratio before applying it.'}</p></details>
@@ -2244,6 +2268,34 @@ function payAccSub(a){
   return bits.join(' · ');
 }
 const A = {
+  async refreshPromoRequests(){
+    await run(async () => { await loadPromoRequests(); if (state.tab === 'shop') renderTab(); });
+  },
+  async submitPromoRequest(){
+    const titleEl = $('promoTitle'), subtitleEl = $('promoSubtitle'), imageEl = $('promoImage'), startsEl = $('promoStarts'), endsEl = $('promoEnds'), errorEl = $('promoError'), button = $('promoSubmit');
+    if (!titleEl || !errorEl) return;
+    const title = titleEl.value.trim(), subtitle = subtitleEl.value.trim(), image = imageEl.value.trim();
+    const startsRaw = startsEl.value, endsRaw = endsEl.value;
+    const fail = message => { errorEl.textContent = message; };
+    errorEl.textContent = '';
+    if (title.length < 3 || title.length > 80) return fail(state.lang === 'ur' ? 'عنوان 3 سے 80 حروف کا ہونا چاہیے۔' : 'The title must be 3 to 80 characters.');
+    if (subtitle.length > 180) return fail(state.lang === 'ur' ? 'ذیلی عنوان بہت لمبا ہے۔' : 'The subtitle must be 180 characters or fewer.');
+    let imageUrl = null;
+    if (image){ try { const u = new URL(image); if (u.protocol !== 'https:' || !u.hostname) throw new Error(); imageUrl = u.href; } catch (e) { return fail(state.lang === 'ur' ? 'تصویر کے لیے درست HTTPS URL درج کریں۔' : 'Enter a valid HTTPS image URL.'); } }
+    if (!!startsRaw !== !!endsRaw) return fail(state.lang === 'ur' ? 'شیڈول کے لیے شروع اور ختم ہونے دونوں اوقات درج کریں۔' : 'Enter both a start and end time, or leave both blank.');
+    let startsAt = null, endsAt = null;
+    if (startsRaw){ const sd = new Date(startsRaw), ed = new Date(endsRaw); if (!Number.isFinite(sd.getTime()) || !Number.isFinite(ed.getTime())) return fail(state.lang === 'ur' ? 'درست تاریخ اور وقت درج کریں۔' : 'Enter valid schedule dates and times.'); if (sd >= ed) return fail(state.lang === 'ur' ? 'ختم ہونے کا وقت شروع ہونے کے بعد ہونا چاہیے۔' : 'The end time must be after the start time.'); startsAt = sd.toISOString(); endsAt = ed.toISOString(); }
+    if (!state.restaurant || !state.restaurant.id) return fail(state.lang === 'ur' ? 'دکان کی معلومات دستیاب نہیں۔' : 'Shop information is unavailable.');
+    button.disabled = true;
+    try {
+      await run(async () => {
+        need(await sb.rpc('shop_submit_promo_request', { p_restaurant_id:state.restaurant.id, p_title:title, p_subtitle:subtitle || null, p_image_url:imageUrl, p_starts_at:startsAt, p_ends_at:endsAt }));
+        await loadPromoRequests();
+        renderTab();
+        toast(state.lang === 'ur' ? 'درخواست منظوری کے لیے بھیج دی گئی۔' : 'Promotion request submitted for approval.');
+      });
+    } finally { const current = $('promoSubmit'); if (current) current.disabled = false; }
+  },
   openSelfPreview(){ state.selfPreview = true; renderTab(); window.scrollTo(0, 0); },
   closeSelfPreview(){ state.selfPreview = false; renderTab(); window.scrollTo(0, 0); },
   toggleLang(onAuth){

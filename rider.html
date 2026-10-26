@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.42';
+const APP_VERSION = '5.43';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2075,6 +2075,10 @@ async function loadDuty(){
       sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(30)]);
     state.offers = of.data || []; state.reqs = rq.data || []; state.charges = ch.data || [];
   } catch (e) { state.offers = []; state.reqs = []; state.charges = []; }
+  try {
+    const [shifts, shiftRequests] = await Promise.all([sb.rpc('rider_list_available_shifts'), sb.rpc('rider_my_shift_requests')]);
+    state.shiftOptions = need(shifts) || []; state.shiftRequests = need(shiftRequests) || []; state.shiftRequestError = '';
+  } catch (e) { state.shiftOptions = []; state.shiftRequests = []; state.shiftRequestError = e.message || 'Could not load shift requests'; }
   await loadStatus();
 }
 const dLabel = d => new Date(d + 'T00:00:00').toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { weekday:'short', day:'numeric', month:'short' });
@@ -2122,6 +2126,7 @@ function viewDuty(){
     ${mrow('contract', '📋', t('duty_m_contract'))}
   </div>`;
   if (sec === 'timing') return `<h1>${t('duty_m_timing')}</h1>${suspBanner()}${back}
+    ${shiftPickerCard()}
     <div class="card"><b>🕘 ${t('my_timing')}</b>${timing}${nextHtml}</div>
     <div class="card"><b>📊 ${t('att_month')}</b>
       <div class="attgrid"><div><b>${cnt('present')}</b><span>${t('s_present')}</span></div><div><b style="color:#8a5a00">${cnt('late')}</b><span>${t('s_late')}</span></div>
@@ -2136,6 +2141,23 @@ function viewDuty(){
   if (sec === 'offers') return `<h1>${t('duty_m_offers')}</h1>${suspBanner()}${back}
     ${offersCard()}${chargesCard()}${requestsCard()}`;
   return `<h1>${t('duty_m_contract')}</h1>${suspBanner()}${back}${contractCard()}`;
+}
+function shiftPickerCard(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 30);
+  const min = ymd(today), max = ymd(maxDate);
+  const options = (state.shiftOptions || []).map(s => `<option value="${esc(String(s.id))}">${esc(s.name || 'Shift')} · ${esc(t12(s.start_time))}–${esc(t12(s.end_time))}${num(s.break_minutes) ? ` · ${num(s.break_minutes)} min break` : ''}</option>`).join('');
+  const requests = (state.shiftRequests || []).map(q => {
+    const status = ['pending','approved','rejected','cancelled'].includes(q.status) ? q.status : 'unknown';
+    return `<div class="lrow"><div style="min-width:0"><b>${esc(q.shift_name || 'Shift')}</b><div class="muted" style="font-size:13px">${esc(dLabel(q.requested_date))} · ${esc(t12(q.start_time))}–${esc(t12(q.end_time))}</div>${q.admin_note ? `<div style="font-size:13px;overflow-wrap:anywhere">💬 ${esc(q.admin_note)}</div>` : ''}</div><div style="text-align:end;flex:none"><span class="st ${status}">${esc(q.status || 'unknown')}</span>${q.status === 'pending' ? `<div><button class="chip" style="margin-top:6px" onclick="A.cancelShiftRequest('${esc(String(q.id))}')">Cancel</button></div>` : ''}</div></div>`;
+  }).join('');
+  return `<div class="card"><b>🗓️ Request a shift</b>
+    <div class="note" style="margin-top:8px">A request is not approved or reserved until an admin approves it.</div>
+    ${state.shiftRequestError ? `<div class="red" role="alert" style="font-size:13px">${esc(state.shiftRequestError)}</div>` : ''}
+    <label class="f" for="shiftReqDate">Date (next 30 days)</label><input id="shiftReqDate" type="date" min="${min}" max="${max}" value="${min}">
+    <label class="f" for="shiftReqShift">Available shift</label><select id="shiftReqShift" ${options ? '' : 'disabled'}>${options || '<option value="">No shifts currently available</option>'}</select>
+    <button class="btn small" style="margin-top:10px" onclick="A.requestShift()" ${options ? '' : 'disabled'}>Submit request</button>
+    <div style="margin-top:14px"><b>My shift requests</b>${requests || `<div class="muted" style="font-size:13px;margin-top:5px">No shift requests yet.</div>`}</div></div>`;
 }
 function offerCost(o){
   if (o.kind === 'free' || !num(o.amount)) return t('offer_free');
@@ -2621,6 +2643,23 @@ const A = {
       closeSheet(); toast(t('leave_sent')); await loadDuty(); renderTab();
     });
     if (b) b.disabled = false;
+  },
+  async requestShift(){
+    const date = String($('shiftReqDate')?.value || ''), shiftId = String($('shiftReqShift')?.value || '');
+    const today = new Date(); today.setHours(0,0,0,0); const max = new Date(today); max.setDate(max.getDate() + 30);
+    const minStr = ymd(today), maxStr = ymd(max);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < minStr || date > maxStr) return toast('Choose a date within the next 30 days', true);
+    if (!(state.shiftOptions || []).some(s => String(s.id) === shiftId)) return toast('Choose an available shift', true);
+    await run(async () => {
+      need(await sb.rpc('rider_request_shift', { p_shift_id:shiftId, p_date:date }));
+      toast('Shift request submitted. It is not approved or reserved until an admin approves it.'); await loadDuty(); renderTab();
+    });
+  },
+  async cancelShiftRequest(id){
+    const request = (state.shiftRequests || []).find(q => String(q.id) === String(id) && q.status === 'pending');
+    if (!request) return toast('Only pending shift requests can be cancelled', true);
+    if (!await uiConfirm('Cancel this pending shift request?')) return;
+    await run(async () => { need(await sb.rpc('rider_cancel_shift_request', { p_request_id:id })); await loadDuty(); renderTab(); toast('Shift request cancelled'); });
   },
   async askOffer(oid){
     const o = (state.offers || []).find(x => x.id === oid); if (!o) return;

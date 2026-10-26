@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.68';
+const APP_VERSION = '5.69';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -3116,6 +3116,12 @@ async function showOrder(id){
   const o = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone,lat,lng), order_items(menu_item_id,name,quantity,price,options)').eq('id', id).single());
   if (currentRoute !== 'order' || !location.hash.includes(id)) return;
   state.curOrder = o;
+  let refundRequest = null, refundLoadError = '';
+  try {
+    const rr = await sb.from('customer_refund_requests').select('id,order_id,reason,status,admin_note,external_reference,requested_at,updated_at,decided_at').eq('order_id', id).order('requested_at', { ascending:false }).limit(1);
+    if (rr.error) throw rr.error;
+    refundRequest = rr.data && rr.data[0] || null;
+  } catch (e) { refundLoadError = e && e.message ? e.message : 'Could not load refund request status.'; }
   let payAcc = null, code = null;
   if (!FINAL.includes(o.status)){ try { const { data } = await sb.from('order_codes').select('code').eq('order_id', id).maybeSingle(); code = data && data.code; } catch (e) {} }
   if (o.payment_method === 'wallet' && o.payment_status === 'unpaid' && o.status === 'placed'){
@@ -3170,6 +3176,7 @@ async function showOrder(id){
     ${code && ((o.order_type === 'pickup' || o.order_type === 'dinein') ? o.status !== 'placed' : ['rider_assigned', 'picked_up', 'ready', 'preparing', 'accepted'].includes(o.status)) ? `<div class="codebox"><div><b>${o.order_type === 'pickup' ? t('code_t').replace('delivery ', '') : t('code_t')}</b><small>${o.order_type === 'pickup' ? t('code_pick') : t('code_s')}</small></div><span class="code">${esc(code)}</span></div>` : ''}
     ${['pickup','dinein'].includes(o.order_type) && !FINAL.includes(o.status) && o.restaurant && o.restaurant.lat != null ? `<a class="btn ghost" style="margin:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${o.restaurant.lat},${o.restaurant.lng}">${t('pick_dir')}</a>` : ''}
     ${waitHtml}
+    ${refundRequestHtml(o, refundRequest, refundLoadError)}
     ${o.delivery_photo ? `<div class="box" id="dphotoBox" style="text-align:center"><b>📷 ${t('dphoto_cap')}</b><div style="margin-top:8px"><img id="dphotoImg" style="max-width:100%;border-radius:10px;max-height:300px" alt=""></div></div>` : ''}
     ${trackerHtml(o)}
     ${showTrackMap(o) ? `<h2>${t('live_map')}</h2><div id="mapSlot"></div>${rider && rider.lat && o.address_lat ? `<div class="rkm">🛵 ${t('rider_km', { km:kmBetween(rider.lat, rider.lng, o.address_lat, o.address_lng).toFixed(1) })}</div>` : ''}` : ''}
@@ -3218,6 +3225,41 @@ async function showOrder(id){
     })();
   }
 }
+
+const REFUND_ACTIVE_STATUSES = ['requested','reviewing','approved','escalated'];
+function refundRequestHtml(o, request, loadError){
+  if (loadError) return `<div class="box" style="margin-top:12px"><b>Refund request</b><div class="muted" style="margin-top:6px">Could not load request status: ${esc(loadError)}</div></div>`;
+  const active = request && REFUND_ACTIVE_STATUSES.includes(request.status);
+  const history = request ? `<div class="box" style="margin-top:12px"><b>Full refund request · ${esc(String(request.status || 'unknown').replaceAll('_',' '))}</b><div class="muted" style="font-size:14px;margin-top:6px">Requested ${esc(when(request.requested_at))}${request.reason ? `<br>Reason: ${esc(request.reason)}` : ''}</div>${request.admin_note ? `<div style="margin-top:8px"><b>Admin note</b><div class="muted">${esc(request.admin_note)}</div></div>` : ''}${request.external_reference ? `<div class="muted" style="font-size:13px;margin-top:6px">Reference: ${esc(request.external_reference)}</div>` : ''}</div>` : '';
+  if (active || !['delivered','cancelled'].includes(o.status)) return history;
+  return `${history}<div class="box" style="margin-top:12px"><b>Request a full refund</b><p class="muted" style="font-size:14px;margin:5px 0 10px">Submit a request for review. This does not initiate a refund or payment.</p><button type="button" class="btn ghost" id="refundOpenBtn" onclick="A.toggleRefundForm()">Request full refund</button><div id="refundFormWrap" hidden><label class="f" for="refundReason">Reason for request (8–2000 characters)</label><textarea id="refundReason" minlength="8" maxlength="2000" required placeholder="Tell us why you are requesting a refund"></textarea><div id="refundError" class="closed-note" role="alert" hidden></div><button type="button" id="refundSubmitBtn" class="btn" style="margin-top:10px" onclick="A.submitRefundRequest('${esc(o.id)}')">Submit request</button></div></div>`;
+}
+function toggleRefundForm(){
+  const wrap = document.getElementById('refundFormWrap');
+  if (!wrap) return;
+  wrap.hidden = !wrap.hidden;
+  if (!wrap.hidden) document.getElementById('refundReason')?.focus();
+}
+async function submitRefundRequest(orderId){
+  const button = document.getElementById('refundSubmitBtn'), reasonEl = document.getElementById('refundReason'), errorEl = document.getElementById('refundError');
+  if (!state.user) { if (errorEl) { errorEl.textContent = 'Please sign in to submit a refund request.'; errorEl.hidden = false; } return; }
+  if (!state.curOrder || state.curOrder.id !== orderId || !['delivered','cancelled'].includes(state.curOrder.status)) return;
+  const reason = reasonEl && reasonEl.value.trim();
+  if (!reason || reason.length < 8 || reason.length > 2000) { if (errorEl) { errorEl.textContent = 'Please enter a reason between 8 and 2000 characters.'; errorEl.hidden = false; } reasonEl?.focus(); return; }
+  if (button) { button.disabled = true; button.textContent = 'Submitting…'; }
+  if (errorEl) errorEl.hidden = true;
+  try {
+    const { data, error } = await sb.rpc('customer_create_refund_request', { p_order_id:orderId, p_reason:reason });
+    if (error) throw error;
+    if (!data) throw new Error('The request was not created. Please try again.');
+    await showOrder(orderId);
+  } catch (e) {
+    if (errorEl) { errorEl.textContent = e && e.message ? e.message : 'Could not submit your request. Please try again.'; errorEl.hidden = false; }
+    if (button) { button.disabled = false; button.textContent = 'Submit request'; }
+  }
+}
+A.toggleRefundForm = toggleRefundForm;
+A.submitRefundRequest = submitRefundRequest;
 
 // ---- Delivery time and complaints about the rider ----
 const tAt = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });

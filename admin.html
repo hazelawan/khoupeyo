@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.66';
+const APP_VERSION = '7.67';
 const APP_DATE = '26 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -693,10 +693,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support','approvals'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', support:'orders' };
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', support:'orders', approvals:'owner' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -750,7 +750,7 @@ const state = {
   zones:[], restaurants:[], riders:[],
   riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
   menuRestaurant:'all', productFilter:'all', productQ:'', productPage:0, productHasMore:false, categories:[], items:[], formCats:[],
-  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportTargetHours:24
+  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportTargetHours:24, approvals:{refunds:[],shifts:[],promos:[]}
 };
 
 // ---- Payment form (pay a shop, pay a rider, receive cash from a rider) ----
@@ -966,6 +966,7 @@ async function go(tab){
     if (tab === 'campaign'){ const { data } = await sb.from('push_campaigns').select('*').order('created_at', { ascending:false }).limit(20); state.campaigns = data || []; }
     if (tab === 'orders') await Promise.all([loadOrders(), loadRiders()]);
     if (tab === 'support') await loadSupportTickets();
+    if (tab === 'approvals') await loadApprovals();
     if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport(), loadShopRequests()]);
     if (tab === 'menu') await loadProducts();
     if (tab === 'riders') await loadRiderMonth();
@@ -1019,10 +1020,56 @@ function viewSupport(){
   const detail=t?`<section class="card" style="margin-top:16px"><h3>${esc(t.subject)}</h3><div class="muted">Requester ${esc(t.requester_role)} · ${esc(t.requester_id)}${t.order_id?' · Order '+esc(t.order_id):''}</div><div class="muted">First-response target: ${esc(state.supportTargetHours)} hours (configurable app default; not a guarantee). ${supportSla(t)}</div><div class="bar" style="margin:10px 0"><button class="btn ghost" onclick="A.supportAssign()">Assign to me</button><select id="supportStatus">${statuses.slice(1).map(x=>`<option value="${x}" ${t.status===x?'selected':''}>${x.replaceAll('_',' ')}</option>`).join('')}</select><select id="supportPriority">${['low','normal','high','urgent'].map(x=>`<option ${t.priority===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn" onclick="A.supportUpdate()">Save status / priority</button><button class="btn ghost" onclick="A.supportFirstResponse()">Record first response now</button></div><div style="max-height:360px;overflow:auto">${state.supportMessages.map(m=>`<article class="card" style="margin:8px 0"><div class="muted">${esc(m.author_role)} · ${esc(short(m.created_at))}</div><div style="white-space:pre-wrap">${esc(m.body)}</div></article>`).join('')||'<div class="muted">No messages yet.</div>'}</div><textarea id="supportReply" rows="3" maxlength="10000" placeholder="Write a reply"></textarea><button class="btn" style="margin-top:8px" onclick="A.supportReply()">Send reply</button></section>`:'';
   return `<h2>Support queue</h2><p class="muted">First-response target is a configurable app default, not a guarantee. SLA state is calculated from the stored due time.</p><div class="bar"><label>Target (hours) <input id="supportTarget" type="number" min="1" max="720" value="${esc(state.supportTargetHours)}" style="width:90px"></label><button class="btn ghost" onclick="A.supportSaveTarget()">Save target</button></div><div class="bar"><input type="search" maxlength="80" value="${esc(state.supportQ)}" placeholder="Search subject or ticket UUID" oninput="A.supportSearch(this.value)"><select onchange="A.supportFilter(this.value)">${options}</select></div>${rows}<div class="bar" style="justify-content:space-between"><button class="btn ghost" ${state.supportPage<=0?'disabled':''} onclick="A.supportPage(-1)">← Previous</button><span class="muted">Page ${state.supportPage+1}</span><button class="btn ghost" ${state.supportHasMore?'':'disabled'} onclick="A.supportPage(1)">Next →</button></div>${detail}`;
 }
+async function loadApprovals(){
+  const [refunds, shifts, promos] = await Promise.all([
+    sb.rpc('admin_refund_queue'), sb.rpc('admin_shift_request_queue'), sb.rpc('admin_promo_queue')
+  ]);
+  state.approvals = { refunds:need(refunds) || [], shifts:need(shifts) || [], promos:need(promos) || [] };
+}
+function approvalDate(v){ return v ? esc(new Date(v).toLocaleString('en-GB')) : '—'; }
+function approvalCard(kind, r){
+  const fields = kind === 'refund' ? [
+    ['Request',r.id],['Order',r.order_id],['Customer ID',r.customer_id],['Customer',r.customer_name],['Phone',r.customer_phone],['Total',r.order_total == null ? null : money(r.order_total)],['Order status',r.order_status],['Payment',r.payment_method],['Payment status',r.payment_status],['Reason',r.reason],['Status',r.status],['Admin note',r.admin_note],['External reference',r.external_reference],['Requested',approvalDate(r.requested_at)],['Updated',approvalDate(r.updated_at)]
+  ] : kind === 'shift' ? [
+    ['Request',r.id],['Rider ID',r.rider_id],['Rider',r.rider_name],['Rider code',r.rider_code],['Shift ID',r.shift_id],['Shift',r.shift_name],['Start',r.start_time],['End',r.end_time],['Requested date',r.requested_date],['Status',r.status],['Admin note',r.admin_note],['Created',approvalDate(r.created_at)]
+  ] : [
+    ['Request',r.id],['Restaurant ID',r.restaurant_id],['Restaurant',r.restaurant_name],['Title',r.title],['Subtitle',r.subtitle],['Image URL',r.image_url],['Starts',approvalDate(r.starts_at)],['Ends',approvalDate(r.ends_at)],['Status',r.status],['Admin note',r.admin_note],['Created',approvalDate(r.created_at)]
+  ];
+  const detail = fields.filter(([,v]) => v !== null && v !== undefined && v !== '').map(([k,v]) => `<div class="kv"><span class="muted">${esc(k)}</span><span style="text-align:right;overflow-wrap:anywhere">${esc(v)}</span></div>`).join('');
+  const actions = kind === 'refund'
+    ? (r.status === 'approved' ? ['refunded','escalate'] : r.status === 'reviewing' ? ['approve','reject','escalate'] : ['requested','escalated'].includes(r.status) ? ['review','approve','reject','escalate'] : [])
+    : kind === 'shift' ? (r.status === 'pending' ? ['approve','reject'] : []) : (r.status === 'requested' ? ['approve','reject'] : []);
+  return `<article class="card"><div class="row-title">${esc(kind === 'refund' ? 'Refund' : kind === 'shift' ? 'Shift request' : 'Promotion request')} <span class="pill">${esc(r.status || 'pending')}</span></div>${detail}${actions.length ? `<div class="bar" style="margin:12px 0 0">${actions.map(a=>`<button class="btn ${a==='reject'?'warn':'ghost'} small" onclick="A.approvalAction('${kind}','${encodeURIComponent(String(r.id ?? ''))}','${a}')">${esc(a[0].toUpperCase()+a.slice(1))}</button>`).join('')}</div>` : ''}</article>`;
+}
+function approvalSection(title, kind, rows){ return `<h3>${esc(title)} (${rows.length})</h3>${rows.length ? rows.map(r=>approvalCard(kind,r)).join('') : '<div class="empty">No requests in this queue.</div>'}`; }
+function viewApprovals(){
+  if (!can('owner')) return `${backLink()}<div class="empty">You do not have permission to view approvals.</div>`;
+  const q = state.approvals || {refunds:[],shifts:[],promos:[]};
+  return `${backLink()}<h2>✅ Approvals</h2><p class="muted">Review incoming requests. Mark a refund as refunded only after actual funds have been handled outside this page.</p><div class="bar"><button class="btn ghost" onclick="go('approvals')">↻ Reload queues</button></div>${approvalSection('Refund requests','refund',q.refunds || [])}${approvalSection('Rider shift requests','shift',q.shifts || [])}${approvalSection('Promotion requests','promo',q.promos || [])}`;
+}
+function openApprovalAction(kind, id, action){
+  const title = `${action[0].toUpperCase()+action.slice(1)} ${kind === 'refund' ? 'refund' : kind === 'shift' ? 'shift request' : 'promotion request'}`;
+  const isRefunded = kind === 'refund' && action === 'refunded';
+  const noteRequired = isRefunded || action === 'reject';
+  openSheet(title, `<div class="note">${isRefunded ? '<b>Confirm only after the actual funds have been handled outside this page.</b>' : 'This action will update the request status.'}</div><label class="f">${noteRequired ? 'Required note / reason' : 'Admin note (optional)'}</label><textarea id="approvalNote" maxlength="${kind === 'refund' ? 2000 : 1000}" ${noteRequired ? 'required' : ''} placeholder="Add context for the record"></textarea>${isRefunded ? '<label class="f">External payment/refund reference (required)</label><input id="approvalRef" type="text" maxlength="200" required placeholder="Payment provider transaction/refund ID">' : kind === 'refund' ? '<label class="f">External reference (optional)</label><input id="approvalRef" type="text" maxlength="200" placeholder="Payment or case reference">' : ''}<button class="btn block" style="margin-top:14px" id="approvalSubmit">${esc(title)}</button>`);
+  $('approvalSubmit').onclick = async () => {
+    const note = $('approvalNote').value.trim(); const ref = $('approvalRef') ? $('approvalRef').value.trim() : '';
+    if (noteRequired && !note) return toast('Add a note or reason before continuing.', true);
+    if (isRefunded && !ref) return toast('An external refund reference is required.', true);
+    const btn = $('approvalSubmit'); btn.disabled = true;
+    await run(async () => {
+      if (kind === 'refund') need(await sb.rpc('admin_refund_request_action',{p_request_id:id,p_action:action,p_note:note || null,p_external_reference:ref || null}));
+      else if (kind === 'shift') need(await sb.rpc('admin_shift_request_action',{p_request_id:id,p_action:action,p_note:note || null}));
+      else need(await sb.rpc('admin_promo_request_action',{p_request_id:id,p_action:action,p_admin_note:note || null}));
+      closeSheet(); toast('Request updated.'); await loadApprovals(); if(state.tab==='approvals') renderTab();
+    });
+    const current = $('approvalSubmit'); if (current) current.disabled = false;
+  };
+}
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, support:viewSupport }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, support:viewSupport, approvals:viewApprovals }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -2039,6 +2086,7 @@ function viewMore(){
     + it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there');
   const people = it('customers', '👥 Customers', 'See every customer, their orders, block or unblock')
     + it('support', '🎧 Support queue', 'Customer and partner support tickets, replies and SLA tracking')
+    + it('approvals', '✅ Approvals', 'Review refund, rider shift and promotion requests')
     + it('staff', '🧑‍💼 Staff', 'Helpers who can use this panel with limited access')
     + it('rules', '⚖️ Rider fine rules', 'Rules and fine amounts for riders');
   const system = it('settings', '⚙️ Settings', 'Auto-dispatch, selfie check, waiting time, contracts, support')
@@ -2956,6 +3004,7 @@ function setSupportCard(s){
 
 // ================= ACTIONS =================
 const A = {
+  approvalAction(kind,id,action){ if (!can('owner')) return toast('You do not have permission to do this.', true); try { id = decodeURIComponent(id); } catch (_) { return toast('Invalid request ID.', true); } openApprovalAction(kind,id,action); },
   async forgotPw(){
     const email = $('em').value.trim(); const el = $('loginErr');
     if (!email){ el.textContent = 'Write your email above first'; $('em').focus(); return; }
