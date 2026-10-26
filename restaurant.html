@@ -105,6 +105,7 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .cust{margin:6px 0;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:15px}
 .countdown{display:flex;justify-content:space-between;align-items:center;background:var(--soft);border-radius:10px;padding:8px 12px;margin:8px 0;font-weight:700}
 .countdown.late{background:rgba(179,38,30,.12);color:var(--danger)}
+.order-wait{background:var(--soft);border-radius:10px;padding:8px 12px;margin:8px 0;font-weight:700;font-size:14px}
 .actions{display:grid;gap:10px;margin-top:12px}
 .note{background:rgba(242,169,0,.14);border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14px}
 .soundbar{background:var(--marigold);color:#1E2B25;border:0;width:100%;border-radius:12px;padding:12px;font-weight:800;margin-bottom:12px;cursor:pointer}
@@ -696,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.57';
+const APP_VERSION = '6.58';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1261,7 +1262,7 @@ async function refreshOrders(){
   if (refreshing || !state.restaurant) return; refreshing = true;
   try { await loadOrders(); if (state.tab === 'orders') renderTab(); } catch (e) { logErr(e); } finally { refreshing = false; }
 }
-setInterval(() => { if (state.tab === 'orders' && document.querySelector('.countdown,.bkwait')) renderTab(); }, 30000);
+setInterval(() => { if (state.tab === 'orders' && document.querySelector('.countdown,.bkwait,.order-wait')) renderTab(); }, 30000);
 setInterval(() => { if (state.tab === 'orders' && state.restaurant && isServices() && !document.querySelector('.sheet-back,.over')) loadOrders().then(() => { if (state.tab === 'orders') renderTab(); }, () => {}); }, 60000);
 const CX_STATUSES = ['accepted','preparing','ready','rider_assigned'];
 const CXQ = {};
@@ -1306,6 +1307,13 @@ function countdown(o){
                    : `<div class="countdown late"><span>${t('late_by')}</span><span>${-left} ${t('min')}</span></div>`;
 }
 function isLate(o){ if (isFuture(o)) return false; const acc = state.acceptedAt[o.id]; return acc && o.prep_minutes && ['accepted','preparing'].includes(o.status) && Date.now() > new Date(acc).getTime() + o.prep_minutes * 60000; }
+function orderWait(o){
+  if (isFuture(o) || !['placed','accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) return '';
+  const start = new Date(o.created_at).getTime(); if (!Number.isFinite(start) || start > Date.now()) return '';
+  const mins = Math.floor((Date.now() - start) / 60000), hours = Math.floor(mins / 60), days = Math.floor(hours / 24);
+  const duration = days ? `${days}d ${hours % 24}h` : hours ? `${hours}h ${mins % 60}m` : `${mins}m`;
+  return `<div class="order-wait" role="status">${state.lang === 'ur' ? `آرڈر کو گزرے: ${duration}` : `Elapsed wait since order: ${duration}`}</div>`;
+}
 function orderCard(o){
   const cust = o.customer || {};
   const riderLine = o.rider ? `<div class="muted" style="margin-top:8px">${t('rider_label')}: <b>${esc(o.rider.full_name || '')}</b> ${o.rider.phone ? `<a href="tel:${esc(o.rider.phone)}">${esc(o.rider.phone)}</a>` : ''}</div>` : '';
@@ -1327,6 +1335,7 @@ function orderCard(o){
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
       <span><span class="pill" style="background:var(--s-${o.status})">${t('st_' + o.status)}</span> <span class="muted">${timeAgo(o.created_at)}</span></span></div>
+    ${orderWait(o)}
     ${pickupBox}
     ${o.order_type === 'pickup' ? `<div class="picktag">${t('pickup_tag')}</div>` : o.order_type === 'dinein' ? `<div class="picktag" style="background:#F8590A;color:#fff">🍽️ ${t('dn_tag')}</div>` : ''}
     ${schedBox(o)}

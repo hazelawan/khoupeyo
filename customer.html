@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.67';
+const APP_VERSION = '5.68';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1342,7 +1342,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, restaurants:[], products:[], stats:{ items:{}, shops:{} },
   curMenu:null, curRest:null, addresses:[], selAddr:null, newCoords:null, promo:'', promoRes:null, authMode:'login', pending:null,
-  itemsCache:{}, homeQuery:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), savedShopIds:new Set(), qty:1,
+  itemsCache:{}, homeQuery:'', searchCategory:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), savedShopIds:new Set(), qty:1,
   cart: ls.get('kh_cart', { rid:null, items:[], note:'' }),
   optItems:new Set(), optCache:{}, banners:[], promos:null, tip:0, when:'asap', schedDay:null, schedAt:null, badges:new Set()
 };
@@ -1697,7 +1697,7 @@ function renderShell(){
         <div class="actions-top">${state.user ? `<a class="walletpill" id="walletPill" href="#/account" aria-label="Wallet">${walletPillHtml()}</a>` : ''}${state.user ? Chat.button() : ''}<button class="pillbtn" onclick="A.toggleLang()">${state.lang === 'ur' ? 'English' : 'اردو'}</button></div>
       </div>
       ${state.user ? `<button class="addrchip" id="addrChip" onclick="A.pickAddr()">${addrChipHtml()}</button>` : ''}
-      <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" onfocus="A.suggShow()" onblur="setTimeout(A.suggHide, 250)" autocomplete="off"><button type="button" class="micbtn" onclick="A.voice()" aria-label="Voice search">🎤</button></div>
+      <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();A.openSearch()}" onfocus="A.suggShow()" onblur="setTimeout(A.suggHide, 250)" autocomplete="off"><button type="button" class="micbtn" onclick="A.voice()" aria-label="Voice search">🎤</button></div>
       <div id="sugg" class="sugg" style="display:none"></div>
     </header>
     <main id="view"></main>
@@ -1973,6 +1973,7 @@ async function routeImpl(soft){
   if (!soft) v.innerHTML = skeleton(name);
   try {
     if (name === 'home') await showHome();
+    else if (name === 'search') await showSearchResults();
     else if (name === 'shops') await showShops();
     else if (name === 'c') await showCategory(decodeURIComponent(p[1] || ''));
     else if (name === 'r') await showRestaurant(p[1]);
@@ -2314,17 +2315,28 @@ function searchTerms(q){
 }
 const hayOf = p => normQ([p.name, p.keywords, p.description, p.category && p.category.name, p.restaurants && p.restaurants.name].filter(Boolean).join(' | '));
 const matchTerms = (p, terms) => { const h = hayOf(p); return terms.some(x => h.includes(x)); };
-function searchResults(q){
+function searchResultData(q){
   const terms = searchTerms(q); q = normQ(q);
   const seen = new Set(); const pool = state.products.concat((state.searchExtra && state.searchExtra.q === q) ? state.searchExtra.items : []).filter(p => !seen.has(p.id) && seen.add(p.id));
-  const prods = sortProducts(pool.filter(p => matchTerms(p, terms)));
-  state.lastSearch = { q, n:prods.length };
+  const prods = pool.filter(p => matchTerms(p, terms));
   const shops = state.restaurants.filter(r => (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
-  state.lastSearch.n += shops.length;
-  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(state.homeQuery.trim()) })}</h2>
-    ${shops.length ? shops.map(restaurantCard).join('') : ''}
-    ${prods.length ? sortBar() + `<div class="grid2">${prods.map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
+  return { prods, shops };
 }
+function searchResults(q){
+  const { prods, shops } = searchResultData(q);
+  state.lastSearch = { q:normQ(q), n:prods.length + shops.length };
+  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(q.trim()) })}</h2>${shops.length ? shops.map(restaurantCard).join('') : ''}${prods.length ? sortBar() + `<div class="grid2">${sortProducts(prods).map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
+}
+function renderSearchResults(){
+  const ur = state.lang === 'ur'; const labels = ur ? { back:'‹ واپس', category:'قسم', any:'تمام اقسام', price:'زیادہ سے زیادہ قیمت', clear:'فلٹر صاف کریں', count:'نتائج', empty:'ان فلٹرز کے مطابق کچھ نہیں ملا۔', all:'تمام نتائج' } : { back:'‹ Back', category:'Category', any:'All categories', price:'Maximum price', clear:'Clear filters', count:'results', empty:'No items match these filters.', all:'All results' };
+  const q = state.homeQuery.trim(); const { prods, shops } = searchResultData(q);
+  const cats = [...new Set(prods.map(p => p.category && p.category.name).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const filtered = prods.filter(p => (!state.searchCategory || (p.category && p.category.name === state.searchCategory)) && (!state.priceMax || num(p.price) <= state.priceMax));
+  state.lastSearch = { q:normQ(q), n:filtered.length + shops.length };
+  const opts = cats.map(c => `<option value="${esc(c)}" ${state.searchCategory === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1><div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}<div class="grid2">${sortProducts(filtered).map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
+}
+async function showSearchResults(){ await ensureData(); $('view').innerHTML = renderSearchResults(); }
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
   const cz = customerZone();
@@ -3518,12 +3530,25 @@ const A = {
     replaceHash('#/'); renderShell(); route();
   },
   guestBack(){ state.pending = null; state.authMode = 'login'; replaceHash('#/'); renderShell(); route(); },
+  openSearch(){
+    const v = ($('q') && $('q').value || state.homeQuery).trim();
+    if (!v) return;
+    state.homeQuery = v; state.searchCategory = ''; state.priceMax = 0; A.suggHide(); nav('/search');
+  },
+  closeSearch(){ state.searchCategory = ''; state.priceMax = 0; nav('/'); },
+  searchFilter(kind, value){
+    if (kind === 'category') state.searchCategory = value || '';
+    if (kind === 'price') state.priceMax = Number(value) || 0;
+    const el = $('view'); if (el && currentRoute === 'search') el.innerHTML = renderSearchResults();
+  },
+  clearSearchFilters(){ state.searchCategory = ''; state.priceMax = 0; state.sort = 'best'; const el = $('view'); if (el && currentRoute === 'search') el.innerHTML = renderSearchResults(); },
   search(v){
     state.homeQuery = v;
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       trackSearch(v);
       if (currentRoute === 'shops'){ showShops(); return; }
+      if (currentRoute === 'search'){ const el = $('view'); if (el) el.innerHTML = renderSearchResults(); return; }
       if (currentRoute !== 'home'){ nav('/'); return; }
       const el = $('homeBody'); if (el) el.innerHTML = homeBody();
       const q = normQ(v);
@@ -3532,7 +3557,7 @@ const A = {
           if (!data || normQ(state.homeQuery) !== q) return;
           data.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = Object.assign(state.itemsCache[p.id] || {}, p); });
           state.searchExtra = { q, items:data };
-          const el2 = $('homeBody'); if (el2 && currentRoute === 'home') el2.innerHTML = homeBody();
+          if (currentRoute === 'search'){ const resultView = $('view'); if (resultView) resultView.innerHTML = renderSearchResults(); } else { const el2 = $('homeBody'); if (el2 && currentRoute === 'home') el2.innerHTML = homeBody(); }
         }, () => {});
       }
       A.suggHide();
@@ -3548,7 +3573,7 @@ const A = {
   },
   setSort(s){
     state.sort = s;
-    if (currentRoute === 'c') route(true); else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); }
+    if (currentRoute === 'c') route(true); else if (currentRoute === 'search') { const el = $('view'); if (el) el.innerHTML = renderSearchResults(); } else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); }
   },
   shopSearch(v){ state.shopQuery = v; const el = $('menuBody'); if (el) el.innerHTML = menuBody(); },
   async addShoppingItem(){
@@ -3882,7 +3907,7 @@ const A = {
       r.start();
     } catch (e) { toast(t('voice_no'), true); }
   },
-  setPrice(p){ state.priceMax = p || 0; if (currentRoute === 'c') route(true); else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); } },
+  setPrice(p){ state.priceMax = p || 0; if (currentRoute === 'c') route(true); else if (currentRoute === 'search') { const el = $('view'); if (el) el.innerHTML = renderSearchResults(); } else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); } },
   async notifyMe(id){
     if (!state.user){ state.pending = location.hash; return showAuth(); }
     await run(async () => {
