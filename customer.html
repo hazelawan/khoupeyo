@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.75';
+const APP_VERSION = '5.76';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1348,6 +1348,7 @@ const state = {
   cart: ls.get('kh_cart', { rid:null, items:[], note:'' }),
   optItems:new Set(), optCache:{}, banners:[], promos:null, tip:0, when:'asap', schedDay:null, schedAt:null, badges:new Set()
 };
+state.searchErrorQ = null;
 state.cart.items.forEach(i => { if (!i.key) i.key = i.id; });
 // Public browse feed only: never store session, profile, address, cart, order, payment, or push data here.
 const PUBLIC_FEED_CACHE_PREFIX = 'dera_public_feed_v1_';
@@ -2377,10 +2378,19 @@ function searchResultData(q){
   const shops = state.restaurants.filter(r => (r.name || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q));
   return { prods, shops };
 }
+function searchStatusNotice(q){
+  if (state.searchErrorQ !== normQ(q)) return '';
+  const ur = state.lang === 'ur';
+  return `<div class="warnbox" role="status" style="margin:8px 0 12px">${ur ? 'سرور کی مکمل تلاش عارضی طور پر دستیاب نہیں؛ لوڈ شدہ کیٹلاگ میں نتائج دکھا رہے ہیں۔' : 'Full catalog search is temporarily unavailable; showing matches from the loaded catalog.'} <button type="button" class="link" onclick="A.search(document.getElementById('q') ? document.getElementById('q').value : state.homeQuery)">${ur ? 'دوبارہ کوشش' : 'Retry'}</button></div>`;
+}
+function refreshSearchView(){
+  if (currentRoute === 'search'){ const el = $('view'); if (el) el.innerHTML = renderSearchResults(); }
+  else if (currentRoute === 'home'){ const el = $('homeBody'); if (el) el.innerHTML = homeBody(); }
+}
 function searchResults(q){
   const { prods, shops } = searchResultData(q);
   state.lastSearch = { q:normQ(q), n:prods.length + shops.length };
-  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(q.trim()) })}</h2>${shops.length ? shops.map(restaurantCard).join('') : ''}${prods.length ? sortBar() + `<div class="grid2">${sortProducts(prods).map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
+  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(q.trim()) })}</h2>${searchStatusNotice(q)}${shops.length ? shops.map(restaurantCard).join('') : ''}${prods.length ? sortBar() + `<div class="grid2">${sortProducts(prods).map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
 }
 function renderSearchResults(){
   const ur = state.lang === 'ur'; const labels = ur ? { back:'‹ واپس', category:'قسم', any:'تمام اقسام', price:'زیادہ سے زیادہ قیمت', clear:'فلٹر صاف کریں', count:'نتائج', empty:'ان فلٹرز کے مطابق کچھ نہیں ملا۔', all:'تمام نتائج' } : { back:'‹ Back', category:'Category', any:'All categories', price:'Maximum price', clear:'Clear filters', count:'results', empty:'No items match these filters.', all:'All results' };
@@ -2389,7 +2399,7 @@ function renderSearchResults(){
   const filtered = prods.filter(p => (!state.searchCategory || (p.category && p.category.name === state.searchCategory)) && (!state.priceMax || num(p.price) <= state.priceMax));
   state.lastSearch = { q:normQ(q), n:filtered.length + shops.length };
   const opts = cats.map(c => `<option value="${esc(c)}" ${state.searchCategory === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
-  return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1><div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}<div class="grid2">${sortProducts(filtered).map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
+  return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1>${searchStatusNotice(q)}<div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}<div class="grid2">${sortProducts(filtered).map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
 }
 async function showSearchResults(){ await ensureData(); $('view').innerHTML = renderSearchResults(); }
 function groceryBody(zoneBar, noRider){
@@ -3685,17 +3695,26 @@ const A = {
     searchTimer = setTimeout(() => {
       trackSearch(v);
       if (currentRoute === 'shops'){ showShops(); return; }
-      if (currentRoute === 'search'){ const el = $('view'); if (el) el.innerHTML = renderSearchResults(); return; }
-      if (currentRoute !== 'home'){ nav('/'); return; }
-      const el = $('homeBody'); if (el) el.innerHTML = homeBody();
       const q = normQ(v);
+      if (state.searchErrorQ !== q) state.searchErrorQ = null;
+      if (currentRoute === 'search'){ const el = $('view'); if (el) el.innerHTML = renderSearchResults(); }
+      else {
+        if (currentRoute !== 'home'){ nav('/'); return; }
+        const el = $('homeBody'); if (el) el.innerHTML = homeBody();
+      }
       if (q.length >= 2 && !(state.searchExtra && state.searchExtra.q === q)){
-        sb.rpc('search_items', { p_terms:searchTerms(q), p_region:state.region || null }).then(({ data }) => {
-          if (!data || normQ(state.homeQuery) !== q) return;
+        state.searchErrorQ = null;
+        sb.rpc('search_items', { p_terms:searchTerms(q), p_region:state.region || null }).then(({ data, error }) => {
+          if (normQ(state.homeQuery) !== q) return;
+          if (error || !Array.isArray(data)){ state.searchErrorQ = q; refreshSearchView(); return; }
           data.forEach(p => { syncShopOpen(p); state.itemsCache[p.id] = Object.assign(state.itemsCache[p.id] || {}, p); });
           state.searchExtra = { q, items:data };
-          if (currentRoute === 'search'){ const resultView = $('view'); if (resultView) resultView.innerHTML = renderSearchResults(); } else { const el2 = $('homeBody'); if (el2 && currentRoute === 'home') el2.innerHTML = homeBody(); }
-        }, () => {});
+          state.searchErrorQ = null;
+          refreshSearchView();
+        }, () => {
+          if (normQ(state.homeQuery) !== q) return;
+          state.searchErrorQ = q; refreshSearchView();
+        });
       }
       A.suggHide();
       clearTimeout(state.logT);
