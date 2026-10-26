@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.72';
+const APP_VERSION = '5.73';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1347,6 +1347,48 @@ const state = {
   optItems:new Set(), optCache:{}, banners:[], promos:null, tip:0, when:'asap', schedDay:null, schedAt:null, badges:new Set()
 };
 state.cart.items.forEach(i => { if (!i.key) i.key = i.id; });
+// Public browse feed only: never store session, profile, address, cart, order, payment, or push data here.
+const PUBLIC_FEED_CACHE_PREFIX = 'dera_public_feed_v1_';
+const PUBLIC_FEED_CACHE_MAX = 1400000;
+function publicFeedCacheKey(region){ return PUBLIC_FEED_CACHE_PREFIX + encodeURIComponent(String(region || ls.get('kh_region', 'default'))); }
+function setFeedNotice(){
+  const host = $('feedNotice'); if (!host) return;
+  if (!state.feedStale){ host.innerHTML = ''; return; }
+  const saved = state.feedSavedAt ? new Date(state.feedSavedAt).toLocaleString() : '';
+  const ur = state.lang === 'ur';
+  host.innerHTML = `<div role="status" style="margin:10px 0;padding:11px 13px;border:1px solid #D98B38;border-radius:12px;background:#FFF4E5;color:#674015;font-size:13px;font-weight:600">${ur?'آف لائن محفوظ کیٹلاگ':'Saved catalog (offline)'}${saved ? ` · ${ur?'محفوظ ہونے کا وقت':'saved'} ${esc(saved)}` : ''}<div style="font-weight:400;margin-top:3px">${ur?'قیمتیں، دستیابی اور اوقات بدل چکے ہو سکتے ہیں۔ آرڈر دینے کے لیے دوبارہ آن لائن ہوں۔':'Prices, availability, and hours may have changed. Reconnect before placing an order.'}</div></div>`;
+}
+function savePublicFeed(){
+  if (!state.region || !state.restaurants.length || !state.products.length) return;
+  try {
+    const itemIds = new Set(state.products.map(p => String(p.id))), shopIds = new Set(state.restaurants.map(r => String(r.id)));
+    const items = {}, shops = {};
+    Object.entries(state.stats.items || {}).forEach(([id, value]) => { if (itemIds.has(String(id))) items[id] = value; });
+    Object.entries(state.stats.shops || {}).forEach(([id, value]) => { if (shopIds.has(String(id))) shops[id] = value; });
+    const record = { version:1, region:String(state.region), savedAt:new Date().toISOString(), restaurants:state.restaurants, products:state.products, stats:{ items, shops } };
+    const text = JSON.stringify(record); if (text.length > PUBLIC_FEED_CACHE_MAX) return;
+    localStorage.setItem(publicFeedCacheKey(state.region), text);
+    const keys = []; for (let i=0; i<localStorage.length; i++){ const k=localStorage.key(i); if (k && k.startsWith(PUBLIC_FEED_CACHE_PREFIX)) keys.push(k); }
+    keys.filter(k => k !== publicFeedCacheKey(state.region)).slice(0, Math.max(0, keys.length - 3)).forEach(k => localStorage.removeItem(k));
+  } catch(e) { /* storage unavailable or quota exceeded */ }
+}
+function restorePublicFeed(){
+  try {
+    const raw = localStorage.getItem(publicFeedCacheKey(state.region)); if (!raw || raw.length > PUBLIC_FEED_CACHE_MAX) return false;
+    const rec = JSON.parse(raw);
+    if (!rec || rec.version !== 1 || String(rec.region) !== String(state.region) || !Array.isArray(rec.restaurants) || !Array.isArray(rec.products) || !rec.stats) return false;
+    state.restaurants = rec.restaurants; state.products = rec.products; state.stats = { items:rec.stats.items || {}, shops:rec.stats.shops || {} };
+    state.itemsCache = Object.assign({}, state.itemsCache || {}); state.products.forEach(p => { if (p && p.id) state.itemsCache[p.id] = p; });
+    state.feedStale = true; state.feedSavedAt = rec.savedAt || null; setFeedNotice();
+    if ($('view') && currentRoute) route(true);
+    return true;
+  } catch(e) { return false; }
+}
+window.addEventListener('online', async () => {
+  if (!state.feedStale || !state.region) return;
+  try { await loadRestaurantsFresh(); await loadProductsFresh(); state.feedStale = false; state.feedSavedAt = null; savePublicFeed(); setFeedNotice(); if ($('view') && currentRoute) route(true); } catch(e) { /* retain saved feed until a complete fresh feed arrives */ }
+});
+
 const t = (k, v) => {
   let s = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
   if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]);
@@ -1700,7 +1742,7 @@ function renderShell(){
       <div class="searchbox" id="searchbox">${ICON.search}<input type="search" id="q" placeholder="${t('search')}" value="${esc(state.homeQuery)}" oninput="A.search(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();A.openSearch()}" onfocus="A.suggShow()" onblur="setTimeout(A.suggHide, 250)" autocomplete="off"><button type="button" class="micbtn" onclick="A.voice()" aria-label="Voice search">🎤</button></div>
       <div id="sugg" class="sugg" style="display:none"></div>
     </header>
-    <main id="view"></main>
+    <main><div id="feedNotice" aria-live="polite"></div><div id="view"></div></main>
     <div class="cartbar" id="cartbar"></div>
     <nav class="nav"><div class="nav-in">
       <a href="#/" id="n_home">${ICON.home}${t('home')}</a>
@@ -2048,7 +2090,7 @@ async function loadRegionSettings(){
 const regionName = () => ((state.regions || []).find(r => r.id === state.region) || {}).name || '';
 const cityBtn = () => (state.regions || []).length > 1 ? `<button class="citybtn" onclick="A.pickRegion()" aria-label="Change city">${esc(regionName())}<span aria-hidden="true">▾</span></button>` : '';
 function refreshCityBtn(){ const el = document.getElementById('cityBtn'); if (el) el.innerHTML = cityBtn(); }
-async function loadRestaurants(){
+async function loadRestaurantsFresh(){
   if (!state.regions) await loadRegionsC();
   let q = sb.from('restaurants')
     .select('id,zone_id,name,description,logo_url,address,phone,lat,lng,open_time,close_time,hours,categories,shop_kind,busy_until,offer,sponsored_until,allow_pickup,booking_on,chairs,grace_min,is_open,is_active,prep_time_minutes,dinein_on,dinein_pay,zone:zones(id,name,delivery_fee,min_order,base_km,per_km_fee,max_km,bulk_items,bulk_fee,bulk_max,weight_tiers,center_lat,center_lng,radius_km)')
@@ -2070,7 +2112,7 @@ function syncShopOpen(p){
   const sh = p && p.restaurants; if (!sh) return;
   const r = state.restaurants.find(x => x.id === sh.id); if (r) sh.is_open = r.is_open;
 }
-async function loadProducts(){
+async function loadProductsFresh(){
   const [items, stats] = await Promise.all([
     sb.from('menu_items').select('id,name,price,compare_price,photo_url,description,keywords,duration_min,svc,avail_from,avail_to,restaurant_id,category_id,is_available,is_featured,created_at,heavy_fee,weight_kg,stock_qty,photos,back_photos,category:menu_categories(name),restaurants!inner(id,name,logo_url,is_open,is_active,region_id)')
       .eq('is_available', true).eq('restaurants.is_active', true).eq('restaurants.region_id', state.region || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending:false }).limit(400),
@@ -2086,6 +2128,17 @@ async function loadProducts(){
   if (state.region) bq = bq.eq('region_id', state.region);
   await Promise.all([loadOptItems(), bq.then(({ data }) => { state.banners = data || []; }, () => {})]);
   if (!stats.error && stats.data) state.stats = stats.data;
+}
+async function loadRestaurants(){
+  try { await loadRestaurantsFresh(); }
+  catch(e) { if (restorePublicFeed()) return; throw e; }
+}
+async function loadProducts(){
+  try {
+    await loadProductsFresh();
+    if (!state.feedStale){ state.feedSavedAt = null; savePublicFeed(); }
+    setFeedNotice();
+  } catch(e) { if (restorePublicFeed()) return; throw e; }
 }
 async function ensureData(){
   if (!state.regions) await loadRegionsC();
@@ -2861,7 +2914,7 @@ function drawCheckout(){
   const gwAmt = state.payPlan === 'advance' ? advAmt : total;
   const gwFee = !gwLive ? 0 : state.payM === 'instant' ? Math.round(gwAmt * (gw.instant_fee_pct != null ? num(gw.instant_fee_pct) : 1.5) / 100) : state.payM === 'card' ? Math.round(gwAmt * (gw.card_fee_pct != null ? num(gw.card_fee_pct) : 2.9) / 100) + (gw.card_fee_fixed != null ? num(gw.card_fee_fixed) : 30) : 0;
   const grand = total + gwFee;
-  const blocked = (!pick && !!(q && !q.loading && !q.ok)) || (state.when === 'later' && !state.schedAt);
+  const blocked = (!pick && !!(q && !q.loading && !q.ok)) || (state.when === 'later' && !state.schedAt) || !navigator.onLine || !!state.feedStale;
   const TIPS = [0, 20, 50, 100];
   if (isMart(r) && !state.subPref) state.subPref = 'call';
   const whenHtml = `<h2>${t('when_t')}</h2>
@@ -3909,6 +3962,7 @@ const A = {
     });
   },
   async placeOrder(){
+    if (!navigator.onLine || state.feedStale){ toast(state.lang === 'ur' ? 'آپ آف لائن کیٹلاگ دیکھ رہے ہیں۔ آرڈر دینے کے لیے انٹرنیٹ سے دوبارہ منسلک ہوں؛ آپ کی ٹوکری محفوظ ہے۔' : 'You are viewing a saved catalog. Reconnect to place an order; your cart is preserved.', true); return; }
     const dine = state.otype === 'dinein';
     const pick = state.otype === 'pickup' || dine;
     if (!pick && !state.selAddr) return toast(t('pick_address'), true);
