@@ -653,7 +653,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.36';
+const APP_VERSION = '5.39';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -724,7 +724,8 @@ const I18N = {
     qr_btn:'📲 Customer wants to pay by QR', qr_t:'Pay by QR', qr_s:'Ask the customer to scan this QR and pay {n}. Then type the Transaction ID (TID) from their phone.', qr_none:'QR payment is not set up in your area. Take cash.', tid:'Transaction ID (TID)', qr_send:'Payment done — send for check',
     payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Dera rider for order #{n}.', your_pay:'Your pay', pk_parcel:'Parcel', pk_new:'New parcels', pk_mine:'My parcels', pk_sender:'Sender', pk_receiver:'Receiver', pk_call:'Call', pk_urgent:'Urgent', pk_w1:'Up to 10 kg', pk_w2:'10-15 kg', pk_w3:'15-25 kg', pk_pick_first:'Pickup first', pk_on_way:'On the way', pk_pick_btn:'Picked up — code', pk_del_btn:'Delivered — code', pk_release:'Release parcel', pk_map:'Map', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
-    today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Dera at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
+    today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Dera at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips',
+    wal_title:'My wallet', wal_tip_note:'Customer tips arrive here. Withdraw any amount, any time — Dera pays the fee.', wal_withdraw:'Withdraw', wal_acct:'Your payout account number', wal_amt:'Amount (no minimum)', wal_to:'To account {n}', wal_done:'Withdrawal requested. You will receive it within 24 hours.', wal_noacct:'Enter your payout account number first.', wal_fee_note:'Dera pays the fee.', wal_refresh:'Refresh', wal_none:'No withdrawals yet.', wal_st_requested:'Requested', wal_st_approved:'Approved', wal_st_paid:'Paid', wal_st_rejected:'Rejected', bg_title:'Location while on duty', bg_text:'Dera needs your location in the background while you are on duty, so customers can track their order even when the app is closed. It stops when your duty ends.', bg_allow:'Allow background location', bg_fg:'Foreground only', nav_steps:'Route steps', nav_speak:'Speak next turn', nav_osrm:'Free route (OpenStreetMap)', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
     paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand', handover_code:'Confirm cash handover', handover_t:'Enter the 4-digit code the admin shows you', handover_ph:'Code', handover_ok:'Cash handover confirmed', salary_code_btn:'Confirm salary receipt', salary_code_t:'Salary confirmation code', salary_code_s:'Enter the 4-digit code the admin gave you to confirm you received your salary', salary_ok:'Salary confirmed',
     cash_note:'All cash you collected must be deposited at the Dera office. Your pay comes with your salary.',
@@ -808,7 +809,8 @@ const I18N = {
     qr_btn:'📲 گاہک QR سے ادائیگی کرنا چاہتا ہے', qr_t:'QR سے ادائیگی', qr_s:'گاہک سے کہیں یہ QR اسکین کر کے {n} ادا کرے۔ پھر اس کے فون سے ٹرانزیکشن آئی ڈی (TID) لکھیں۔', qr_none:'آپ کے علاقے میں QR ادائیگی سیٹ نہیں۔ نقد لیں۔', tid:'ٹرانزیکشن آئی ڈی (TID)', qr_send:'ادائیگی ہو گئی — چیک کے لیے بھیجیں',
     payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', pk_parcel:'پارسل', pk_new:'نئے پارسل', pk_mine:'میرے پارسل', pk_sender:'بھیجنے والا', pk_receiver:'وصول کرنے والا', pk_call:'کال', pk_urgent:'ارجنٹ', pk_w1:'10 کلو تک', pk_w2:'10–15 کلو', pk_w3:'15–25 کلو', pk_pick_first:'پہلے پک اپ', pk_on_way:'راستے میں', pk_pick_btn:'اٹھا لیا — کوڈ', pk_del_btn:'پہنچا دیا — کوڈ', pk_release:'پارسل چھوڑ دیں', pk_map:'نقشہ', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
-    today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Dera طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
+    today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Dera طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ',
+    wal_title:'میرا والیٹ', wal_tip_note:'گاہک کی ٹپ یہاں آتی ہے۔ کوئی بھی رقم، کسی بھی وقت نکالیں — فیس Dera دے گا۔', wal_withdraw:'نکالیں', wal_acct:'آپ کے پیسے بھیجنے کا اکاؤنٹ نمبر', wal_amt:'رقم (کوئی کم از کم نہیں)', wal_to:'اکاؤنٹ {n} پر', wal_done:'نکالنے کی درخواست ہو گئی۔ 24 گھنٹے میں مل جائے گی۔', wal_noacct:'پہلے اپنا پیسے بھیجنے کا اکاؤنٹ نمبر ڈالیں۔', wal_fee_note:'فیس Dera دے گا۔', wal_refresh:'تازہ کریں', wal_none:'ابھی کوئی نکالنا نہیں۔', wal_st_requested:'درخواست', wal_st_approved:'منظور', wal_st_paid:'ادا شدہ', wal_st_rejected:'مسترد', bg_title:'ڈیوٹی کے دوران لوکیشن', bg_text:'Dera کو ڈیوٹی کے دوران بیک گراؤنڈ میں آپ کی لوکیشن چاہیے، تاکہ گاہک اپنا آرڈر دیکھ سکے چاہے ایپ بند ہو۔ ڈیوٹی ختم ہوتے ہی یہ بند ہو جاتی ہے۔', bg_allow:'بیک گراؤنڈ لوکیشن کی اجازت دیں', bg_fg:'صرف ایپ کھلی ہو تو', nav_steps:'راستے کے مراحل', nav_speak:'بول کر بتائیں', nav_osrm:'مفت راستہ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
     paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد', handover_code:'نقد حوالگی کی تصدیق', handover_t:'ایڈمن جو 4 ہندسوں کا کوڈ دکھائے وہ درج کریں', handover_ph:'کوڈ', handover_ok:'نقد حوالگی کی تصدیق ہو گئی', salary_code_btn:'تنخواہ ملنے کی تصدیق', salary_code_t:'تنخواہ کا تصدیقی کوڈ', salary_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے تنخواہ ملنے کی تصدیق کریں', salary_ok:'تنخواہ کی تصدیق ہو گئی',
     cash_note:'وصول شدہ تمام نقد رقم Dera کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
@@ -914,11 +916,44 @@ function startGeo(){
   if (geoWatch !== null || !navigator.geolocation) return;
   geoWatch = navigator.geolocation.watchPosition(pos => {
     state.pos = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+    try { navGuideTick(); } catch (e) {}
     const now = Date.now(); const busy = (state.mine || []).some(o => ['rider_assigned','picked_up'].includes(o.status)); if (now - lastSent < (busy ? 10000 : 30000) || !onDuty()) return; lastSent = now;
     sb.from('riders').update({ current_lat:state.pos.lat, current_lng:state.pos.lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
   }, () => {}, { enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
+  try { if (bgCap()){ if (bgChoice() === '') showBgDisclosure(); else if (bgChoice() === '1') startBgWatcher(); } } catch (e) {}
 }
-function stopGeo(){ if (geoWatch !== null){ navigator.geolocation.clearWatch(geoWatch); geoWatch = null; } }
+function stopGeo(){ if (geoWatch !== null){ navigator.geolocation.clearWatch(geoWatch); geoWatch = null; } stopBgWatcher(); }
+// ---- Background location (Capacitor plugin; foreground watchPosition is the fallback) ----
+let bgWatcherId = null;
+function bgCap(){ try { const Cap = window.Capacitor; return Cap && Cap.Plugins && Cap.Plugins.BackgroundGeolocation; } catch (e) { return null; } }
+function bgChoice(){ try { return localStorage.getItem('dera_bg_loc') || ''; } catch (e) { return ''; } }
+function bgSend(lat, lng){
+  try {
+    state.pos = { lat, lng };
+    const now = Date.now(); const busy = (state.mine || []).some(o => ['rider_assigned','picked_up'].includes(o.status));
+    if (now - lastSent < (busy ? 10000 : 30000) || !onDuty()) return; lastSent = now;
+    sb.from('riders').update({ current_lat:lat, current_lng:lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
+    try { navGuideTick(); } catch (e) {}
+  } catch (e) {}
+}
+async function startBgWatcher(){
+  try {
+    const BG = bgCap(); if (!BG || bgWatcherId !== null) return;
+    bgWatcherId = await BG.addWatcher({ backgroundMessage:'Dera is tracking your delivery route while you are on duty.', backgroundTitle:'Dera — on duty', requestPermissions:true, stale:false, distanceFilter:10 }, (pos, err) => {
+      try { if (err) return; if (pos && pos.latitude != null) bgSend(pos.latitude, pos.longitude); } catch (e) {}
+    });
+  } catch (e) {}
+}
+async function stopBgWatcher(){ try { const BG = bgCap(); if (BG && bgWatcherId !== null){ await BG.removeWatcher({ id:bgWatcherId }); } } catch (e) {} bgWatcherId = null; }
+function showBgDisclosure(){
+  try {
+    if (document.getElementById('bgDiscWrap')) return;
+    const w = document.createElement('div'); w.id = 'bgDiscWrap';
+    w.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;padding:16px';
+    w.innerHTML = `<div style="background:#fff;border-radius:18px;padding:20px;max-width:420px;width:100%"><h2 style="margin:0 0 8px">${esc(t('bg_title'))}</h2><p style="color:#444;line-height:1.5;margin:0 0 14px">${esc(t('bg_text'))}</p><button class="btn" style="width:100%;margin-bottom:8px" onclick="A.bgAccept(true)">${esc(t('bg_allow'))}</button><button class="btn ghost" style="width:100%" onclick="A.bgAccept(false)">${esc(t('bg_fg'))}</button></div>`;
+    document.body.appendChild(w);
+  } catch (e) {}
+}
 function getPosOnce(){
   return new Promise(res => {
     if (!navigator.geolocation) return res(null);
@@ -1233,6 +1268,8 @@ async function loadMoney(){
   try { state.targets = need(await sb.rpc('my_targets')) || []; } catch (e) { state.targets = []; }
   try { const bb = need(await sb.from('rider_bonuses').select('amount,title,created_at').eq('rider_id', state.rider.id).gte('period_start', ymd(m)).order('created_at', { ascending:false })); state.bonuses = bb; } catch (e) { state.bonuses = []; }
   try { const tr = need(await sb.rpc('my_pay_tier')); state.tier = (Array.isArray(tr) ? tr[0] : tr) || null; } catch (e) { state.tier = null; }
+  try { const b = await sb.rpc('my_wallet'); state.walletBal = num(b.data); } catch (e) { state.walletBal = 0; }
+  try { const w = await sb.from('wallet_withdrawals').select('*').eq('user_id', state.user.id).order('requested_at', { ascending:false }).limit(10); state.wdRows = w.data || []; } catch (e) { state.wdRows = []; }
   await loadShift();
 }
 async function loadRules(){
@@ -1395,7 +1432,7 @@ function activeCard(o){
   const navHtml = `<div class="card" style="margin-top:10px"><div class="navphase">
       <div class="ph ${picked ? 'done' : 'on'}">1. 🏪 ${t('nav_shop')}</div>
       <div class="ph ${picked ? 'on' : ''}">2. 🏠 ${t('nav_cust')}</div></div>
-    <div id="navMap"></div>
+    <div id="navMap"></div><div id="navSteps"></div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <a class="btn" style="flex:1;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="${navGmapsUrl(o, r, picked)}">🧭 ${t('navigate')}</a>
       ${(picked ? c.phone : r.phone) ? `<a class="btn ghost" style="flex:1;text-align:center;text-decoration:none" href="tel:${esc(picked ? c.phone : r.phone)}">📞 ${t('call')}</a>` : ''}
@@ -1416,6 +1453,23 @@ function navGmapsUrl(o, r, picked){
   return `https://www.google.com/maps/dir/?api=1${orig ? `&origin=${orig}` : ''}&destination=${dest}&travelmode=driving`;
 }
 let navMap = null;
+// ---- OSM turn steps + voice guidance (free; OSRM public API) ----
+let navGuide = null;
+function navSpeak(text){ try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = state.lang === 'ur' ? 'ur-PK' : 'en-US'; speechSynthesis.speak(u); } catch (e) {} }
+function navSpeakCur(){ try { const s = navGuide && navGuide.steps[navGuide.idx]; if (s){ s.spoken = true; navSpeak(s.text); } } catch (e) {} }
+function renderNavSteps(){
+  try {
+    const el = document.getElementById('navSteps'); if (!el || !navGuide) return;
+    el.innerHTML = `<div class="card" style="margin-top:10px"><b>🧭 ${t('nav_steps')}</b><div class="muted" style="font-size:12px">${t('nav_osrm')}</div>${navGuide.steps.map((s, i) => `<div class="line" style="${i === navGuide.idx ? 'font-weight:700' : ''}"><span>${i + 1}. ${esc(s.text)}</span><span class="muted">${s.dist != null ? fmtKm(s.dist) : ''}</span></div>`).join('')}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" style="flex:1" onclick="navSpeakCur()">🔊 ${t('nav_speak')}</button></div></div>`;
+  } catch (e) {}
+}
+function navGuideTick(){
+  try {
+    if (!navGuide || !state.pos) return;
+    const s = navGuide.steps[navGuide.idx]; if (!s || s.lat == null) return;
+    if (km(state.pos.lat, state.pos.lng, s.lat, s.lng) < 0.15){ if (!s.spoken){ s.spoken = true; navSpeak(s.text); } navGuide.idx++; renderNavSteps(); }
+  } catch (e) {}
+}
 async function initNavMap(orderId){
   try {
     if (typeof L === 'undefined') return;
@@ -1441,7 +1495,7 @@ async function initNavMap(orderId){
     if (cp) L.marker(cp, { icon:homeIcon }).addTo(navMap).bindPopup(t('nav_cust'));
     // route via free OSRM
     try {
-      const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+      const url = `https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson&steps=true`;
       const res = await fetch(url); const j = await res.json();
       if (j.routes && j.routes[0]){
         const coords = j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
@@ -1449,6 +1503,7 @@ async function initNavMap(orderId){
         const d = j.routes[0].distance / 1000, mins = Math.round(j.routes[0].duration / 60);
         L.popup().setLatLng(coords[Math.floor(coords.length/2)]).setContent(`<b>${d.toFixed(1)} km · ~${mins} min</b>`).openOn(navMap);
         navMap.fitBounds(L.polyline(coords).getBounds().pad(0.2));
+        try { const steps = []; (j.routes[0].legs || []).forEach(l => (l.steps || []).forEach(st => { const m = st.maneuver || {}; if (m.instruction) steps.push({ text:m.instruction, lat:m.location ? m.location[1] : null, lng:m.location ? m.location[0] : null, dist:(st.distance || 0) / 1000, spoken:false }); })); navGuide = { steps, idx:0 }; renderNavSteps(); if (steps[0]){ steps[0].spoken = true; navSpeak(steps[0].text); } } catch (e) {}
       }
     } catch(e){ navMap.fitBounds([from, to]); }
   } catch(e){}
@@ -2102,6 +2157,9 @@ function viewEarn(){
       <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
       <div class="tile"><b>${hm(state.todayMinutes)}</b><span>${t('on_duty_time')} · ${t('today')}</span></div>
     </div>
+    <div class="card"><div class="line"><span><b>💰 ${t('wal_title')}</b><div class="muted" style="font-size:13px">${t('wal_tip_note')}</div></span><b style="font-size:22px">${money(num(state.walletBal))}</b></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" style="flex:1" onclick="A.walletWithdraw()">💸 ${t('wal_withdraw')}</button><button class="btn ghost" style="flex:1" onclick="A.loadRiderWithdrawals()">↻ ${t('wal_refresh')}</button></div>
+      <div id="rwdList" style="margin-top:10px">${(state.wdRows || []).length ? state.wdRows.map(x => `<div class="line"><span>${t('wal_st_' + x.status)}<small class="muted" style="display:block;font-size:12px">${esc(when(x.requested_at))} · ${esc(x.account)} · ${money(x.payout_amount)}</small></span><b>${money(x.amount)}</b></div>`).join('') : `<div class="muted" style="font-size:13px">${t('wal_none')}</div>`}</div></div>
     <button class="btn ghost" style="margin-bottom:12px" onclick="showPaySlip()">🧾 ${t('pay_slip_btn')}</button>
     <div class="card">
       <div class="line"><span class="muted">${t('contract')}</span><b>${t('c_' + c.kind)}</b></div>
@@ -2230,6 +2288,34 @@ const A = {
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
     renderShell(); markTab(); renderTab();
+  },
+  bgAccept(allow){
+    try { localStorage.setItem('dera_bg_loc', allow ? '1' : '0'); } catch (e) {}
+    try { document.getElementById('bgDiscWrap')?.remove(); } catch (e) {}
+    if (allow) startBgWatcher();
+  },
+  async walletWithdraw(){
+    let pre = '';
+    try { const po = state.rider.payout; if (po && typeof po === 'object') pre = po.number || po.account || po.phone || ''; } catch (e) {}
+    const acct = await uiPrompt(t('wal_acct'), pre);
+    if (acct === null) return;
+    const a = (acct || '').trim(); if (!a) return toast(t('wal_noacct'), true);
+    const amt = await uiPrompt(t('wal_amt'), '');
+    if (amt === null) return;
+    const n = Math.floor(num(amt)); if (!n || n <= 0) return;
+    if (!await uiConfirm(t('wal_to', { n:a }) + ' — ' + t('wal_fee_note'))) return;
+    await run(async () => {
+      need(await sb.rpc('request_withdrawal', { p_amount:n, p_account:a, p_kind:'rider' }));
+      toast(t('wal_done')); await A.loadRiderWithdrawals();
+    });
+  },
+  async loadRiderWithdrawals(){
+    try {
+      const el = $('rwdList'); if (!el) return;
+      const { data } = await sb.from('wallet_withdrawals').select('*').eq('user_id', state.user.id).order('requested_at', { ascending:false }).limit(10);
+      const rows = data || [];
+      el.innerHTML = rows.length ? rows.map(x => `<div class="line"><span>${t('wal_st_' + x.status)}<small class="muted" style="display:block;font-size:12px">${esc(when(x.requested_at))} · ${esc(x.account)} · ${money(x.payout_amount)}</small></span><b>${money(x.amount)}</b></div>`).join('') : `<div class="muted" style="font-size:13px">${t('wal_none')}</div>`;
+    } catch (e) {}
   },
   handoverCode(){
     openSheet(`🔐 ${t('handover_code')}`, `<p>${t('handover_t')}</p>
@@ -2740,6 +2826,15 @@ function passGate(){ if (state.user) ls.set('kh_facegate_' + state.user.id, null
 // ================= FCM PUSH (Capacitor only; web par no-op) =================
 // App khulne par login user ka FCM token device_tokens mein save hota hai,
 // taake Admin app se push bheja ja sake. Koi error login ko kabhi nahi rokti.
+function handleCallPush(d){
+  try {
+    if (!d || d.type !== 'call') return false;
+    const rec = { thread: d.thread, orderId: d.orderId || null, ts: Date.now() };
+    try { localStorage.setItem('dera_pending_call', JSON.stringify(rec)); } catch (e) {}
+    try { if (typeof Chat !== 'undefined' && Chat.consumePendingCall) Chat.consumePendingCall(); } catch (e) {}
+    return true;
+  } catch (e) { return false; }
+}
 const FCM = {
   app: 'rider',
   done: false,
@@ -2768,6 +2863,7 @@ const FCM = {
       try {
         PN.addListener('pushNotificationReceived', async (n) => {
           try {
+            try { if (n && n.data) handleCallPush(n.data); } catch (e) {}
             const LN = Cap.Plugins.LocalNotifications;
             if (!LN || !n) return;
             await LN.schedule({ notifications: [{ id: Date.now() % 2147483647, title: n.title || 'Dera', body: n.body || '', extra: n.data || {} }] });
@@ -2777,6 +2873,7 @@ const FCM = {
       try {
         PN.addListener('pushNotificationActionPerformed', (a) => {
           try {
+            try { if (a && a.notification && a.notification.data) handleCallPush(a.notification.data); } catch (e) {}
             const p = a && a.notification && a.notification.data && a.notification.data.path;
             if (p) location.hash = p;
           } catch (e) {}
@@ -2790,7 +2887,7 @@ async function afterLogin(user){ FCM.register(user && user.id); state.user = use
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', warn:'⚠️ Never share your phone number or delivery code in chat.', closed:'This chat is closed because the trip has ended.', photo:'Photo', loc:'Location', attach_photo:'Send photo', send_loc:'Send location', loc_denied:'Location permission was not allowed.', photo_fail:'Photo could not be sent.',
+      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', warn:'⚠️ Never share your phone number or delivery code in chat.', closed:'This chat is closed because the trip has ended.', photo:'Photo', loc:'Location', attach_photo:'Send photo', send_loc:'Send location', loc_denied:'Location permission was not allowed.', photo_fail:'Photo could not be sent.', call:'Voice call', calling:'Calling…', incoming:'Incoming voice call', accept:'Accept', decline:'Decline', busy:'The other person is busy on another call.', busy_self:'You are already on a call.', declined:'Call declined.', no_answer:'No answer.', mic_denied:'Microphone permission was not allowed. Please allow the microphone and try again.', call_ended:'Call ended.', connecting:'Connecting…', mute:'Mute', unmute:'Unmute', end_call:'End call', cancel_call:'Cancel', call_failed:'Call failed. Please try again.', video_call:'Video call', speaker:'Speaker', earpiece:'Earpiece', speaker_sys:'Speaker switching uses your phone’s own call controls.',
       new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Dera', order:'Order',
       'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Dera support',
       'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Dera support',
@@ -2815,7 +2912,7 @@ const Chat = (() => {
       sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔',
+      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔', call:'صوتی کال', calling:'کال کی جا رہی ہے…', incoming:'صوتی کال آ رہی ہے', accept:'قبول کریں', decline:'مسترد کریں', busy:'دوسرا شخص کسی اور کال میں مصروف ہے۔', busy_self:'آپ پہلے سے ایک کال میں ہیں۔', declined:'کال مسترد کر دی گئی۔', no_answer:'کوئی جواب نہیں ملا۔', mic_denied:'مائیکروفون کی اجازت نہیں ملی۔ براہ کرم مائیکروفون کی اجازت دیں اور دوبارہ کوشش کریں۔', call_ended:'کال ختم ہو گئی۔', connecting:'رابطہ ہو رہا ہے…', mute:'خاموش کریں', unmute:'آواز بحال کریں', end_call:'کال ختم کریں', cancel_call:'منسوخ کریں', call_failed:'کال ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔', video_call:'ویڈیو کال', speaker:'اسپیکر', earpiece:'ایئر پیس', speaker_sys:'اسپیکر بدلنے کے لیے اپنے فون کے کال کنٹرول استعمال کریں۔',
       new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Dera', order:'آرڈر',
       'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Dera سپورٹ',
       'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Dera سپورٹ',
@@ -2877,6 +2974,21 @@ const Chat = (() => {
 .chatin button{border:0;background:var(--brand);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
     document.head.appendChild(st);
   }
+  if (!document.getElementById('callCss')){
+    const cs = document.createElement('style'); cs.id = 'callCss';
+    cs.textContent = `.callwrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.callcard{background:var(--paper);width:100%;max-width:360px;border-radius:20px;padding:28px 22px;text-align:center}
+.callav{width:88px;height:88px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:40px;font-weight:800;margin:0 auto 14px}
+.callcard b{font-size:20px;display:block}
+.callcard .cst{color:var(--muted);margin:8px 0 20px;font-size:15px}
+.callbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.callbtns button{border:0;border-radius:999px;padding:12px 20px;font-weight:800;cursor:pointer;font-size:15px}
+.callbtns .acc{background:#1a7f37;color:#fff}
+.callbtns .dec{background:#B3261E;color:#fff}
+.callbtns .mut{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.chathead .callbtn{border:1px solid #1a7f37 !important;color:#1a7f37 !important;background:transparent;border-radius:999px;font-size:18px !important;font-weight:800;padding:6px 10px !important;white-space:nowrap}`;
+    document.head.appendChild(cs);
+  }
   function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
   function paintBadge(){
     const n = Object.values(unread).reduce((a, b) => a + b, 0);
@@ -2887,14 +2999,16 @@ const Chat = (() => {
     cfg = c; stop();
     chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
     refresh();
+    try { setTimeout(() => { try { consumePendingCall(); } catch (x) {} }, 800); } catch (x) {}
   }
-  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } try { Object.values(callChans).forEach(c => { try { sb.removeChannel(c); } catch (x) {} }); Object.keys(callChans).forEach(k => delete callChans[k]); } catch (x) {} callEnd(null); }
   async function refresh(){
     if (!me()) return;
     const since = new Date(Date.now() - 7 * 864e5).toISOString();
     const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
     unread = {};
     (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    (data || []).forEach(m => callSubFor(m.order_id, m.thread, m.user_id));
     paintBadge();
   }
   function onMsg(m){
@@ -2924,6 +3038,7 @@ const Chat = (() => {
     let names = {};
     const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
     if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    Object.values(groups).forEach(g => callSubFor(g.order_id, g.thread, g.user_id));
     const rows = Object.values(groups).map(g => {
       const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
       return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
@@ -2936,6 +3051,7 @@ const Chat = (() => {
     else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
   }
   async function open(orderId, thread, userId, title){
+    callSubFor(orderId, thread, userId);
     const k = (orderId || '') + '|' + thread + '|' + (userId || '');
     cur = { orderId, thread, userId, k, msgs:[] };
     const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
@@ -2943,7 +3059,7 @@ const Chat = (() => {
     shell(title || label(thread, orderId), `<div style="font-size:13px;color:#7a5b00;background:#fff8e1;border-bottom:1px solid #f0dfa8;padding:8px 10px">⚠️ ${e(tr('warn'))}</div><div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
       ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
       <div class="chatin"><button onclick="document.getElementById('chatPhoto').click()" title="${e(tr('attach_photo'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📷</button><button onclick="Chat.sendLoc()" title="${e(tr('send_loc'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📍</button><input type="file" id="chatPhoto" accept="image/*" style="display:none" onchange="Chat.sendPhoto(this)"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
-      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button><button class="callbtn" onclick="Chat.callStart(${e(JSON.stringify(orderId))}, ${e(JSON.stringify(thread))})" title="${e(tr('call'))}" aria-label="${e(tr('call'))}">📞</button>` : (thread && thread.startsWith('sup') && cfg.role === 'rider') ? `<button class="callbtn" onclick="Chat.callStart(null, 'sup', true)" title="${e(tr('video_call'))}" aria-label="${e(tr('video_call'))}">📹</button>` : '');
     cur = { orderId, thread, userId, k, msgs:[] };
     let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
     q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
@@ -3059,7 +3175,337 @@ function draw(){
     const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
-  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc };
+
+  // ---- Voice calls (WebRTC, audio-only, in-app; NO phone numbers anywhere) ----
+  // Signaling uses Supabase Realtime broadcast on one channel per order thread:
+  // call:<thread>:<orderId>. No new DB tables, no tel: links, and no phone
+  // columns are read by this code — the call screen shows ONLY the other
+  // party's NAME. STUN-only note: Google's free STUN server works on most
+  // home/mobile networks, but a call can fail on symmetric NATs / strict
+  // corporate networks. TURN (short-lived credentials issued by an Edge
+  // Function) is phase 2 — NEVER hardcode TURN credentials in an app, they
+  // would leak from the APK.
+  const CALL_NOANSWER_MS = 30000;
+  const CALL_STUN = 'stun:stun.l.google.com:19302';
+  let callSt = null;
+  const callChans = {};
+  function supPeerKey(){
+    try { return cfg.role === 'admin' ? (cur && cur.userId) : me(); } catch (x) { return null; }
+  }
+  function callChanKey(orderId, thread, peerKey){
+    if (thread && thread.startsWith('sup')) return 'call:sup:' + (peerKey || supPeerKey() || 'x');
+    return 'call:' + thread + ':' + orderId;
+  }
+  function callEnsureChan(orderId, thread, peerKey){
+    try {
+      const key = callChanKey(orderId, thread, peerKey);
+      if (callChans[key]) return callChans[key];
+      const ch = sb.channel(key).on('broadcast', { event: 'call-signal' }, p => {
+        try { callOnSignal(orderId, thread, (p && p.payload) || {}, peerKey); } catch (x) {}
+      }).subscribe();
+      callChans[key] = ch;
+      return ch;
+    } catch (x) { return null; }
+  }
+  function callSubFor(orderId, thread, peerKey){
+    try {
+      if (orderId && ['cr','cs','rs'].includes(thread)) callEnsureChan(orderId, thread);
+      else if (thread && thread.startsWith('sup')) callEnsureChan(orderId, thread, peerKey);
+    } catch (x) {}
+  }
+  async function callSend(orderId, thread, msg, peerKey){
+    try {
+      const ch = callEnsureChan(orderId, thread, peerKey);
+      if (!ch) return false;
+      await ch.send({ type: 'broadcast', event: 'call-signal', payload: Object.assign({}, msg, { from: me() }) });
+      return true;
+    } catch (x) { return false; }
+  }
+  function callPushNotify(orderId, thread, peerKey, video){
+    try {
+      sb.auth.getSession().then(({ data: sess }) => {
+        try {
+          const tok = sess && sess.session && sess.session.access_token; if (!tok) return;
+          fetch(SUPABASE_URL + '/functions/v1/call-push', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + tok }, body: JSON.stringify({ thread, orderId, peerId: peerKey || null, video: !!video }) }).catch(() => {});
+        } catch (x) {}
+      }).catch(() => {});
+    } catch (x) {}
+  }
+  function consumePendingCall(){
+    try {
+      const raw = localStorage.getItem('dera_pending_call'); if (!raw) return;
+      const rec = JSON.parse(raw);
+      if (!rec || Date.now() - rec.ts > 120000){ try { localStorage.removeItem('dera_pending_call'); } catch (x) {} return; }
+      if (callSt && callSt.orderId === rec.orderId && callSt.thread === rec.thread) return;
+      if (cur && cur.orderId === rec.orderId && cur.thread === rec.thread) {
+        try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+        setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+        return;
+      }
+      try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+      open(rec.orderId, rec.thread, (rec.thread && rec.thread.startsWith('sup') && cfg.role === 'rider') ? me() : undefined);
+      setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+    } catch (x) {}
+  }
+  // NAME ONLY: this resolver never selects a phone column and never returns a
+  // number. On any failure it falls back to the role label (e.g. 'Shop').
+  async function callPeerName(orderId, thread){
+    const roleLabel = thread && thread.startsWith('sup') ? (cfg.role === 'admin' ? tr('as_admin.sup_r') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    try {
+      if (!orderId && thread && thread.startsWith('sup') && cfg.role === 'admin' && cur && cur.userId) {
+        try { const { data } = await sb.from('profiles').select('full_name').eq('id', cur.userId).single(); if (data && data.full_name) return data.full_name; } catch (x) {}
+        return roleLabel;
+      }
+      if (!orderId) return roleLabel;
+      if (cfg.role === 'customer' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+      if (cfg.role === 'customer' && thread === 'cr') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('customer_name').eq('id', orderId).single();
+        return (data && data.customer_name) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'rs') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'cr') {
+        const { data } = await sb.from('orders').select('customer:profiles!customer_id(full_name)').eq('id', orderId).single();
+        return (data && data.customer && data.customer.full_name) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'rs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+    } catch (x) {}
+    return roleLabel;
+  }
+  function callDur(sec){ const m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s); }
+  function callShow(){
+    try {
+      const s = callSt; if (!s) return;
+      let w = document.getElementById('callWrap');
+      if (!w) { w = document.createElement('div'); w.className = 'callwrap'; w.id = 'callWrap'; document.body.appendChild(w); }
+      let status = '', btns = '';
+      if (s.state === 'calling') { status = tr('calling'); btns = `<button class="mut" onclick="Chat.callCancel()">${e(tr('cancel_call'))}</button>`; }
+      else if (s.state === 'incoming') { status = tr('incoming'); btns = `<button class="dec" onclick="Chat.callDecline()">${e(tr('decline'))}</button><button class="acc" onclick="Chat.callAccept()">${e(tr('accept'))}</button>`; }
+      else if (s.state === 'connecting') { status = tr('connecting'); btns = `<button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      else { status = callDur(s.durSec || 0); btns = `<button class="mut" onclick="Chat.callMute()">${e(s.muted ? tr('unmute') : tr('mute'))}</button><button class="mut" onclick="Chat.callSpeaker()">${e(s.speaker ? tr('earpiece') : tr('speaker'))}</button><button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      const nm = (s.peerName || '?').trim();
+      w.innerHTML = `<div class="callcard"><div class="callav">${e(nm[0] || '?')}</div><b>${s.video ? '📹 ' : ''}${e(s.peerName)}</b>${s.video ? `<video id="callRemoteV" autoplay playsinline style="width:100%;max-height:52vh;background:#000;border-radius:14px;margin:12px 0 0"></video><video id="callLocalV" autoplay muted playsinline style="width:110px;height:82px;object-fit:cover;border-radius:10px;margin:8px auto 0"></video>` : ''}<div class="cst" id="callDur">${e(status)}</div><div class="callbtns">${btns}</div></div>`;
+      try {
+        if (s.video) {
+          const rv = document.getElementById('callRemoteV'); if (rv && s.remoteStream && !rv.srcObject) rv.srcObject = s.remoteStream;
+          const lv = document.getElementById('callLocalV'); if (lv && s.stream && !lv.srcObject) lv.srcObject = s.stream;
+        }
+      } catch (x) {}
+    } catch (x) {}
+  }
+  function callEnd(msg){
+    try {
+      const s = callSt; callSt = null;
+      if (s) {
+        if (s.noAnsTimer) clearTimeout(s.noAnsTimer);
+        if (s.ringTimer) clearInterval(s.ringTimer);
+        if (s.durTimer) clearInterval(s.durTimer);
+        try { if (s.stream) s.stream.getTracks().forEach(t => t.stop()); } catch (x) {}
+        try { if (s.pc) s.pc.close(); } catch (x) {}
+        try { if (s.remoteEl) s.remoteEl.remove(); } catch (x) {}
+      }
+      const w = document.getElementById('callWrap'); if (w) w.remove();
+      if (msg && cfg.toast) cfg.toast(msg);
+    } catch (x) {}
+  }
+  function callNewPc(s){
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: CALL_STUN }] });
+    pc.onicecandidate = ev => {
+      try { if (ev.candidate) callSend(s.orderId, s.thread, { type: 'ice-candidate', candidate: ev.candidate }, s.peerKey); } catch (x) {}
+    };
+    pc.ontrack = ev => {
+      try {
+        s.remoteStream = ev.streams[0];
+        if (s.video) { const rv = document.getElementById('callRemoteV'); if (rv) rv.srcObject = ev.streams[0]; return; }
+        let el = s.remoteEl;
+        if (!el) { el = document.createElement('audio'); el.autoplay = true; el.style.display = 'none'; document.body.appendChild(el); s.remoteEl = el; }
+        el.srcObject = ev.streams[0];
+      } catch (x) {}
+    };
+    pc.onconnectionstatechange = () => {
+      try {
+        const st = pc.connectionState;
+        if (st === 'connected' && callSt === s && (s.state === 'connecting' || s.state === 'calling')) {
+          s.state = 'in-call'; s.durSec = 0;
+          if (s.durTimer) clearInterval(s.durTimer);
+          s.durTimer = setInterval(() => { try { if (callSt === s && s.state === 'in-call') { s.durSec++; const dEl = document.getElementById('callDur'); if (dEl) dEl.textContent = callDur(s.durSec); else callShow(); } } catch (x) {} }, 1000);
+          callShow();
+        } else if (st === 'failed' && callSt === s && s.state === 'in-call') {
+          callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey);
+          callEnd(tr('call_ended'));
+        }
+      } catch (x) {}
+    };
+    return pc;
+  }
+  async function callStart(orderId, thread, video){
+    try {
+      const isSup = thread && thread.startsWith('sup');
+      if (isSup) {
+        if (cfg.role !== 'rider' && cfg.role !== 'admin') return;
+        video = true;
+      } else {
+        if (cfg.role === 'admin') return;
+        if (!orderId || !['cr','cs','rs'].includes(thread)) return;
+        video = false;
+      }
+      if (callSt) { if (cfg.toast) cfg.toast(tr('busy_self')); return; }
+      if (!isSup) {
+        try {
+          const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+          if (od && ['delivered','cancelled'].includes(od.status)) { if (cfg.toast) cfg.toast(tr('closed')); return; }
+        } catch (x) {}
+      }
+      const peerName = await callPeerName(orderId, thread);
+      const peerKey = isSup ? supPeerKey() : null;
+      callSt = { orderId, thread, state: 'calling', peerName, muted: false, pendCand: [], durSec: null, video: !!video, peerKey, speaker: false };
+      callShow();
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!video }); }
+      catch (x) { callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt.state !== 'calling') { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      callSt.stream = stream;
+      const pc = callNewPc(callSt);
+      callSt.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      if (callSt) callSt.noAnsTimer = setTimeout(() => {
+        try { if (callSt && callSt.state === 'calling') { callSend(callSt.orderId, callSt.thread, { type: 'hangup' }, callSt.peerKey); callEnd(tr('no_answer')); } } catch (x) {}
+      }, CALL_NOANSWER_MS);
+      const ok = await callSend(orderId, thread, { type: 'offer', sdp: offer, video: !!video }, peerKey);
+      if (!ok) { callEnd(tr('call_failed')); return; }
+      callPushNotify(orderId, thread, peerKey, !!video);
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callOnSignal(orderId, thread, p, peerKey){
+    try {
+      if (!p || p.from === me()) return;
+      const type = p.type;
+      if (type === 'offer') {
+        if (callSt && callSt.orderId === orderId && callSt.thread === thread && callSt.state === 'incoming' && (!thread.startsWith('sup') || !peerKey || !callSt.peerKey || callSt.peerKey === peerKey)) return;
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        if (orderId) {
+          try {
+            const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+            if (od && ['delivered','cancelled'].includes(od.status)) { await callSend(orderId, thread, { type: 'decline' }, peerKey); return; }
+          } catch (x) {}
+        }
+        const peerName = await callPeerName(orderId, thread);
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        callSt = { orderId, thread, state: 'incoming', peerName, muted: false, pendCand: [], durSec: null, offer: p.sdp, video: !!p.video, peerKey: peerKey || null, speaker: false };
+        callShow();
+        try { if (cfg.ding) cfg.ding(); } catch (x) {}
+        if (callSt) callSt.ringTimer = setInterval(() => { try { if (callSt && callSt.state === 'incoming' && cfg.ding) cfg.ding(); } catch (x) {} }, 3000);
+        return;
+      }
+      if (type === 'call-ready') {
+        const cs = callSt;
+        if (cs && cs.state === 'calling' && cs.orderId === orderId && cs.thread === thread && cs.pc && cs.pc.localDescription) {
+          try { await callSend(orderId, thread, { type: 'offer', sdp: cs.pc.localDescription, video: !!cs.video }, cs.peerKey); } catch (x) {}
+        }
+        return;
+      }
+      const s = callSt;
+      if (!s || s.orderId !== orderId || s.thread !== thread) return;
+      if (thread && thread.startsWith('sup') && peerKey && s.peerKey && s.peerKey !== peerKey) return;
+      if (type === 'answer') {
+        if (s.state !== 'calling') return;
+        if (s.noAnsTimer) { clearTimeout(s.noAnsTimer); s.noAnsTimer = null; }
+        try {
+          await s.pc.setRemoteDescription(p.sdp);
+          if (s.state === 'calling') { s.state = 'connecting'; callShow(); }
+          const q = s.pendCand; s.pendCand = [];
+          for (const c of q) { try { await s.pc.addIceCandidate(c); } catch (x) {} }
+        } catch (x) { callEnd(tr('call_failed')); }
+        return;
+      }
+      if (type === 'ice-candidate') {
+        try {
+          if (!s.pc) { s.pendCand.push(p.candidate); return; }
+          if (s.pc.remoteDescription) await s.pc.addIceCandidate(p.candidate);
+          else s.pendCand.push(p.candidate);
+        } catch (x) {}
+        return;
+      }
+      if (type === 'hangup') { callEnd(s.state === 'in-call' ? tr('call_ended') : null); return; }
+      if (type === 'decline') { if (s.state === 'calling') callEnd(tr('declined')); return; }
+      if (type === 'busy') { if (s.state === 'calling') callEnd(tr('busy')); return; }
+    } catch (x) {}
+  }
+  async function callAccept(){
+    try {
+      const s = callSt; if (!s || s.state !== 'incoming' || !s.offer) return;
+      if (s.ringTimer) { clearInterval(s.ringTimer); s.ringTimer = null; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!s.video }); }
+      catch (x) { await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt !== s) { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      s.stream = stream;
+      const pc = callNewPc(s); s.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      try {
+        await pc.setRemoteDescription(s.offer);
+        const ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        if (s.state === 'incoming') { s.state = 'connecting'; callShow(); }
+        const q = s.pendCand; s.pendCand = [];
+        for (const c of q) { try { await pc.addIceCandidate(c); } catch (x) {} }
+        const ok = await callSend(s.orderId, s.thread, { type: 'answer', sdp: ans }, s.peerKey);
+        if (!ok) { callEnd(tr('call_failed')); return; }
+      } catch (x) { callEnd(tr('call_failed')); }
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callDecline(){
+    try { const s = callSt; if (s && s.state === 'incoming') await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callCancel(){
+    try { const s = callSt; if (s && s.state === 'calling') await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callHangup(){
+    try { const s = callSt; if (s) await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  function callMute(){
+    try {
+      const s = callSt; if (!s || !s.stream) return;
+      s.muted = !s.muted;
+      s.stream.getAudioTracks().forEach(t => { t.enabled = !s.muted; });
+      callShow();
+    } catch (x) {}
+  }
+  async function callSpeaker(){
+    try {
+      const s = callSt; if (!s) return; s.speaker = !s.speaker;
+      const el = s.remoteEl || document.getElementById('callRemoteV');
+      if (el && el.setSinkId) {
+        try {
+          const devs = await navigator.mediaDevices.enumerateDevices();
+          const outs = devs.filter(d => d.kind === 'audiooutput');
+          const spk = outs.find(d => /speaker/i.test(d.label || ''));
+          await el.setSinkId(s.speaker && spk ? spk.deviceId : 'default');
+        } catch (x) {}
+      } else if (cfg.toast && s.speaker) cfg.toast(tr('speaker_sys'));
+      callShow();
+    } catch (x) {}
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc, callStart, callAccept, callDecline, callCancel, callHangup, callMute, callSpeaker, consumePendingCall };
 })();
 
 // ================= PUSH + INSTALL (same code in all four apps) =================
