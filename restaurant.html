@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.51';
+const APP_VERSION = '6.53';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -3274,7 +3274,56 @@ function showPwGate(){
     <div style="margin-top:16px"><button class="link" onclick="A.logout()">🚪 ${t('logout')}</button></div>
     <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
 }
+// ================= FCM PUSH (Capacitor only; web par no-op) =================
+// App khulne par login user ka FCM token device_tokens mein save hota hai,
+// taake Admin app se push bheja ja sake. Koi error login ko kabhi nahi rokti.
+const FCM = {
+  app: 'shop',
+  done: false,
+  async register(uid){
+    try {
+      if (this.done) return; this.done = true;
+      const Cap = window.Capacitor;
+      const PN = Cap && Cap.Plugins && Cap.Plugins.PushNotifications;
+      if (!PN || !uid) return;
+      const saved = new Promise((res) => {
+        try {
+          PN.addListener('registration', async (tok) => {
+            try {
+              if (tok && tok.value) await sb.from('device_tokens').upsert({ user_id: uid, token: tok.value, platform: 'android', app: FCM.app, updated_at: new Date().toISOString() }, { onConflict: 'token' });
+            } catch (e) {}
+            res();
+          });
+          PN.addListener('registrationError', () => res());
+        } catch (e) { res(); }
+        setTimeout(res, 10000);
+      });
+      const perm = await PN.requestPermissions();
+      if (!perm || perm.receive === 'denied') return;
+      await PN.register();
+      await saved;
+      try {
+        PN.addListener('pushNotificationReceived', async (n) => {
+          try {
+            const LN = Cap.Plugins.LocalNotifications;
+            if (!LN || !n) return;
+            await LN.schedule({ notifications: [{ id: Date.now() % 2147483647, title: n.title || 'Dera', body: n.body || '', extra: n.data || {} }] });
+          } catch (e) {}
+        });
+      } catch (e) {}
+      try {
+        PN.addListener('pushNotificationActionPerformed', (a) => {
+          try {
+            const p = a && a.notification && a.notification.data && a.notification.data.path;
+            if (p) location.hash = p;
+          } catch (e) {}
+        });
+      } catch (e) {}
+    } catch (e) {}
+  }
+};
 async function afterLogin(user){
+  FCM.register(user && user.id);
   state.user = user;
   { const { data:pf } = await sb.from('profiles').select('email_verified').eq('id', user.id).maybeSingle();
     if (needVerify(pf)){ let ok = false; try { ok = (await sb.rpc('mark_email_verified')).data; } catch (e) {} if (!ok) return showVerify(); } }
@@ -3294,7 +3343,7 @@ async function afterLogin(user){
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send',
+      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', warn:'⚠️ Never share your phone number or delivery code in chat.', closed:'This chat is closed because the trip has ended.', photo:'Photo', loc:'Location', attach_photo:'Send photo', send_loc:'Send location', loc_denied:'Location permission was not allowed.', photo_fail:'Photo could not be sent.',
       new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Dera', order:'Order',
       'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Dera support',
       'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Dera support',
@@ -3319,7 +3368,7 @@ const Chat = (() => {
       sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں',
+      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔',
       new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Dera', order:'آرڈر',
       'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Dera سپورٹ',
       'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Dera سپورٹ',
@@ -3404,7 +3453,7 @@ const Chat = (() => {
   function onMsg(m){
     if (!m || seenIds.has(m.id)) return; seenIds.add(m.id);
     const k = keyOf(m);
-    if (cur && cur.k === k){ if (!cur.msgs.some(x => x.id === m.id)) cur.msgs.push(m); draw(); setSeen(k, m.created_at); return; }
+    if (cur && cur.k === k){ if (!cur.msgs.some(x => x.id === m.id)) cur.msgs.push(m); draw(); setSeen(k, m.created_at); readSync(cur); return; }
     if (m.sender_id !== me()){
       unread[k] = (unread[k] || 0) + 1; paintBadge();
       if (cfg.ding) cfg.ding();
@@ -3444,9 +3493,9 @@ const Chat = (() => {
     cur = { orderId, thread, userId, k, msgs:[] };
     const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
     const quick = (L[lang()][qk] || L.en[qk] || []);
-    shell(title || label(thread, orderId), `<div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
+    shell(title || label(thread, orderId), `<div style="font-size:13px;color:#7a5b00;background:#fff8e1;border-bottom:1px solid #f0dfa8;padding:8px 10px">⚠️ ${e(tr('warn'))}</div><div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
       ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
-      <div class="chatin"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
+      <div class="chatin"><button onclick="document.getElementById('chatPhoto').click()" title="${e(tr('attach_photo'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📷</button><button onclick="Chat.sendLoc()" title="${e(tr('send_loc'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📍</button><input type="file" id="chatPhoto" accept="image/*" style="display:none" onchange="Chat.sendPhoto(this)"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
       (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
     cur = { orderId, thread, userId, k, msgs:[] };
     let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
@@ -3455,12 +3504,28 @@ const Chat = (() => {
     const { data } = await q;
     if (!cur || cur.k !== k) return;
     cur.msgs = data || []; cur.msgs.forEach(m => seenIds.add(m.id));
+    await readSync(cur);
     draw();
+    if (orderId && ['cr','cs','rs'].includes(thread)) {
+      try {
+        const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+        if (od && ['delivered','cancelled'].includes(od.status) && cur && cur.k === k) {
+          cur.closed = true;
+          const w = document.getElementById('chatWrap');
+          if (w) { const ci = w.querySelector('.chatin'); if (ci) ci.innerHTML = '<div class="muted" style="font-size:14px;text-align:center;padding:10px">' + e(tr('closed')) + '</div>'; const qd = w.querySelector('.quick'); if (qd) qd.remove(); }
+        }
+      } catch (err) {}
+    }
     if (cur.msgs.length) setSeen(k, cur.msgs[cur.msgs.length - 1].created_at);
     delete unread[k]; paintBadge();
   }
   function fmt(m){
-    if (m.sender_role !== 'system') return String(m.body);
+    if (m.sender_role !== 'system') {
+      const b = String(m.body);
+      if (b.startsWith('[img]')) return '📷 ' + tr('photo');
+      if (b.startsWith('[loc]')) return '📍 ' + tr('loc');
+      return b;
+    }
     const parts = String(m.body).split('|');
     if (parts[0] === 'join_request') return tr('sys_req').replace('{w}', tr(parts[1] || '')) + (parts.slice(2).join('|') ? ': ' + parts.slice(2).join('|') : '');
     if (parts[0] === 'joined') return tr('sys_joined');
@@ -3475,17 +3540,70 @@ const Chat = (() => {
     const k = cur.k; let q = sb.from('messages').select('*').eq('thread', cur.thread).eq('order_id', cur.orderId).order('created_at').limit(300);
     const { data } = await q; if (cur && cur.k === k){ cur.msgs = data || []; cur.msgs.forEach(x => seenIds.add(x.id)); draw(); }
   }
-  function draw(){
+    function renderBody(m){
+    const b = String(m.body);
+    if (b.startsWith('[img]')) {
+      const u = b.slice(5).trim();
+      if (/^https:\/\//.test(u)) return `<a href="${e(u)}" target="_blank" rel="noopener"><img src="${e(u)}" style="max-width:220px;border-radius:10px;display:block" alt=""></a>`;
+      return e(b);
+    }
+    if (b.startsWith('[loc]')) {
+      const parts = b.slice(5).split(','); const la = parseFloat(parts[0]); const lo = parseFloat(parts[1]);
+      if (isFinite(la) && isFinite(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180) return `<a href="https://www.openstreetmap.org/?mlat=${la}&mlon=${lo}&zoom=16" target="_blank" rel="noopener">📍 ${e(tr('loc'))} (${la.toFixed(5)}, ${lo.toFixed(5)})</a>`;
+      return e(b);
+    }
+    return e(b);
+  }
+  async function readSync(c){
+    if (!c) return;
+    try {
+      let q2 = sb.from('messages').select('id,read_at').eq('thread', c.thread).order('created_at').limit(300);
+      q2 = c.orderId ? q2.eq('order_id', c.orderId) : q2.is('order_id', null);
+      if (!c.orderId) q2 = q2.eq('user_id', c.userId);
+      const { data: rd } = await q2;
+      if (rd) { const mp = {}; rd.forEach(r => { if (r.read_at) mp[r.id] = r.read_at; }); c.msgs.forEach(m => { if (mp[m.id]) m.read_at = mp[m.id]; }); }
+    } catch (err) {}
+    try {
+      let q3 = sb.from('messages').update({ read_at: new Date().toISOString() }).eq('thread', c.thread).neq('sender_id', me()).is('read_at', null);
+      q3 = c.orderId ? q3.eq('order_id', c.orderId) : q3.is('order_id', null);
+      if (!c.orderId) q3 = q3.eq('user_id', c.userId);
+      await q3;
+    } catch (err) {}
+  }
+  async function sendPhoto(input){
+    try {
+      if (!cur || cur.closed) return;
+      const f = input && input.files && input.files[0]; if (!f) return;
+      input.value = '';
+      const safe = f.name.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 60) || 'photo.jpg';
+      const path = me() + '/chat/' + Date.now() + '_' + safe;
+      const { error: uerr } = await sb.storage.from('rider-selfies').upload(path, f);
+      if (uerr) throw uerr;
+      const { data: su, error: serr } = await sb.storage.from('rider-selfies').createSignedUrl(path, 31536000);
+      if (serr || !su || !su.signedUrl) throw (serr || new Error('sign failed'));
+      await send('[img]' + su.signedUrl);
+    } catch (err) { if (cfg.toast) cfg.toast(tr('photo_fail'), true); }
+  }
+  function sendLoc(){
+    if (!cur || cur.closed) return;
+    if (!navigator.geolocation){ if (cfg.toast) cfg.toast(tr('loc_denied'), true); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { send('[loc]' + pos.coords.latitude + ',' + pos.coords.longitude); },
+      () => { if (cfg.toast) cfg.toast(tr('loc_denied'), true); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+function draw(){
     const box = document.getElementById('msgs'); if (!box || !cur) return;
     box.innerHTML = cur.msgs.map(m => {
       if (m.sender_role === 'system') return `<div class="sysmsg">🛟 ${e(fmt(m))}<small>${hm(m.created_at)}</small></div>`;
       const mine = m.sender_id === me();
-      return `<div class="bub ${mine ? 'mine' : ''}">${mine ? '' : `<span class="who">${e(tr(m.sender_role))}</span>`}${e(m.body)}<small>${hm(m.created_at)}</small></div>`;
+      return `<div class="bub ${mine ? 'mine' : ''}">${mine ? '' : `<span class="who">${e(tr(m.sender_role))}</span>`}${renderBody(m)}<small>${hm(m.created_at)}${mine ? (m.read_at ? ' ✓✓' : ' ✓') : ''}</small></div>`;
     }).join('') || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`;
     box.scrollTop = box.scrollHeight;
   }
   async function send(text){
-    if (!cur) return;
+    if (!cur || cur.closed) return;
     const ta = document.getElementById('chatText');
     const body = (text || (ta && ta.value) || '').trim(); if (!body) return;
     if (ta && !text) ta.value = '';
@@ -3494,7 +3612,7 @@ const Chat = (() => {
     const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
-  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin };
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc };
 })();
 
 // ================= PUSH + INSTALL (same code in all four apps) =================
