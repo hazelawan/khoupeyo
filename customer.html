@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.76';
+const APP_VERSION = '5.77';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1076,6 +1076,20 @@ const ls = {
 };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function imageThumb(src, size=320, quality=75){
+  const raw = String(src || ''); if (!raw) return '';
+  try {
+    const u = new URL(raw, location.href), marker = '/storage/v1/object/public/';
+    if (u.origin !== SUPABASE_URL || !u.pathname.includes(marker)) return raw;
+    const w = Math.max(64, Math.min(1200, Math.round(Number(size) || 320)));
+    const q = Math.max(50, Math.min(90, Math.round(Number(quality) || 75)));
+    u.pathname = u.pathname.replace(marker, '/storage/v1/render/image/public/');
+    u.searchParams.set('width', String(w)); u.searchParams.set('height', String(w));
+    u.searchParams.set('resize', 'cover'); u.searchParams.set('quality', String(q));
+    return u.href;
+  } catch (e) { return raw; }
+}
+
 const num = n => Number(n || 0);
 const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
 const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
@@ -2309,7 +2323,7 @@ function productCard(p, why){
   return `<div class="gcard">
     <button class="heart ${isFav(p.id) ? 'on' : ''}" onclick="A.fav('${p.id}', this)" aria-label="Save">${isFav(p.id) ? '♥' : '♡'}</button>
     <a href="#/p/${p.id}">
-      <div class="gimg">${p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" loading="lazy">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}${why ? `<span class="recowhy">${why}</span>` : ''}</div>
+      <div class="gimg">${p.photo_url ? `<img src="${esc(imageThumb(p.photo_url,320))}" alt="" loading="lazy" decoding="async">` : noImg(p.name, p.category && p.category.name)}${off ? `<span class="off">-${off}%</span>` : ''}${why ? `<span class="recowhy">${why}</span>` : ''}</div>
       <div class="gname">${esc(p.name)}</div>
     </a>
     <div class="prow"><a href="#/p/${p.id}" class="gprice ${off ? '' : 'plain'}">${fl ? '⚡ ' : ''}${money(effPrice)}${off ? `<span class="strike">${money(effCompare)}</span>` : ''}</a>${canAdd ? `<button class="qadd" onclick="A.quickAdd('${p.id}')" aria-label="${t('add')}">+</button>` : ''}</div>
@@ -2321,13 +2335,13 @@ function productCard(p, why){
 const bharosaChip = r => (state.badges && r && state.badges.has(r.id)) ? `<span class="bharosa">✔️ ${t('bharosa')}</span>` : '';
 function shopMini(r){
   const rt = shopRating(r.id);
-  return `<a class="shopcard" href="#/r/${r.id}"><div class="logo">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="" loading="lazy">` : noImg(r.name)}${r.is_open ? '' : `<span class="closedtag">${t('closed')}</span>`}</div>
+  return `<a class="shopcard" href="#/r/${r.id}"><div class="logo">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}${r.is_open ? '' : `<span class="closedtag">${t('closed')}</span>`}</div>
     <div class="nm">${r.top ? `<span class="adtag" style="background:#B8860B;color:#fff">${t('top_shop')}</span> ` : ''}${r.ad ? `<span class="adtag">${t('ad')}</span> ` : ''}${esc(r.name)} ${bharosaChip(r)}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}<div class="muted" style="font-size:12px">${rt ? `<span class="star">★ ${rt.avg}</span> · ` : ''}${r.prep_time_minutes || 25} ${t('minutes')}</div></a>`;
 }
 function restaurantCard(r){
   const rt = shopRating(r.id); const sd = shopDist(r);
   return `<a class="rcard ${r.is_open ? '' : 'closed'}" href="#/r/${r.id}">
-    <div class="rimg">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="" loading="lazy">` : noImg(r.name)}</div>
+    <div class="rimg">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}</div>
     <div class="rbody">
       <div class="rname">${r.top ? `<span class="adtag" style="background:#B8860B;color:#fff">${t('top_shop')}</span>` : ''}${r.ad ? `<span class="adtag">${t('ad')}</span>` : ''}${esc(r.name)} ${bharosaChip(r)}<span class="badge ${r.is_open ? '' : 'closed'}">${r.is_open ? t('open') : t('closed')}</span></div>
       <div class="rdesc">${esc(r.description || '')}</div>${offerText(r) ? `<div class="offtag">🏷️ ${esc(offerText(r))}</div>` : ''}
@@ -2541,7 +2555,7 @@ async function showRestaurant(id){
   state.curMenu.items.forEach(it => { it._shop = r; state.itemsCache[it.id] = Object.assign(state.itemsCache[it.id] || {}, it); });
   const rt = shopRating(r.id);
   if (state.user) await loadSavedShops();
-  const hero = r.logo_url ? `style="background-image:url('${esc(r.logo_url)}')"` : '';
+  const hero = r.logo_url ? `style="background-image:url('${esc(imageThumb(r.logo_url,720))}')"` : '';
   const tabs = state.curMenu.cats.filter(cat => state.curMenu.items.some(x => x.category_id === cat.id));
   $('view').innerHTML = `
     <div class="hero"><div class="hero-img" ${hero}>${r.logo_url ? '' : noImg(r.name)}</div></div>
@@ -2584,7 +2598,7 @@ function itemHtml(i){
       ${i.description ? `<div class="item-desc">${esc(i.description)}</div>` : ''}
       <div class="item-price">${money(i.price)}${off ? `<span class="strike">${money(i.compare_price)}</span> <span class="save">-${off}%</span>` : ''}</div>${num(i.weight_kg) ? `<div class="muted" style="font-size:12px">⚖️ ${kgText(i.weight_kg)}</div>` : ''}${i.duration_min ? `<div class="muted" style="font-size:12px">⏱️ ${i.duration_min} ${t('min_s')}</div>` : ''}${itemRate(i.id) ? `<div style="font-size:12px"><span class="star">★ ${itemRate(i.id).avg}</span> <span class="muted">(${itemRate(i.id).n})</span></div>` : ''}${leftBadge(i)}${hasOpts(i.id) ? `<div class="custom">${t('customizable')}</div>` : ''}</a>
     <div class="item-media">
-      <div class="tile">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : noImg(i.name)}</div>
+      <div class="tile">${i.photo_url ? `<img src="${esc(imageThumb(i.photo_url,320))}" alt="" loading="lazy" decoding="async">` : noImg(i.name)}</div>
       <div class="ctl" id="ctl-${i.id}">${ctlHtml(i)}</div>
     </div></div>`;
 }
@@ -2622,14 +2636,14 @@ function galGroupFor(item){ if (!item) return null; const pics = railPics(item);
 function galGroupName(item){ const g = galGroupFor(item); if (!g) return 'Rang (Color)'; if (/design/i.test(g.name || '')) return 'Design'; if (/rang|colou?r/i.test(g.name || '')) return 'Rang (Color)'; return g.name; }
 function galRail(fromScroll){ const c = $('dgal'); if (!c) return; if (fromScroll){ clearTimeout(window._galT); window._galT = setTimeout(() => galRail(), 130); } const cards = c.children; if (!cards.length) return; const mid = c.scrollLeft + c.clientWidth / 2; let best = 0, bd = 1e9;
   for (let i = 0; i < cards.length; i++){ const card = cards[i]; const cc = card.offsetLeft + card.offsetWidth / 2; const d = Math.abs(cc - mid); const r = Math.min(1, d / (card.offsetWidth || 1)); card.style.transform = `scale(${1 - r * 0.18}) rotate(${r * 3 * (cc < mid ? -1 : 1)}deg)`; card.style.opacity = String(1 - r * 0.4); if (d < bd){ bd = d; best = i; } }
-  if (best !== state.galIdx){ state.galIdx = best; [...cards].forEach((cd, k) => { const fb = cd.querySelector('.rlflip'); if (fb) fb.style.display = k === best ? 'flex' : 'none'; if (k !== best && cd.dataset.flipped){ cd.dataset.flipped = ''; const im = cd.querySelector('.rlphoto img'); if (im && cd.dataset.front) im.src = cd.dataset.front; const bb = cd.querySelector('.rlback'); if (bb) bb.style.display = 'none'; } }); const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); const nm = $('galName'); if (nm && state.galNames) nm.textContent = state.galNames[best] || ''; const ch = $('galChips'); if (ch) [...ch.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
+  if (best !== state.galIdx){ state.galIdx = best; [...cards].forEach((cd, k) => { const fb = cd.querySelector('.rlflip'); if (fb) fb.style.display = k === best ? 'flex' : 'none'; if (k !== best && cd.dataset.flipped){ cd.dataset.flipped = ''; const im = cd.querySelector('.rlphoto img'); if (im && cd.dataset.front) im.src = imageThumb(cd.dataset.front,720); const bb = cd.querySelector('.rlback'); if (bb) bb.style.display = 'none'; } }); const dEl = $('gdots'); if (dEl) [...dEl.children].forEach((x, k) => x.classList.toggle('on', k === best)); const nm = $('galName'); if (nm && state.galNames) nm.textContent = state.galNames[best] || ''; const ch = $('galChips'); if (ch) [...ch.children].forEach((x, k) => x.classList.toggle('on', k === best)); } }
 function galHtml(item){
   const pics = railPics(item);
   if (!pics.length) return noImg(item.name, item.category && item.category.name);
-  if (pics.length === 1){ const b0 = galBacks(item)[0]; if (!b0) return `<img src="${esc(pics[0])}" alt="">`;
-    return `<img src="${esc(pics[0])}" alt="" data-f="${esc(pics[0])}" data-b="${esc(b0)}"><button class="rlflip" style="display:flex;position:absolute;top:10px;inset-inline-end:10px;z-index:3" onclick="event.stopPropagation();A.galFlip1(this)" aria-label="${t('rail_flip')}">🔄</button><span class="rlback" style="display:none;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:3">${t('rail_back')}</span>`; }
-  if (railFor(item)){ const backs = galBacks(item); const opts = galOptsFor(item); return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})" ${backs[i] ? `data-front="${esc(u)}" data-back="${esc(backs[i])}"` : ''}><div class="rlhook"></div><div class="rlphoto"><img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>${backs[i] ? `<button class="rlflip" style="display:${i ? 'none' : 'flex'}" onclick="event.stopPropagation();A.galFlip(this)" aria-label="${t('rail_flip')}">🔄</button>` : ''}</div>${opts[i] ? `<div class="rlcname">${esc(opts[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(opts[i].price))}</div>` : ''}${backs[i] ? `<div><span class="rlback" style="display:none">${t('rail_back')}</span></div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`; }
-  return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(u)}" alt="" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
+  if (pics.length === 1){ const b0 = galBacks(item)[0]; if (!b0) return `<img src="${esc(imageThumb(pics[0],720))}" alt="" decoding="async">`;
+    return `<img src="${esc(imageThumb(pics[0],720))}" alt="" decoding="async" data-f="${esc(pics[0])}" data-b="${esc(b0)}"><button class="rlflip" style="display:flex;position:absolute;top:10px;inset-inline-end:10px;z-index:3" onclick="event.stopPropagation();A.galFlip1(this)" aria-label="${t('rail_flip')}">🔄</button><span class="rlback" style="display:none;position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:3">${t('rail_back')}</span>`; }
+  if (railFor(item)){ const backs = galBacks(item); const opts = galOptsFor(item); return `<div class="railrod"></div><div class="railgal" id="dgal" onscroll="galRail(1)">${pics.map((u, i) => `<div class="rlcard" onclick="A.galTap(${i})" ${backs[i] ? `data-front="${esc(u)}" data-back="${esc(backs[i])}"` : ''}><div class="rlhook"></div><div class="rlphoto"><img src="${esc(imageThumb(u,720))}" alt="" decoding="async" ${i ? 'loading="lazy"' : ''}>${backs[i] ? `<button class="rlflip" style="display:${i ? 'none' : 'flex'}" onclick="event.stopPropagation();A.galFlip(this)" aria-label="${t('rail_flip')}">🔄</button>` : ''}</div>${opts[i] ? `<div class="rlcname">${esc(opts[i].name)}</div><div class="rlcprice">${money(num(item.price) + num(opts[i].price))}</div>` : ''}${backs[i] ? `<div><span class="rlback" style="display:none">${t('rail_back')}</span></div>` : ''}</div>`).join('')}</div><div class="rldots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><div class="rlhint">${t('rail_hint')}</div>`; }
+  return `<div class="dgal" id="dgal" onscroll="galDots()">${pics.map((u, i) => `<img src="${esc(imageThumb(u,720))}" alt="" decoding="async" ${i ? 'loading="lazy"' : ''}>`).join('')}</div><div class="gdots" id="gdots">${pics.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
 }
 function zoomOpen(){
   const dz = document.querySelector('.dimg, .railbox'); if (!dz) return;
@@ -2676,7 +2690,7 @@ async function showProduct(id){
     ${item.is_available && !winOff(item) ? '' : `<div class="closed-note">${t('sold_out')}</div><button class="btn ghost" id="nmBtn" style="margin:8px 0" onclick="A.notifyMe('${item.id}')">${(state.alerts || new Set()).has(item.id) ? t('notify_on') : t('notify_me')}</button>`}
     ${full.is_open === false ? `<div class="closed-note">${esc(closedText(full))}</div>` : ''}
     <a class="shopstrip" href="#/r/${shop.id}">
-      <div class="thumb">${shop.logo_url ? `<img src="${esc(shop.logo_url)}" alt="">` : noImg(shop.name)}</div>
+      <div class="thumb">${shop.logo_url ? `<img src="${esc(imageThumb(shop.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(shop.name)}</div>
       <div style="flex:1"><b>${esc(shop.name || '')}</b><div class="muted" style="font-size:13px">${rt ? `<span class="star">★ ${rt.avg}</span> · ` : ''}${t('visit_shop')}</div></div>
       <span class="muted">›</span>
     </a>
@@ -2714,7 +2728,7 @@ function drawCart(){
   const short = min && sub < min;
   const rows = state.cart.items.map(i => { const it = state.itemsCache[i.id] || {}; return `
     <div class="cartrow">
-      <div class="thumb">${it.photo_url ? `<img src="${esc(it.photo_url)}" alt="">` : noImg(i.name, it.category && it.category.name)}</div>
+      <div class="thumb">${it.photo_url ? `<img src="${esc(imageThumb(it.photo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(i.name, it.category && it.category.name)}</div>
       <div style="flex:1;min-width:0"><div style="font-weight:700">${esc(i.name)}</div>${i.optText ? `<div class="optline">${esc(i.optText)}</div>` : ''}<div class="muted">${money(i.price)}</div></div>
       <div style="text-align:end"><div class="stepper"><button onclick="A.chg(${esc(JSON.stringify(i.key))},-1)" aria-label="-">−</button><b>${i.qty}</b><button onclick="A.chg(${esc(JSON.stringify(i.key))},1)" aria-label="+">+</button></div>
       <div style="font-weight:700;margin-top:4px">${money(i.price * i.qty)}</div></div>
@@ -2723,12 +2737,12 @@ function drawCart(){
   const shopBlock = s => {
     const srows = s.items.map(i => { const it = state.itemsCache[i.id] || {}; return `
     <div class="cartrow">
-      <div class="thumb">${it.photo_url ? `<img src="${esc(it.photo_url)}" alt="">` : noImg(i.name, it.category && it.category.name)}</div>
+      <div class="thumb">${it.photo_url ? `<img src="${esc(imageThumb(it.photo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(i.name, it.category && it.category.name)}</div>
       <div style="flex:1;min-width:0"><div style="font-weight:700">${esc(i.name)}</div>${i.optText ? `<div class="optline">${esc(i.optText)}</div>` : ''}<div class="muted">${money(i.price)}</div></div>
       <div style="text-align:end"><div class="stepper"><button onclick="A.chg(${esc(JSON.stringify(i.key))},-1)" aria-label="−">−</button><b>${i.qty}</b><button onclick="A.chg(${esc(JSON.stringify(i.key))},1)" aria-label="+">+</button></div>
       <div style="font-weight:700;margin-top:4px">${money(i.price * i.qty)}</div></div>
     </div>`; }).join('');
-    return `${s.shop && s.shop.id ? `<a class="shopstrip" href="#/r/${s.shop.id}"><div class="thumb">${s.shop.logo_url ? `<img src="${esc(s.shop.logo_url)}" alt="">` : noImg(s.shop.name)}</div><div style="flex:1"><b>${esc(s.shop.name)}</b><div class="muted" style="font-size:13px">${s.items.length} items · ${money(s.items.reduce((n, i) => n + i.price * i.qty, 0))}</div></div><span class="muted">›</span></a>` : ''}
+    return `${s.shop && s.shop.id ? `<a class="shopstrip" href="#/r/${s.shop.id}"><div class="thumb">${s.shop.logo_url ? `<img src="${esc(imageThumb(s.shop.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(s.shop.name)}</div><div style="flex:1"><b>${esc(s.shop.name)}</b><div class="muted" style="font-size:13px">${s.items.length} items · ${money(s.items.reduce((n, i) => n + i.price * i.qty, 0))}</div></div><span class="muted">›</span></a>` : ''}
     <div class="box" style="margin-top:0">${srows}</div>`;
   };
   v.innerHTML = `<h1>${t('cart')}</h1>
@@ -3029,7 +3043,7 @@ async function showOrders(){
       const count=(x.order_items||[]).reduce((n,i)=>n+num(i.quantity),0);
       const canSaveRider = ['delivered','completed'].includes(x.status) && x.rider_id;
       const riderSave = canSaveRider ? (savedRiderIds.has(x.rider_id) ? `<span class="muted" style="display:inline-block;margin-top:8px">✓ ${t('rider_favorite_saved')}</span>` : `<button type="button" class="btn ghost inline" style="margin-top:8px" onclick="A.saveRiderFromOrder('${esc(x.id)}')">${t('rider_favorite_save')}</button>`) : '';
-      return `<article class="support-card" style="margin:0"><a class="orow" style="padding:0;border:0" href="#/order/${esc(x.id)}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:48px;height:48px;font-size:19px">${x.restaurant&&x.restaurant.logo_url?`<img src="${esc(x.restaurant.logo_url)}" alt="">`:esc(((x.restaurant&&x.restaurant.name)||'?')[0])}</div><div style="min-width:0"><div class="muted" style="font-size:12px">${t('activity_order')} · ${date}</div><b>${esc(x.restaurant?x.restaurant.name:'')}</b><small class="muted" style="display:block">${t('items_n',{n:count})}${dkm!=null?` · 📍 ${fmtKmC(dkm)}`:''}${x.scheduled_for&&!FINAL.includes(x.status)?` · 🗓️ ${esc(schedLabel(x.scheduled_for))}`:''}</small></div></div><div class="r">${money(x.total)}<small>${pillFor(x.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin-top:8px" href="#/help/${esc(x.id)}">❓ Help with this order</a>${riderSave}${canSaveRider?`<div class="muted" style="font-size:12px;margin-top:4px">${t('rider_favorite_info')}</div>`:''}</article>`;
+      return `<article class="support-card" style="margin:0"><a class="orow" style="padding:0;border:0" href="#/order/${esc(x.id)}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:48px;height:48px;font-size:19px">${x.restaurant&&x.restaurant.logo_url?`<img src="${esc(imageThumb(x.restaurant.logo_url,96))}" alt="" loading="lazy" decoding="async">`:esc(((x.restaurant&&x.restaurant.name)||'?')[0])}</div><div style="min-width:0"><div class="muted" style="font-size:12px">${t('activity_order')} · ${date}</div><b>${esc(x.restaurant?x.restaurant.name:'')}</b><small class="muted" style="display:block">${t('items_n',{n:count})}${dkm!=null?` · 📍 ${fmtKmC(dkm)}`:''}${x.scheduled_for&&!FINAL.includes(x.status)?` · 🗓️ ${esc(schedLabel(x.scheduled_for))}`:''}</small></div></div><div class="r">${money(x.total)}<small>${pillFor(x.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin-top:8px" href="#/help/${esc(x.id)}">❓ Help with this order</a>${riderSave}${canSaveRider?`<div class="muted" style="font-size:12px;margin-top:4px">${t('rider_favorite_info')}</div>`:''}</article>`;
     }
     const active=['booked','arrived'].includes(x.status), statusLabel=t('bk_'+x.status);
     return `<article class="bkcard ${x.status==='booked'?'on':''}" style="margin:0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><div class="muted" style="font-size:12px">${t('activity_booking')} · ${date}</div><b>${esc(x.item_name)}</b><div class="muted" style="font-size:14px">${esc(x.shop_name)} · ${money(x.price)}</div></div><span class="pill ${['cancelled','no_show'].includes(x.status)?'bad':''}">${statusLabel}</span></div>${active?`<div class="muted" style="font-size:13px;margin-top:6px">${t('bk_wait_till',{t:new Date(x.late_until).toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Karachi'})})} · ${t('bk_pay')}</div><div id="q-${esc(x.id)}" style="margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:8px">${x.shop_phone?`<a class="btn ghost inline" href="tel:${esc(x.shop_phone)}">📞</a>`:''}<button class="btn warn inline" onclick="A.bookCancel('${esc(x.id)}')">${t('bk_cancel')}</button></div>`:''}${x.cancel_reason&&!active?`<div class="muted" style="font-size:13px;margin-top:4px">${esc(x.cancel_reason)}</div>`:''}${x.status==='done'?(x.rating?`<div style="margin-top:6px"><b class="star">${'★'.repeat(x.rating)}</b>${x.rating_comment?' · '+esc(x.rating_comment):''}</div>`:`<div style="margin-top:8px"><b>${t('rate_bk')}</b><div class="stars" id="stars-bk${esc(x.id.slice(0,8))}" style="text-align:center">${starsHtml('bk'+x.id.slice(0,8),0)}</div><input type="text" id="bkc-${esc(x.id)}" placeholder="${t('rate_comment')}" maxlength="300" style="width:100%"><button class="btn" style="margin-top:8px" onclick="A.rateBooking('${esc(x.id)}')">${t('rate_bk_send')}</button></div>`):''}</article>`;
@@ -3858,14 +3872,14 @@ const A = {
   // ---- Offers and invite ----
   galChip(i){ const c = $('dgal'); if (!c || !c.children[i]) return; const card = c.children[i]; c.scrollTo({ left: card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' }); },
   galFlip1(btn){ const wrap = btn.parentElement; const im = wrap.querySelector('img'); const bb = wrap.querySelector('.rlback'); if (!im) return;
-    if (im.dataset.flipped){ im.dataset.flipped = ''; im.src = im.dataset.f; if (bb) bb.style.display = 'none'; }
-    else { im.dataset.flipped = '1'; im.src = im.dataset.b; if (bb) bb.style.display = 'inline-block'; } },
+    if (im.dataset.flipped){ im.dataset.flipped = ''; im.src = imageThumb(im.dataset.f,720); if (bb) bb.style.display = 'none'; }
+    else { im.dataset.flipped = '1'; im.src = imageThumb(im.dataset.b,720); if (bb) bb.style.display = 'inline-block'; } },
   galFlip(btn){
     const card = btn.closest('.rlcard'); if (!card) return;
     const im = card.querySelector('.rlphoto img'); if (!im) return;
     const bb = card.querySelector('.rlback');
-    if (card.dataset.flipped){ card.dataset.flipped = ''; im.src = card.dataset.front; if (bb) bb.style.display = 'none'; }
-    else { card.dataset.flipped = '1'; im.src = card.dataset.back; if (bb) bb.style.display = 'inline-block'; }
+    if (card.dataset.flipped){ card.dataset.flipped = ''; im.src = imageThumb(card.dataset.front,720); if (bb) bb.style.display = 'none'; }
+    else { card.dataset.flipped = '1'; im.src = imageThumb(card.dataset.back,720); if (bb) bb.style.display = 'inline-block'; }
   },
   galTap(i){ const c = $('dgal'); if (!c || !c.children.length) return; if (i === (state.galIdx || 0)){ zoomOpen(); return; } const card = c.children[i]; if (card) c.scrollTo({ left:card.offsetLeft - (c.clientWidth - card.offsetWidth) / 2, behavior:'smooth' }); },
   useOffer(code){ state.promo = code; if (currentRoute === 'cart') A.applyPromo(); else { toast(t('code_copied', { c:code })); nav('/cart'); } },

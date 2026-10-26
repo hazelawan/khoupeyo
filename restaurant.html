@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.66';
+const APP_VERSION = '6.67';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -710,6 +710,20 @@ const ls = {
 };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function imageThumb(src, size=320, quality=75){
+  const raw = String(src || ''); if (!raw) return '';
+  try {
+    const u = new URL(raw, location.href), marker = '/storage/v1/object/public/';
+    if (u.origin !== SUPABASE_URL || !u.pathname.includes(marker)) return raw;
+    const w = Math.max(64, Math.min(1200, Math.round(Number(size) || 320)));
+    const q = Math.max(50, Math.min(90, Math.round(Number(quality) || 75)));
+    u.pathname = u.pathname.replace(marker, '/storage/v1/render/image/public/');
+    u.searchParams.set('width', String(w)); u.searchParams.set('height', String(w));
+    u.searchParams.set('resize', 'cover'); u.searchParams.set('quality', String(q));
+    return u.href;
+  } catch (e) { return raw; }
+}
+
 const num = n => Number(n || 0);
 const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
 function distKm(aLat, aLng, bLat, bLng){
@@ -1555,7 +1569,7 @@ async function loadMenu(){
 }
 function itemRow(i){
   return `<div class="row">
-    <div class="thumb">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : noImg(i.name)}</div>
+    <div class="thumb">${i.photo_url ? `<img src="${esc(imageThumb(i.photo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(i.name)}</div>
     <button class="row-main" onclick="A.editItem('${i.id}')"><div style="font-weight:700">${esc(i.name)}</div>
       <div>${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}</div>
       ${i.stock_qty != null ? `<div class="muted" style="font-size:13px;${num(i.stock_qty) <= 3 ? 'color:var(--danger);font-weight:700' : ''}">📦 ${t('stock_n', { n:num(i.stock_qty) })}</div>` : ''}
@@ -1571,7 +1585,7 @@ function selfPreviewView(){
   const cats = Array.isArray(state.cats) ? state.cats : [];
   const available = i => i.is_available !== false && !(i.stock_qty != null && num(i.stock_qty) <= 0) && i.is_approved !== false;
   const card = i => `<article class="card" style="display:flex;gap:12px;align-items:center">
-    <div class="thumb" style="width:72px;height:72px;flex:none">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="${esc(i.name || '')}" loading="lazy">` : noImg(i.name)}</div>
+    <div class="thumb" style="width:72px;height:72px;flex:none">${i.photo_url ? `<img src="${esc(imageThumb(i.photo_url,192))}" alt="${esc(i.name || '')}" loading="lazy" decoding="async">` : noImg(i.name)}</div>
     <div style="min-width:0;flex:1"><b>${esc(i.name || '—')}</b>${i.description ? `<div class="muted" style="font-size:13px">${esc(i.description)}</div>` : ''}
       <div style="margin-top:4px;font-weight:800">${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}</div>
       <span class="pill ${available(i) ? 'g' : 'r'}">${i.is_approved === false ? 'Not listed yet' : available(i) ? 'Available' : 'Unavailable'}</span>
@@ -2988,7 +3002,7 @@ const A = {
       if (!state.items) await loadMenu();
       const r = state.restaurant;
       const products = (state.items || []).filter(x => x.is_available !== false).slice(0, 80);
-      const rows = products.map(x => `<div class="row" style="cursor:default"><span class="thumb">${x.photo_url ? `<img src="${esc(x.photo_url)}" alt="">` : '🛍️'}</span><div class="row-main" style="cursor:default"><b>${esc(x.name)}</b><div class="muted">${money(x.price)}${x.description ? ' · ' + esc(x.description) : ''}</div></div></div>`).join('');
+      const rows = products.map(x => `<div class="row" style="cursor:default"><span class="thumb">${x.photo_url ? `<img src="${esc(imageThumb(x.photo_url,192))}" alt="" loading="lazy" decoding="async">` : '🛍️'}</span><div class="row-main" style="cursor:default"><b>${esc(x.name)}</b><div class="muted">${money(x.price)}${x.description ? ' · ' + esc(x.description) : ''}</div></div></div>`).join('');
       openSheet(state.lang === 'ur' ? '👁️ کسٹمر ویو' : '👁️ Customer view', `<div class="card"><b>${esc(r.name)}</b><div class="muted">${esc(r.description || '')}</div><div class="muted">${r.is_open ? (state.lang === 'ur' ? 'آرڈر کھلے ہیں' : 'Accepting orders') : (state.lang === 'ur' ? 'آرڈر بند ہیں' : 'Not accepting orders')}</div></div><h3>${state.lang === 'ur' ? 'دستیاب اشیا' : 'Available items'}</h3>${rows || `<div class="empty">${state.lang === 'ur' ? 'کوئی دستیاب شے نہیں' : 'No available items'}</div>`}<p class="muted" style="font-size:12px">${state.lang === 'ur' ? 'یہ اسی مینو کا پیش نظارہ ہے؛ چیک آؤٹ شامل نہیں۔' : 'Preview of this shop menu; checkout is not included.'}</p>`);
     });
   },
@@ -3392,7 +3406,7 @@ const A = {
     await run(async () => {
       const rows = need(await sb.from('menu_photo_submissions').select('id,menu_item_id,status,photo_url,photos,back_photos,submitted_at,review_note').eq('restaurant_id', state.restaurant.id).order('submitted_at', { ascending:false }).limit(50)) || [];
       const status = r => r.status === 'pending' ? (state.lang === 'ur' ? 'منظوری باقی' : 'Awaiting Admin review') : r.status === 'approved' ? (state.lang === 'ur' ? 'منظور' : 'Approved') : (state.lang === 'ur' ? 'مسترد' : 'Rejected');
-      const cards = rows.map(r => { const item = (state.items || []).find(x => x.id === r.menu_item_id); const pics = [r.photo_url].concat(Array.isArray(r.photos) ? r.photos : [], Array.isArray(r.back_photos) ? r.back_photos : []).filter(Boolean).slice(0, 8); return `<div class="card"><div class="line"><b>${esc(item ? item.name : (state.lang === 'ur' ? 'پروڈکٹ' : 'Product'))}</b><span class="pill ${r.status === 'pending' ? 'y' : r.status === 'approved' ? 'g' : ''}">${status(r)}</span></div><div class="muted" style="font-size:12px">${new Date(r.submitted_at).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB')}</div><div style="display:flex;gap:6px;overflow:auto;margin-top:8px">${pics.map(u => `<img src="${esc(u)}" alt="" loading="lazy" style="width:64px;height:64px;object-fit:cover;border-radius:8px">`).join('')}</div>${r.review_note ? `<div class="muted" style="font-size:13px;margin-top:6px">${esc(r.review_note)}</div>` : ''}</div>`; }).join('');
+      const cards = rows.map(r => { const item = (state.items || []).find(x => x.id === r.menu_item_id); const pics = [r.photo_url].concat(Array.isArray(r.photos) ? r.photos : [], Array.isArray(r.back_photos) ? r.back_photos : []).filter(Boolean).slice(0, 8); return `<div class="card"><div class="line"><b>${esc(item ? item.name : (state.lang === 'ur' ? 'پروڈکٹ' : 'Product'))}</b><span class="pill ${r.status === 'pending' ? 'y' : r.status === 'approved' ? 'g' : ''}">${status(r)}</span></div><div class="muted" style="font-size:12px">${new Date(r.submitted_at).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB')}</div><div style="display:flex;gap:6px;overflow:auto;margin-top:8px">${pics.map(u => `<img src="${esc(imageThumb(u,200))}" alt="" loading="lazy" decoding="async" style="width:64px;height:64px;object-fit:cover;border-radius:8px">`).join('')}</div>${r.review_note ? `<div class="muted" style="font-size:13px;margin-top:6px">${esc(r.review_note)}</div>` : ''}</div>`; }).join('');
       openSheet(t('photo_reviews'), cards || `<div class="empty">${t('photo_none')}</div>`);
     });
   }
@@ -3464,7 +3478,7 @@ function showOtherAlert(sh){
 }
 function shopMenu(){
   const list = (state.shops || []).map(x => `<button type="button" class="shoprow ${x.id === state.restaurant.id ? 'on' : ''}" onclick="switchShop('${x.id}')">
-      <span class="thumb">${x.logo_url ? `<img src="${esc(x.logo_url)}" alt="">` : noImg(x.name)}</span>
+      <span class="thumb">${x.logo_url ? `<img src="${esc(imageThumb(x.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(x.name)}</span>
       <span class="nm"><b>${esc(x.name)}</b><small>${x.is_open ? t('open_now') : t('closed_now')}</small></span>
       ${(state.otherNew || {})[x.id] ? `<span class="pill r">${state.otherNew[x.id]} 🛎️</span>` : x.id === state.restaurant.id ? '<span>✓</span>' : '<span class="muted">›</span>'}</button>`).join('');
   openSheet(t('my_shops'), `${list}<button type="button" class="btn ghost" style="margin-top:12px" onclick="A.addShop()">${t('add_shop')}</button>`);

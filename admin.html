@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.69';
+const APP_VERSION = '7.70';
 const APP_DATE = '27 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -701,6 +701,20 @@ const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'mone
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function imageThumb(src, size=320, quality=75){
+  const raw = String(src || ''); if (!raw) return '';
+  try {
+    const u = new URL(raw, location.href), marker = '/storage/v1/object/public/';
+    if (u.origin !== SUPABASE_URL || !u.pathname.includes(marker)) return raw;
+    const w = Math.max(64, Math.min(1200, Math.round(Number(size) || 320)));
+    const q = Math.max(50, Math.min(90, Math.round(Number(quality) || 75)));
+    u.pathname = u.pathname.replace(marker, '/storage/v1/render/image/public/');
+    u.searchParams.set('width', String(w)); u.searchParams.set('height', String(w));
+    u.searchParams.set('resize', 'cover'); u.searchParams.set('quality', String(q));
+    return u.href;
+  } catch (e) { return raw; }
+}
+
 const money = n => 'Rs ' + Math.round(Number(n || 0)).toLocaleString('en-PK');
 function distKmA(aLat, aLng, bLat, bLng){
   if (![aLat, aLng, bLat, bLng].every(x => typeof x === 'number')) return null;
@@ -1370,7 +1384,7 @@ function viewShops(){
     const c = (state.cancelCounts || {})[r.id] || {};
     const cxLine = (num(c.by_shop) || num(c.by_customer) || num(c.by_admin) || num(c.items_qty)) ? `<div class="row-sub">🚫 Cancelled — shop ${num(c.by_shop)} · customer ${num(c.by_customer)}${num(c.by_admin) ? ' · admin ' + num(c.by_admin) : ''}${num(c.items_qty) ? ' · items ' + num(c.items_qty) : ''}</div>` : '';
     return `<div class="row" style="cursor:default">
-      <div class="thumb">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
+      <div class="thumb">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}</div>
       <button class="row-main" onclick="A.openShop('${r.id}')">
         <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? '<span class="pill g">✔️ Bharosa</span>' : ''}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
         <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>${cxLine}
@@ -1484,7 +1498,7 @@ function filteredItems(){
 function itemRow(i){
   const all = state.menuRestaurant === 'all';
   return `<div class="row" style="cursor:default">
-    <div class="thumb">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="" loading="lazy">` : noImg(i.name)}</div>
+    <div class="thumb">${i.photo_url ? `<img src="${esc(imageThumb(i.photo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(i.name)}</div>
     <button class="row-main" onclick="A.editItem('${i.id}')">
       <div class="row-title">${esc(i.name)}${i.is_approved ? '' : '<span class="pill y">Waiting approval</span>'}${i.is_featured ? '<span class="pill b">Featured</span>' : ''}</div>
       <div class="row-sub">${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}${all && i.restaurant ? ' · ' + esc(i.restaurant.name) : ''}</div>
@@ -3319,7 +3333,7 @@ const A = {
     const st = state.shopTab;
     const stab = (key, label) => `<button class="chip ${st === key ? 'on' : ''}" onclick="state.shopTab='${key}';A.openShop('${id}')">${label}</button>`;
     openSheet(r.name, `
-      <div class="card-head" style="margin-bottom:10px"><div class="thumb" style="width:64px;height:64px">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : noImg(r.name)}</div>
+      <div class="card-head" style="margin-bottom:10px"><div class="thumb" style="width:64px;height:64px">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}</div>
         <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? ' <span class="pill g">✔️ Bharosa</span>' : ''}</div>
         <div class="muted" style="font-size:14px">${esc(r.address || '')}</div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}</div></div>
       <div class="muted" style="font-size:14px">${esc(zone ? zone.name : '')} · Commission ${num(r.commission_percent)}% · ${s.rating ? '★ ' + s.rating + ' (' + s.reviews + ' reviews)' : 'No reviews'}</div>
@@ -3554,7 +3568,7 @@ const A = {
   async photoReviewQueue(){
     await run(async () => {
       const rows = need(await sb.rpc('admin_menu_photo_review_queue')) || [];
-      const cards = rows.map(r => { const pics = [r.photo_url].concat(Array.isArray(r.photos) ? r.photos : [], Array.isArray(r.back_photos) ? r.back_photos : []).filter(Boolean).slice(0, 12); return `<div class="card"><div class="line"><b>${esc(r.product_name || 'Product')}</b><span class="muted">${esc(r.shop_name || 'Shop')}</span></div><div class="muted" style="font-size:12px">Submitted ${new Date(r.submitted_at).toLocaleString()}</div><div style="display:flex;gap:7px;overflow:auto;margin:10px 0">${pics.map(u => `<img src="${esc(u)}" alt="Pending product photo" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">`).join('') || '<span class="muted">No photos attached</span>'}</div><div class="actions"><button class="btn" onclick="A.reviewPhotoSubmission('${r.id}','approve')">Approve & publish photos</button><button class="btn ghost" onclick="A.reviewPhotoSubmission('${r.id}','reject')">Reject</button></div></div>`; }).join('');
+      const cards = rows.map(r => { const pics = [r.photo_url].concat(Array.isArray(r.photos) ? r.photos : [], Array.isArray(r.back_photos) ? r.back_photos : []).filter(Boolean).slice(0, 12); return `<div class="card"><div class="line"><b>${esc(r.product_name || 'Product')}</b><span class="muted">${esc(r.shop_name || 'Shop')}</span></div><div class="muted" style="font-size:12px">Submitted ${new Date(r.submitted_at).toLocaleString()}</div><div style="display:flex;gap:7px;overflow:auto;margin:10px 0">${pics.map(u => `<img src="${esc(imageThumb(u,320))}" alt="Pending product photo" loading="lazy" decoding="async" style="width:76px;height:76px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">`).join('') || '<span class="muted">No photos attached</span>'}</div><div class="actions"><button class="btn" onclick="A.reviewPhotoSubmission('${r.id}','approve')">Approve & publish photos</button><button class="btn ghost" onclick="A.reviewPhotoSubmission('${r.id}','reject')">Reject</button></div></div>`; }).join('');
       openSheet('Photo approvals', cards || '<div class="empty">No product photos are awaiting approval.</div>', 'wide');
     });
   },
