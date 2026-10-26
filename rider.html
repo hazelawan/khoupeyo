@@ -364,6 +364,8 @@ input[type=date],input[type=number]{width:100%;border:1px solid var(--line);back
 .sosbtn{background:#B4161B!important;color:#fff!important;border:0!important;font-weight:800}
 .paidok.wait{background:rgba(232,160,40,.14);color:#9A5B00}
 .wabtn{display:flex!important;width:100%;margin-top:8px;background:#25D366!important;color:#fff!important;border:0!important;justify-content:center;text-decoration:none}
+#navMap.nav-map-night .leaflet-tile{filter:brightness(.62) invert(1) hue-rotate(180deg) saturate(.7)}
+#navMap.nav-map-night .leaflet-control-attribution{background:rgba(20,30,24,.72);color:#e8f0ea}
 /* ===== Dera design system v3 ===== */
 :root{
   --paper:#F3F5F2; --surface:#FFFFFF; --ink:#12201A; --muted:#5E6D65; --line:#E1E6E1; --soft:#E5F1EA; --field:#F1F4F0;
@@ -653,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.39';
+const APP_VERSION = '5.41';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -669,6 +671,7 @@ const ls = {
 };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const jsArg = s => JSON.stringify(String(s ?? '')).replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const num = n => Number(n || 0);
 const money = n => 'Rs ' + Math.round(num(n)).toLocaleString('en-PK');
 const when = ts => new Date(ts).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
@@ -785,6 +788,8 @@ const I18N = {
     bx_title:'🎁 Bonus levels — extra on top of your pay', bx_each:'+{p} extra each', bx_how:'How your bonus is counted', bx_total:'Bonus so far',
     bx_next:'Your next {k} deliveries get {p} extra each. From delivery number {f}, every delivery gets {q} extra.', bx_top:'You are on the highest bonus level: every delivery gets {p} extra.',
     bx_pre:'Bonus starts at delivery number {f}: every delivery then gets {q} extra. {k} deliveries to go.', bx_note:'This bonus is paid on top of your normal delivery pay.',
+    rider_tools:'Rider tools', trip_preferences:'Trip preferences', trip_preferences_note:'Choose which new work offers you want to see. Active trips always stay visible.', orders_enabled:'Order delivery offers', parcels_enabled:'Parcel offers', night_map:'Night map', auto_navigation:'Auto-open maps after accepting', live_traffic:'Live-traffic handoff', navigation_note:'Maps never open from a new-offer popup. Auto-open is opt-in and runs only after you accept a job; the live-traffic button always requires a tap.', radar_title:'Trip Radar', radar_note:'Available orders and parcels · accept or skip each offer', pro_hub:'Rider Pro & quests', pro_note:'Your existing goals, active boosts, company offers and earnings at a glance.', pro_earn:'Delivery earnings this month', speak_offer:'🔊 Read offer aloud', spoken_order:'New order. Pay {p}. Pickup: {a}. Deliver to: {b}.', spoken_parcel:'New parcel. Pay {p}. Pickup: {a}. Deliver to: {b}.',
+    safety_check_title:'Bike safety check', safety_check_note:'A quick reminder before riding. This is not emergency assistance or a substitute for local emergency services.', safety_helmet:'Helmet secured', safety_brakes:'Brakes working', safety_lights:'Lights and reflectors visible', safety_tires:'Tires look ready', safety_done:'Checklist saved on this device for this rider.', barcode_scan:'Scan parcel code', barcode_scan_note:'Point your camera at a parcel barcode or QR code. Camera access requires a supported browser and secure connection.', barcode_unavailable:'Barcode scanning is unavailable here. Enter the code manually.', barcode_typed:'Enter code manually', barcode_close:'Close scanner', barcode_camera_error:'Camera could not start. Enter the code manually.', barcode_placeholder:'Pickup or delivery code', barcode_submit:'Use code',
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
   ur: {
@@ -870,13 +875,15 @@ const I18N = {
     bx_title:'🎁 بونس لیول — معمول کے پیسوں کے علاوہ اضافی', bx_each:'ہر ایک پر +{p} اضافی', bx_how:'آپ کا بونس کیسے بنتا ہے', bx_total:'اب تک کا بونس',
     bx_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} اضافی ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری پر {q} اضافی ملے گا۔', bx_top:'آپ سب سے اوپر والے بونس لیول پر ہیں: ہر ڈیلیوری پر {p} اضافی۔',
     bx_pre:'بونس ڈیلیوری نمبر {f} سے شروع ہوگا: پھر ہر ڈیلیوری پر {q} اضافی ملے گا۔ ابھی {k} ڈیلیوریاں باقی ہیں۔', bx_note:'یہ بونس آپ کے معمول کے ڈیلیوری پیسوں کے علاوہ ملتا ہے۔',
+    rider_tools:'رائیڈر کے اوزار', trip_preferences:'کام کی ترجیحات', trip_preferences_note:'چنیں کہ کون سے نئے کام کے آفر دکھائے جائیں۔ جاری سفر ہمیشہ نظر آئیں گے۔', orders_enabled:'آرڈر ڈیلیوری کے آفر', parcels_enabled:'پارسل کے آفر', night_map:'رات کا نقشہ', auto_navigation:'قبول کرنے کے بعد نقشہ خود کھولیں', live_traffic:'لائیو ٹریفک نقشے پر', navigation_note:'نئے آفر سے نقشہ خود نہیں کھلے گا۔ خودکار کھولنا اختیاری ہے اور صرف کام قبول کرنے کے بعد ہوگا؛ لائیو ٹریفک کے لیے ہمیشہ بٹن دبائیں۔', radar_title:'ٹرپ ریڈار', radar_note:'دستیاب آرڈر اور پارسل · ہر آفر قبول یا چھوڑیں', pro_hub:'رائیڈر پرو اور کویسٹس', pro_note:'آپ کے موجودہ اہداف، فعال بوسٹ، کمپنی آفر اور کمائی ایک جگہ۔', pro_earn:'اس ماہ ڈیلیوری کی کمائی', speak_offer:'🔊 آفر پڑھ کر سنائیں', spoken_order:'نیا آرڈر۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔', spoken_parcel:'نیا پارسل۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔',
+    safety_check_title:'موٹر سائیکل کی حفاظتی جانچ', safety_check_note:'سواری سے پہلے ایک مختصر یاد دہانی۔ یہ ہنگامی مدد نہیں اور مقامی ہنگامی خدمات کا متبادل نہیں۔', safety_helmet:'ہیلمٹ مضبوطی سے باندھا ہے', safety_brakes:'بریک درست کام کر رہے ہیں', safety_lights:'لائٹس اور ریفلیکٹر نظر آ رہے ہیں', safety_tires:'ٹائر ٹھیک حالت میں ہیں', safety_done:'چیک لسٹ اس ڈیوائس پر اسی رائیڈر کے لیے محفوظ ہے۔', barcode_scan:'پارسل کوڈ اسکین کریں', barcode_scan_note:'پارسل بارکوڈ یا QR کوڈ پر کیمرہ رکھیں۔ کیمرہ کے لیے معاون براؤزر اور محفوظ کنکشن ضروری ہے۔', barcode_unavailable:'یہاں بارکوڈ اسکیننگ دستیاب نہیں۔ کوڈ خود درج کریں۔', barcode_typed:'کوڈ خود درج کریں', barcode_close:'اسکینر بند کریں', barcode_camera_error:'کیمرہ شروع نہیں ہو سکا۔ کوڈ خود درج کریں۔', barcode_placeholder:'پک اپ یا ڈیلیوری کوڈ', barcode_submit:'کوڈ استعمال کریں',
     tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے'
   }
 };
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
   mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
-  sound: ls.get('kh_rd_sound', true), seen:new Set(), seenOffer:new Set(), skipped:new Set(), parcels:[], myParcels:[], seenParcel:new Set(), pos:null
+  sound: ls.get('kh_rd_sound', true), supportTickets:[], supportMessages:[], supportSelected:null, supportOrderId:null, supportContext:null, supportTargetHours:24, tripPrefs:(() => { const p = ls.get('kh_rd_trip_prefs', {}); return { orders:p.orders !== false, parcels:p.parcels !== false, nightMap:p.nightMap === true, autoNavigation:p.autoNavigation === true }; })(), seen:new Set(), seenOffer:new Set(), skipped:new Set(), parcels:[], myParcels:[], seenParcel:new Set(), pos:null
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
@@ -1120,7 +1127,7 @@ async function go(tab){
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
   await run(async () => {
     if (tab === 'jobs') await Promise.all([loadJobs(), loadMoney()]);
-    if (tab === 'earn') await loadMoney();
+    if (tab === 'earn') { if (!state.earnTab) state.earnTab = 'pro'; await Promise.all([loadMoney(), loadDuty()]); }
     if (tab === 'rules') await loadRules();
     if (tab === 'duty') await Promise.all([loadDuty(), loadShift()]);
   });
@@ -1207,6 +1214,7 @@ async function loadMine(){
 }
 async function loadAvailable(){
   if (!onDuty() || state.prayerOpen || state.breakOpen){ state.available = []; return; }
+  if (!state.tripPrefs.orders){ state.available = []; if ($('overlay')?.dataset.offerKind === 'order') closeJobPopup(); return; }
   state.available = need(await sb.rpc('available_deliveries')) || [];
   // a 2nd order from the same (or next door) shop going the same way: show it first
   if (state.mine.some(o => o.status === 'rider_assigned')){ try { const { data } = await sb.rpc('batch_suggestions'); const m = {}; (data || []).forEach(x => { m[x.order_id] = x.reason; }); state.available.forEach(j => { j.batch = m[j.order_id] || null; }); } catch (e) {} }
@@ -1322,6 +1330,7 @@ function showJobPopup(j){
   if ($('overlay')) return beep();
   const d = jobDistances(j);
   const el = document.createElement('div'); el.className = 'over newjob'; el.id = 'overlay';
+  el.dataset.offerKind = 'order';
   el.innerHTML = `<div class="panel" role="alertdialog" aria-modal="true">
     <div class="ch"><span class="pill y">${j.offered_to_me ? '⭐ ' + t('only_you') : t('new_order')}</span><span class="muted" id="popLeft">${JOB_SECONDS}s</span></div>
     <div class="timer"><i id="popBar"></i></div>
@@ -1331,7 +1340,8 @@ function showJobPopup(j){
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
-    <div class="two" style="margin-top:14px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', ${j.offered_to_me ? 'true' : 'false'})">${j.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>
+    <button class="btn ghost small" style="width:100%;margin-top:12px" onclick='A.speakOffer("order", ${jsArg(j.restaurant_name || '')}, ${jsArg(j.restaurant_address || '')}, ${jsArg(j.drop_address || '')}, ${num(j.rider_pay)})'>${t('speak_offer')}</button>
+    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', ${j.offered_to_me ? 'true' : 'false'})">${j.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>
   </div>`;
   document.body.appendChild(el);
   const total = j.offered_to_me && j.offer_expires_at ? Math.max(5, Math.round((new Date(j.offer_expires_at) - Date.now()) / 1000)) : JOB_SECONDS;
@@ -1427,14 +1437,15 @@ function activeCard(o){
       ${waNum(c.phone) ? `<a class="btn small wabtn" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent(t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : ''}</div></div>`;
   const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
-  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
+  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn ghost small" style="width:100%;margin-top:7px" onclick="openSupportCenter('${o.id}')">🛟 Help about this delivery</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
   // navigation map (2-phase: shop then customer)
   const navHtml = `<div class="card" style="margin-top:10px"><div class="navphase">
       <div class="ph ${picked ? 'done' : 'on'}">1. 🏪 ${t('nav_shop')}</div>
       <div class="ph ${picked ? 'on' : ''}">2. 🏠 ${t('nav_cust')}</div></div>
-    <div id="navMap"></div><div id="navSteps"></div>
+    <div id="navMap" class="${state.tripPrefs.nightMap ? 'nav-map-night' : ''}"></div><div id="navSteps"></div>
     <div style="display:flex;gap:8px;margin-top:10px">
       <a class="btn" style="flex:1;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="${navGmapsUrl(o, r, picked)}">🧭 ${t('navigate')}</a>
+      <a class="btn ghost" style="flex:1;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="${navTrafficUrl(o, r, picked)}">🚦 ${t('live_traffic')}</a>
       ${(picked ? c.phone : r.phone) ? `<a class="btn ghost" style="flex:1;text-align:center;text-decoration:none" href="tel:${esc(picked ? c.phone : r.phone)}">📞 ${t('call')}</a>` : ''}
     </div></div>`;
   const action = picked
@@ -1452,6 +1463,7 @@ function navGmapsUrl(o, r, picked){
   const orig = state.pos ? `${state.pos.lat},${state.pos.lng}` : '';
   return `https://www.google.com/maps/dir/?api=1${orig ? `&origin=${orig}` : ''}&destination=${dest}&travelmode=driving`;
 }
+function navTrafficUrl(o, r, picked){ return navGmapsUrl(o, r, picked) + '&layer=traffic'; }
 let navMap = null;
 // ---- OSM turn steps + voice guidance (free; OSRM public API) ----
 let navGuide = null;
@@ -1832,7 +1844,7 @@ async function loadParcels(){
   try {
     state.myParcels = need(await sb.from('parcels').select('*').eq('rider_id', state.rider.id).in('status', ['rider_assigned', 'picked_up']).order('created_at')) || [];
   } catch (e) { state.myParcels = state.myParcels || []; }
-  if (!onDuty() || state.prayerOpen || state.breakOpen){ state.parcels = []; return; }
+  if (!onDuty() || state.prayerOpen || state.breakOpen || !state.tripPrefs.parcels){ state.parcels = []; if ($('overlay')?.dataset.offerKind === 'parcel') closeJobPopup(); return; }
   sb.rpc('parcel_dispatch_tick').then(() => {}, () => {});
   try { state.parcels = need(await sb.rpc('available_parcels')) || []; } catch (e) { state.parcels = []; }
   const off = (state.parcels || []).find(p => p.offered_to_me && p.offer_expires_at && !state.seenParcel.has(p.parcel_id + p.offer_expires_at));
@@ -1859,18 +1871,19 @@ function parcelActiveCard(p){
     <div class="muted">${t('pk_sender')}: ${esc(p.sender_phone || '')} ${p.sender_phone ? `<a href="tel:${esc(p.sender_phone)}">☎️ ${t('pk_call')}</a>` : ''}</div>
     <div><span class="muted">${t('deliver_to')}:</span> ${esc(p.drop_text || '')} — ${esc(p.receiver_name || '')} ${esc(p.receiver_phone || '')}</div>
     <div class="meta"><span>${esc(p.item_type || '')}</span><span>${pkBandTxt(p.weight_band)}</span><span>${t('cash_collect')} <b>${cashTxt(p.total_fee)}</b></span><span>${t('your_pay')} <b>${money(p.rider_pay)}</b></span></div>
-    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.pickup_lat, p.pickup_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.parcelPickup('${p.id}')">${t('pk_pick_btn')}</button></div>
-    <button class="btn ghost" style="margin-top:8px;color:var(--danger)" onclick="A.parcelRelease('${p.id}')">${t('pk_release')}</button></div>`;
+    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.pickup_lat, p.pickup_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.openParcelScanner('${p.id}','pickup')">${t('pk_pick_btn')}</button></div>
+    <button class="btn ghost" style="margin-top:8px" onclick="openSupportCenter(null,'parcel','${p.id}')">🛟 Help about this parcel</button><button class="btn ghost" style="margin-top:8px;color:var(--danger)" onclick="A.parcelRelease('${p.id}')">${t('pk_release')}</button></div>`;
   return `<div class="card" style="border:2px solid var(--brand)">
     <div class="ch"><b>📦 ${t('pk_parcel')}${p.urgent ? ' · ⚡' : ''}</b><span class="pill">${t('pk_on_way')}</span></div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> <b>${esc(p.drop_text || '')}</b></div>
     <div class="muted">${t('pk_receiver')}: ${esc(p.receiver_name || '')} · ${esc(p.receiver_phone || '')} ${p.receiver_phone ? `<a href="tel:${esc(p.receiver_phone)}">☎️ ${t('pk_call')}</a>` : ''}</div>
     <div class="meta"><span>${t('cash_collect')} <b>${cashTxt(p.total_fee)}</b></span><span>${t('your_pay')} <b>${money(p.rider_pay)}</b></span></div>
-    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.drop_lat, p.drop_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.parcelDeliver('${p.id}')">${t('pk_del_btn')}</button></div></div>`;
+    <div class="two" style="margin-top:10px"><a class="btn ghost" target="_blank" rel="noopener" href="${maps(p.drop_lat, p.drop_lng)}">📍 ${t('pk_map')}</a><button class="btn" onclick="A.openParcelScanner('${p.id}','deliver')">${t('pk_del_btn')}</button></div><button class="btn ghost" style="margin-top:8px" onclick="openSupportCenter(null,'parcel','${p.id}')">🛟 Help about this parcel</button></div>`;
 }
 function showParcelPopup(p){
   if ($('overlay')) return beep();
   const el = document.createElement('div'); el.className = 'over newjob'; el.id = 'overlay';
+  el.dataset.offerKind = 'parcel';
   el.innerHTML = `<div class="panel" role="alertdialog" aria-modal="true">
     <div class="ch"><span class="pill y">${p.offered_to_me ? '⭐ ' + t('only_you') : '📦 ' + t('pk_parcel')}</span><span class="muted" id="popLeft">${JOB_SECONDS}s</span></div>
     <div class="timer"><i id="popBar"></i></div>
@@ -1879,7 +1892,8 @@ function showParcelPopup(p){
     <div class="meta"><span>${esc(p.item_type || '')}</span><span>${pkBandTxt(p.weight_band)}</span>${p.urgent ? `<span>⚡ ${t('pk_urgent')}</span>` : ''}</div>
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(p.pickup_text || p.pickup_zone || '')}</b></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(p.drop_text || p.drop_zone || '')}</b></div></div>
-    <div class="two" style="margin-top:14px"><button class="btn ghost" onclick="A.skipParcel('${p.parcel_id}', ${p.offered_to_me ? 'true' : 'false'})">${p.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button></div>
+    <button class="btn ghost small" style="width:100%;margin-top:12px" onclick='A.speakOffer("parcel", ${jsArg(p.item_type || t('pk_parcel'))}, ${jsArg(p.pickup_text || p.pickup_zone || '')}, ${jsArg(p.drop_text || p.drop_zone || '')}, ${num(p.rider_pay)})'>${t('speak_offer')}</button>
+    <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.skipParcel('${p.parcel_id}', ${p.offered_to_me ? 'true' : 'false'})">${p.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button></div>
   </div>`;
   document.body.appendChild(el);
   const total = p.offered_to_me && p.offer_expires_at ? Math.max(5, Math.round((new Date(p.offer_expires_at) - Date.now()) / 1000)) : JOB_SECONDS;
@@ -1893,6 +1907,48 @@ function showParcelPopup(p){
   }, 1000);
 }
 
+function safetyChecklistCard(){
+  const riderId = state.rider && state.rider.id;
+  if (!riderId) return '';
+  const key = 'kh_rd_bike_check_' + riderId;
+  let checked = {};
+  try { checked = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) {}
+  const items = [['helmet','safety_helmet'],['brakes','safety_brakes'],['lights','safety_lights'],['tires','safety_tires']];
+  return `<div class="card"><b>🛡️ ${t('safety_check_title')}</b><div class="muted" style="font-size:13px;margin:4px 0 8px">${t('safety_check_note')}</div>
+    ${items.map(([id,label]) => `<label class="row" style="align-items:center;cursor:pointer"><span>${t(label)}</span><input type="checkbox" ${checked[id] ? 'checked' : ''} onchange="A.saveSafetyCheck('${id}',this.checked)" aria-label="${t(label)}"></label>`).join('')}
+    <div class="muted" style="font-size:12px;margin-top:8px">${t('safety_done')}</div></div>`;
+}
+function openParcelScanner(id, action){
+  const detectorAvailable = typeof window.BarcodeDetector === 'function';
+  const overlay = document.createElement('div'); overlay.className = 'over'; overlay.id = 'parcelScanner';
+  overlay.innerHTML = `<div class="panel" role="dialog" aria-modal="true" aria-labelledby="parcelScanTitle"><div class="ch"><b id="parcelScanTitle">📷 ${t('barcode_scan')}</b><button class="pillbtn" onclick="A.closeParcelScanner()">${t('barcode_close')}</button></div>
+    <p class="muted" style="font-size:14px">${t('barcode_scan_note')}</p><div class="cam" style="aspect-ratio:4/3"><video id="parcelScanVideo" playsinline muted style="width:100%;height:100%;object-fit:cover"></video><div class="ring"></div></div><div id="parcelScanStatus" class="facestate" aria-live="polite">${detectorAvailable ? '' : t('barcode_unavailable')}</div>
+    <label class="f" for="parcelTypedCode">${t('barcode_typed')}</label><input id="parcelTypedCode" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${t('barcode_placeholder')}"><button class="btn" style="margin-top:10px" onclick="A.submitParcelCode('${id}','${action}')">${t('barcode_submit')}</button></div>`;
+  document.body.appendChild(overlay);
+  if (detectorAvailable) startParcelBarcodeDetection(overlay, id, action); else $('parcelTypedCode')?.focus();
+}
+let parcelScanStream = null, parcelScanFrame = null;
+async function startParcelBarcodeDetection(overlay, id, action){
+  const status = $('parcelScanStatus');
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('camera unavailable');
+    const formats = typeof BarcodeDetector.getSupportedFormats === 'function' ? await BarcodeDetector.getSupportedFormats().catch(() => []) : [];
+    const supported = ['qr_code','code_128','code_39','ean_13','ean_8','upc_a','upc_e','itf','codabar','data_matrix','pdf417'];
+    const selectedFormats=formats.filter(f => supported.includes(f));
+    const detector = selectedFormats.length ? new BarcodeDetector({ formats:selectedFormats }) : new BarcodeDetector();
+    parcelScanStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:'environment'} }, audio:false });
+    const video = $('parcelScanVideo'); if (!video || !overlay.isConnected) return stopParcelScanner();
+    video.srcObject = parcelScanStream; await video.play();
+    const scan = async () => {
+      if (!overlay.isConnected || !video.isConnected) return stopParcelScanner();
+      try { const codes = await detector.detect(video); const code = codes.find(x => x.rawValue && x.rawValue.trim()); if (code) { const input=$('parcelTypedCode'); if(input) input.value=code.rawValue.trim(); A.submitParcelCode(id,action); return; } }
+      catch(e) { if(status) status.textContent=t('barcode_unavailable'); }
+      parcelScanFrame = requestAnimationFrame(scan);
+    };
+    scan();
+  } catch (e) { if(status) status.textContent=t('barcode_camera_error'); }
+}
+function stopParcelScanner(){ if (parcelScanFrame) cancelAnimationFrame(parcelScanFrame); parcelScanFrame=null; if(parcelScanStream){ parcelScanStream.getTracks().forEach(x=>x.stop()); parcelScanStream=null; } }
 function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -1903,9 +1959,10 @@ function viewJobs(){
     <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div>
     <div class="tile"><b>🛣️ ${todayKm.toFixed(1)} km</b><span>${t('km_today')}</span></div></div>`;
   const boost = boostBanner();
-  if (suspended() && !state.mine.length) return suspBanner() + boost + stats;
+  const safety = safetyChecklistCard();
+  if (suspended() && !state.mine.length) return safety + suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return `${boost}${goalCard()}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
+    return `${safety}${boost}${goalCard()}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
   const myP = (state.myParcels || []).length ? `<h2>📦 ${t('pk_mine')} <span class="count">${state.myParcels.length}</span></h2>${state.myParcels.map(parcelActiveCard).join('')}` : '';
@@ -1920,7 +1977,8 @@ function viewJobs(){
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
   const gpsHint = onDuty() && !state.pos ? `<div class="note" style="border-color:#E2A400;margin-bottom:10px">${t('gps_hint')}</div>` : '';
-  return sound + suspBanner() + boost + cashWarning() + rankChip + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
+  const radar = onDuty() ? `<div class="card" style="border:1px solid var(--brand);margin:8px 0"><b>📡 ${t('radar_title')}</b><div class="muted" style="font-size:13px">${t('radar_note')}</div></div>` : '';
+  return safety + sound + suspBanner() + boost + cashWarning() + rankChip + radar + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -2112,6 +2170,14 @@ function contractCard(){
 function perksCards(){
   return offersCard() + chargesCard() + requestsCard() + contractCard();
 }
+function riderProHub(){
+  const month = (state.done || []).reduce((n, o) => n + num(o.rider_pay), 0);
+  const activeBoosts = boostBanner();
+  const goal = goalCard();
+  const quests = targetsCard();
+  const offers = offersCard();
+  return `<h2>🌟 ${t('pro_hub')}</h2><div class="muted" style="margin:-6px 0 10px">${t('pro_note')}</div><div class="tiles"><div class="tile hi"><b>${money(month)}</b><span>${t('pro_earn')}</span></div><div class="tile"><b>${(state.done || []).length}</b><span>${t('deliveries_n')}</span></div></div>${activeBoosts}${goal}${quests}${offers}<div class="card"><b>${t('earnings')}</b><div class="muted" style="font-size:13px">${t('month_pay')}: ${money(month)}</div><button class="btn ghost" style="margin-top:8px" onclick="state.earnTab='pay';renderTab()">${t('earn_t_pay')} ›</button></div>`;
+}
 // ================= EARNINGS TAB =================
 function viewEarn(){
   const r = state.rider; const sum = (list, f) => list.reduce((n, o) => n + num(f(o)), 0);
@@ -2151,7 +2217,8 @@ function viewEarn(){
   const et = state.earnTab || 'pay';
   const etab = (key, label) => `<button class="chip ${et === key ? 'on' : ''}" onclick="state.earnTab='${key}';renderTab()">${label}</button>`;
   let earnBody = '';
-  if (et === 'pay') earnBody = `<div class="tiles">
+  if (et === 'pro') earnBody = riderProHub();
+  else if (et === 'pay') earnBody = `<div class="tiles">
       <div class="tile hi"><b>${money(monthPay)}</b><span>${t('month_pay')}</span></div>
       <div class="tile hi"><b>${money(Math.max(0, monthPay - paid))}</b><span>${t('to_pay')}</span></div>
       <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
@@ -2196,7 +2263,7 @@ function viewEarn(){
   else if (et === 'history') earnBody = historyHtml();
   else earnBody = `${lbCard()}`;
   return `<h1>${t('earnings')}</h1>${boostBanner()}
-    <div class="chips" style="margin-bottom:10px">${etab('pay', t('earn_t_pay'))}${etab('targets', t('earn_t_targets'))}${etab('board', t('earn_t_board'))}${etab('history', t('earn_t_history'))}</div>
+    <div class="chips" style="margin-bottom:10px">${etab('pro', t('pro_hub'))}${etab('pay', t('earn_t_pay'))}${etab('targets', t('earn_t_targets'))}${etab('board', t('earn_t_board'))}${etab('history', t('earn_t_history'))}</div>
     ${earnBody}`;
 }
 
@@ -2255,15 +2322,23 @@ function viewAcct(){
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
       <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
     </div>
+    <div class="grp"><div class="grp-h">🛵 ${t('rider_tools')}</div>
+      <div class="card"><div class="muted" style="font-size:13px;margin-bottom:8px">${t('trip_preferences_note')}</div><div class="muted" style="font-size:12px;margin-bottom:8px">${t('navigation_note')}</div>
+        <div class="row"><b>${t('auto_navigation')}</b><label class="switch"><input type="checkbox" ${state.tripPrefs.autoNavigation ? 'checked' : ''} onchange="A.setTripPref('autoNavigation',this.checked)"><span></span></label></div>
+        <div class="row"><b>${t('orders_enabled')}</b><label class="switch"><input type="checkbox" ${state.tripPrefs.orders ? 'checked' : ''} onchange="A.setTripPref('orders',this.checked)"><span></span></label></div>
+        <div class="row"><b>${t('parcels_enabled')}</b><label class="switch"><input type="checkbox" ${state.tripPrefs.parcels ? 'checked' : ''} onchange="A.setTripPref('parcels',this.checked)"><span></span></label></div>
+        <div class="row"><b>🌙 ${t('night_map')}</b><label class="switch"><input type="checkbox" ${state.tripPrefs.nightMap ? 'checked' : ''} onchange="A.setTripPref('nightMap',this.checked)"><span></span></label></div>
+      </div>
+    </div>
     <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
     ${Theme.picker(state.lang)}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><b>🔔 ${t('sound')}</b>
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
     <div class="card" style="margin-top:8px"><button class="row" style="width:100%;border:none;background:none" onclick="A.toggleLang()"><div class="row-main"><div class="row-title">🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</div></div><span class="muted">›</span></button></div>
     </div>
-    <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
+    <div class="grp"><div class="grp-h">🛟 Rider support & help</div>
     <div class="card">
-      <button class="row" style="width:100%;border:none;background:none" onclick='Chat.open(null, "sup", state.user.id)'><div class="row-main"><div class="row-title">💬 ${t('chat_support')}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="openSupportCenter()"><div class="row-main"><div class="row-title">🛟 Rider Help Center</div><div class="muted" style="font-size:13px">Tickets and replies for rider support</div></div><span class="muted">›</span></button>
       <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
       ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
       ${Legal.links(state.lang)}
@@ -2283,7 +2358,78 @@ async function showMyFace(){
 
 // ================= ACTIONS =================
 let pollTimer = null, channel = null;
+// ================= RIDER HELP CENTER =================
+function supportClose(){ document.getElementById('riderSupportModal')?.remove(); state.supportSelected=null; state.supportOrderId=null; state.supportContext=null; }
+function supportStatusLabel(status){ return ({open:'Open',in_progress:'In progress',waiting_on_requester:'Waiting on you',resolved:'Resolved',closed:'Closed'})[status] || status || 'Open'; }
+function supportPriorityLabel(priority){ return priority || 'normal'; }
+async function openSupportCenter(orderId,contextKind,contextId){
+  if (!state.user){ showAuth(); return; }
+  state.supportOrderId=orderId || null; state.supportContext=contextId?{kind:contextKind||'delivery',id:contextId}:null; state.supportSelected=null; state.supportMessages=[];
+  const wrap=document.createElement('div'); wrap.className='over'; wrap.id='riderSupportModal';
+  wrap.addEventListener('click',ev=>{ if(ev.target===wrap) supportClose(); });
+  wrap.innerHTML=`<div class="panel" role="dialog" aria-modal="true" aria-labelledby="riderSupportTitle"><div class="ch"><b id="riderSupportTitle">🛟 Rider Help Center</b><button class="pillbtn" onclick="supportClose()" aria-label="Close">✕</button></div><div id="riderSupportBody" class="empty">Loading your support tickets…</div></div>`;
+  document.body.appendChild(wrap);
+  try {
+    const [tickets,config]=await Promise.all([
+      sb.from('support_tickets').select('id,requester_id,requester_role,subject,category,order_id,status,priority,first_response_at,first_response_due_at,created_at,updated_at').eq('requester_id',state.user.id).order('created_at',{ascending:false}).limit(30),
+      sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).maybeSingle()
+    ]);
+    if(tickets.error) throw tickets.error;
+    state.supportTickets=tickets.data||[]; state.supportTargetHours=Number(config.data?.first_response_target_hours)||24;
+    renderSupportCenter();
+  } catch(e){ logErr(e); const b=document.getElementById('riderSupportBody'); if(b)b.innerHTML='<div class="card">Could not load support tickets. Please try again when connected.</div><button class="btn ghost" onclick="supportClose()">Close</button>'; }
+}
+function renderSupportCenter(){
+ const b=document.getElementById('riderSupportBody'); if(!b)return;
+ const selected=(state.supportTickets||[]).find(x=>x.id===state.supportSelected);
+ const call=state.settings.support_phone?`<a class="btn ghost" href="tel:${esc(state.settings.support_phone)}">📞 Call rider support</a>`:'';
+ const target=`<div class="note" style="font-size:13px">First response target: within ${Number(state.supportTargetHours)||24} hours. This is a target, not a guarantee.</div>`;
+ if(selected){
+   const messages=(state.supportMessages||[]).map(m=>`<div class="card" style="margin:8px 0"><div class="ch"><b>${m.author_role==='admin'?'Rider support':'You'}</b><span class="muted" style="font-size:12px">${esc(when(m.created_at))}</span></div><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(m.body)}</div></div>`).join('')||'<div class="muted">No messages yet.</div>';
+   const canReopen=['resolved','closed'].includes(selected.status);
+   b.innerHTML=`<button class="link" onclick="supportBackToList()">‹ All tickets</button><div class="card"><div class="ch"><b>${esc(selected.subject)}</b><span class="pill">${esc(supportStatusLabel(selected.status))}</span></div><div class="muted" style="font-size:13px">${esc(selected.category)} · ${selected.order_id?'Order / parcel '+esc(selected.order_id.slice(-8).toUpperCase()):'General rider support'} · ${esc(when(selected.created_at))}</div>${selected.first_response_at?'<div class="muted" style="font-size:13px;margin-top:6px">First response received</div>':target}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost small" onclick="supportEscalate('${selected.id}')">Escalate</button>${canReopen?`<button class="btn ghost small" onclick="supportReopen('${selected.id}')">Reopen</button>`:''}</div></div><div style="max-height:38vh;overflow:auto">${messages}</div><label class="f" for="supportReply">Reply to rider support</label><textarea id="supportReply" maxlength="10000" rows="3" placeholder="Write a reply…"></textarea><button class="btn" style="margin-top:8px" onclick="supportReply('${selected.id}')">Send reply</button>${call}`;
+   return;
+ }
+ const rows=(state.supportTickets||[]).map(x=>`<button class="card" style="display:block;width:100%;text-align:left;color:inherit;cursor:pointer" onclick="supportOpenTicket('${x.id}')"><div class="ch"><b>${esc(x.subject)}</b><span class="pill">${esc(supportStatusLabel(x.status))}</span></div><div class="muted" style="font-size:13px">${esc(x.category)} · ${x.order_id?'Order / parcel '+esc(x.order_id.slice(-8).toUpperCase()):'General'} · ${esc(when(x.updated_at||x.created_at))}</div></button>`).join('')||'<div class="card muted">No rider support tickets yet.</div>';
+ const order=state.supportOrderId;
+ b.innerHTML=`<div class="card" style="background:var(--soft)"><b>Rider support</b><div class="muted" style="font-size:13px;margin-top:4px">A rider-focused support channel, separate from delivery chat. ${order?'This request will be linked to the selected active delivery.':state.supportContext?.kind==='parcel'?'Parcel reference '+esc(String(state.supportContext.id).slice(-8).toUpperCase())+' will be included in the ticket message (the support schema links orders, not standalone parcels).':''}</div></div>${target}<div class="ch"><h3 style="margin:8px 0">Your tickets</h3><span class="muted">Most recent 30</span></div>${rows}<h3>Start a support ticket</h3><label class="f" for="supportSubject">Subject</label><input id="supportSubject" type="text" maxlength="180" placeholder="Briefly describe what you need"><label class="f" for="supportCategory">Category</label><select id="supportCategory"><option value="delivery">Delivery / parcel</option><option value="account">Rider account</option><option value="earnings">Earnings or payout question</option><option value="app">App or technical issue</option><option value="safety">Rider safety concern</option><option value="general">Other rider support</option></select><label class="f" for="supportMessage">Message</label><textarea id="supportMessage" maxlength="10000" rows="4" placeholder="Describe the issue. Do not include payment details."></textarea><button class="btn" style="margin-top:8px" onclick="supportCreateTicket()">Create ticket</button>${call}`;
+}
+async function supportOpenTicket(id){ state.supportSelected=id; state.supportMessages=[]; renderSupportCenter(); try{ const res=await sb.from('support_ticket_messages').select('id,ticket_id,author_id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:false}).limit(100); if(res.error)throw res.error; state.supportMessages=(res.data||[]).reverse(); renderSupportCenter(); }catch(e){ logErr(e); toast('Could not load ticket messages',true); } }
+function supportBackToList(){ state.supportSelected=null; renderSupportCenter(); }
+async function supportCreateTicket(){ const subject=String(document.getElementById('supportSubject')?.value||'').trim(), category=document.getElementById('supportCategory')?.value||'general', message=String(document.getElementById('supportMessage')?.value||'').trim(); if(!subject||!message)return toast('Add a subject and message first',true); if(subject.length>180||message.length>10000)return toast('Please shorten your message',true); try{ const contextNote=state.supportContext?.kind==='parcel'?`[Active parcel reference: ${state.supportContext.id}]\n\n`:''; const id=need(await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:state.supportOrderId,p_message:contextNote+message})); toast('Rider support ticket created'); await openSupportCenter(state.supportOrderId); await supportOpenTicket(id); }catch(e){logErr(e);toast(e.message||'Could not create support ticket',true);} }
+async function supportReply(id){ const body=String(document.getElementById('supportReply')?.value||'').trim(); if(!body)return toast('Write a reply first',true); try{need(await sb.rpc('support_send_message',{p_ticket_id:id,p_body:body}));toast('Reply sent');await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not send reply',true);} }
+async function supportReopen(id){ try{need(await sb.rpc('support_reopen_ticket',{p_ticket_id:id}));toast('Ticket reopened');await openSupportCenter(state.supportOrderId);await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not reopen ticket',true);} }
+async function supportEscalate(id){ try{need(await sb.rpc('support_escalate_ticket',{p_ticket_id:id}));toast('Ticket escalated to high priority');await openSupportCenter(state.supportOrderId);await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not escalate ticket',true);} }
+
 const A = {
+  saveSafetyCheck(item, value){
+    if (!['helmet','brakes','lights','tires'].includes(item) || !state.rider) return;
+    const key='kh_rd_bike_check_'+state.rider.id; let data={};
+    try { data=JSON.parse(localStorage.getItem(key)||'{}')||{}; } catch(e) {}
+    data[item]=!!value; data.updated_at=new Date().toISOString();
+    try { localStorage.setItem(key,JSON.stringify(data)); } catch(e) { toast(t('error'),true); }
+  },
+  openParcelScanner(id, action){ if (!['pickup','deliver'].includes(action)) return; openParcelScanner(id,action); },
+  closeParcelScanner(){ stopParcelScanner(); $('parcelScanner')?.remove(); },
+  submitParcelCode(id, action){
+    const value=String(($('parcelTypedCode')||{}).value||'').trim();
+    if (!value) { toast(t('barcode_placeholder'),true); return; }
+    this.closeParcelScanner();
+    if (action==='pickup') this.parcelPickup(id,value); else if(action==='deliver') this.parcelDeliver(id,value);
+  },
+  setTripPref(key, value){
+    if (!['orders','parcels','nightMap'].includes(key)) return;
+    state.tripPrefs[key] = !!value; ls.set('kh_rd_trip_prefs', state.tripPrefs);
+    if (key === 'orders' && !value && $('overlay')?.dataset.offerKind === 'order') closeJobPopup();
+    if (key === 'parcels' && !value && $('overlay')?.dataset.offerKind === 'parcel') closeJobPopup();
+    if (state.tab === 'acct') renderTab();
+    if (state.tab === 'jobs') loadJobs().then(() => renderTab()).catch(logErr);
+  },
+  speakOffer(kind, pickup, from, to, pay){
+    if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) return toast(t('error'), true);
+    const summary = t(kind === 'parcel' ? 'spoken_parcel' : 'spoken_order', { p:money(pay), a:[pickup, from].filter(Boolean).join(', '), b:to || '' });
+    try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(summary); u.lang = state.lang === 'ur' ? 'ur-PK' : 'en-US'; speechSynthesis.speak(u); } catch (e) { logErr(e); }
+  },
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }
@@ -2656,9 +2802,10 @@ const A = {
     closeJobPopup();
     await run(async () => {
       const { error } = await sb.rpc('accept_delivery', { p_order_id:id });
-      await loadJobs(); await loadMoney(); if (state.tab !== 'jobs') state.tab = 'jobs'; renderTab();
       if (error) throw error;
+      await loadJobs(); await loadMoney(); if (state.tab !== 'jobs') state.tab = 'jobs'; renderTab();
       toast(t('accepted')); window.scrollTo(0, 0);
+      if (state.tripPrefs.autoNavigation){ const o = state.mine.find(x => x.id === id); if (o){ const r = state.rests[o.restaurant_id] || {}; window.location.assign(navGmapsUrl(o, r, o.status === 'picked_up')); } }
     });
   },
   skipParcel(id, offered){ closeJobPopup(); if (offered) sb.rpc('decline_parcel', { p_id:id }).then(() => {}, () => {}); if (state.tab === 'jobs') renderTab(); },
@@ -2671,16 +2818,16 @@ const A = {
       await loadJobs(); if (state.tab !== 'jobs') state.tab = 'jobs'; renderTab(); toast(t('accepted')); window.scrollTo(0, 0);
     });
   },
-  async parcelPickup(id){
-    const code = await uiPrompt(t('pickup_code_q'), '', { type:'number', icon:'🔐' });
+  async parcelPickup(id, scannedCode){
+    const code = scannedCode == null ? await uiPrompt(t('pickup_code_q'), '', { type:'number', icon:'🔐' }) : scannedCode;
     if (code === null){ renderTab(); return; }
     const { data } = await sb.rpc('parcel_pickup', { p_id:id, p_code:String(code).trim() });
     const r = data && data[0];
     if (!r || !r.ok){ toast((r && r.message) || t('error'), true); renderTab(); return; }
     await loadJobs(); renderTab(); toast(t('saved'));
   },
-  async parcelDeliver(id){
-    const code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' });
+  async parcelDeliver(id, scannedCode){
+    const code = scannedCode == null ? await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' }) : scannedCode;
     if (code === null){ renderTab(); return; }
     const { data } = await sb.rpc('parcel_deliver', { p_id:id, p_code:String(code).trim() });
     const r = data && data[0];

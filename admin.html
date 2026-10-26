@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.65';
+const APP_VERSION = '7.66';
 const APP_DATE = '26 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -693,10 +693,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders' };
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', support:'orders' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -749,8 +749,8 @@ const state = {
   orders:[], issues:[], orderFilter:'active', orderQ:'',
   zones:[], restaurants:[], riders:[],
   riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
-  menuRestaurant:'all', productFilter:'all', productQ:'', categories:[], items:[], formCats:[],
-  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}
+  menuRestaurant:'all', productFilter:'all', productQ:'', productPage:0, productHasMore:false, categories:[], items:[], formCats:[],
+  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportTargetHours:24
 };
 
 // ---- Payment form (pay a shop, pay a rider, receive cash from a rider) ----
@@ -965,6 +965,7 @@ async function go(tab){
     if (tab === 'omap'){ const days = state.omapDays || 7; const { data } = await sb.from('orders').select('address_lat,address_lng,status,total,created_at').gte('created_at', new Date(Date.now() - days * 864e5).toISOString()).not('address_lat', 'is', null).limit(5000); state.omap = data || []; if (!state.restaurants.length) await loadRestaurants(); }
     if (tab === 'campaign'){ const { data } = await sb.from('push_campaigns').select('*').order('created_at', { ascending:false }).limit(20); state.campaigns = data || []; }
     if (tab === 'orders') await Promise.all([loadOrders(), loadRiders()]);
+    if (tab === 'support') await loadSupportTickets();
     if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport(), loadShopRequests()]);
     if (tab === 'menu') await loadProducts();
     if (tab === 'riders') await loadRiderMonth();
@@ -989,10 +990,39 @@ async function go(tab){
   });
   renderTab(); window.scrollTo(0, 0);
 }
+async function loadSupportTickets(){
+  let q = sb.from('support_tickets').select('id,requester_id,requester_role,subject,category,order_id,status,priority,assigned_admin_id,first_response_at,first_response_due_at,created_at,updated_at').order('updated_at',{ascending:false}).order('id',{ascending:false});
+  if (state.supportStatus !== 'all') q = q.eq('status', state.supportStatus);
+  const term = String(state.supportQ || '').trim().replace(/[,%_*]/g, ' ').slice(0,80);
+  if (term) { if (/^[0-9a-f-]{36}$/i.test(term)) q = q.or(`subject.ilike.%${term}%,id.eq.${term}`); else q = q.ilike('subject', `%${term}%`); }
+  const start = Math.max(0, state.supportPage) * 25;
+  const rows = need(await q.range(start, start + 25)) || [];
+  state.supportHasMore = rows.length > 25; state.supportTickets = rows.slice(0,25);
+  const cfg = await sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).maybeSingle();
+  if (!cfg.error && cfg.data) state.supportTargetHours = cfg.data.first_response_target_hours;
+  if (state.supportSelected && !state.supportTickets.some(t => t.id === state.supportSelected)) { state.supportSelected = null; state.supportMessages = []; }
+  if (state.supportSelected) await loadSupportMessages(state.supportSelected);
+}
+async function loadSupportMessages(id){
+  state.supportMessages = need(await sb.from('support_ticket_messages').select('id,ticket_id,author_id,author_role,body,created_at').eq('ticket_id',id).order('created_at').order('id').limit(200)) || [];
+}
+function supportSla(t){
+  if (t.first_response_at) return '<span class="chip on">First response recorded</span>';
+  const due = new Date(t.first_response_due_at), late = due.getTime() < Date.now();
+  return `<span class="chip ${late?'':'on'}">${late?'Past target':'Due'} ${esc(short(t.first_response_due_at))}</span>`;
+}
+function viewSupport(){
+  const statuses=['all','open','in_progress','waiting_on_requester','resolved','closed'];
+  const options=statuses.map(x=>`<option value="${x}" ${state.supportStatus===x?'selected':''}>${x==='all'?'All statuses':x.replaceAll('_',' ')}</option>`).join('');
+  const rows=state.supportTickets.map(t=>`<button class="card" type="button" style="display:block;width:100%;text-align:left;margin:8px 0" onclick="A.supportOpen('${t.id}')"><div class="bar" style="justify-content:space-between"><b>${esc(t.subject)}</b><span>${esc(t.priority)} · ${esc(t.status.replaceAll('_',' '))}</span></div><div class="muted">${esc(t.requester_role)} · ${esc(t.category)}${t.order_id?' · order '+esc(t.order_id):''} · Updated ${esc(short(t.updated_at))}</div>${supportSla(t)}</button>`).join('') || '<div class="empty">No support tickets found.</div>';
+  const t=state.supportTickets.find(x=>x.id===state.supportSelected);
+  const detail=t?`<section class="card" style="margin-top:16px"><h3>${esc(t.subject)}</h3><div class="muted">Requester ${esc(t.requester_role)} · ${esc(t.requester_id)}${t.order_id?' · Order '+esc(t.order_id):''}</div><div class="muted">First-response target: ${esc(state.supportTargetHours)} hours (configurable app default; not a guarantee). ${supportSla(t)}</div><div class="bar" style="margin:10px 0"><button class="btn ghost" onclick="A.supportAssign()">Assign to me</button><select id="supportStatus">${statuses.slice(1).map(x=>`<option value="${x}" ${t.status===x?'selected':''}>${x.replaceAll('_',' ')}</option>`).join('')}</select><select id="supportPriority">${['low','normal','high','urgent'].map(x=>`<option ${t.priority===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn" onclick="A.supportUpdate()">Save status / priority</button><button class="btn ghost" onclick="A.supportFirstResponse()">Record first response now</button></div><div style="max-height:360px;overflow:auto">${state.supportMessages.map(m=>`<article class="card" style="margin:8px 0"><div class="muted">${esc(m.author_role)} · ${esc(short(m.created_at))}</div><div style="white-space:pre-wrap">${esc(m.body)}</div></article>`).join('')||'<div class="muted">No messages yet.</div>'}</div><textarea id="supportReply" rows="3" maxlength="10000" placeholder="Write a reply"></textarea><button class="btn" style="margin-top:8px" onclick="A.supportReply()">Send reply</button></section>`:'';
+  return `<h2>Support queue</h2><p class="muted">First-response target is a configurable app default, not a guarantee. SLA state is calculated from the stored due time.</p><div class="bar"><label>Target (hours) <input id="supportTarget" type="number" min="1" max="720" value="${esc(state.supportTargetHours)}" style="width:90px"></label><button class="btn ghost" onclick="A.supportSaveTarget()">Save target</button></div><div class="bar"><input type="search" maxlength="80" value="${esc(state.supportQ)}" placeholder="Search subject or ticket UUID" oninput="A.supportSearch(this.value)"><select onchange="A.supportFilter(this.value)">${options}</select></div>${rows}<div class="bar" style="justify-content:space-between"><button class="btn ghost" ${state.supportPage<=0?'disabled':''} onclick="A.supportPage(-1)">← Previous</button><span class="muted">Page ${state.supportPage+1}</span><button class="btn ghost" ${state.supportHasMore?'':'disabled'} onclick="A.supportPage(1)">Next →</button></div>${detail}`;
+}
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, support:viewSupport }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -1356,21 +1386,25 @@ function restaurantForm(r){
 
 // ================= PRODUCTS =================
 async function loadProducts(){
-  if (state.menuRestaurant === 'all'){
-    state.items = need(await sb.from('menu_items').select('*, restaurant:restaurants(name)').order('created_at', { ascending:false }).limit(1000));
-    state.categories = [];
-  } else {
-    const [c, i] = await Promise.all([
-      sb.from('menu_categories').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order'),
-      sb.from('menu_items').select('*, restaurant:restaurants(name)').eq('restaurant_id', state.menuRestaurant).order('sort_order').order('name')
-    ]);
-    state.categories = need(c); state.items = need(i);
-  }
+  const from = Math.max(0, state.productPage || 0) * 100;
+  let q = sb.from('menu_items').select('*, restaurant:restaurants(name)');
+  if (state.menuRestaurant !== 'all') q = q.eq('restaurant_id', state.menuRestaurant);
+  const term = String(state.productQ || '').trim().replace(/[,%_*]/g, ' ').slice(0, 80);
+  if (term) q = q.ilike('name', `%${term}%`);
+  if (state.productFilter === 'pending') q = q.eq('is_approved', false);
+  if (state.productFilter === 'out') q = q.eq('is_available', false);
+  if (state.productFilter === 'featured') q = q.eq('is_featured', true);
+  q = state.menuRestaurant === 'all' ? q.order('created_at', { ascending:false }) : q.order('sort_order').order('name');
+  const [i, c] = await Promise.all([
+    q.range(from, from + 100),
+    state.menuRestaurant === 'all' ? Promise.resolve({ data:[] }) : sb.from('menu_categories').select('*').eq('restaurant_id', state.menuRestaurant).order('sort_order')
+  ]);
+  const rows = need(i) || []; state.productHasMore = rows.length > 100; state.items = rows.slice(0, 100); state.categories = need(c) || [];
 }
 const PRODUCT_FILTERS = [['all','All',() => true],['pending','Waiting approval',i => !i.is_approved],['out','Out of stock',i => !i.is_available],['featured','Featured',i => i.is_featured]];
 function filteredItems(){
-  const f = PRODUCT_FILTERS.find(x => x[0] === state.productFilter)[2]; const q = state.productQ.trim().toLowerCase();
-  return state.items.filter(f).filter(i => !q || (i.name || '').toLowerCase().includes(q) || (i.restaurant?.name || '').toLowerCase().includes(q));
+  const f = PRODUCT_FILTERS.find(x => x[0] === state.productFilter)[2]; const q = String(state.productQ || '').trim().replace(/[,%_*]/g, ' ').slice(0, 80).toLowerCase();
+  return state.items.filter(f).filter(i => !q || (i.name || '').toLowerCase().includes(q));
 }
 function itemRow(i){
   const all = state.menuRestaurant === 'all';
@@ -1390,7 +1424,7 @@ const secTypeName = k => SEC_TYPES[k] || SEC_TYPES.general;
 function viewProducts(){
   if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a shop first, then its products here.</div>';
   const opts = `<option value="all" ${state.menuRestaurant === 'all' ? 'selected' : ''}>All shops</option>` + state.restaurants.map(r => `<option value="${r.id}" ${r.id === state.menuRestaurant ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
-  const chips = PRODUCT_FILTERS.map(([k, l, fn]) => { const c = state.items.filter(fn).length; return `<button class="chip ${state.productFilter === k ? 'on' : ''}" onclick="A.productFilter('${k}')">${l}${k !== 'all' && c ? ' ' + c : ''}</button>`; }).join('');
+  const chips = PRODUCT_FILTERS.map(([k, l]) => `<button class="chip ${state.productFilter === k ? 'on' : ''}" onclick="A.productFilter('${k}')">${l}</button>`).join('');
   const items = filteredItems();
   let body;
   if (state.menuRestaurant === 'all' || state.productFilter !== 'all' || state.productQ.trim()){
@@ -1409,15 +1443,16 @@ function viewProducts(){
   return `<h2>Products</h2>
     <select onchange="A.pickMenuRestaurant(this.value)" aria-label="Shop">${opts}</select>
     ${state.menuRestaurant !== 'all' && shopName ? `<div class="shophead"><b>${esc(shopName)}</b><button class="linkbtn" onclick="A.editShopName()">✏️ Rename</button></div>
-    <div class="prodstats"><span>📦 <b>${totalProducts}</b> products</span><span>📂 <b>${totalSections}</b> sections</span></div>` : ''}
+    <div class="prodstats"><span>📦 <b>${totalProducts}${state.productHasMore ? '+' : ''}</b> products shown</span><span>📂 <b>${totalSections}</b> sections</span></div>` : ''}
     <input type="search" placeholder="Search products" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)" style="margin:10px 0">
     <div class="chips">${chips}</div>
     <div class="bar">
       ${state.menuRestaurant !== 'all' ? `<div class="btngroup"><span class="btngroup-t">Manage</span><button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button></div><div class="btngroup"><span class="btngroup-t">Bulk</span><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button><button class="btn ghost" onclick="AutoImg.open()">🖼️ Find images</button></div>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
-      ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve all ${pending}</button>` : ''}
+      ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve visible ${pending}</button>` : ''}
       <button class="btn ghost" onclick="A.flashList()">⚡ Flash sales</button>
     </div>
-    <div id="prodBody">${body}</div>`;
+    <div id="prodBody">${body}</div>
+    <div class="bar" style="justify-content:space-between;margin-top:10px"><button class="btn ghost small" ${state.productPage <= 0 ? 'disabled' : ''} onclick="A.productPage(-1)">← Previous</button><span class="muted">Page ${state.productPage + 1} · ${state.items.length} shown${state.productHasMore ? ' · more available' : ''}</span><button class="btn ghost small" ${state.productHasMore ? '' : 'disabled'} onclick="A.productPage(1)">Next →</button></div>`;
 }
 function itemForm(i){
   i = i || { is_available:true, is_approved:true };
@@ -2003,6 +2038,7 @@ function viewMore(){
     + it('parcels', '📦 Parcels (Samaan Bhejo)', 'Parcel bookings, rates and riders')
     + it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there');
   const people = it('customers', '👥 Customers', 'See every customer, their orders, block or unblock')
+    + it('support', '🎧 Support queue', 'Customer and partner support tickets, replies and SLA tracking')
     + it('staff', '🧑‍💼 Staff', 'Helpers who can use this panel with limited access')
     + it('rules', '⚖️ Rider fine rules', 'Rules and fine amounts for riders');
   const system = it('settings', '⚙️ Settings', 'Auto-dispatch, selfie check, waiting time, contracts, support')
@@ -3358,7 +3394,7 @@ const A = {
   },
 
   // ---- Products ----
-  async pickMenuRestaurant(id){ state.menuRestaurant = id; await run(loadProducts); renderTab(); },
+  async pickMenuRestaurant(id){ state.menuRestaurant = id; state.productPage = 0; await run(loadProducts); renderTab(); },
   async editShopName(){
     const r = state.restaurants.find(x => x.id === state.menuRestaurant);
     if (!r) return;
@@ -3371,8 +3407,16 @@ const A = {
       renderTab(); toast('Shop name updated');
     });
   },
-  productFilter(f){ state.productFilter = f; renderTab(); },
-  productSearch(v){ state.productQ = v; renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
+  async productFilter(f){ state.productFilter = f; state.productPage = 0; await run(loadProducts); renderTab(); },
+  async productPage(delta){ state.productPage = Math.max(0, state.productPage + delta); await run(loadProducts); renderTab(); },
+  productSearch(v){
+    state.productQ = v; state.productPage = 0; clearTimeout(state.productSearchTimer);
+    state.productSearchTimer = setTimeout(async () => {
+      if (state.tab !== 'menu') return;
+      await run(loadProducts); renderTab();
+      const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); }
+    }, 300);
+  },
   editCategory(id){
     const c = state.categories.find(x => x.id === id);
     openSheet(c ? 'Edit section' : 'Add section', `
@@ -4791,6 +4835,16 @@ const A = {
       await A.loadWithdrawals();
     });
   }
+  ,async supportOpen(id){ state.supportSelected=id; await run(async()=>loadSupportMessages(id)); renderTab(); }
+  ,async supportPage(delta){ state.supportPage=Math.max(0,state.supportPage+delta); await run(async()=>loadSupportTickets()); renderTab(); }
+  ,supportFilter(v){ state.supportStatus=v; state.supportPage=0; run(async()=>loadSupportTickets()).then(renderTab); }
+  ,supportSearch(v){ state.supportQ=v; state.supportPage=0; clearTimeout(state.supportTimer); state.supportTimer=setTimeout(()=>run(async()=>loadSupportTickets()).then(renderTab),250); }
+  ,async supportSaveTarget(){ const n=Number($('supportTarget')?.value); if(!Number.isInteger(n)||n<1||n>720)return toast('Target must be 1-720 hours',true); await run(async()=>{need(await sb.from('support_center_config').update({first_response_target_hours:n,updated_at:new Date().toISOString()}).eq('singleton',true)); state.supportTargetHours=n; await loadSupportTickets(); renderTab(); toast('Default target saved for new tickets');}); }
+  ,async supportAssign(){ if(!state.supportSelected)return; await run(async()=>{need(await sb.from('support_tickets').update({assigned_admin_id:state.userId}).eq('id',state.supportSelected)); await loadSupportTickets(); renderTab(); toast('Assigned to you');}); }
+  ,async supportUpdate(){ if(!state.supportSelected)return; await run(async()=>{need(await sb.from('support_tickets').update({status:$('supportStatus').value,priority:$('supportPriority').value}).eq('id',state.supportSelected)); await loadSupportTickets(); renderTab(); toast('Ticket updated');}); }
+  ,async supportFirstResponse(){ if(!state.supportSelected)return; await run(async()=>{need(await sb.from('support_tickets').update({first_response_at:new Date().toISOString()}).eq('id',state.supportSelected)); await loadSupportTickets(); renderTab(); toast('First response timestamp recorded');}); }
+  ,async supportReply(){ const body=String($('supportReply')?.value||'').trim(); if(!body)return toast('Write a reply first',true); await run(async()=>{need(await sb.rpc('support_send_message',{p_ticket_id:state.supportSelected,p_body:body})); await loadSupportMessages(state.supportSelected); renderTab(); toast('Reply sent');}); }
+
 };
 
 // ================= PUBLISH TO GITHUB =================

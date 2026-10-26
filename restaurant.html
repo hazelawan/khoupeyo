@@ -557,6 +557,12 @@ main{padding-bottom:130px!important}
 .noimg .emj{font-size:44px;line-height:1;filter:saturate(1.15)}
 .thumb .noimg .emj{font-size:26px}
 @media (prefers-color-scheme: dark){ .noimg{background-color:hsl(var(--h) 25% 18%);color:hsl(var(--h) 45% 78%);background-image:radial-gradient(hsl(var(--h) 25% 27%) 1.2px,transparent 1.4px)} }
+
+.crop-stage{position:relative;width:100%;height:min(58vh,420px);min-height:230px;background:#152019;border-radius:14px;overflow:hidden;touch-action:none;margin:10px 0}
+.crop-stage canvas{width:100%;height:100%;display:block;touch-action:none}
+.crop-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.crop-toolbar select{flex:1;min-width:120px}.crop-toolbar input[type=range]{flex:1;min-width:130px}
+.crop-help{font-size:13px;color:var(--muted);margin:6px 0}
+.academy details{padding:12px 14px;border-bottom:1px solid var(--line)}.academy details:last-child{border-bottom:0}.academy summary{font-weight:750;cursor:pointer}.academy p{font-size:14px;color:var(--muted);margin:8px 0 0;line-height:1.5}
 </style>
 </head>
 <body>
@@ -690,7 +696,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.55';
+const APP_VERSION = '6.56';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -945,8 +951,8 @@ const I18N = {
 };
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], payChecks:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
-  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, period:'today', earn:null, stmt:null, stmtMonth:null, productFilter:'all', productQ:'', alerted:new Set(),
-  settings:{}, pwChecked:false, pwBlocking:false,
+  sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, orderFilter:'live', period:'today', earn:null, stmt:null, stmtMonth:null, productFilter:'all', productQ:'', alerted:new Set(),
+  settings:{}, specialHours:[], pwChecked:false, pwBlocking:false,
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -1313,8 +1319,10 @@ function orderCard(o){
   else if (o.status === 'picked_up') actions = `<div class="muted" style="margin-top:8px">${t('picked')}</div>${riderLine}`;
   const cid = JSON.stringify(o.id);
   actions += `<div style="margin-top:10px"><button class="btn ghost small" style="width:100%;display:block" onclick='A.contactSheet(${cid}, ${o.rider_id ? 'true' : 'false'})'>💬 ${t('contact')}</button></div>`;
+  actions += `<button class="btn ghost small" style="width:100%;display:block;margin-top:7px" onclick='A.supportNew(${cid})'>🛟 ${state.lang === 'ur' ? 'اس آرڈر کے بارے میں مدد' : 'Get help with this order'}</button>`;
   if (CX_STATUSES.includes(o.status)) actions += `<div style="margin-top:8px"><button class="btn warn" style="width:100%;display:block" onclick="A.openCancelOrder('${o.id}')">⛔ ${t('cx_order')}</button></div>`;
   if (['accepted','preparing','ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="link" style="color:var(--danger)" onclick="A.reportForm('${o.id}')">${t('report')}</button>`;
+  if (['ready','rider_assigned','picked_up'].includes(o.status)) actions += `<button class="btn ghost small" style="width:100%;margin-top:8px" onclick="A.handoffSheet('${o.id}')">📦 ${state.lang === 'ur' ? 'حوالگی چیک لسٹ' : 'Handoff checklist'}</button>`;
   const pickupBox = o.pickup_code && ['ready','rider_assigned'].includes(o.status) ? `<div class="pickcode"><div><b>🔐 ${t('pickup_code_t')}</b><small>${t('pickup_code_s')}</small></div><span class="code">${esc(o.pickup_code)}</span></div>` : '';
   return `<div class="card ${o.status === 'placed' ? 'new' : ''} ${isLate(o) ? 'late' : ''}">
     <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
@@ -1383,15 +1391,16 @@ function viewOrders(){
     return `${sound}${closed}${apptsHtml()}`;
   }
   const by = fn => state.orders.filter(fn);
-  const fresh = by(o => o.status === 'placed');
-  const kitchen = by(o => ['accepted','preparing'].includes(o.status));
-  const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status));
+  const show = o => state.orderFilter === 'live' ? !['delivered','cancelled','rejected'].includes(o.status) : state.orderFilter === 'new' ? o.status === 'placed' : state.orderFilter === 'prep' ? ['accepted','preparing'].includes(o.status) : state.orderFilter === 'ready' ? ['ready','rider_assigned','picked_up'].includes(o.status) : ['delivered','cancelled','rejected'].includes(o.status);
+  const fresh = by(o => o.status === 'placed' && show(o));
+  const kitchen = by(o => ['accepted','preparing'].includes(o.status) && show(o));
+  const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status) && show(o));
   const back = by(o => o.return_status === 'returning');
-  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').slice(0, 30);
+  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning' && show(o)).slice(0, 30);
   const sect = (title, list) => list.length ? `<h2>${title} <span class="count">${list.length}</span></h2>${list.map(orderCard).join('')}` : '';
   const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const closed = r.is_open ? (withinHours(r) ? '' : `<div class="closedbar"><span>${esc(hoursText(r))}</span></div>`) : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
-  const live = fresh.length || kitchen.length || ready.length || back.length;
+  const live = fresh.length || kitchen.length || ready.length || (state.orderFilter === 'live' && back.length);
   const backHtml = back.length ? `<h2>${t('coming_back')} <span class="count">${back.length}</span></h2>${back.map(o => `<div class="card back">
       <div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span><span class="pill r">${t('coming_back')}</span></div>
       ${itemsHtml(o)}<div class="muted">${t('coming_back_note')}</div>
@@ -1403,7 +1412,9 @@ function viewOrders(){
     : (r.is_open ? `<button type="button" class="busybtn" onclick="A.busyMenu()">${t('busy_b')}</button>` : '');
   const lowN = (state.items || []).filter(i => i.stock_qty != null && num(i.stock_qty) <= 3).length;
   const lowHtml = lowN ? `<button class="note" style="width:100%;text-align:start;border-color:#E2A400;cursor:pointer;margin-bottom:10px" onclick="go('menu')">${t('low_stock_n', { n:lowN })} ›</button>` : '';
-  return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
+  const filterLabels = state.lang === 'ur' ? [['live','📋 سب'],['new','🛎️ نئے'],['prep','🍳 تیاری'],['ready','✅ تیار'],['past','🗂️ سابقہ']] : [['live','📋 All'],['new','🛎️ New'],['prep','🍳 Preparing'],['ready','✅ Ready'],['past','🗂️ Past']];
+  const pipeline = `<div class="chips" role="tablist">${filterLabels.map(([k,l]) => `<button type="button" class="chip ${state.orderFilter === k ? 'on' : ''}" role="tab" aria-selected="${state.orderFilter === k}" onclick="A.setOrderFilter('${k}')">${l}</button>`).join('')}</div>`;
+  return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${pipeline}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
 }
@@ -1801,6 +1812,8 @@ function itemForm(i){
     <label class="f" for="i_photo">${t('photo')}</label>
     <input id="i_photo" type="file" accept="image/*" onchange="previewFile(this,'i_prev'); TF.syncPics()">
     <img id="i_prev" class="preview" alt="" style="display:${i.photo_url ? 'block' : 'none'}" src="${esc(i.photo_url || '')}">
+    <button type="button" class="btn ghost small" style="width:auto;margin-top:8px" onclick="PhotoCrop.open()">✂️ ${state.lang === 'ur' ? 'تصویر کراپ / ایڈٹ کریں' : 'Crop / edit photo'}</button>
+    <div class="muted" style="font-size:12px;margin-top:4px">${state.lang === 'ur' ? 'تصویر کو زوم، گھمائیں اور فریم میں کھسکائیں؛ یہ ایپ میں ہی محفوظ ہوگی۔' : 'Zoom, rotate and reposition the photo in-app before saving.'}</div>
     <div id="bgRmBox" style="margin:8px 0;${(typeof state !== "undefined" && state.settings && state.settings.ai_bg_remove === "false") ? "display:none" : ""}"><button type="button" class="btn ghost small" onclick="removeBg('i_photo','i_prev')">✨ Background Remove (AI)</button> <span id="bgRmMsg" class="muted" style="font-size:12px"></span></div>
     <label class="f">${t('more_photos')}</label>
     <div class="pgrid" id="pgrid"></div>
@@ -2007,7 +2020,14 @@ function viewShop(){
       <div class="tile hi"><b>${avg ? '★ ' + avg : '—'}</b><span>${t('rating')} (${rv.length})</span></div>
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
     </div>
+    <button type="button" class="btn ghost" style="margin:8px 0 12px" onclick="A.shopPreview()">👁️ ${state.lang === 'ur' ? 'کسٹمر ویو دیکھیں' : 'Preview customer view'}</button>
     ${(() => { const x = weekHours(r)[todayDw()]; const badge = x.off ? t('day_closed') : `${time12(x.o)} – ${time12(x.c)}`; return `
+    <div class="card academy" style="margin:12px 0"><b>🎓 ${state.lang === 'ur' ? 'دکان سیکھنے کی مختصر تربیت' : 'Shop quick-start academy'}</b>
+      <details><summary>${state.lang === 'ur' ? '1. پروڈکٹ اور اچھی تصویر شامل کریں' : '1. Add a product and a clear photo'}</summary><p>${state.lang === 'ur' ? 'مینو / پروڈکٹس کھولیں، سیکشن چنیں اور نام، قیمت اور دستیابی درج کریں۔ روشن، صاف تصویر اپ لوڈ کریں؛ کراپ ایڈیٹر میں تناسب، زوم اور جگہ درست کر کے استعمال کریں۔' : 'Open Menu / Products, choose a section, then enter the name, price and availability. Upload a bright, clear photo; use the crop editor to adjust framing, zoom and aspect ratio before applying it.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '2. آرڈر وصول اور تیار کریں' : '2. Receive and prepare orders'}</summary><p>${state.lang === 'ur' ? 'ایپ کھلی اور آواز آن رکھیں۔ نیا آرڈر قبول کریں، تیاری کا وقت بتائیں، پھر تیار ہونے پر تیار نشان لگائیں۔' : 'Keep the app open with sound enabled. Accept a new order, set a realistic prep time, then mark it ready when it is prepared.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '3. اوقات اور دستیابی تازہ رکھیں' : '3. Keep hours and availability current'}</summary><p>${state.lang === 'ur' ? 'دکان کی ترتیبات میں کھلنے کے اوقات اور وقفے محفوظ کریں۔ مصروف ہوں تو نئی آرڈرز عارضی طور پر روکیں؛ دستیابی بدلنے پر اسٹاک اپ ڈیٹ کریں۔' : 'Save opening hours and breaks in Shop settings. Pause new orders temporarily when busy, and update stock when availability changes.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '4. گاہک کا منظر دیکھیں' : '4. Check the customer view'}</summary><p>${state.lang === 'ur' ? 'پری ویو میں دکان اور پروڈکٹس دیکھیں تاکہ تصویر، نام اور قیمت درست نظر آئیں۔' : 'Use customer preview to check that your shop and products display with the right photos, names and prices.'}</p></details>
+    </div>
     <div class="grp" style="margin-top:6px"><div class="grp-h">👤 Profile &amp; Account</div>
     <div class="list setlist">
       <button class="row" onclick="A.profileSheet()"><div class="row-main"><div class="row-title">🏪 ${t('m_profile')}</div><div class="row-sub">${t('m_profile_s')}</div></div><span class="muted">›</span></button>
@@ -2041,6 +2061,7 @@ function viewShop(){
     <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
     <div class="card">
       <button class="row" style="width:100%;border:none;background:none" onclick='Chat.open(null, "sup", state.user.id)'><div class="row-main"><div class="row-title">💬 ${t('chat_support')}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="A.supportCenter()"><div class="row-main"><div class="row-title">🛟 ${state.lang === 'ur' ? 'سپورٹ پیغامات' : 'Support messages'}</div><div class="row-sub">${state.lang === 'ur' ? 'مدد کی درخواست بنائیں اور جواب دیں' : 'Create a request and reply to support'}</div></div><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
     </div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
@@ -2050,6 +2071,26 @@ function viewShop(){
     </div></div>
     <p class="ver" style="margin-top:14px">Dera Shop v${APP_VERSION}</p>`;
 }
+
+// ---- In-app photo crop editor ----
+const PhotoCrop = {
+  file:null, img:null, zoom:1, rotation:0, panX:0, panY:0, aspect:1, drag:null,
+  open(){
+    const input = $('i_photo'), file = input && input.files && input.files[0];
+    const source = this.file || file;
+    if (!source) return toast(state.lang === 'ur' ? 'پہلے تصویر منتخب کریں' : 'Select a photo first', true);
+    const url = URL.createObjectURL(source), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); this.img = img; this.file = source; this.zoom=1; this.rotation=0; this.panX=0; this.panY=0;
+      openSheet(state.lang === 'ur' ? 'تصویر کراپ / ایڈٹ کریں' : 'Crop / edit photo', `<div class="crop-help">${state.lang === 'ur' ? 'تصویر کو کھسکائیں؛ زوم اور تناسب منتخب کریں۔' : 'Drag to reposition; choose a zoom and aspect ratio.'}</div><div class="crop-stage" id="cropStage"><canvas id="cropCanvas"></canvas></div><div class="crop-toolbar"><label>${state.lang === 'ur' ? 'تناسب' : 'Aspect'} <select id="cropAspect" onchange="PhotoCrop.setAspect(this.value)"><option value="1">1:1</option><option value="1.333">4:3</option><option value="0.75">3:4</option><option value="1.778">16:9</option></select></label><label>${state.lang === 'ur' ? 'زوم' : 'Zoom'} <input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" oninput="PhotoCrop.setZoom(this.value)"></label><button type="button" class="btn ghost small" style="width:auto" onclick="PhotoCrop.rotate()">↻ ${state.lang === 'ur' ? 'گھمائیں' : 'Rotate'}</button></div><div class="actions"><button type="button" class="btn ghost" onclick="closeSheet()">${t('cancel')}</button><button type="button" class="btn" onclick="PhotoCrop.apply()">${state.lang === 'ur' ? 'کراپ استعمال کریں' : 'Use cropped photo'}</button></div>`);
+      this.bind(); this.draw();
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);toast(state.lang==='ur'?'تصویر نہیں کھل سکی':'Could not read this photo',true)}; img.src=url;
+  },
+  bind(){ const stage=$('cropStage'); if(!stage)return; stage.onpointerdown=e=>{this.drag={x:e.clientX,y:e.clientY,px:this.panX,py:this.panY};stage.setPointerCapture(e.pointerId)}; stage.onpointermove=e=>{if(!this.drag)return;const r=stage.getBoundingClientRect();this.panX=this.drag.px+(e.clientX-this.drag.x)/r.width;this.panY=this.drag.py+(e.clientY-this.drag.y)/r.height;this.draw()}; stage.onpointerup=stage.onpointercancel=()=>{this.drag=null}; },
+  setAspect(v){this.aspect=Number(v)||1;this.draw()}, setZoom(v){this.zoom=Number(v)||1;this.draw()}, rotate(){this.rotation=(this.rotation+90)%360;this.panX=0;this.panY=0;this.draw()},
+  draw(target){const c=target||$('cropCanvas');if(!c||!this.img)return;const w=target?c.width:Math.max(1,c.clientWidth*devicePixelRatio),h=target?c.height:Math.max(1,c.clientHeight*devicePixelRatio);if(!target){c.width=w;c.height=h}const ctx=c.getContext('2d');ctx.clearRect(0,0,w,h);const a=this.rotation%180?this.img.height:this.img.width,b=this.rotation%180?this.img.width:this.img.height;const scale=Math.max(w/a,h/b)*this.zoom;ctx.save();ctx.translate(w/2+this.panX*w,h/2+this.panY*h);ctx.rotate(this.rotation*Math.PI/180);ctx.drawImage(this.img,-this.img.width*scale/2,-this.img.height*scale/2,this.img.width*scale,this.img.height*scale);ctx.restore();},
+  apply(){const outW=900,outH=Math.round(outW/this.aspect),c=document.createElement('canvas');c.width=outW;c.height=outH;this.draw(c);c.toBlob(blob=>{if(!blob)return toast(t('error'),true);this.file=new File([blob],'shop-photo-cropped.jpg',{type:'image/jpeg'});const img=$('i_prev');if(img){img.src=URL.createObjectURL(this.file);img.style.display='block'}closeSheet();toast(state.lang==='ur'?'کراپ شد؛ محفوظ کرنے کے لیے سیو دبائیں':'Crop applied — press Save to upload');},'image/jpeg',0.9)}
+};
 
 // ---- Photos ----
 function resizeImage(file, max){
@@ -2129,7 +2170,7 @@ function drawPics(){
   g.innerHTML = old.concat(add).join('');
   wireDrag(g, () => state.pics, drawPics, seq => { try { remapBSlots(seq); drawBSlots(); } catch (e) {} try { TF.remapMeta(seq); } catch (e) {} try { TF.syncPics(); } catch (e) {} });
 }
-function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; if (id === 'i_prev') setTimeout(() => { try { syncBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} }, 0); const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
+function previewFile(input, id){ const f = input.files && input.files[0]; if (!f) return; if (id === 'i_prev') PhotoCrop.file = null; const el = $(id); el.src = objUrl(f); el.style.display = 'block'; if (id === 'i_prev') setTimeout(() => { try { syncBSlots(); } catch (e) {} try { TF.syncPics(); } catch (e) {} }, 0); const bx = $('bgRmBox'); if (bx) bx.style.display = (state.settings && state.settings.ai_bg_remove === 'false') ? 'none' : 'block'; }
 async function removeBg(inputId, prevId){
   const inp = $(inputId); const f = inp.files && inp.files[0];
   const msg0 = $('bgRmMsg');
@@ -2212,6 +2253,7 @@ const A = {
       ${x.o === x.c ? `<div class="h24">${t('open24')}</div>` : ''}
       ${x.b.map((b, i) => `<div class="hbrk"><span>☕ ${t('brk')}</span>${tSel(b.s, `A.brkSet(${d},${i},'s',this.value)`)}<span>–</span>${tSel(b.e, `A.brkSet(${d},${i},'e',this.value)`)}<button type="button" class="hx" onclick="A.brkDel(${d},${i})" aria-label="×">×</button></div>`).join('')}
       <div class="hbtns">${x.b.length < 3 ? `<button type="button" class="hadd" onclick="A.brkAdd(${d})">${t('add_brk')}</button>` : ''}${d === 5 && !x.b.some(b => b.s === '13:00') ? `<button type="button" class="hadd" onclick="A.brkAdd(5,'13:00','14:30')">${t('jumma')}</button>` : ''}</div>`}</div>`; };
+    this.loadSpecialHours().then(() => { const list = $('specialHoursList'); if (list) list.innerHTML = this.specialHoursHtml(); });
     openSheet(`🕘 ${t('m_timings')}`,
       `<div class="chips" style="margin-bottom:10px">
         <button class="chip ${mode === 'same' ? 'on' : ''}" onclick="state.hrsMode='same';A.timingsSheet()">${t('mode_same')}</button>
@@ -2219,8 +2261,34 @@ const A = {
       </div>
       <div class="muted" style="font-size:13px;margin-bottom:8px">${t('all_day_note')}</div>
       <div class="hrsed" id="hrsed">${mode === 'same' ? dayCard(1) : [1, 2, 3, 4, 5, 6, 0].map(dayCard).join('')}</div>
+      <hr><h3>${state.lang === 'ur' ? '📅 خاص / چھٹی کے اوقات' : '📅 Special / holiday hours'}</h3>
+      <p class="muted">${state.lang === 'ur' ? 'چنی ہوئی تاریخ کے لیے ہفتہ وار اوقات کے بجائے یہ اوقات لاگو ہوں گے۔' : 'These date-specific hours override weekly hours for that date only.'}</p>
+      <input id="sh_date" type="date" aria-label="${state.lang === 'ur' ? 'تاریخ' : 'Date'}">
+      <label style="display:flex;gap:8px;align-items:center;margin:8px 0"><input id="sh_closed" type="checkbox" onchange="A.specialClosedToggle()">${state.lang === 'ur' ? 'اس تاریخ دکان بند' : 'Closed on this date'}</label>
+      <div id="sh_times" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>${state.lang === 'ur' ? 'کھلے' : 'Opens'}<input id="sh_open" type="time" value="09:00"></label><label>${state.lang === 'ur' ? 'بند' : 'Closes'}<input id="sh_close" type="time" value="22:00"></label></div>
+      <input id="sh_note" maxlength="160" placeholder="${state.lang === 'ur' ? 'مختصر نوٹ (اختیاری)' : 'Short note (optional)'}" style="margin-top:8px">
+      <button class="btn ghost" style="margin-top:8px" onclick="A.saveSpecialHours()">${state.lang === 'ur' ? 'تاریخ کے اوقات محفوظ کریں' : 'Save date exception'}</button>
+      <div id="specialHoursList" style="margin-top:10px">${this.specialHoursHtml()}</div>
       <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveTimings()">${t('save')}</button></div>`);
   },
+  async loadSpecialHours(){
+    const r = state.restaurant; if (!r) return;
+    try { const { data, error } = await sb.from('restaurant_special_hours').select('id,restaurant_id,exception_date,is_closed,open_time,close_time,note').eq('restaurant_id', r.id).order('exception_date').limit(100); if (error) throw error; state.specialHours = data || []; }
+    catch (e) { state.specialHours = []; console.warn('Could not load special hours', e); }
+  },
+  specialHoursHtml(){
+    return (state.specialHours || []).map(x => `<div class="card" style="display:flex;gap:8px;align-items:center;padding:8px;margin:6px 0"><div style="flex:1"><b>${esc(x.exception_date)}</b> · ${x.is_closed ? (state.lang === 'ur' ? 'بند' : 'Closed') : `${hhmm(x.open_time)}–${hhmm(x.close_time)}`}${x.note ? `<div class="muted">${esc(x.note)}</div>` : ''}</div><button class="pillbtn" onclick="A.editSpecialHours('${x.id}')">${state.lang === 'ur' ? 'ترمیم' : 'Edit'}</button><button class="pillbtn" onclick="A.removeSpecialHours('${x.id}')">${state.lang === 'ur' ? 'ہٹائیں' : 'Remove'}</button></div>`).join('') || `<div class="muted">${state.lang === 'ur' ? 'ابھی کوئی خاص تاریخ نہیں۔' : 'No date exceptions yet.'}</div>`;
+  },
+  specialClosedToggle(){ const el = $('sh_times'); if (el) el.style.display = $('sh_closed').checked ? 'none' : 'grid'; },
+  editSpecialHours(id){ const x = (state.specialHours || []).find(y => y.id === id); if (!x) return; $('sh_date').value = x.exception_date; $('sh_closed').checked = !!x.is_closed; $('sh_open').value = hhmm(x.open_time) || '09:00'; $('sh_close').value = hhmm(x.close_time) || '22:00'; $('sh_note').value = x.note || ''; this.specialClosedToggle(); },
+  async saveSpecialHours(){
+    const r = state.restaurant, date = $('sh_date').value, closed = $('sh_closed').checked, o = $('sh_open').value, c = $('sh_close').value, note = $('sh_note').value.trim();
+    if (!date) return toast(state.lang === 'ur' ? 'تاریخ چنیں' : 'Choose a date', true);
+    if (!closed && (!o || !c || o >= c)) return toast(state.lang === 'ur' ? 'کھلنے اور بند ہونے کا درست وقت لکھیں' : 'Enter valid same-day opening and closing times', true);
+    if (new Date(date + 'T00:00:00Z') < new Date(new Date().toISOString().slice(0,10) + 'T00:00:00Z')) return toast(state.lang === 'ur' ? 'گزری ہوئی تاریخ محفوظ نہیں ہو سکتی' : 'Past dates cannot be saved', true);
+    await run(async () => { const row = { restaurant_id:r.id, exception_date:date, is_closed:closed, open_time:closed ? null : o, close_time:closed ? null : c, note:note || null, updated_at:new Date().toISOString() }; need(await sb.from('restaurant_special_hours').upsert(row, { onConflict:'restaurant_id,exception_date' })); await this.loadSpecialHours(); const list=$('specialHoursList'); if(list) list.innerHTML=this.specialHoursHtml(); $('sh_note').value=''; toast(state.lang === 'ur' ? 'خاص اوقات محفوظ ہو گئے' : 'Special hours saved'); });
+  },
+  async removeSpecialHours(id){ if (!await uiConfirm(state.lang === 'ur' ? 'اس خاص وقت کو ہٹائیں؟' : 'Remove this date exception?')) return; await run(async () => { need(await sb.from('restaurant_special_hours').delete().eq('id',id).eq('restaurant_id',state.restaurant.id)); await this.loadSpecialHours(); const list=$('specialHoursList'); if(list) list.innerHTML=this.specialHoursHtml(); toast(t('saved')); }); },
   async saveTimings(){
     const r = state.restaurant; const w = hrsDraft(r);
     if (state.hrsMode === 'same'){ const m = w[1]; for (let d = 0; d < 7; d++) if (d !== 1) w[d] = { o:m.o, c:m.c, off:m.off, b:m.b.map(b => Object.assign({}, b)) }; }
@@ -2716,6 +2784,31 @@ const A = {
     });
   },
 
+  // ---- Shop ops ----
+  setOrderFilter(k){ state.orderFilter = ['live','new','prep','ready','past'].includes(k) ? k : 'live'; renderTab(); },
+  async shopPreview(){
+    await run(async () => {
+      if (!state.items) await loadMenu();
+      const r = state.restaurant;
+      const products = (state.items || []).filter(x => x.is_available !== false).slice(0, 80);
+      const rows = products.map(x => `<div class="row" style="cursor:default"><span class="thumb">${x.photo_url ? `<img src="${esc(x.photo_url)}" alt="">` : '🛍️'}</span><div class="row-main" style="cursor:default"><b>${esc(x.name)}</b><div class="muted">${money(x.price)}${x.description ? ' · ' + esc(x.description) : ''}</div></div></div>`).join('');
+      openSheet(state.lang === 'ur' ? '👁️ کسٹمر ویو' : '👁️ Customer view', `<div class="card"><b>${esc(r.name)}</b><div class="muted">${esc(r.description || '')}</div><div class="muted">${r.is_open ? (state.lang === 'ur' ? 'آرڈر کھلے ہیں' : 'Accepting orders') : (state.lang === 'ur' ? 'آرڈر بند ہیں' : 'Not accepting orders')}</div></div><h3>${state.lang === 'ur' ? 'دستیاب اشیا' : 'Available items'}</h3>${rows || `<div class="empty">${state.lang === 'ur' ? 'کوئی دستیاب شے نہیں' : 'No available items'}</div>`}<p class="muted" style="font-size:12px">${state.lang === 'ur' ? 'یہ اسی مینو کا پیش نظارہ ہے؛ چیک آؤٹ شامل نہیں۔' : 'Preview of this shop menu; checkout is not included.'}</p>`);
+    });
+  },
+  async handoffSheet(id){
+    await run(async () => {
+      const { data, error } = await sb.from('shop_order_handoffs').select('checklist,note').eq('order_id', id).maybeSingle();
+      if (error) throw error;
+      const c = (data && data.checklist) || {};
+      const ur = state.lang === 'ur';
+      openSheet(ur ? '📦 حوالگی چیک لسٹ' : '📦 Handoff checklist', `<p class="muted">#${esc(id.slice(-4).toUpperCase())} · ${ur ? 'حوالگی سے پہلے تصدیق کریں' : 'Confirm before handing over'}</p><label class="check"><input id="ho_items" type="checkbox" ${c.items_checked ? 'checked' : ''}>${ur ? 'آرڈر کی اشیا چیک کر لیں' : 'Items checked against order'}</label><label class="check"><input id="ho_seal" type="checkbox" ${c.order_sealed ? 'checked' : ''}>${ur ? 'پیکٹ بند / محفوظ ہے' : 'Package sealed / secured'}</label><label class="check"><input id="ho_person" type="checkbox" ${c.customer_or_rider_confirmed ? 'checked' : ''}>${ur ? 'کسٹمر یا رائیڈر کی حوالگی کی تصدیق' : 'Customer or rider handoff confirmed'}</label><label class="f" for="ho_note">${ur ? 'نوٹ (اختیاری)' : 'Note (optional)'}</label><textarea id="ho_note" maxlength="500">${esc(data?.note || '')}</textarea><button class="btn" style="margin-top:12px" onclick="A.saveHandoff('${id}')">${ur ? 'محفوظ کریں' : 'Save checklist'}</button>`);
+    });
+  },
+  async saveHandoff(id){
+    const checklist = { items_checked:$('ho_items').checked, order_sealed:$('ho_seal').checked, customer_or_rider_confirmed:$('ho_person').checked };
+    const note = $('ho_note').value.trim() || null;
+    await run(async () => { need(await sb.from('shop_order_handoffs').upsert({ order_id:id, restaurant_id:state.restaurant.id, checklist, note, updated_at:new Date().toISOString() }, { onConflict:'order_id' })); closeSheet(); toast(state.lang === 'ur' ? 'چیک لسٹ محفوظ ہو گئی' : 'Checklist saved'); });
+  },
   // ---- Orders ----
   openAccept(id){
     const o = state.orders.find(x => x.id === id); if (o) return showNewOrder(o);
@@ -3052,6 +3145,7 @@ const A = {
   tfCustom(pk, i, f2, v){ const P = TF.pools[pk]; if (P && P.custom[i]) P.custom[i][f2] = v; },
   editItem(id, catId){
     if (!state.cats.length) return toast(t('no_sections'), true);
+    PhotoCrop.file = null;
     const i = state.items.find(x => x.id === id);
     state.pics = { old:(i && Array.isArray(i.photos) ? i.photos.slice() : []), add:[] };
     state.bslots = []; { const bp = (i && Array.isArray(i.back_photos)) ? i.back_photos : []; const n = ((i && i.photo_url) ? 1 : 0) + ((i && Array.isArray(i.photos)) ? i.photos.length : 0); for (let k = 0; k < n; k++) state.bslots.push(bp[k] ? { t:'o', v:bp[k] } : null); }
@@ -3067,7 +3161,7 @@ const A = {
       const row = { name, description:$('i_desc').value.trim() || null, keywords:($('i_kw').value || '').trim().slice(0, 300) || null, barcode:($('i_bc').value || '').trim().slice(0, 64) || null, price:num(price), compare_price:cmp === '' ? null : num(cmp),
         category_id:$('i_cat').value, is_available:$('i_avail').checked, weight_kg:Math.round(Math.max(0, num($('i_kg').value)) / ($('i_kgu').value === 'g' ? 1000 : 1) * 1000) / 1000 };
       const durEl = $('i_dur'); const dur = durEl ? Math.round(num(durEl.value)) : 0; row.duration_min = dur >= 5 ? Math.min(480, dur) : null;
-      const f = $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items', 'Main photo');
+      const f = PhotoCrop.file || $('i_photo').files[0]; if (f) row.photo_url = await uploadImage(f, 'items', 'Main photo');
       const st = $('i_stock').value.trim(); row.stock_qty = st === '' ? null : Math.max(0, Math.round(num(st)));
       const pics = (state.pics || { old:[], add:[] }); const up = [];
       for (let ix = 0; ix < pics.add.length; ix++) up.push(await uploadImage(pics.add[ix], 'items', 'Photo ' + (pics.old.length + ix + 1)));
@@ -3090,6 +3184,13 @@ const A = {
     if (!await uiConfirm(t('remove_q'))) return;
     await run(async () => { need(await sb.from('menu_items').delete().eq('id', id)); await loadMenu(); closeSheet(); renderTab(); toast(t('saved')); });
   }
+  ,supportCenter(orderId){ return ShopSupport.open(orderId || null); }
+  ,supportTicket(id){ return ShopSupport.detail(id); }
+  ,supportNew(orderId){ return ShopSupport.createForm(orderId || null); }
+  ,supportSubmit(){ return ShopSupport.submit(); }
+  ,supportReply(id){ return ShopSupport.reply(id); }
+  ,supportReopen(id){ return ShopSupport.reopen(id); }
+  ,supportEscalate(id){ return ShopSupport.escalate(id); }
 };
 
 // ================= LIVE =================
@@ -4737,6 +4838,46 @@ const Legal = (() => {
     cfg.toast(tt(lang, 'del_done'));
   }
   return { init, agree, links, del };
+})();
+
+// ================= SHOP SUPPORT CENTER (isolated from chat/order issues) =================
+const ShopSupport = (() => {
+  const ur = () => state.lang === 'ur';
+  const txt = (en, u) => ur() ? u : en;
+  const statusText = s => ({open:txt('Open','کھلا'),in_progress:txt('In progress','جاری'),waiting_on_requester:txt('Waiting for you','آپ کے جواب کا انتظار'),resolved:txt('Resolved','حل شدہ'),closed:txt('Closed','بند')})[s] || s;
+  const safeId = id => JSON.stringify(String(id));
+  const showError = e => toast((e && e.message) || txt('Support could not be loaded. Please try again.','سپورٹ لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔'), true);
+  const dateText = d => d ? new Date(d).toLocaleString(ur() ? 'ur-PK' : 'en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+  async function open(orderId){
+    const {data:rows,error}=await sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_due_at,first_response_at,created_at,updated_at').order('updated_at',{ascending:false}).limit(20);
+    if(error) return showError(error);
+    const {data:cfg}=await sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).limit(1).maybeSingle();
+    const list=(rows||[]).map(x=>`<button class="row" style="width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin:7px 0" onclick='A.supportTicket(${safeId(x.id)})'><div class="row-main"><div class="row-title">${esc(x.subject)}</div><div class="row-sub">${esc(statusText(x.status))} · ${esc(x.category)}${x.order_id?' · '+txt('Order','آرڈر')+' #'+esc(String(x.order_id).slice(-4).toUpperCase()):''} · ${esc(dateText(x.updated_at))}</div></div><span class="muted">›</span></button>`).join('');
+    const hours=Number((cfg||{}).first_response_target_hours)||24;
+    openSheet(txt('Support messages','سپورٹ پیغامات'),`<p class="muted">${txt(`First response target: within about ${hours} hours. This is a target, not a guarantee.`,`پہلے جواب کا ہدف: تقریباً ${hours} گھنٹے۔ یہ ہدف ہے، ضمانت نہیں۔`)}</p><button class="btn" style="width:100%" onclick='A.supportNew(${orderId?safeId(orderId):'null'})'>＋ ${txt('New support request','نئی مدد کی درخواست')}</button><h3>${txt('Recent requests','حالیہ درخواستیں')}</h3>${list||`<div class="muted">${txt('No support requests yet.','ابھی کوئی سپورٹ درخواست نہیں۔')}</div>`}<p class="muted" style="font-size:12px">${txt('Showing up to 20 most recently updated requests.','تازہ ترین 20 درخواستیں دکھائی جا رہی ہیں۔')}</p>`);
+  }
+  function createForm(orderId){
+    const categories=[['general',txt('General','عام')],['orders',txt('Orders','آرڈرز')],['account',txt('Account','اکاؤنٹ')],['payments',txt('Payments','ادائیگیاں')],['technical',txt('App or technical','ایپ یا تکنیکی')],['other',txt('Other','دیگر')]];
+    window.__shopSupportOrderId=orderId||null;
+    openSheet(txt('New support request','نئی سپورٹ درخواست'),`<label class="f" for="sc_subject">${txt('Subject','عنوان')}</label><input id="sc_subject" maxlength="180" required><label class="f" for="sc_category">${txt('Category','قسم')}</label><select id="sc_category">${categories.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>${orderId?`<div class="note">${txt('Linked order','منسلک آرڈر')} #${esc(String(orderId).slice(-4).toUpperCase())}</div>`:''}<label class="f" for="sc_message">${txt('Message','پیغام')}</label><textarea id="sc_message" maxlength="10000" rows="5" placeholder="${txt('Describe how we can help','بتائیں ہم کیسے مدد کر سکتے ہیں')}" required></textarea><div class="actions"><button class="btn" onclick='A.supportSubmit()'>${txt('Send request','درخواست بھیجیں')}</button></div>`);
+  }
+  async function submit(){
+    const subject=($('sc_subject')?.value||'').trim(),category=$('sc_category')?.value||'general',body=($('sc_message')?.value||'').trim();
+    if(!subject||!body)return toast(txt('Add a subject and message.','عنوان اور پیغام لکھیں۔'),true);
+    try{const {data:id,error}=await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:window.__shopSupportOrderId||null,p_message:body});if(error)throw error;window.__shopSupportOrderId=null;await detail(id);}catch(e){showError(e);}
+  }
+  async function detail(id){
+    const {data:tkt,error}=await sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_due_at,first_response_at,created_at,updated_at').eq('id',id).limit(1).maybeSingle();if(error||!tkt)return showError(error||new Error('Ticket not found'));
+    const {data:msgs,error:me}=await sb.from('support_ticket_messages').select('id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:true}).limit(100);if(me)return showError(me);
+    const body=(msgs||[]).map(m=>`<div class="note" style="margin:7px 0"><b>${m.author_role==='admin'?txt('Dera support','Dera سپورٹ'):txt('You','آپ')}</b><span class="muted" style="font-size:12px"> · ${esc(dateText(m.created_at))}</span><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(m.body)}</div></div>`).join('');
+    const target=tkt.first_response_at?txt('First response received','پہلا جواب موصول ہو گیا'):txt('First-response target (not a guarantee): ','پہلے جواب کا ہدف (ضمانت نہیں): ')+dateText(tkt.first_response_due_at);
+    const actions=['resolved','closed'].includes(tkt.status)?`<button class="btn ghost" onclick='A.supportReopen(${safeId(id)})'>${txt('Reopen request','درخواست دوبارہ کھولیں')}</button>`:`<button class="btn ghost" onclick='A.supportEscalate(${safeId(id)})'>${txt('Escalate','ترجیح بڑھائیں')}</button>`;
+    openSheet(txt('Support request','سپورٹ درخواست'),`<h3>${esc(tkt.subject)}</h3><div class="muted">${esc(statusText(tkt.status))} · ${esc(tkt.category)}${tkt.order_id?' · '+txt('Order','آرڈر')+' #'+esc(String(tkt.order_id).slice(-4).toUpperCase()):''}</div><p class="muted" style="font-size:13px">${esc(target)}</p><div style="max-height:38vh;overflow:auto">${body||`<div class="muted">${txt('No messages yet.','ابھی کوئی پیغام نہیں۔')}</div>`}${(msgs||[]).length>=100?`<div class="muted">${txt('Showing the first 100 messages.','پہلے 100 پیغامات دکھائے جا رہے ہیں۔')}</div>`:''}</div><label class="f" for="sc_reply">${txt('Reply','جواب')}</label><textarea id="sc_reply" maxlength="10000" rows="3"></textarea><button class="btn" style="width:100%" onclick='A.supportReply(${safeId(id)})'>${txt('Send reply','جواب بھیجیں')}</button><div style="display:flex;gap:8px;margin-top:8px">${actions}<button class="btn ghost" onclick="A.supportCenter()">${txt('Back to requests','درخواستوں پر واپس')}</button></div>`);
+  }
+  async function reply(id){const body=($('sc_reply')?.value||'').trim();if(!body)return toast(txt('Write a reply first.','پہلے جواب لکھیں۔'),true);try{const {error}=await sb.rpc('support_send_message',{p_ticket_id:id,p_body:body});if(error)throw error;await detail(id);}catch(e){showError(e);}}
+  async function reopen(id){try{const {error}=await sb.rpc('support_reopen_ticket',{p_ticket_id:id});if(error)throw error;await detail(id);}catch(e){showError(e);}}
+  async function escalate(id){try{const {error}=await sb.rpc('support_escalate_ticket',{p_ticket_id:id});if(error)throw error;await detail(id);}catch(e){showError(e);}}
+  return {open,detail,createForm,submit,reply,reopen,escalate};
 })();
 
 // ================= REPORTS: Excel and PDF (Shop app and Admin) =================

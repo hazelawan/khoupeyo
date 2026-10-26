@@ -197,6 +197,7 @@ html[dir=rtl] .heart{right:auto;left:12px}
 .progress{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:8px 0}
 .progress i{display:block;height:100%;background:var(--marigold)}
 .micbtn{position:absolute;top:50%;right:6px;transform:translateY(-50%);border:0;background:transparent;font-size:20px;cursor:pointer;padding:4px 6px;z-index:2}html[dir=rtl] .micbtn{right:auto;left:6px}.searchbox input#q{padding-right:44px}html[dir=rtl] .searchbox input#q{padding-left:44px;padding-right:40px}.micbtn.on{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.35}}.sugg{background:var(--surface,#fff);color:var(--ink);border-radius:16px;margin-top:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.18)}.sg-h{display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px;font-size:14px}.sg-c{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.add.bell{margin-top:6px;min-width:0;padding:6px 10px}.add.bell.on{background:var(--brand);color:#fff}.sharebtn{flex:none;color:var(--brand)!important;border-color:var(--line)!important;background:var(--surface)!important}.faqq{border-bottom:1px solid var(--line);padding:10px 0}.faqq summary{font-weight:700;cursor:pointer}.faqq div{margin-top:6px;color:var(--muted)}
+.support-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}.support-message{padding:10px 12px;border-radius:12px;background:var(--soft);margin:8px 0;white-space:pre-wrap;overflow-wrap:anywhere}.support-message.admin{background:rgba(31,111,74,.12)}.support-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.support-actions .btn{flex:1;min-width:135px}.support-status{font-size:12px;font-weight:700;text-transform:capitalize}
 .revrow{border-bottom:1px solid var(--line);padding:8px 0}.stars.small button{font-size:22px;padding:0 1px}
 .bkcard{background:var(--surface,#fff);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px}.bkcard.on{border:2px solid var(--brand)}.bkslots{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow:auto}.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}.chip{flex:none;border-radius:999px;padding:8px 14px;cursor:pointer;font-family:inherit}
 /* booking slot picker polish */
@@ -1061,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.65';
+const APP_VERSION = '5.66';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1088,6 +1089,7 @@ const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.
 const I18N = {
   en: {
     appearance:'Appearance', grp_profile:'Profile', grp_orders:'Orders & wallet', help_legal:'Help & legal', delete_account:'Delete my account', voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Dera:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
+    saved_shops:'Saved shops', save_shop:'♡ Save shop', shop_saved:'♥ Shop saved', shop_save_login:'Log in to save shops', shops_none:'No saved shops yet.', shopping_list:'Shopping list', meal_plan:'Meal plan', add_list_item:'Add item', list_placeholder:'Item name', list_empty:'Your list is empty.', planned_meal:'Meal', meal_placeholder:'What are you planning to eat?', plan_date:'Date', add_meal:'Add meal', plan_empty:'No meals planned yet.', checked:'Done', remove_item:'Remove',
     rate_items_t:'Rate the products (optional)', rate_bk:'How was the service?', rate_bk_send:'Send rating', rate_bk_thanks:'Thank you for your rating!', reviews_t:'Customer reviews', no_reviews:'No reviews yet.', rev_n:'{n} reviews',
     book:'📅 Book', book_title:'Book a time', bk_day:'Choose a day', bk_time:'Choose a time', bk_none:'No free time on this day. Try another day.', bk_note:'Note for the shop (optional)', bk_confirm:'Book this time', bk_ok:'Booked! Please reach on time.', bk_login:'Please log in to book', my_bookings:'My bookings', bk_booked:'Booked', bk_arrived:'At the shop', bk_done:'Done', bk_cancelled:'Cancelled', bk_no_show:'Cancelled — late', bk_rule:'Please be on time. If you are more than {m} min late, the booking is cancelled by itself.', bk_wait_till:'The shop waits for you until {t}', bk_cancel:'Cancel booking', bk_cancel_q:'Cancel this booking?', bk_cancel_ok:'Booking cancelled', bk_free:'{n} free', bk_pay:'Pay at the shop', today:'Today', tomorrow:'Tomorrow', min_s:'min', bk_loading:'Loading times…',
     login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password', email_ph:'yourname@gmail.com', pw_ph:'Enter your password',
@@ -1212,6 +1214,7 @@ const I18N = {
   },
   ur: {
     appearance:'انداز', grp_profile:'پروفائل', grp_orders:'آرڈرز اور والیٹ', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Dera پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
+    saved_shops:'محفوظ دکانیں', save_shop:'♡ دکان محفوظ کریں', shop_saved:'♥ دکان محفوظ ہے', shop_save_login:'دکانیں محفوظ کرنے کے لیے لاگ ان کریں', shops_none:'ابھی کوئی دکان محفوظ نہیں۔', shopping_list:'خریداری کی فہرست', meal_plan:'کھانے کا منصوبہ', add_list_item:'آئٹم شامل کریں', list_placeholder:'آئٹم کا نام', list_empty:'فہرست خالی ہے۔', planned_meal:'کھانا', meal_placeholder:'کیا کھانے کا ارادہ ہے؟', plan_date:'تاریخ', add_meal:'کھانا شامل کریں', plan_empty:'ابھی کھانے کا منصوبہ نہیں۔', checked:'مکمل', remove_item:'ہٹائیں',
     rate_items_t:'پروڈکٹس کو ریٹ کریں (اختیاری)', rate_bk:'سروس کیسی رہی؟', rate_bk_send:'ریٹنگ بھیجیں', rate_bk_thanks:'ریٹنگ کا شکریہ!', reviews_t:'گاہکوں کے ریویوز', no_reviews:'ابھی کوئی ریویو نہیں۔', rev_n:'{n} ریویوز',
     book:'📅 بُک کریں', book_title:'وقت بُک کریں', bk_day:'دن چنیں', bk_time:'وقت چنیں', bk_none:'اس دن کوئی وقت خالی نہیں۔ کوئی اور دن دیکھیں۔', bk_note:'دکان کے لیے نوٹ (اختیاری)', bk_confirm:'یہ وقت بُک کریں', bk_ok:'بُک ہو گیا! وقت پر پہنچیں۔', bk_login:'بُک کرنے کے لیے لاگ اِن کریں', my_bookings:'میری بُکنگز', bk_booked:'بُک ہے', bk_arrived:'دکان پر پہنچ گئے', bk_done:'مکمل', bk_cancelled:'منسوخ', bk_no_show:'منسوخ — دیر ہو گئی', bk_rule:'وقت پر پہنچیں۔ اگر آپ {m} منٹ سے زیادہ لیٹ ہوئے تو بُکنگ خود منسوخ ہو جائے گی۔', bk_wait_till:'دکان {t} تک آپ کا انتظار کرے گی', bk_cancel:'بُکنگ منسوخ کریں', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟', bk_cancel_ok:'بُکنگ منسوخ ہو گئی', bk_free:'{n} خالی', bk_pay:'پیسے دکان پر دیں', today:'آج', tomorrow:'کل', min_s:'منٹ', bk_loading:'وقت لوڈ ہو رہے ہیں…',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', email_ph:'yourname@gmail.com', pw_ph:'اپنا پاس ورڈ لکھیں',
@@ -1339,7 +1342,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, restaurants:[], products:[], stats:{ items:{}, shops:{} },
   curMenu:null, curRest:null, addresses:[], selAddr:null, newCoords:null, promo:'', promoRes:null, authMode:'login', pending:null,
-  itemsCache:{}, homeQuery:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), qty:1,
+  itemsCache:{}, homeQuery:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), savedShopIds:new Set(), qty:1,
   cart: ls.get('kh_cart', { rid:null, items:[], note:'' }),
   optItems:new Set(), optCache:{}, banners:[], promos:null, tip:0, when:'asap', schedDay:null, schedAt:null, badges:new Set()
 };
@@ -1499,8 +1502,11 @@ const PKD = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Karachi', year:'nu
 const PKW = new Intl.DateTimeFormat('en-US', { timeZone:'Asia/Karachi', weekday:'short' });
 const WD = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 };
 const hasWeek = r => !!(r && r.hours && typeof r.hours === 'object' && Object.keys(r.hours).length);
+function specialForDate(r, date){ return ((r && r.special_hours) || []).find(x => x.exception_date === date) || null; }
 function openAt(r, d){
   const n = PKF.format(d).replace(/^24/, '00');
+  const date = PKD.format(d), special = specialForDate(r, date);
+  if (special){ if (special.is_closed) return false; const o = String(special.open_time || '').slice(0,5), c = String(special.close_time || '').slice(0,5); if (!o || !c || o === c) return true; return o < c ? (n >= o && n < c) : (n >= o || n < c); }
   if (!hasWeek(r)){ const o = (r.open_time || '').slice(0, 5), c = (r.close_time || '').slice(0, 5); if (!o || !c || o === c) return true; return o < c ? (n >= o && n < c) : (n >= o || n < c); }
   const dw = WD[PKW.format(d)], x = r.hours[dw], y = r.hours[(dw + 6) % 7]; let sh = null;
   if (x && !x.off){ const o = (x.o || '').slice(0, 5), c = (x.c || '').slice(0, 5); if (!o || !c || o === c || (o < c && n >= o && n < c) || (o > c && n >= o)) sh = x; }
@@ -1512,6 +1518,9 @@ function openAt(r, d){
 function nextOpen(r){ let tms = Math.ceil(Date.now() / 900000) * 900000; for (let i = 0; i < 7 * 96; i++, tms += 900000){ if (openAt(r, new Date(tms))) return new Date(tms).toISOString(); } return null; }
 const DAYN = d => new Date(Date.UTC(2024, 0, 7 + d)).toLocaleDateString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', { weekday:'long', timeZone:'UTC' });
 function dayHours(r, d){
+  const date = new Date(PKD.format(new Date()) + 'T00:00:00Z'); date.setUTCDate(date.getUTCDate() + ((d - WD[PKW.format(new Date())] + 7) % 7));
+  const exception = specialForDate(r, PKD.format(date));
+  if (exception) return exception.is_closed ? (state.lang === 'ur' ? 'خصوصی اوقات: بند' : 'Special hours: Closed') + (exception.note ? ` · ${esc(exception.note)}` : '') : (state.lang === 'ur' ? 'خصوصی اوقات: ' : 'Special hours: ') + (exception.open_time === exception.close_time ? t('all_day') : fmtTime(exception.open_time) + ' – ' + fmtTime(exception.close_time)) + (exception.note ? ` · ${esc(exception.note)}` : '');
   if (!hasWeek(r)) return r.open_time && r.close_time && r.open_time !== r.close_time ? fmtTime(r.open_time) + ' – ' + fmtTime(r.close_time) : t('all_day');
   const x = r.hours[d]; if (!x || x.off) return t('day_off');
   const br = (Array.isArray(x.b) ? x.b : []).filter(b => b.s && b.e).map(b => fmtTime(b.s) + '–' + fmtTime(b.e)).join(', ');
@@ -1945,7 +1954,7 @@ async function showParcel(){
 // ================= ROUTER =================
 let pollTimer = null;
 function stopPoll(){ if (pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
-const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account', 'offers', 'plus', 'parcel'];
+const LOGIN_ROUTES = ['checkout', 'orders', 'order', 'account', 'offers', 'plus', 'parcel', 'shopping-list', 'meal-plan', 'help'];
 let routeRunning = false, routeQueued = false;
 async function route(soft){
   if (routeRunning){ routeQueued = true; return; }
@@ -1975,6 +1984,9 @@ async function routeImpl(soft){
     else if (name === 'parcel') await showParcel();
     else if (name === 'account') await showAccount();
     else if (name === 'saved') await showSaved();
+    else if (name === 'shopping-list') await showShoppingList();
+    else if (name === 'meal-plan') await showMealPlan();
+    else if (name === 'help') { if (p[1] === 'ticket') await showSupportTicket(p[2]); else await showHelpCenter(p[1] || null); }
     else if (name === 'offers') await showOffers();
     else if (name === 'plus') await showPlus();
     else return nav('/');
@@ -2042,6 +2054,11 @@ async function loadRestaurants(){
     .eq('is_active', true).order('name');
   if (state.region) q = q.eq('region_id', state.region);
   const list = need(await q);
+  const today = PKD.format(new Date()), untilDate = PKD.format(new Date(Date.now() + 8 * 864e5));
+  try {
+    const ids = list.map(r => r.id);
+    if (ids.length){ const { data, error } = await sb.from('restaurant_special_hours').select('restaurant_id,exception_date,is_closed,open_time,close_time,note').in('restaurant_id', ids).gte('exception_date', today).lte('exception_date', untilDate).limit(500); if (error) throw error; const byShop = new Map(); (data || []).forEach(x => { if (!byShop.has(x.restaurant_id)) byShop.set(x.restaurant_id, []); byShop.get(x.restaurant_id).push(x); }); list.forEach(r => { r.special_hours = byShop.get(r.id) || []; }); }
+  } catch (e) { console.warn('Special shop hours unavailable', e); list.forEach(r => { r.special_hours = []; }); }
   const now = Date.now();
   try { const { data:ts } = await sb.from('app_settings').select('value').eq('key', 'top_shops').maybeSingle(); state.topShops = (ts && ts.value && Array.isArray(ts.value.ids)) ? ts.value.ids : []; } catch (e) { state.topShops = []; }
   list.forEach(r => { r.manual_open = r.is_open; r.busy = !!(r.busy_until && new Date(r.busy_until).getTime() > now); r.ad = !!(r.sponsored_until && new Date(r.sponsored_until).getTime() > now); r.is_open = !!r.is_open && withinHours(r) && !r.busy; const ti = state.topShops.indexOf(r.id); r.top = ti >= 0; r.topRank = ti >= 0 ? ti : 99; });
@@ -2383,14 +2400,35 @@ async function showCategory(name){
   const list = sortProducts(state.products.filter(p => p.category && p.category.name.trim().toLowerCase() === k));
   $('view').innerHTML = `<h1>${esc(name)}</h1>${sortBar()}<div class="grid2">${list.map(productCard).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}</div>`;
 }
+async function loadSavedShops(){
+  if (!state.user) { state.savedShopIds = new Set(); return; }
+  try { const { data, error } = await sb.from('customer_shop_favorites').select('restaurant_id').eq('user_id', state.user.id).limit(200); if (error) throw error; state.savedShopIds = new Set((data || []).map(x => x.restaurant_id)); } catch (e) { state.savedShopIds = new Set(); logErr(e); }
+}
 async function showSaved(){
   await ensureData();
   const list = state.favs.map(id => state.itemsCache[id]).filter(Boolean);
+  await loadSavedShops();
+  const shops = state.restaurants.filter(r => state.savedShopIds.has(r.id));
+  const shopCards = shops.map(r => `<a class="rcard" href="#/r/${r.id}"><div class="rimg">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : esc((r.name || 'S').slice(0,1))}</div><div class="rbody"><div class="rname">${esc(r.name)}</div><div class="rmeta">${r.is_open ? t('open') : t('closed')}</div></div></a>`).join('');
   const card = p => {
     const dropped = p.compare_price > p.price || p._flash;
     return productCard(p, dropped ? t('price_drop') : '');
   };
-  $('view').innerHTML = `<h1>${t('favourites')}</h1>${list.length ? `<div class="grid2">${list.map(card).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}`;
+  $('view').innerHTML = `<h1>${t('favourites')}</h1><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><a class="pillbtn" href="#/shopping-list">${t('shopping_list')}</a><a class="pillbtn" href="#/meal-plan">${t('meal_plan')}</a></div>${list.length ? `<div class="grid2">${list.map(card).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}<h2>${t('saved_shops')}</h2>${shopCards || `<div class="empty">${t('shops_none')}</div>`}`;
+}
+
+// ================= CUSTOMER PERSONAL PLANNING =================
+async function showShoppingList(){
+  const { data, error } = await sb.from('customer_shopping_list').select('id,item_name,is_checked,created_at').eq('user_id',state.user.id).order('created_at',{ascending:true}).limit(200);
+  if(error) throw error;
+  const rows=data||[];
+  $('view').innerHTML=`<h1>${t('shopping_list')}</h1><div style="display:flex;gap:8px;margin:12px 0"><input id="shoppingItem" maxlength="120" placeholder="${t('list_placeholder')}" style="flex:1"><button class="btn" onclick="A.addShoppingItem()">${t('add_list_item')}</button></div>${rows.length?`<div style="display:grid;gap:8px">${rows.map(x=>`<div class="card" style="display:flex;align-items:center;gap:10px;padding:12px"><input type="checkbox" ${x.is_checked?'checked':''} onchange="A.checkShoppingItem('${x.id}',this.checked)"><span style="flex:1;${x.is_checked?'text-decoration:line-through;opacity:.65':''}">${esc(x.item_name)}</span><button class="pillbtn" onclick="A.removeShoppingItem('${x.id}')">${t('remove_item')}</button></div>`).join('')}</div>`:`<div class="empty">${t('list_empty')}</div>`}<a class="pillbtn" href="#/meal-plan" style="display:inline-block;margin-top:16px">${t('meal_plan')}</a>`;
+}
+async function showMealPlan(){
+  const { data,error }=await sb.from('customer_meal_plan').select('id,planned_date,meal_name,created_at').eq('user_id',state.user.id).order('planned_date',{ascending:true}).order('created_at',{ascending:true}).limit(200);
+  if(error) throw error;
+  const rows=data||[]; const today=new Date().toISOString().slice(0,10);
+  $('view').innerHTML=`<h1>${t('meal_plan')}</h1><div style="display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin:12px 0"><input id="mealDate" type="date" value="${today}" aria-label="${t('plan_date')}"><input id="mealName" maxlength="160" placeholder="${t('meal_placeholder')}" aria-label="${t('planned_meal')}"><button class="btn" onclick="A.addPlannedMeal()">${t('add_meal')}</button></div>${rows.length?`<div style="display:grid;gap:8px">${rows.map(x=>`<div class="card" style="display:flex;gap:12px;align-items:center;padding:12px"><time>${esc(x.planned_date)}</time><span style="flex:1">${esc(x.meal_name)}</span><button class="pillbtn" onclick="A.removePlannedMeal('${x.id}')">${t('remove_item')}</button></div>`).join('')}</div>`:`<div class="empty">${t('plan_empty')}</div>`}<a class="pillbtn" href="#/shopping-list" style="display:inline-block;margin-top:16px">${t('shopping_list')}</a>`;
 }
 
 // ================= SHOP PAGE =================
@@ -2407,6 +2445,7 @@ async function showRestaurant(id){
   if (state.curMenu.items.length){ try { const { data } = await sb.from('menu_option_groups').select('menu_item_id').in('menu_item_id', state.curMenu.items.map(x => x.id)); (data || []).forEach(g => state.optItems.add(g.menu_item_id)); } catch (e) {} }
   state.curMenu.items.forEach(it => { it._shop = r; state.itemsCache[it.id] = Object.assign(state.itemsCache[it.id] || {}, it); });
   const rt = shopRating(r.id);
+  if (state.user) await loadSavedShops();
   const hero = r.logo_url ? `style="background-image:url('${esc(r.logo_url)}')"` : '';
   const tabs = state.curMenu.cats.filter(cat => state.curMenu.items.some(x => x.category_id === cat.id));
   $('view').innerHTML = `
@@ -2419,7 +2458,7 @@ async function showRestaurant(id){
       <div class="rmeta">${rt ? `<span class="star">★ ${rt.avg} (${rt.n})</span>` : ''}<span>${t('delivery')} ${money(zoneFee(r))}</span><span>${t('min_order')} ${r.zone ? money(r.zone.min_order) : ''}</span><span>${r.prep_time_minutes || 25} ${t('minutes')}</span></div>
       ${offerText(r) ? `<div class="offtag big">🏷️ ${esc(t('shop_offer'))}: ${esc(offerText(r))}</div>` : ''}${r.allow_pickup !== false ? `<div class="muted" style="font-size:13px;margin-top:6px">🛍️ ${t('o_pickup').replace('🛍️ ', '')} ✓</div>` : ''}
       ${hoursHtml(r)}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${waNum(r.phone) ? `<a class="wabtn" target="_blank" rel="noopener" href="${waHref(r.phone, '')}">${WA_IC} ${t('wa_shop')}</a>` : ''}<button class="pillbtn sharebtn" onclick="A.share('r','${r.id}')">${t('share')}</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${waNum(r.phone) ? `<a class="wabtn" target="_blank" rel="noopener" href="${waHref(r.phone, '')}">${WA_IC} ${t('wa_shop')}</a>` : ''}<button class="pillbtn" onclick="A.toggleShopFav('${r.id}')">${state.savedShopIds.has(r.id) ? t('shop_saved') : t('save_shop')}</button><button class="pillbtn sharebtn" onclick="A.share('r','${r.id}')">${t('share')}</button></div>
     </div>
     ${r.is_open ? '' : `<div class="closed-note">${esc(closedText(r))}</div>`}
     <input type="search" id="sq" placeholder="${t('search_shop')}" oninput="A.shopSearch(this.value)" style="margin-top:12px">
@@ -2875,10 +2914,10 @@ function pillFor(status){
 }
 async function showOrders(){
   const orders = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone,logo_url,lat,lng), order_items(menu_item_id,name,quantity,price)').order('created_at', { ascending:false }).limit(50));
-  const rows = orders.map(o => { const dkm = !['pickup','dinein'].includes(o.order_type) && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<a class="orow" href="#/order/${o.id}">
+  const rows = orders.map(o => { const dkm = !['pickup','dinein'].includes(o.order_type) && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div><a class="orow" href="#/order/${esc(o.id)}">
     <div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:52px;height:52px;font-size:20px">${o.restaurant && o.restaurant.logo_url ? `<img src="${esc(o.restaurant.logo_url)}" alt="">` : esc(((o.restaurant && o.restaurant.name) || '?')[0])}</div>
     <div style="min-width:0"><div style="font-weight:700">${esc(o.restaurant ? o.restaurant.name : '')}</div><small class="muted">${when(o.created_at)} · ${t('items_n', { n:(o.order_items || []).reduce((n, i) => n + i.quantity, 0) })}${dkm != null ? ` · 📍 ${fmtKmC(dkm)}` : ''}</small>${o.scheduled_for && !FINAL.includes(o.status) ? `<div><span class="schedpill">🗓️ ${esc(schedLabel(o.scheduled_for))}</span></div>` : ''}</div></div>
-    <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a>`; }).join('');
+    <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin:5px 0 8px" href="#/help/${esc(o.id)}">❓ Help with this order</a></div>`; }).join('');
   let bk = [];
   try { bk = need(await sb.rpc('my_bookings')) || []; } catch (e) { logErr(e); }
   state.myBookings = bk;
@@ -2906,6 +2945,39 @@ const FAQ = {
       ['حجام یا سیلون کیسے بُک کروں؟','دکان کھولیں، سروس پر بُک دبائیں، دن اور وقت چنیں۔ وقت پر پہنچیں۔'],
       ['مفت ڈیلیوری کیسے ملے؟','آفرز اور پرومو کوڈ دیکھیں، یا Dera Plus لیں۔']]
 };
+const SUPPORT_CATEGORIES = ['order','delivery','payment','account','feedback','other'];
+const supportStatusLabel = s => String(s || 'open').replaceAll('_',' ');
+const supportWhen = ts => { try { return new Date(ts).toLocaleString(state.lang === 'ur' ? 'ur-PK' : 'en-GB', {day:'numeric',month:'short',year:'numeric',hour:'numeric',minute:'2-digit'}); } catch(e) { return ''; } };
+function supportCategoryLabel(c){ return state.lang === 'ur' ? ({order:'آرڈر',delivery:'ڈیلیوری',payment:'ادائیگی',account:'اکاؤنٹ',feedback:'رائے',other:'دیگر'}[c] || c) : c.charAt(0).toUpperCase()+c.slice(1); }
+function supportTargetText(hours,ur){ return hours ? (ur?`پہلے جواب کا موجودہ نظامی ہدف ${hours} گھنٹے ہے۔ یہ ضمانت نہیں۔`:`Current system target for a first response: ${hours} hours. This is a target, not a guarantee.`) : (ur?'پہلے جواب کا نظامی ہدف دستیاب نہیں؛ کسی جواب کے وقت کی ضمانت نہیں۔':'The current first-response system target is unavailable; response timing is not guaranteed.'); }
+function helpOrderTitle(id){ return id ? (state.lang === 'ur' ? 'آرڈر کے بارے میں مدد' : 'Help with order') + ' #' + String(id).slice(-4).toUpperCase() : ''; }
+async function showHelpCenter(orderId){
+  const L=FAQ[state.lang === 'ur' ? 'ur' : 'en'], ur=state.lang==='ur';
+  let tickets=[], targetHours=null, ticketErr='';
+  try {
+    const [tr, cfg] = await Promise.all([
+      sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_at,first_response_due_at,created_at,updated_at').eq('requester_id',state.user.id).order('updated_at',{ascending:false}).limit(20),
+      sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).maybeSingle()
+    ]);
+    if (tr.error) throw tr.error; tickets=tr.data||[];
+    if (!cfg.error && cfg.data) targetHours=Number(cfg.data.first_response_target_hours)||null;
+  } catch(e) { ticketErr=niceErr(e); }
+  const faqHtml=L.map(([q,a])=>`<details class="faqq"><summary>${esc(q)}</summary><div>${esc(a)}</div></details>`).join('');
+  const rows=tickets.map(x=>`<button class="support-card" type="button" style="display:block;width:100%;text-align:left;cursor:pointer" onclick="nav('/help/ticket/${esc(x.id)}')"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(x.subject)}</b><span class="support-status">${esc(supportStatusLabel(x.status))}</span></div><div class="muted" style="font-size:13px;margin-top:4px">${esc(supportCategoryLabel(x.category))}${x.order_id?' · '+esc(helpOrderTitle(x.order_id)):''} · ${esc(supportWhen(x.updated_at))}</div></button>`).join('');
+  $('view').innerHTML=`<h1>${ur?'مدد مرکز':'Help Center'}</h1><p class="muted">${ur?'پہلے عام سوالات دیکھیں، پھر بھی مدد چاہیے تو Dera کو پیغام بھیجیں۔':'Browse the answers first. If you still need help, send Dera a message.'}</p><section class="support-card"><h2 style="margin:0 0 8px">${ur?'عام سوالات':'Popular answers'}</h2>${faqHtml}</section><div class="support-card"><b>${ur?'جواب کا عمومی ہدف':'System response target'}</b><div class="muted" style="font-size:14px;margin-top:4px">${supportTargetText(targetHours,ur)}</div></div><button class="btn" type="button" onclick="A.supportCompose(${esc(JSON.stringify(orderId||''))})">✉️ ${ur?'ابھی بھی مدد چاہیے؟ پیغام بھیجیں':'Still need help? Contact support'}</button><div class="support-actions"><button class="btn ghost" type="button" onclick='Chat.open(null,"sup",state.user.id)'>💬 ${t('chat_support')}</button></div><h2>${ur?'حالیہ سپورٹ ٹکٹ':'Recent support tickets'} <small class="muted">(${tickets.length}/20)</small></h2>${ticketErr?`<div class="closed-note">${esc(ticketErr)}<button class="btn ghost" style="margin-top:8px" onclick="route(true)">${t('retry')}</button></div>`:rows||`<div class="empty">${ur?'ابھی کوئی ٹکٹ نہیں۔':'No support tickets yet.'}</div>`}`;
+}
+async function showSupportTicket(id){
+  const ur=state.lang==='ur';
+  const ticket=need(await sb.from('support_tickets').select('id,requester_id,subject,category,order_id,status,priority,first_response_at,first_response_due_at,created_at,updated_at').eq('id',id).eq('requester_id',state.user.id).maybeSingle());
+  if(!ticket){ $('view').innerHTML=`<div class="empty">${ur?'یہ ٹکٹ نہیں ملا۔':'Ticket not found or unavailable.'}<br><a class="pillbtn" href="#/help">${ur?'مدد مرکز':'Help Center'}</a></div>`; return; }
+  const [mr,cfg]=await Promise.all([sb.from('support_ticket_messages').select('id,author_role,body,created_at').eq('ticket_id',ticket.id).order('created_at',{ascending:true}).limit(100),sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).maybeSingle()]);
+  if(mr.error) throw mr.error; const target=!cfg.error&&cfg.data?Number(cfg.data.first_response_target_hours)||null:null;
+  const msgs=(mr.data||[]).map(m=>`<div class="support-message ${m.author_role==='admin'?'admin':''}"><b>${m.author_role==='admin'?(ur?'Dera':'Dera support'):(ur?'آپ':'You')}</b><small class="muted" style="display:block">${esc(supportWhen(m.created_at))}</small>${esc(m.body)}</div>`).join('');
+  const canReply=!['closed'].includes(ticket.status);
+  const actions=`<div class="support-actions">${['resolved','closed'].includes(ticket.status)?`<button class="btn ghost" onclick="A.supportTicketAction('reopen','${esc(ticket.id)}')">${ur?'دوبارہ کھولیں':'Reopen ticket'}</button>`:''}<button class="btn warn" onclick="A.supportTicketAction('escalate','${esc(ticket.id)}')">${ur?'ترجیح بڑھائیں':'Escalate priority'}</button><button class="btn ghost" onclick="nav('/help')">${ur?'واپس':'Back to Help Center'}</button></div>`;
+  $('view').innerHTML=`<h1>${ur?'سپورٹ ٹکٹ':'Support ticket'}</h1><section class="support-card"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(ticket.subject)}</b><span class="support-status">${esc(supportStatusLabel(ticket.status))} · ${esc(ticket.priority)}</span></div><div class="muted" style="font-size:13px;margin-top:5px">${esc(supportCategoryLabel(ticket.category))}${ticket.order_id?' · '+esc(helpOrderTitle(ticket.order_id)):''} · ${ur?'تازہ کاری':'Updated'} ${esc(supportWhen(ticket.updated_at))}</div><div class="muted" style="font-size:13px;margin-top:8px">${supportTargetText(target,ur)}${ticket.first_response_due_at?' '+(ur?'ہدفی وقت':'Target time')+': '+esc(supportWhen(ticket.first_response_due_at)):''}${ticket.first_response_at?' · '+(ur?'پہلا جواب':'First response')+': '+esc(supportWhen(ticket.first_response_at)):''}</div></section><h2>${ur?'پیغامات':'Messages'}</h2>${msgs||`<div class="muted">${ur?'ابھی کوئی پیغام نہیں۔':'No messages yet.'}</div>`}${canReply?`<label class="f" for="supportReply">${ur?'جواب':'Reply'}</label><textarea id="supportReply" maxlength="10000" placeholder="${ur?'اپنا پیغام لکھیں…':'Write a message…'}"></textarea><button class="btn" style="margin-top:8px" onclick="A.supportSend('${esc(ticket.id)}')">${ur?'پیغام بھیجیں':'Send reply'}</button>`:''}${actions}`;
+}
+
 const tKar = ts => new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
 function bookingsHtml(list){
   const live = list.filter(b => ['booked','arrived'].includes(b.status)), old = list.filter(b => !['booked','arrived'].includes(b.status)).slice(0, 5);
@@ -3090,7 +3162,7 @@ async function showOrder(id){
       <button class="btn ghost" style="margin-top:10px" onclick="A.receipt()">${t('receipt')}</button></div>
     <div class="box"><b>${o.order_type === 'pickup' ? t('pick_from') : o.order_type === 'dinein' ? t('o_dinein') : t('delivered_to')}</b><div class="muted">${esc(o.address_text || '')}</div>${o.receiver_name ? `<div style="margin-top:4px">👤 ${t('receiver')}: <b>${esc(o.receiver_name)}</b> · ${esc(o.receiver_phone || '')}</div>` : ''}${o.sub_pref ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('sub_shown')}: ${t('sub_' + o.sub_pref)}</div>` : ''}${o.rx_path ? `<div class="muted" style="font-size:13px">${t('rx_ok')}</div>` : ''}</div>
     <div style="display:grid;gap:10px;margin-top:10px">
-      <button class="btn ghost" onclick="A.contactSheet('${o.id}')">💬 ${t('contact')}</button>
+      <button class="btn ghost" onclick="A.contactSheet('${o.id}')">💬 ${t('contact')}</button><a class="btn ghost" href="#/help/${esc(o.id)}">❓ Help with this order</a>
     </div>
     <div style="display:grid;gap:10px;margin-top:14px">
       ${o.restaurant && o.restaurant.phone ? `<a class="btn ghost" href="tel:${esc(o.restaurant.phone)}">${t('call')}</a>` : ''}
@@ -3209,7 +3281,7 @@ async function showAccount(){
     </div>
     <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
       <button class="menu-row" onclick='Chat.open(null, "sup", state.user.id)'><span>💬 ${t('chat_support')}</span><span class="muted">›</span></button>
-      <button class="menu-row" onclick="A.faq()"><span>${t('faq_link')}</span><span class="muted">›</span></button>
+      <a class="menu-row" href="#/help"><span>❓ Help Center</span><span class="muted">›</span></a><button class="menu-row" onclick="A.faq()"><span>${t('faq_link')}</span><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
     </div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
@@ -3465,6 +3537,29 @@ const A = {
     if (currentRoute === 'c') route(true); else { const el = $('homeBody'); if (el) el.innerHTML = homeBody(); }
   },
   shopSearch(v){ state.shopQuery = v; const el = $('menuBody'); if (el) el.innerHTML = menuBody(); },
+  async addShoppingItem(){
+    const el=$('shoppingItem'), name=(el&&el.value||'').trim(); if(!name) return;
+    await run(async()=>{ need(await sb.from('customer_shopping_list').insert({user_id:state.user.id,item_name:name})); await showShoppingList(); });
+  },
+  async checkShoppingItem(id,checked){ await run(async()=>{ need(await sb.from('customer_shopping_list').update({is_checked:!!checked}).eq('id',id).eq('user_id',state.user.id)); await showShoppingList(); }); },
+  async removeShoppingItem(id){ await run(async()=>{ need(await sb.from('customer_shopping_list').delete().eq('id',id).eq('user_id',state.user.id)); await showShoppingList(); }); },
+  async addPlannedMeal(){
+    const meal=($('mealName')&&$('mealName').value||'').trim(), date=($('mealDate')&&$('mealDate').value||''); if(!meal||!date) return;
+    await run(async()=>{ need(await sb.from('customer_meal_plan').insert({user_id:state.user.id,planned_date:date,meal_name:meal})); await showMealPlan(); });
+  },
+  async removePlannedMeal(id){ await run(async()=>{ need(await sb.from('customer_meal_plan').delete().eq('id',id).eq('user_id',state.user.id)); await showMealPlan(); }); },
+  async toggleShopFav(id){
+    if (!state.user) return toast(t('shop_save_login'), true);
+    const exists = state.savedShopIds.has(id);
+    await run(async () => {
+      if (exists) need(await sb.from('customer_shop_favorites').delete().eq('user_id', state.user.id).eq('restaurant_id', id));
+      else need(await sb.from('customer_shop_favorites').insert({ user_id:state.user.id, restaurant_id:id }));
+      if (exists) state.savedShopIds.delete(id); else state.savedShopIds.add(id);
+      if (currentRoute === 'r') await showRestaurant(id);
+      else if (currentRoute === 'saved') await showSaved();
+      toast(exists ? t('saved') : t('shop_saved'));
+    });
+  },
   fav(id, btn){
     const i = state.favs.indexOf(id); if (i > -1) state.favs.splice(i, 1); else state.favs.push(id);
     ls.set('kh_favs', state.favs);
@@ -3793,10 +3888,20 @@ const A = {
   },
   forOther(v){ state.forOther = !!v; if (typeof drawCheckout === 'function') drawCheckout(); },
   hoursSheet(){ const r = state.curRest; if (!r) return; openSheet(t('hours'), hoursSheetHtml(r)); },
-  faq(){
-    const L = FAQ[state.lang === 'ur' ? 'ur' : 'en'];
-    openSheet(t('faq_t'), L.map(([q, a]) => `<details class="faqq"><summary>${esc(q)}</summary><div>${esc(a)}</div></details>`).join('') + `<button class="btn ghost" style="margin-top:12px" onclick='closeSheet();if(state.user)Chat.open(null, "sup", state.user.id);else showAuth()'>💬 ${t('chat_support')}</button>`);
+  faq(){ closeSheet(); nav('/help'); },
+  supportCompose(orderId){
+    const ur=state.lang==='ur'; const isOrder=!!orderId;
+    const categories=SUPPORT_CATEGORIES.map(c=>`<option value="${c}" ${isOrder&&c==='order'?'selected':''}>${esc(supportCategoryLabel(c))}</option>`).join('');
+    const subject=isOrder?helpOrderTitle(orderId):'';
+    openSheet(ur?'Dera سے رابطہ':'Contact Dera',`<label class="f" for="supportSubject">${ur?'موضوع':'Subject'}</label><input id="supportSubject" type="text" maxlength="180" value="${esc(subject)}" placeholder="${ur?'مختصر موضوع':'Brief subject'}"><label class="f" for="supportCategory">${ur?'قسم':'Category'}</label><select id="supportCategory">${categories}</select><label class="f" for="supportBody">${ur?'پیغام':'Message'}</label><textarea id="supportBody" maxlength="10000" placeholder="${ur?'مسئلے کی وضاحت کریں':'Describe how we can help'}"></textarea><div class="muted" style="font-size:12px;margin:8px 0">${ur?'پہلے جواب کا نظامی ہدف دکھایا جائے گا؛ یہ ضمانت نہیں۔':'The system first-response target is informational, not a guarantee.'}</div><button class="btn" onclick="A.supportCreate(${esc(JSON.stringify(orderId||''))})">${ur?'ٹکٹ بھیجیں':'Create support ticket'}</button>`);
   },
+  async supportCreate(orderId){
+    const subject=($('supportSubject')?.value||'').trim(), category=$('supportCategory')?.value||'general', body=($('supportBody')?.value||'').trim();
+    if(!subject||!body) return toast(state.lang==='ur'?'موضوع اور پیغام لکھیں':'Enter a subject and message',true);
+    await run(async()=>{ const id=need(await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:orderId||null,p_message:body})); closeSheet(); toast(state.lang==='ur'?'ٹکٹ بھیج دیا':'Support ticket created'); nav('/help/ticket/'+id); });
+  },
+  async supportSend(id){ const body=($('supportReply')?.value||'').trim(); if(!body) return toast(state.lang==='ur'?'پیغام لکھیں':'Write a reply',true); await run(async()=>{ need(await sb.rpc('support_send_message',{p_ticket_id:id,p_body:body})); await showSupportTicket(id); toast(state.lang==='ur'?'جواب بھیج دیا':'Reply sent'); }); },
+  async supportTicketAction(action,id){ await run(async()=>{ need(await sb.rpc(action==='reopen'?'support_reopen_ticket':'support_escalate_ticket',{p_ticket_id:id})); await showSupportTicket(id); toast(action==='reopen'?(state.lang==='ur'?'ٹکٹ دوبارہ کھل گیا':'Ticket reopened'):(state.lang==='ur'?'ترجیح بڑھا دی':'Ticket escalated')); }); },
   bookItem(itemId, shopId){
     const sh = state.restaurants.find(r => r.id === shopId); if (!sh) return;
     state.curRest = sh; const it = state.itemsCache[itemId]; if (it && !it.duration_min) return;
