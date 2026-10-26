@@ -690,7 +690,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.53';
+const APP_VERSION = '6.55';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -3277,6 +3277,15 @@ function showPwGate(){
 // ================= FCM PUSH (Capacitor only; web par no-op) =================
 // App khulne par login user ka FCM token device_tokens mein save hota hai,
 // taake Admin app se push bheja ja sake. Koi error login ko kabhi nahi rokti.
+function handleCallPush(d){
+  try {
+    if (!d || d.type !== 'call') return false;
+    const rec = { thread: d.thread, orderId: d.orderId || null, ts: Date.now() };
+    try { localStorage.setItem('dera_pending_call', JSON.stringify(rec)); } catch (e) {}
+    try { if (typeof Chat !== 'undefined' && Chat.consumePendingCall) Chat.consumePendingCall(); } catch (e) {}
+    return true;
+  } catch (e) { return false; }
+}
 const FCM = {
   app: 'shop',
   done: false,
@@ -3305,6 +3314,7 @@ const FCM = {
       try {
         PN.addListener('pushNotificationReceived', async (n) => {
           try {
+            try { if (n && n.data) handleCallPush(n.data); } catch (e) {}
             const LN = Cap.Plugins.LocalNotifications;
             if (!LN || !n) return;
             await LN.schedule({ notifications: [{ id: Date.now() % 2147483647, title: n.title || 'Dera', body: n.body || '', extra: n.data || {} }] });
@@ -3314,6 +3324,7 @@ const FCM = {
       try {
         PN.addListener('pushNotificationActionPerformed', (a) => {
           try {
+            try { if (a && a.notification && a.notification.data) handleCallPush(a.notification.data); } catch (e) {}
             const p = a && a.notification && a.notification.data && a.notification.data.path;
             if (p) location.hash = p;
           } catch (e) {}
@@ -3343,7 +3354,7 @@ async function afterLogin(user){
 const Chat = (() => {
   const L = {
     en: {
-      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', warn:'⚠️ Never share your phone number or delivery code in chat.', closed:'This chat is closed because the trip has ended.', photo:'Photo', loc:'Location', attach_photo:'Send photo', send_loc:'Send location', loc_denied:'Location permission was not allowed.', photo_fail:'Photo could not be sent.',
+      messages:'Messages', support:'Dera support', support_sub:'Ask us anything', no_chats:'No messages yet.', write:'Write a message…', send:'Send', warn:'⚠️ Never share your phone number or delivery code in chat.', closed:'This chat is closed because the trip has ended.', photo:'Photo', loc:'Location', attach_photo:'Send photo', send_loc:'Send location', loc_denied:'Location permission was not allowed.', photo_fail:'Photo could not be sent.', call:'Voice call', calling:'Calling…', incoming:'Incoming voice call', accept:'Accept', decline:'Decline', busy:'The other person is busy on another call.', busy_self:'You are already on a call.', declined:'Call declined.', no_answer:'No answer.', mic_denied:'Microphone permission was not allowed. Please allow the microphone and try again.', call_ended:'Call ended.', connecting:'Connecting…', mute:'Mute', unmute:'Unmute', end_call:'End call', cancel_call:'Cancel', call_failed:'Call failed. Please try again.', video_call:'Video call', speaker:'Speaker', earpiece:'Earpiece', speaker_sys:'Speaker switching uses your phone’s own call controls.',
       new_msg:'New message', you:'You', customer:'Customer', rider:'Rider', shop:'Shop', admin:'Dera', order:'Order',
       'as_customer.cr':'Rider', 'as_customer.cs':'Shop', 'as_customer.sup_c':'Dera support',
       'as_rider.cr':'Customer', 'as_rider.rs':'Shop', 'as_rider.sup_r':'Dera support',
@@ -3368,7 +3379,7 @@ const Chat = (() => {
       sys_req:'{w} asked Dera to join this chat', sys_joined:'Dera joined the chat. Please explain the problem.'
     },
     ur: {
-      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔',
+      messages:'پیغامات', support:'Dera سپورٹ', support_sub:'ہم سے کچھ بھی پوچھیں', no_chats:'ابھی کوئی پیغام نہیں۔', write:'پیغام لکھیں…', send:'بھیجیں', warn:'⚠️ اپنا فون نمبر یا ڈیلیوری کوڈ چیٹ میں شیئر نہ کریں۔', closed:'یہ چیٹ بند ہو گئی ہے کیونکہ سفر ختم ہو گیا ہے۔', photo:'تصویر', loc:'مقام', attach_photo:'تصویر بھیجیں', send_loc:'لوکیشن بھیجیں', loc_denied:'لوکیشن کی اجازت نہیں ملی۔', photo_fail:'تصویر نہیں بھیجی جا سکی۔', call:'صوتی کال', calling:'کال کی جا رہی ہے…', incoming:'صوتی کال آ رہی ہے', accept:'قبول کریں', decline:'مسترد کریں', busy:'دوسرا شخص کسی اور کال میں مصروف ہے۔', busy_self:'آپ پہلے سے ایک کال میں ہیں۔', declined:'کال مسترد کر دی گئی۔', no_answer:'کوئی جواب نہیں ملا۔', mic_denied:'مائیکروفون کی اجازت نہیں ملی۔ براہ کرم مائیکروفون کی اجازت دیں اور دوبارہ کوشش کریں۔', call_ended:'کال ختم ہو گئی۔', connecting:'رابطہ ہو رہا ہے…', mute:'خاموش کریں', unmute:'آواز بحال کریں', end_call:'کال ختم کریں', cancel_call:'منسوخ کریں', call_failed:'کال ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔', video_call:'ویڈیو کال', speaker:'اسپیکر', earpiece:'ایئر پیس', speaker_sys:'اسپیکر بدلنے کے لیے اپنے فون کے کال کنٹرول استعمال کریں۔',
       new_msg:'نیا پیغام', you:'آپ', customer:'گاہک', rider:'رائیڈر', shop:'دکان', admin:'Dera', order:'آرڈر',
       'as_customer.cr':'رائیڈر', 'as_customer.cs':'دکان', 'as_customer.sup_c':'Dera سپورٹ',
       'as_rider.cr':'گاہک', 'as_rider.rs':'دکان', 'as_rider.sup_r':'Dera سپورٹ',
@@ -3430,6 +3441,21 @@ const Chat = (() => {
 .chatin button{border:0;background:var(--brand);color:#fff;border-radius:12px;padding:0 18px;font-weight:800;cursor:pointer}`;
     document.head.appendChild(st);
   }
+  if (!document.getElementById('callCss')){
+    const cs = document.createElement('style'); cs.id = 'callCss';
+    cs.textContent = `.callwrap{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.callcard{background:var(--paper);width:100%;max-width:360px;border-radius:20px;padding:28px 22px;text-align:center}
+.callav{width:88px;height:88px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:40px;font-weight:800;margin:0 auto 14px}
+.callcard b{font-size:20px;display:block}
+.callcard .cst{color:var(--muted);margin:8px 0 20px;font-size:15px}
+.callbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.callbtns button{border:0;border-radius:999px;padding:12px 20px;font-weight:800;cursor:pointer;font-size:15px}
+.callbtns .acc{background:#1a7f37;color:#fff}
+.callbtns .dec{background:#B3261E;color:#fff}
+.callbtns .mut{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.chathead .callbtn{border:1px solid #1a7f37 !important;color:#1a7f37 !important;background:transparent;border-radius:999px;font-size:18px !important;font-weight:800;padding:6px 10px !important;white-space:nowrap}`;
+    document.head.appendChild(cs);
+  }
   function button(){ return `<button class="cbtn" onclick="Chat.inbox()" aria-label="${e(tr('messages'))}">💬<span class="cn" id="chatN"></span></button>`; }
   function paintBadge(){
     const n = Object.values(unread).reduce((a, b) => a + b, 0);
@@ -3440,14 +3466,16 @@ const Chat = (() => {
     cfg = c; stop();
     chan = sb.channel('chat-' + me()).on('postgres_changes', { event:'INSERT', schema:'public', table:'messages' }, p => onMsg(p.new)).subscribe();
     refresh();
+    try { setTimeout(() => { try { consumePendingCall(); } catch (x) {} }, 800); } catch (x) {}
   }
-  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } }
+  function stop(){ if (chan){ try { sb.removeChannel(chan); } catch (x) {} chan = null; } try { Object.values(callChans).forEach(c => { try { sb.removeChannel(c); } catch (x) {} }); Object.keys(callChans).forEach(k => delete callChans[k]); } catch (x) {} callEnd(null); }
   async function refresh(){
     if (!me()) return;
     const since = new Date(Date.now() - 7 * 864e5).toISOString();
     const { data } = await sb.from('messages').select('id,order_id,thread,user_id,sender_id,created_at').gte('created_at', since).neq('sender_id', me()).order('created_at', { ascending:false }).limit(400);
     unread = {};
     (data || []).forEach(m => { seenIds.add(m.id); const k = keyOf(m); if (m.created_at > seenTs(k) && (!cur || cur.k !== k)) unread[k] = (unread[k] || 0) + 1; });
+    (data || []).forEach(m => callSubFor(m.order_id, m.thread, m.user_id));
     paintBadge();
   }
   function onMsg(m){
@@ -3477,6 +3505,7 @@ const Chat = (() => {
     let names = {};
     const uids = [...new Set(Object.values(groups).filter(g => g.user_id).map(g => g.user_id))];
     if (cfg.role === 'admin' && uids.length){ const p = await sb.from('profiles').select('id,full_name,role').in('id', uids); (p.data || []).forEach(x => { names[x.id] = (x.full_name || '') + ' (' + x.role + ')'; }); }
+    Object.values(groups).forEach(g => callSubFor(g.order_id, g.thread, g.user_id));
     const rows = Object.values(groups).map(g => {
       const n = unread[g.k] || 0; const title = label(g.thread, g.order_id, names[g.user_id]);
       return `<button class="chatrow" onclick='Chat.open(${e(JSON.stringify(g.order_id))}, ${e(JSON.stringify(g.thread))}, ${e(JSON.stringify(g.user_id))}, ${e(JSON.stringify(title))})'>
@@ -3489,6 +3518,7 @@ const Chat = (() => {
     else shell(tr('messages'), `<div class="chatlist" id="inboxList">${sup}${rows || `<div class="muted" style="text-align:center;padding:30px">${e(tr('no_chats'))}</div>`}</div>`);
   }
   async function open(orderId, thread, userId, title){
+    callSubFor(orderId, thread, userId);
     const k = (orderId || '') + '|' + thread + '|' + (userId || '');
     cur = { orderId, thread, userId, k, msgs:[] };
     const qk = 'q_' + cfg.role + '_' + (thread.startsWith('sup') ? 'sup' : thread);
@@ -3496,7 +3526,7 @@ const Chat = (() => {
     shell(title || label(thread, orderId), `<div style="font-size:13px;color:#7a5b00;background:#fff8e1;border-bottom:1px solid #f0dfa8;padding:8px 10px">⚠️ ${e(tr('warn'))}</div><div class="msgs" id="msgs"><div class="muted" style="text-align:center">…</div></div>
       ${quick.length ? `<div class="quick">${quick.map(q => `<button onclick='Chat.send(${e(JSON.stringify(q))})'>${e(q)}</button>`).join('')}</div>` : ''}
       <div class="chatin"><button onclick="document.getElementById('chatPhoto').click()" title="${e(tr('attach_photo'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📷</button><button onclick="Chat.sendLoc()" title="${e(tr('send_loc'))}" style="font-size:18px;background:none;border:none;cursor:pointer">📍</button><input type="file" id="chatPhoto" accept="image/*" style="display:none" onchange="Chat.sendPhoto(this)"><textarea id="chatText" rows="1" placeholder="${e(tr('write'))}" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Chat.send();}"></textarea><button onclick="Chat.send()">${e(tr('send'))}</button></div>`,
-      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button>` : '');
+      (cfg.role !== 'admin' && orderId && ['cr','cs','rs'].includes(thread)) ? `<button class="askbtn" onclick="Chat.askJoin()">🛟 ${e(tr('ask_join'))}</button><button class="callbtn" onclick="Chat.callStart(${e(JSON.stringify(orderId))}, ${e(JSON.stringify(thread))})" title="${e(tr('call'))}" aria-label="${e(tr('call'))}">📞</button>` : (thread && thread.startsWith('sup') && cfg.role === 'rider') ? `<button class="callbtn" onclick="Chat.callStart(null, 'sup', true)" title="${e(tr('video_call'))}" aria-label="${e(tr('video_call'))}">📹</button>` : '');
     cur = { orderId, thread, userId, k, msgs:[] };
     let q = sb.from('messages').select('*').eq('thread', thread).order('created_at').limit(300);
     q = orderId ? q.eq('order_id', orderId) : q.is('order_id', null);
@@ -3612,7 +3642,337 @@ function draw(){
     const m = { id, order_id:cur.orderId, thread:cur.thread, user_id:cur.userId, sender_id:me(), sender_role:cfg.role, body, created_at:new Date().toISOString() };
     seenIds.add(id); cur.msgs.push(m); draw(); setSeen(cur.k, m.created_at);
   }
-  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc };
+
+  // ---- Voice calls (WebRTC, audio-only, in-app; NO phone numbers anywhere) ----
+  // Signaling uses Supabase Realtime broadcast on one channel per order thread:
+  // call:<thread>:<orderId>. No new DB tables, no tel: links, and no phone
+  // columns are read by this code — the call screen shows ONLY the other
+  // party's NAME. STUN-only note: Google's free STUN server works on most
+  // home/mobile networks, but a call can fail on symmetric NATs / strict
+  // corporate networks. TURN (short-lived credentials issued by an Edge
+  // Function) is phase 2 — NEVER hardcode TURN credentials in an app, they
+  // would leak from the APK.
+  const CALL_NOANSWER_MS = 30000;
+  const CALL_STUN = 'stun:stun.l.google.com:19302';
+  let callSt = null;
+  const callChans = {};
+  function supPeerKey(){
+    try { return cfg.role === 'admin' ? (cur && cur.userId) : me(); } catch (x) { return null; }
+  }
+  function callChanKey(orderId, thread, peerKey){
+    if (thread && thread.startsWith('sup')) return 'call:sup:' + (peerKey || supPeerKey() || 'x');
+    return 'call:' + thread + ':' + orderId;
+  }
+  function callEnsureChan(orderId, thread, peerKey){
+    try {
+      const key = callChanKey(orderId, thread, peerKey);
+      if (callChans[key]) return callChans[key];
+      const ch = sb.channel(key).on('broadcast', { event: 'call-signal' }, p => {
+        try { callOnSignal(orderId, thread, (p && p.payload) || {}, peerKey); } catch (x) {}
+      }).subscribe();
+      callChans[key] = ch;
+      return ch;
+    } catch (x) { return null; }
+  }
+  function callSubFor(orderId, thread, peerKey){
+    try {
+      if (orderId && ['cr','cs','rs'].includes(thread)) callEnsureChan(orderId, thread);
+      else if (thread && thread.startsWith('sup')) callEnsureChan(orderId, thread, peerKey);
+    } catch (x) {}
+  }
+  async function callSend(orderId, thread, msg, peerKey){
+    try {
+      const ch = callEnsureChan(orderId, thread, peerKey);
+      if (!ch) return false;
+      await ch.send({ type: 'broadcast', event: 'call-signal', payload: Object.assign({}, msg, { from: me() }) });
+      return true;
+    } catch (x) { return false; }
+  }
+  function callPushNotify(orderId, thread, peerKey, video){
+    try {
+      sb.auth.getSession().then(({ data: sess }) => {
+        try {
+          const tok = sess && sess.session && sess.session.access_token; if (!tok) return;
+          fetch(SUPABASE_URL + '/functions/v1/call-push', { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:'Bearer ' + tok }, body: JSON.stringify({ thread, orderId, peerId: peerKey || null, video: !!video }) }).catch(() => {});
+        } catch (x) {}
+      }).catch(() => {});
+    } catch (x) {}
+  }
+  function consumePendingCall(){
+    try {
+      const raw = localStorage.getItem('dera_pending_call'); if (!raw) return;
+      const rec = JSON.parse(raw);
+      if (!rec || Date.now() - rec.ts > 120000){ try { localStorage.removeItem('dera_pending_call'); } catch (x) {} return; }
+      if (callSt && callSt.orderId === rec.orderId && callSt.thread === rec.thread) return;
+      if (cur && cur.orderId === rec.orderId && cur.thread === rec.thread) {
+        try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+        setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+        return;
+      }
+      try { localStorage.removeItem('dera_pending_call'); } catch (x) {}
+      open(rec.orderId, rec.thread, (rec.thread && rec.thread.startsWith('sup') && cfg.role === 'rider') ? me() : undefined);
+      setTimeout(() => { try { callSend(rec.orderId, rec.thread, { type: 'call-ready' }, supPeerKey()); } catch (x) {} }, 800);
+    } catch (x) {}
+  }
+  // NAME ONLY: this resolver never selects a phone column and never returns a
+  // number. On any failure it falls back to the role label (e.g. 'Shop').
+  async function callPeerName(orderId, thread){
+    const roleLabel = thread && thread.startsWith('sup') ? (cfg.role === 'admin' ? tr('as_admin.sup_r') : tr('support')) : tr('as_' + cfg.role + '.' + thread);
+    try {
+      if (!orderId && thread && thread.startsWith('sup') && cfg.role === 'admin' && cur && cur.userId) {
+        try { const { data } = await sb.from('profiles').select('full_name').eq('id', cur.userId).single(); if (data && data.full_name) return data.full_name; } catch (x) {}
+        return roleLabel;
+      }
+      if (!orderId) return roleLabel;
+      if (cfg.role === 'customer' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+      if (cfg.role === 'customer' && thread === 'cr') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'cs') {
+        const { data } = await sb.from('orders').select('customer_name').eq('id', orderId).single();
+        return (data && data.customer_name) || roleLabel;
+      }
+      if (cfg.role === 'shop' && thread === 'rs') {
+        const r = await sb.rpc('order_rider_info', { p_order_id: orderId });
+        const row = r.data && r.data[0];
+        return (row && (row.full_name || row.name)) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'cr') {
+        const { data } = await sb.from('orders').select('customer:profiles!customer_id(full_name)').eq('id', orderId).single();
+        return (data && data.customer && data.customer.full_name) || roleLabel;
+      }
+      if (cfg.role === 'rider' && thread === 'rs') {
+        const { data } = await sb.from('orders').select('restaurant:restaurants(name)').eq('id', orderId).single();
+        return (data && data.restaurant && data.restaurant.name) || roleLabel;
+      }
+    } catch (x) {}
+    return roleLabel;
+  }
+  function callDur(sec){ const m = Math.floor(sec / 60), s = sec % 60; return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s); }
+  function callShow(){
+    try {
+      const s = callSt; if (!s) return;
+      let w = document.getElementById('callWrap');
+      if (!w) { w = document.createElement('div'); w.className = 'callwrap'; w.id = 'callWrap'; document.body.appendChild(w); }
+      let status = '', btns = '';
+      if (s.state === 'calling') { status = tr('calling'); btns = `<button class="mut" onclick="Chat.callCancel()">${e(tr('cancel_call'))}</button>`; }
+      else if (s.state === 'incoming') { status = tr('incoming'); btns = `<button class="dec" onclick="Chat.callDecline()">${e(tr('decline'))}</button><button class="acc" onclick="Chat.callAccept()">${e(tr('accept'))}</button>`; }
+      else if (s.state === 'connecting') { status = tr('connecting'); btns = `<button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      else { status = callDur(s.durSec || 0); btns = `<button class="mut" onclick="Chat.callMute()">${e(s.muted ? tr('unmute') : tr('mute'))}</button><button class="mut" onclick="Chat.callSpeaker()">${e(s.speaker ? tr('earpiece') : tr('speaker'))}</button><button class="dec" onclick="Chat.callHangup()">${e(tr('end_call'))}</button>`; }
+      const nm = (s.peerName || '?').trim();
+      w.innerHTML = `<div class="callcard"><div class="callav">${e(nm[0] || '?')}</div><b>${s.video ? '📹 ' : ''}${e(s.peerName)}</b>${s.video ? `<video id="callRemoteV" autoplay playsinline style="width:100%;max-height:52vh;background:#000;border-radius:14px;margin:12px 0 0"></video><video id="callLocalV" autoplay muted playsinline style="width:110px;height:82px;object-fit:cover;border-radius:10px;margin:8px auto 0"></video>` : ''}<div class="cst" id="callDur">${e(status)}</div><div class="callbtns">${btns}</div></div>`;
+      try {
+        if (s.video) {
+          const rv = document.getElementById('callRemoteV'); if (rv && s.remoteStream && !rv.srcObject) rv.srcObject = s.remoteStream;
+          const lv = document.getElementById('callLocalV'); if (lv && s.stream && !lv.srcObject) lv.srcObject = s.stream;
+        }
+      } catch (x) {}
+    } catch (x) {}
+  }
+  function callEnd(msg){
+    try {
+      const s = callSt; callSt = null;
+      if (s) {
+        if (s.noAnsTimer) clearTimeout(s.noAnsTimer);
+        if (s.ringTimer) clearInterval(s.ringTimer);
+        if (s.durTimer) clearInterval(s.durTimer);
+        try { if (s.stream) s.stream.getTracks().forEach(t => t.stop()); } catch (x) {}
+        try { if (s.pc) s.pc.close(); } catch (x) {}
+        try { if (s.remoteEl) s.remoteEl.remove(); } catch (x) {}
+      }
+      const w = document.getElementById('callWrap'); if (w) w.remove();
+      if (msg && cfg.toast) cfg.toast(msg);
+    } catch (x) {}
+  }
+  function callNewPc(s){
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: CALL_STUN }] });
+    pc.onicecandidate = ev => {
+      try { if (ev.candidate) callSend(s.orderId, s.thread, { type: 'ice-candidate', candidate: ev.candidate }, s.peerKey); } catch (x) {}
+    };
+    pc.ontrack = ev => {
+      try {
+        s.remoteStream = ev.streams[0];
+        if (s.video) { const rv = document.getElementById('callRemoteV'); if (rv) rv.srcObject = ev.streams[0]; return; }
+        let el = s.remoteEl;
+        if (!el) { el = document.createElement('audio'); el.autoplay = true; el.style.display = 'none'; document.body.appendChild(el); s.remoteEl = el; }
+        el.srcObject = ev.streams[0];
+      } catch (x) {}
+    };
+    pc.onconnectionstatechange = () => {
+      try {
+        const st = pc.connectionState;
+        if (st === 'connected' && callSt === s && (s.state === 'connecting' || s.state === 'calling')) {
+          s.state = 'in-call'; s.durSec = 0;
+          if (s.durTimer) clearInterval(s.durTimer);
+          s.durTimer = setInterval(() => { try { if (callSt === s && s.state === 'in-call') { s.durSec++; const dEl = document.getElementById('callDur'); if (dEl) dEl.textContent = callDur(s.durSec); else callShow(); } } catch (x) {} }, 1000);
+          callShow();
+        } else if (st === 'failed' && callSt === s && s.state === 'in-call') {
+          callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey);
+          callEnd(tr('call_ended'));
+        }
+      } catch (x) {}
+    };
+    return pc;
+  }
+  async function callStart(orderId, thread, video){
+    try {
+      const isSup = thread && thread.startsWith('sup');
+      if (isSup) {
+        if (cfg.role !== 'rider' && cfg.role !== 'admin') return;
+        video = true;
+      } else {
+        if (cfg.role === 'admin') return;
+        if (!orderId || !['cr','cs','rs'].includes(thread)) return;
+        video = false;
+      }
+      if (callSt) { if (cfg.toast) cfg.toast(tr('busy_self')); return; }
+      if (!isSup) {
+        try {
+          const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+          if (od && ['delivered','cancelled'].includes(od.status)) { if (cfg.toast) cfg.toast(tr('closed')); return; }
+        } catch (x) {}
+      }
+      const peerName = await callPeerName(orderId, thread);
+      const peerKey = isSup ? supPeerKey() : null;
+      callSt = { orderId, thread, state: 'calling', peerName, muted: false, pendCand: [], durSec: null, video: !!video, peerKey, speaker: false };
+      callShow();
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!video }); }
+      catch (x) { callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt.state !== 'calling') { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      callSt.stream = stream;
+      const pc = callNewPc(callSt);
+      callSt.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      if (callSt) callSt.noAnsTimer = setTimeout(() => {
+        try { if (callSt && callSt.state === 'calling') { callSend(callSt.orderId, callSt.thread, { type: 'hangup' }, callSt.peerKey); callEnd(tr('no_answer')); } } catch (x) {}
+      }, CALL_NOANSWER_MS);
+      const ok = await callSend(orderId, thread, { type: 'offer', sdp: offer, video: !!video }, peerKey);
+      if (!ok) { callEnd(tr('call_failed')); return; }
+      callPushNotify(orderId, thread, peerKey, !!video);
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callOnSignal(orderId, thread, p, peerKey){
+    try {
+      if (!p || p.from === me()) return;
+      const type = p.type;
+      if (type === 'offer') {
+        if (callSt && callSt.orderId === orderId && callSt.thread === thread && callSt.state === 'incoming' && (!thread.startsWith('sup') || !peerKey || !callSt.peerKey || callSt.peerKey === peerKey)) return;
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        if (orderId) {
+          try {
+            const { data: od } = await sb.from('orders').select('status').eq('id', orderId).single();
+            if (od && ['delivered','cancelled'].includes(od.status)) { await callSend(orderId, thread, { type: 'decline' }, peerKey); return; }
+          } catch (x) {}
+        }
+        const peerName = await callPeerName(orderId, thread);
+        if (callSt) { await callSend(orderId, thread, { type: 'busy' }, peerKey); return; }
+        callSt = { orderId, thread, state: 'incoming', peerName, muted: false, pendCand: [], durSec: null, offer: p.sdp, video: !!p.video, peerKey: peerKey || null, speaker: false };
+        callShow();
+        try { if (cfg.ding) cfg.ding(); } catch (x) {}
+        if (callSt) callSt.ringTimer = setInterval(() => { try { if (callSt && callSt.state === 'incoming' && cfg.ding) cfg.ding(); } catch (x) {} }, 3000);
+        return;
+      }
+      if (type === 'call-ready') {
+        const cs = callSt;
+        if (cs && cs.state === 'calling' && cs.orderId === orderId && cs.thread === thread && cs.pc && cs.pc.localDescription) {
+          try { await callSend(orderId, thread, { type: 'offer', sdp: cs.pc.localDescription, video: !!cs.video }, cs.peerKey); } catch (x) {}
+        }
+        return;
+      }
+      const s = callSt;
+      if (!s || s.orderId !== orderId || s.thread !== thread) return;
+      if (thread && thread.startsWith('sup') && peerKey && s.peerKey && s.peerKey !== peerKey) return;
+      if (type === 'answer') {
+        if (s.state !== 'calling') return;
+        if (s.noAnsTimer) { clearTimeout(s.noAnsTimer); s.noAnsTimer = null; }
+        try {
+          await s.pc.setRemoteDescription(p.sdp);
+          if (s.state === 'calling') { s.state = 'connecting'; callShow(); }
+          const q = s.pendCand; s.pendCand = [];
+          for (const c of q) { try { await s.pc.addIceCandidate(c); } catch (x) {} }
+        } catch (x) { callEnd(tr('call_failed')); }
+        return;
+      }
+      if (type === 'ice-candidate') {
+        try {
+          if (!s.pc) { s.pendCand.push(p.candidate); return; }
+          if (s.pc.remoteDescription) await s.pc.addIceCandidate(p.candidate);
+          else s.pendCand.push(p.candidate);
+        } catch (x) {}
+        return;
+      }
+      if (type === 'hangup') { callEnd(s.state === 'in-call' ? tr('call_ended') : null); return; }
+      if (type === 'decline') { if (s.state === 'calling') callEnd(tr('declined')); return; }
+      if (type === 'busy') { if (s.state === 'calling') callEnd(tr('busy')); return; }
+    } catch (x) {}
+  }
+  async function callAccept(){
+    try {
+      const s = callSt; if (!s || s.state !== 'incoming' || !s.offer) return;
+      if (s.ringTimer) { clearInterval(s.ringTimer); s.ringTimer = null; }
+      let stream;
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !!s.video }); }
+      catch (x) { await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); callEnd(tr('mic_denied')); return; }
+      if (!callSt || callSt !== s) { try { stream.getTracks().forEach(t => t.stop()); } catch (x) {} return; }
+      s.stream = stream;
+      const pc = callNewPc(s); s.pc = pc;
+      stream.getTracks().forEach(t => pc.addTrack(t, stream));
+      try {
+        await pc.setRemoteDescription(s.offer);
+        const ans = await pc.createAnswer();
+        await pc.setLocalDescription(ans);
+        if (s.state === 'incoming') { s.state = 'connecting'; callShow(); }
+        const q = s.pendCand; s.pendCand = [];
+        for (const c of q) { try { await pc.addIceCandidate(c); } catch (x) {} }
+        const ok = await callSend(s.orderId, s.thread, { type: 'answer', sdp: ans }, s.peerKey);
+        if (!ok) { callEnd(tr('call_failed')); return; }
+      } catch (x) { callEnd(tr('call_failed')); }
+    } catch (x) { try { callEnd(tr('call_failed')); } catch (y) {} }
+  }
+  async function callDecline(){
+    try { const s = callSt; if (s && s.state === 'incoming') await callSend(s.orderId, s.thread, { type: 'decline' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callCancel(){
+    try { const s = callSt; if (s && s.state === 'calling') await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  async function callHangup(){
+    try { const s = callSt; if (s) await callSend(s.orderId, s.thread, { type: 'hangup' }, s.peerKey); } catch (x) {}
+    callEnd(null);
+  }
+  function callMute(){
+    try {
+      const s = callSt; if (!s || !s.stream) return;
+      s.muted = !s.muted;
+      s.stream.getAudioTracks().forEach(t => { t.enabled = !s.muted; });
+      callShow();
+    } catch (x) {}
+  }
+  async function callSpeaker(){
+    try {
+      const s = callSt; if (!s) return; s.speaker = !s.speaker;
+      const el = s.remoteEl || document.getElementById('callRemoteV');
+      if (el && el.setSinkId) {
+        try {
+          const devs = await navigator.mediaDevices.enumerateDevices();
+          const outs = devs.filter(d => d.kind === 'audiooutput');
+          const spk = outs.find(d => /speaker/i.test(d.label || ''));
+          await el.setSinkId(s.speaker && spk ? spk.deviceId : 'default');
+        } catch (x) {}
+      } else if (cfg.toast && s.speaker) cfg.toast(tr('speaker_sys'));
+      callShow();
+    } catch (x) {}
+  }
+  return { init, stop, refresh, button, inbox, open, close, send, label, askJoin, sendPhoto, sendLoc, callStart, callAccept, callDecline, callCancel, callHangup, callMute, callSpeaker, consumePendingCall };
 })();
 
 // ================= PUSH + INSTALL (same code in all four apps) =================
