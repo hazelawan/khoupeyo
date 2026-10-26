@@ -696,7 +696,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.56';
+const APP_VERSION = '6.57';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1472,7 +1472,27 @@ function itemRow(i){
 }
 // sections fold open and closed; the open ones are remembered on this phone
 function secOpen(){ if (!state.secOpen){ state.secOpen = new Set(ls.get('kh_secopen', []) || []); if (!state.secOpen.size && state.cats.length === 1) state.secOpen.add(state.cats[0].id); } return state.secOpen; }
+function selfPreviewView(){
+  const r = state.restaurant || {};
+  const items = Array.isArray(state.items) ? state.items : [];
+  const cats = Array.isArray(state.cats) ? state.cats : [];
+  const available = i => i.is_available !== false && !(i.stock_qty != null && num(i.stock_qty) <= 0) && i.is_approved !== false;
+  const card = i => `<article class="card" style="display:flex;gap:12px;align-items:center">
+    <div class="thumb" style="width:72px;height:72px;flex:none">${i.photo_url ? `<img src="${esc(i.photo_url)}" alt="${esc(i.name || '')}" loading="lazy">` : noImg(i.name)}</div>
+    <div style="min-width:0;flex:1"><b>${esc(i.name || '—')}</b>${i.description ? `<div class="muted" style="font-size:13px">${esc(i.description)}</div>` : ''}
+      <div style="margin-top:4px;font-weight:800">${money(i.price)}${num(i.compare_price) > num(i.price) ? `<span class="strike">${money(i.compare_price)}</span>` : ''}</div>
+      <span class="pill ${available(i) ? 'g' : 'r'}">${i.is_approved === false ? 'Not listed yet' : available(i) ? 'Available' : 'Unavailable'}</span>
+    </div></article>`;
+  let body = cats.map(c => { const products = items.filter(i => i.category_id === c.id); return products.length ? `<h2>${esc(c.name || '')}</h2>${products.map(card).join('')}` : ''; }).join('');
+  const loose = items.filter(i => !cats.some(c => c.id === i.category_id));
+  if (loose.length) body += `<h2>Other items</h2>${loose.map(card).join('')}`;
+  if (!items.length) body = '<div class="empty">No menu items to preview yet.</div>';
+  return `<div class="note" role="note"><b>Preview only</b> · Customer-style view of the current shop and menu. Nothing here can be ordered or changed.</div>
+    <div class="card"><div class="ch"><b>${esc(r.name || 'Shop')}</b><span class="pill ${r.is_open ? 'g' : 'r'}">${r.is_open ? 'Open' : 'Closed'}</span></div>${r.description ? `<div class="muted">${esc(r.description)}</div>` : ''}<div class="muted" style="font-size:13px">Prices and availability shown from the current menu.</div></div>
+    ${body}<button class="btn ghost" onclick="A.closeSelfPreview()">Back to shop menu</button>`;
+}
 function viewMenu(){
+  if (state.selfPreview) return selfPreviewView();
   const q = state.productQ.trim().toLowerCase(); const f = state.productFilter;
   const list = state.items.filter(i => (!q || (i.name || '').toLowerCase().includes(q)) && (f === 'all' || (f === 'out' && !i.is_available) || (f === 'pending' && i.is_approved === false)));
   const pending = state.items.filter(i => i.is_approved === false).length, out = state.items.filter(i => !i.is_available).length;
@@ -1501,7 +1521,8 @@ function viewMenu(){
   }
   return `<h1>${isServices() ? t('kind_services') : isFood() ? t('tab_menu') : t('products')}</h1>
     ${state.restaurant ? `<div class="shophead"><b>${esc(state.restaurant.name || '')}</b>${state.staffMode ? '' : `<button class="linkbtn" onclick="A.editShopName()">✏️</button>`}</div>
-    <div class="prodstats"><span>📦 <b>${(state.items || []).length}</b> ${isServices() ? t('kind_services') : isFood() ? t('tab_menu') : t('products')}</span><span>📂 <b>${(state.cats || []).length}</b> ${t('add_section')}</span></div>` : ''}
+    <div class="prodstats"><span>📦 <b>${(state.items || []).length}</b> ${isServices() ? t('kind_services') : isFood() ? t('tab_menu') : t('products')}</span><span>📂 <b>${(state.cats || []).length}</b> ${t('add_section')}</span></div>
+    <button class="btn ghost small" style="margin:10px 0" onclick="A.openSelfPreview()">👁 Preview as customer · read only</button>` : ''}
     <input type="search" id="pq" placeholder="${t('search')}" value="${esc(state.productQ)}" oninput="A.productSearch(this.value)">
     <div class="chips">${chips}</div>
     <div class="btngroup"><span class="btngroup-t">${t('add_product')}</span><button class="btn ghost" onclick="A.editCategory()">${t('add_section')}</button><button class="btn" onclick="A.editItem()">${isServices() ? t('add_service') : t('add_product')}</button></div>
@@ -2214,6 +2235,8 @@ function payAccSub(a){
   return bits.join(' · ');
 }
 const A = {
+  openSelfPreview(){ state.selfPreview = true; renderTab(); window.scrollTo(0, 0); },
+  closeSelfPreview(){ state.selfPreview = false; renderTab(); window.scrollTo(0, 0); },
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.restaurant) showAuth(); else if (!shopKind()) showKindPicker(); else { renderShell(); renderTab(); }

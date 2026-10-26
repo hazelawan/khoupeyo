@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.66';
+const APP_VERSION = '5.67';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1089,7 +1089,7 @@ const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.
 const I18N = {
   en: {
     appearance:'Appearance', grp_profile:'Profile', grp_orders:'Orders & wallet', help_legal:'Help & legal', delete_account:'Delete my account', voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Dera:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
-    saved_shops:'Saved shops', save_shop:'♡ Save shop', shop_saved:'♥ Shop saved', shop_save_login:'Log in to save shops', shops_none:'No saved shops yet.', shopping_list:'Shopping list', meal_plan:'Meal plan', add_list_item:'Add item', list_placeholder:'Item name', list_empty:'Your list is empty.', planned_meal:'Meal', meal_placeholder:'What are you planning to eat?', plan_date:'Date', add_meal:'Add meal', plan_empty:'No meals planned yet.', checked:'Done', remove_item:'Remove',
+    activity:'Activity', activity_empty:'No orders or appointments yet.', activity_order:'Order', activity_booking:'Appointment', allergy_notice:'Allergy & ingredient note: menu information may be incomplete or out of date. Contact the shop directly to confirm ingredients and allergen handling before ordering. Dera cannot guarantee an item is allergen-safe.', saved_shops:'Saved shops', save_shop:'♡ Save shop', shop_saved:'♥ Shop saved', shop_save_login:'Log in to save shops', shops_none:'No saved shops yet.', shopping_list:'Shopping list', meal_plan:'Meal plan', add_list_item:'Add item', list_placeholder:'Item name', list_empty:'Your list is empty.', planned_meal:'Meal', meal_placeholder:'What are you planning to eat?', plan_date:'Date', add_meal:'Add meal', plan_empty:'No meals planned yet.', checked:'Done', remove_item:'Remove',
     rate_items_t:'Rate the products (optional)', rate_bk:'How was the service?', rate_bk_send:'Send rating', rate_bk_thanks:'Thank you for your rating!', reviews_t:'Customer reviews', no_reviews:'No reviews yet.', rev_n:'{n} reviews',
     book:'📅 Book', book_title:'Book a time', bk_day:'Choose a day', bk_time:'Choose a time', bk_none:'No free time on this day. Try another day.', bk_note:'Note for the shop (optional)', bk_confirm:'Book this time', bk_ok:'Booked! Please reach on time.', bk_login:'Please log in to book', my_bookings:'My bookings', bk_booked:'Booked', bk_arrived:'At the shop', bk_done:'Done', bk_cancelled:'Cancelled', bk_no_show:'Cancelled — late', bk_rule:'Please be on time. If you are more than {m} min late, the booking is cancelled by itself.', bk_wait_till:'The shop waits for you until {t}', bk_cancel:'Cancel booking', bk_cancel_q:'Cancel this booking?', bk_cancel_ok:'Booking cancelled', bk_free:'{n} free', bk_pay:'Pay at the shop', today:'Today', tomorrow:'Tomorrow', min_s:'min', bk_loading:'Loading times…',
     login:'Log in', signup:'Create account', name:'Full name', phone:'Phone number', email:'Email', password:'Password', email_ph:'yourname@gmail.com', pw_ph:'Enter your password',
@@ -1214,7 +1214,7 @@ const I18N = {
   },
   ur: {
     appearance:'انداز', grp_profile:'پروفائل', grp_orders:'آرڈرز اور والیٹ', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Dera پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
-    saved_shops:'محفوظ دکانیں', save_shop:'♡ دکان محفوظ کریں', shop_saved:'♥ دکان محفوظ ہے', shop_save_login:'دکانیں محفوظ کرنے کے لیے لاگ ان کریں', shops_none:'ابھی کوئی دکان محفوظ نہیں۔', shopping_list:'خریداری کی فہرست', meal_plan:'کھانے کا منصوبہ', add_list_item:'آئٹم شامل کریں', list_placeholder:'آئٹم کا نام', list_empty:'فہرست خالی ہے۔', planned_meal:'کھانا', meal_placeholder:'کیا کھانے کا ارادہ ہے؟', plan_date:'تاریخ', add_meal:'کھانا شامل کریں', plan_empty:'ابھی کھانے کا منصوبہ نہیں۔', checked:'مکمل', remove_item:'ہٹائیں',
+    activity:'سرگرمیاں', activity_empty:'ابھی کوئی آرڈر یا اپائنٹمنٹ نہیں۔', activity_order:'آرڈر', activity_booking:'اپائنٹمنٹ', allergy_notice:'الرجی اور اجزاء کا نوٹ: مینو کی معلومات نامکمل یا پرانی ہو سکتی ہیں۔ آرڈر سے پہلے اجزاء اور الرجی سے متعلق تیاری کی تصدیق براہِ راست دکان سے کریں۔ Dera اس بات کی ضمانت نہیں دیتا کہ کوئی چیز الرجی سے محفوظ ہے۔', saved_shops:'محفوظ دکانیں', save_shop:'♡ دکان محفوظ کریں', shop_saved:'♥ دکان محفوظ ہے', shop_save_login:'دکانیں محفوظ کرنے کے لیے لاگ ان کریں', shops_none:'ابھی کوئی دکان محفوظ نہیں۔', shopping_list:'خریداری کی فہرست', meal_plan:'کھانے کا منصوبہ', add_list_item:'آئٹم شامل کریں', list_placeholder:'آئٹم کا نام', list_empty:'فہرست خالی ہے۔', planned_meal:'کھانا', meal_placeholder:'کیا کھانے کا ارادہ ہے؟', plan_date:'تاریخ', add_meal:'کھانا شامل کریں', plan_empty:'ابھی کھانے کا منصوبہ نہیں۔', checked:'مکمل', remove_item:'ہٹائیں',
     rate_items_t:'پروڈکٹس کو ریٹ کریں (اختیاری)', rate_bk:'سروس کیسی رہی؟', rate_bk_send:'ریٹنگ بھیجیں', rate_bk_thanks:'ریٹنگ کا شکریہ!', reviews_t:'گاہکوں کے ریویوز', no_reviews:'ابھی کوئی ریویو نہیں۔', rev_n:'{n} ریویوز',
     book:'📅 بُک کریں', book_title:'وقت بُک کریں', bk_day:'دن چنیں', bk_time:'وقت چنیں', bk_none:'اس دن کوئی وقت خالی نہیں۔ کوئی اور دن دیکھیں۔', bk_note:'دکان کے لیے نوٹ (اختیاری)', bk_confirm:'یہ وقت بُک کریں', bk_ok:'بُک ہو گیا! وقت پر پہنچیں۔', bk_login:'بُک کرنے کے لیے لاگ اِن کریں', my_bookings:'میری بُکنگز', bk_booked:'بُک ہے', bk_arrived:'دکان پر پہنچ گئے', bk_done:'مکمل', bk_cancelled:'منسوخ', bk_no_show:'منسوخ — دیر ہو گئی', bk_rule:'وقت پر پہنچیں۔ اگر آپ {m} منٹ سے زیادہ لیٹ ہوئے تو بُکنگ خود منسوخ ہو جائے گی۔', bk_wait_till:'دکان {t} تک آپ کا انتظار کرے گی', bk_cancel:'بُکنگ منسوخ کریں', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟', bk_cancel_ok:'بُکنگ منسوخ ہو گئی', bk_free:'{n} خالی', bk_pay:'پیسے دکان پر دیں', today:'آج', tomorrow:'کل', min_s:'منٹ', bk_loading:'وقت لوڈ ہو رہے ہیں…',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'پورا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', email_ph:'yourname@gmail.com', pw_ph:'اپنا پاس ورڈ لکھیں',
@@ -2574,6 +2574,7 @@ async function showProduct(id){
     ${s || itemRate(item.id) ? `<div class="muted">${itemRate(item.id) ? `<span class="star">★ ${itemRate(item.id).avg}</span> · ${t('rev_n', { n:itemRate(item.id).n })}${s ? ' · ' : ''}` : ''}${s ? t('sold_n', { n:s }) : ''}</div>` : ''}
     ${item.duration_min ? `<div class="muted" style="font-size:14px">⏱️ ${item.duration_min} ${t('min_s')}</div>` : ''}
     ${item.description ? `<p class="muted">${esc(item.description)}</p>` : ''}
+    <div class="support-card" role="note" style="border-color:var(--marigold);font-size:13px">⚠️ ${t('allergy_notice')}</div>
     ${num(item.weight_kg) ? `<div class="muted" style="font-size:14px">⚖️ ${kgText(item.weight_kg)}</div>` : ''}
     ${leftBadge(item)}${winBadge(item)}
     ${hasOpts(item.id) ? `<div class="custom" style="font-size:14px">${t('customizable')}: ${esc((state.optCache[item.id] || []).map(g => g.name).join(', '))}</div>` : ''}
@@ -2901,6 +2902,7 @@ function drawCheckout(){
     </div>
     ${!pick && q && !q.loading && !q.ok ? `<div class="closed-note">${esc(q.msg)}${/location/i.test(q.msg) ? `<div style="font-weight:400;margin-top:6px">${t('add_loc_hint')}</div>` : ''}</div>` : ''}
     ${!pick && plusSet() && !plusActive() && fee > 0 ? `<a class="plusad" href="#/plus">${t('plus_get')}</a>` : ''}
+    <div class="support-card" role="note" style="border-color:var(--marigold);font-size:13px">⚠️ ${t('allergy_notice')}</div>
     <button class="btn" id="placeBtn" ${blocked || (!pick && q && q.loading) ? 'disabled' : ''} onclick="A.placeOrder()">${t('place_order')} · ${money(grand)}</button>`;
 }
 
@@ -2913,15 +2915,27 @@ function pillFor(status){
   return `<span class="pill ${cls}">${t('st_' + status)}</span>`;
 }
 async function showOrders(){
-  const orders = need(await sb.from('orders').select('*, restaurant:restaurants(name,phone,logo_url,lat,lng), order_items(menu_item_id,name,quantity,price)').order('created_at', { ascending:false }).limit(50));
-  const rows = orders.map(o => { const dkm = !['pickup','dinein'].includes(o.order_type) && o.address_lat != null && o.restaurant && o.restaurant.lat != null ? kmBetween(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null; return `<div><a class="orow" href="#/order/${esc(o.id)}">
-    <div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:52px;height:52px;font-size:20px">${o.restaurant && o.restaurant.logo_url ? `<img src="${esc(o.restaurant.logo_url)}" alt="">` : esc(((o.restaurant && o.restaurant.name) || '?')[0])}</div>
-    <div style="min-width:0"><div style="font-weight:700">${esc(o.restaurant ? o.restaurant.name : '')}</div><small class="muted">${when(o.created_at)} · ${t('items_n', { n:(o.order_items || []).reduce((n, i) => n + i.quantity, 0) })}${dkm != null ? ` · 📍 ${fmtKmC(dkm)}` : ''}</small>${o.scheduled_for && !FINAL.includes(o.status) ? `<div><span class="schedpill">🗓️ ${esc(schedLabel(o.scheduled_for))}</span></div>` : ''}</div></div>
-    <div class="r">${money(o.total)}<small>${pillFor(o.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin:5px 0 8px" href="#/help/${esc(o.id)}">❓ Help with this order</a></div>`; }).join('');
-  let bk = [];
-  try { bk = need(await sb.rpc('my_bookings')) || []; } catch (e) { logErr(e); }
-  state.myBookings = bk;
-  $('view').innerHTML = `${bookingsHtml(bk)}<h1>${t('history')}</h1>${rows || `<div class="empty"><div style="font-size:72px;line-height:1;margin-bottom:10px">📦</div>${t('no_orders')}</div>`}`;
+  const orders = need(await sb.from('orders').select('id,status,created_at,scheduled_for,total,order_type,address_lat,address_lng,restaurant:restaurants(name,phone,logo_url,lat,lng),order_items(menu_item_id,name,quantity,price)').eq('customer_id', state.user.id).order('created_at', { ascending:false }).limit(50));
+  let bookings = [];
+  try { bookings = need(await sb.rpc('my_bookings')) || []; } catch (e) { logErr(e); }
+  bookings = bookings.slice(0, 50); state.myBookings = bookings;
+  state._liveBk = bookings.filter(b => ['booked','arrived'].includes(b.status));
+  setTimeout(() => A.loadQueues(), 80);
+  const events = [
+    ...orders.map(o => ({ kind:'order', at:o.created_at, data:o })),
+    ...bookings.map(b => ({ kind:'booking', at:b.starts_at, data:b }))
+  ].filter(e => e.at).sort((a,b) => new Date(b.at)-new Date(a.at)).slice(0, 100);
+  const rows = events.map(({kind,data:x}) => {
+    const date = kind === 'booking' ? tKar(x.starts_at) : when(x.created_at);
+    if (kind === 'order') {
+      const dkm = !['pickup','dinein'].includes(x.order_type) && x.address_lat != null && x.restaurant && x.restaurant.lat != null ? kmBetween(x.restaurant.lat,x.restaurant.lng,x.address_lat,x.address_lng) : null;
+      const count=(x.order_items||[]).reduce((n,i)=>n+num(i.quantity),0);
+      return `<article class="support-card" style="margin:0"><a class="orow" style="padding:0;border:0" href="#/order/${esc(x.id)}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:48px;height:48px;font-size:19px">${x.restaurant&&x.restaurant.logo_url?`<img src="${esc(x.restaurant.logo_url)}" alt="">`:esc(((x.restaurant&&x.restaurant.name)||'?')[0])}</div><div style="min-width:0"><div class="muted" style="font-size:12px">${t('activity_order')} · ${date}</div><b>${esc(x.restaurant?x.restaurant.name:'')}</b><small class="muted" style="display:block">${t('items_n',{n:count})}${dkm!=null?` · 📍 ${fmtKmC(dkm)}`:''}${x.scheduled_for&&!FINAL.includes(x.status)?` · 🗓️ ${esc(schedLabel(x.scheduled_for))}`:''}</small></div></div><div class="r">${money(x.total)}<small>${pillFor(x.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin-top:8px" href="#/help/${esc(x.id)}">❓ Help with this order</a></article>`;
+    }
+    const active=['booked','arrived'].includes(x.status), statusLabel=t('bk_'+x.status);
+    return `<article class="bkcard ${x.status==='booked'?'on':''}" style="margin:0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><div class="muted" style="font-size:12px">${t('activity_booking')} · ${date}</div><b>${esc(x.item_name)}</b><div class="muted" style="font-size:14px">${esc(x.shop_name)} · ${money(x.price)}</div></div><span class="pill ${['cancelled','no_show'].includes(x.status)?'bad':''}">${statusLabel}</span></div>${active?`<div class="muted" style="font-size:13px;margin-top:6px">${t('bk_wait_till',{t:new Date(x.late_until).toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Karachi'})})} · ${t('bk_pay')}</div><div id="q-${esc(x.id)}" style="margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:8px">${x.shop_phone?`<a class="btn ghost inline" href="tel:${esc(x.shop_phone)}">📞</a>`:''}<button class="btn warn inline" onclick="A.bookCancel('${esc(x.id)}')">${t('bk_cancel')}</button></div>`:''}${x.cancel_reason&&!active?`<div class="muted" style="font-size:13px;margin-top:4px">${esc(x.cancel_reason)}</div>`:''}${x.status==='done'?(x.rating?`<div style="margin-top:6px"><b class="star">${'★'.repeat(x.rating)}</b>${x.rating_comment?' · '+esc(x.rating_comment):''}</div>`:`<div style="margin-top:8px"><b>${t('rate_bk')}</b><div class="stars" id="stars-bk${esc(x.id.slice(0,8))}" style="text-align:center">${starsHtml('bk'+x.id.slice(0,8),0)}</div><input type="text" id="bkc-${esc(x.id)}" placeholder="${t('rate_comment')}" maxlength="300" style="width:100%"><button class="btn" style="margin-top:8px" onclick="A.rateBooking('${esc(x.id)}')">${t('rate_bk_send')}</button></div>`):''}</article>`;
+  }).join('');
+  $('view').innerHTML = `<h1>${t('activity')}</h1><p class="muted" style="margin-top:-6px">${state.lang==='ur'?'آخری 100 آرڈرز اور اپائنٹمنٹس، تازہ ترین پہلے۔':'Your latest 100 orders and appointments, newest first.'}</p>${rows||`<div class="empty">${t('activity_empty')}</div>`}`;
 }
 const FAQ = {
   en:[['How do I order?','Open a shop, add items to the cart, tap Checkout, choose your address and payment, then tap Place order.'],
