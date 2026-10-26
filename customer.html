@@ -1061,8 +1061,8 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 })();
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
-// ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.73';
+// ---- Version: change this number every time the file is updated ----
+const APP_VERSION = '5.74';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1173,6 +1173,7 @@ const I18N = {
     no_shops:'No shops are available yet.', no_results:'Nothing found. Try another word.', menu_empty:'This shop has no products yet.',
     items_n:'{n} items', your_details:'Your details', order_no:'Order',
     delivered_to:'Delivering to', order_items:'Your order', history:'Your orders',
+    rider_favorites:'Saved riders', rider_favorites_none:'No saved riders yet. After a completed delivery, you can save its rider here.', rider_favorite_save:'Save rider', rider_favorite_saved:'Rider saved', rider_favorite_remove:'Remove', rider_favorite_info:'Saved riders are for your information only and never affect who is assigned to an order.',
     addr_in_use:'This address was used in an earlier order, so it cannot be deleted.',
     browse_guest:'Continue browsing', login_to_order:'Please log in to place your order. Your cart is saved.',
     need_details:'Please add your name and phone so the shop and rider can reach you.',
@@ -1298,6 +1299,7 @@ const I18N = {
     no_shops:'ابھی کوئی دکان دستیاب نہیں۔', no_results:'کچھ نہیں ملا۔ کوئی اور لفظ آزمائیں۔', menu_empty:'اس دکان میں ابھی کوئی پروڈکٹ نہیں۔',
     items_n:'{n} آئٹم', your_details:'آپ کی معلومات', order_no:'آرڈر',
     delivered_to:'اس پتے پر ڈیلیوری', order_items:'آپ کا آرڈر', history:'آپ کے آرڈرز',
+    rider_favorites:'محفوظ رائیڈر', rider_favorites_none:'ابھی کوئی رائیڈر محفوظ نہیں۔ مکمل ڈیلیوری کے بعد اس کے رائیڈر کو یہاں محفوظ کر سکتے ہیں۔', rider_favorite_save:'رائیڈر محفوظ کریں', rider_favorite_saved:'رائیڈر محفوظ ہو گیا', rider_favorite_remove:'ہٹائیں', rider_favorite_info:'محفوظ رائیڈر صرف معلومات کے لیے ہیں؛ ان سے آرڈر کے لیے رائیڈر کی تعیناتی پر کوئی اثر نہیں پڑتا۔',
     addr_in_use:'یہ پتہ پہلے آرڈر میں استعمال ہوا ہے، اس لیے حذف نہیں ہو سکتا۔',
     browse_guest:'بغیر لاگ اِن دیکھتے رہیں', login_to_order:'آرڈر کرنے کے لیے لاگ اِن کریں۔ آپ کا کارٹ محفوظ ہے۔',
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
@@ -2478,17 +2480,26 @@ async function loadSavedShops(){
   if (!state.user) { state.savedShopIds = new Set(); return; }
   try { const { data, error } = await sb.from('customer_shop_favorites').select('restaurant_id').eq('user_id', state.user.id).limit(200); if (error) throw error; state.savedShopIds = new Set((data || []).map(x => x.restaurant_id)); } catch (e) { state.savedShopIds = new Set(); logErr(e); }
 }
+async function loadSavedRiders(){
+  if (!state.user) return [];
+  const { data, error } = await sb.rpc('customer_list_rider_favorites');
+  if (error) throw error;
+  return data || [];
+}
 async function showSaved(){
   await ensureData();
   const list = state.favs.map(id => state.itemsCache[id]).filter(Boolean);
   await loadSavedShops();
   const shops = state.restaurants.filter(r => state.savedShopIds.has(r.id));
   const shopCards = shops.map(r => `<a class="rcard" href="#/r/${r.id}"><div class="rimg">${r.logo_url ? `<img src="${esc(r.logo_url)}" alt="">` : esc((r.name || 'S').slice(0,1))}</div><div class="rbody"><div class="rname">${esc(r.name)}</div><div class="rmeta">${r.is_open ? t('open') : t('closed')}</div></div></a>`).join('');
+  let savedRiders = [];
+  try { savedRiders = await loadSavedRiders(); } catch (e) { logErr(e); }
+  const riderCards = savedRiders.map(r => `<div class="rcard"><div class="rimg" aria-hidden="true">🛵</div><div class="rbody"><div class="rname">${esc(r.rider_name || 'Rider')}</div><div class="rmeta">${esc(t('rider_favorite_info'))}</div></div><button type="button" class="pillbtn" style="background:var(--surface);color:var(--ink);border-color:var(--line)" onclick="A.removeRiderFavorite('${esc(r.rider_id)}')">${t('rider_favorite_remove')}</button></div>`).join('');
   const card = p => {
     const dropped = p.compare_price > p.price || p._flash;
     return productCard(p, dropped ? t('price_drop') : '');
   };
-  $('view').innerHTML = `<h1>${t('favourites')}</h1><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><a class="pillbtn" href="#/shopping-list">${t('shopping_list')}</a><a class="pillbtn" href="#/meal-plan">${t('meal_plan')}</a></div>${list.length ? `<div class="grid2">${list.map(card).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}<h2>${t('saved_shops')}</h2>${shopCards || `<div class="empty">${t('shops_none')}</div>`}`;
+  $('view').innerHTML = `<h1>${t('favourites')}</h1><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><a class="pillbtn" href="#/shopping-list">${t('shopping_list')}</a><a class="pillbtn" href="#/meal-plan">${t('meal_plan')}</a></div>${list.length ? `<div class="grid2">${list.map(card).join('')}</div>` : `<div class="empty"><div class="eic">🤍</div>${t('no_favs')}</div>`}<h2>${t('saved_shops')}</h2>${shopCards || `<div class="empty">${t('shops_none')}</div>`}<h2>${t('rider_favorites')}</h2><p class="muted" style="font-size:14px">${t('rider_favorite_info')}</p>${riderCards || `<div class="empty">${t('rider_favorites_none')}</div>`}`;
 }
 
 // ================= CUSTOMER PERSONAL PLANNING =================
@@ -2989,7 +3000,9 @@ function pillFor(status){
   return `<span class="pill ${cls}">${t('st_' + status)}</span>`;
 }
 async function showOrders(){
-  const orders = need(await sb.from('orders').select('id,status,created_at,scheduled_for,total,order_type,address_lat,address_lng,restaurant:restaurants(name,phone,logo_url,lat,lng),order_items(menu_item_id,name,quantity,price)').eq('customer_id', state.user.id).order('created_at', { ascending:false }).limit(50));
+  const orders = need(await sb.from('orders').select('id,status,rider_id,created_at,scheduled_for,total,order_type,address_lat,address_lng,restaurant:restaurants(name,phone,logo_url,lat,lng),order_items(menu_item_id,name,quantity,price)').eq('customer_id', state.user.id).order('created_at', { ascending:false }).limit(50));
+  let savedRiderIds = new Set();
+  if (orders.some(o => ['delivered','completed'].includes(o.status) && o.rider_id)) try { savedRiderIds = new Set((await loadSavedRiders()).map(r => r.rider_id)); } catch (e) { logErr(e); }
   let bookings = [];
   try { bookings = need(await sb.rpc('my_bookings')) || []; } catch (e) { logErr(e); }
   bookings = bookings.slice(0, 50); state.myBookings = bookings;
@@ -3004,7 +3017,9 @@ async function showOrders(){
     if (kind === 'order') {
       const dkm = !['pickup','dinein'].includes(x.order_type) && x.address_lat != null && x.restaurant && x.restaurant.lat != null ? kmBetween(x.restaurant.lat,x.restaurant.lng,x.address_lat,x.address_lng) : null;
       const count=(x.order_items||[]).reduce((n,i)=>n+num(i.quantity),0);
-      return `<article class="support-card" style="margin:0"><a class="orow" style="padding:0;border:0" href="#/order/${esc(x.id)}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:48px;height:48px;font-size:19px">${x.restaurant&&x.restaurant.logo_url?`<img src="${esc(x.restaurant.logo_url)}" alt="">`:esc(((x.restaurant&&x.restaurant.name)||'?')[0])}</div><div style="min-width:0"><div class="muted" style="font-size:12px">${t('activity_order')} · ${date}</div><b>${esc(x.restaurant?x.restaurant.name:'')}</b><small class="muted" style="display:block">${t('items_n',{n:count})}${dkm!=null?` · 📍 ${fmtKmC(dkm)}`:''}${x.scheduled_for&&!FINAL.includes(x.status)?` · 🗓️ ${esc(schedLabel(x.scheduled_for))}`:''}</small></div></div><div class="r">${money(x.total)}<small>${pillFor(x.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin-top:8px" href="#/help/${esc(x.id)}">❓ Help with this order</a></article>`;
+      const canSaveRider = ['delivered','completed'].includes(x.status) && x.rider_id;
+      const riderSave = canSaveRider ? (savedRiderIds.has(x.rider_id) ? `<span class="muted" style="display:inline-block;margin-top:8px">✓ ${t('rider_favorite_saved')}</span>` : `<button type="button" class="btn ghost inline" style="margin-top:8px" onclick="A.saveRiderFromOrder('${esc(x.id)}')">${t('rider_favorite_save')}</button>`) : '';
+      return `<article class="support-card" style="margin:0"><a class="orow" style="padding:0;border:0" href="#/order/${esc(x.id)}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><div class="rimg" style="width:48px;height:48px;font-size:19px">${x.restaurant&&x.restaurant.logo_url?`<img src="${esc(x.restaurant.logo_url)}" alt="">`:esc(((x.restaurant&&x.restaurant.name)||'?')[0])}</div><div style="min-width:0"><div class="muted" style="font-size:12px">${t('activity_order')} · ${date}</div><b>${esc(x.restaurant?x.restaurant.name:'')}</b><small class="muted" style="display:block">${t('items_n',{n:count})}${dkm!=null?` · 📍 ${fmtKmC(dkm)}`:''}${x.scheduled_for&&!FINAL.includes(x.status)?` · 🗓️ ${esc(schedLabel(x.scheduled_for))}`:''}</small></div></div><div class="r">${money(x.total)}<small>${pillFor(x.status)}</small></div></a><a class="pillbtn" style="display:inline-block;margin-top:8px" href="#/help/${esc(x.id)}">❓ Help with this order</a>${riderSave}${canSaveRider?`<div class="muted" style="font-size:12px;margin-top:4px">${t('rider_favorite_info')}</div>`:''}</article>`;
     }
     const active=['booked','arrived'].includes(x.status), statusLabel=t('bk_'+x.status);
     return `<article class="bkcard ${x.status==='booked'?'on':''}" style="margin:0"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><div class="muted" style="font-size:12px">${t('activity_booking')} · ${date}</div><b>${esc(x.item_name)}</b><div class="muted" style="font-size:14px">${esc(x.shop_name)} · ${money(x.price)}</div></div><span class="pill ${['cancelled','no_show'].includes(x.status)?'bad':''}">${statusLabel}</span></div>${active?`<div class="muted" style="font-size:13px;margin-top:6px">${t('bk_wait_till',{t:new Date(x.late_until).toLocaleTimeString('en-GB',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'Asia/Karachi'})})} · ${t('bk_pay')}</div><div id="q-${esc(x.id)}" style="margin-top:8px"></div><div style="display:flex;gap:8px;margin-top:8px">${x.shop_phone?`<a class="btn ghost inline" href="tel:${esc(x.shop_phone)}">📞</a>`:''}<button class="btn warn inline" onclick="A.bookCancel('${esc(x.id)}')">${t('bk_cancel')}</button></div>`:''}${x.cancel_reason&&!active?`<div class="muted" style="font-size:13px;margin-top:4px">${esc(x.cancel_reason)}</div>`:''}${x.status==='done'?(x.rating?`<div style="margin-top:6px"><b class="star">${'★'.repeat(x.rating)}</b>${x.rating_comment?' · '+esc(x.rating_comment):''}</div>`:`<div style="margin-top:8px"><b>${t('rate_bk')}</b><div class="stars" id="stars-bk${esc(x.id.slice(0,8))}" style="text-align:center">${starsHtml('bk'+x.id.slice(0,8),0)}</div><input type="text" id="bkc-${esc(x.id)}" placeholder="${t('rate_comment')}" maxlength="300" style="width:100%"><button class="btn" style="margin-top:8px" onclick="A.rateBooking('${esc(x.id)}')">${t('rate_bk_send')}</button></div>`):''}</article>`;
@@ -3719,6 +3734,25 @@ const A = {
       if (currentRoute === 'r') await showRestaurant(id);
       else if (currentRoute === 'saved') await showSaved();
       toast(exists ? t('saved') : t('shop_saved'));
+    });
+  },
+  async saveRiderFromOrder(orderId){
+    if (!state.user) return toast(t('login_to_order'), true);
+    await run(async()=>{
+      const { data, error } = await sb.rpc('customer_save_rider_favorite', { p_order_id:orderId });
+      if (error) throw error;
+      if (!data) throw new Error(t('rider_favorites_none'));
+      toast(t('rider_favorite_saved'));
+      if (currentRoute === 'orders') await showOrders();
+    });
+  },
+  async removeRiderFavorite(riderId){
+    if (!state.user) return;
+    await run(async()=>{
+      const { data, error } = await sb.rpc('customer_remove_rider_favorite', { p_rider_id:riderId });
+      if (error) throw error;
+      if (!data) throw new Error('Saved rider was not removed.');
+      await showSaved();
     });
   },
   fav(id, btn){

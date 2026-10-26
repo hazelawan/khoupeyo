@@ -680,8 +680,8 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.68';
-const APP_DATE = '26 Oct 2026';
+const APP_VERSION = '7.69';
+const APP_DATE = '27 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1524,6 +1524,7 @@ function viewProducts(){
     <div class="bar">
       ${state.menuRestaurant !== 'all' ? `<div class="btngroup"><span class="btngroup-t">Manage</span><button class="btn ghost" onclick="A.editCategory()">Add section</button><button class="btn" onclick="A.editItem()">Add product</button></div><div class="btngroup"><span class="btngroup-t">Bulk</span><button class="btn ghost" onclick="Bulk.open()">📊 Excel sheet</button><button class="btn ghost" onclick="Bulk.photoMode()">📷 Photo mode</button><button class="btn ghost" onclick="AutoImg.open()">🖼️ Find images</button></div>` : '<span class="muted" style="font-size:14px">Choose a shop above to add sections and products.</span>'}
       ${pending ? `<button class="btn ghost" onclick="A.approveAll()">Approve visible ${pending}</button>` : ''}
+      <button class="btn ghost" onclick="A.photoReviewQueue()">📷 Photo approvals</button>
       <button class="btn ghost" onclick="A.flashList()">⚡ Flash sales</button>
     </div>
     <div id="prodBody">${body}</div>
@@ -3550,6 +3551,18 @@ const A = {
   },
   async toggleItem(id, val){ await run(async () => { need(await sb.from('menu_items').update({ is_available:val }).eq('id', id)); await loadProducts(); renderTab(); }); },
   async approveItem(id){ await run(async () => { need(await sb.from('menu_items').update({ is_approved:true }).eq('id', id)); await loadProducts(); renderTab(); toast('Approved'); }); },
+  async photoReviewQueue(){
+    await run(async () => {
+      const rows = need(await sb.rpc('admin_menu_photo_review_queue')) || [];
+      const cards = rows.map(r => { const pics = [r.photo_url].concat(Array.isArray(r.photos) ? r.photos : [], Array.isArray(r.back_photos) ? r.back_photos : []).filter(Boolean).slice(0, 12); return `<div class="card"><div class="line"><b>${esc(r.product_name || 'Product')}</b><span class="muted">${esc(r.shop_name || 'Shop')}</span></div><div class="muted" style="font-size:12px">Submitted ${new Date(r.submitted_at).toLocaleString()}</div><div style="display:flex;gap:7px;overflow:auto;margin:10px 0">${pics.map(u => `<img src="${esc(u)}" alt="Pending product photo" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:9px;border:1px solid var(--line)">`).join('') || '<span class="muted">No photos attached</span>'}</div><div class="actions"><button class="btn" onclick="A.reviewPhotoSubmission('${r.id}','approve')">Approve & publish photos</button><button class="btn ghost" onclick="A.reviewPhotoSubmission('${r.id}','reject')">Reject</button></div></div>`; }).join('');
+      openSheet('Photo approvals', cards || '<div class="empty">No product photos are awaiting approval.</div>', 'wide');
+    });
+  },
+  async reviewPhotoSubmission(id, action){
+    let note = null;
+    if (action === 'reject'){ note = await uiPrompt('Reason for rejecting these photos', ''); if (note === null) return; if (!note.trim()) return toast('A reason is required.', true); }
+    await run(async () => { need(await sb.rpc('admin_review_menu_photo_submission', { p_submission_id:id, p_action:action, p_note:note })); toast(action === 'approve' ? 'Photos approved and published.' : 'Photos rejected; current live photos were left unchanged.'); await loadProducts(); renderTab(); await A.photoReviewQueue(); });
+  },
   // ---- Flash sales ----
   async flashList(){
     const [sales, reqs] = await Promise.all([
