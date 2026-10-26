@@ -680,8 +680,8 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.64';
-const APP_DATE = '1 Oct 2026';
+const APP_VERSION = '7.65';
+const APP_DATE = '26 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2690,7 +2690,7 @@ function withdrawCard(){
 function pushCard(){
   return `<div class="card">
     <b>📣 Push notification bhejo</b>
-    <div class="muted" style="font-size:14px">Ye notification us app ke sab users ko jayegi jin ke paas app installed hai aur notifications on hain. Push service live hone ke baad hi kaam karegi (Edge Function deploy pending).</div>
+    <div class="muted" style="font-size:14px">Ye notification chune hue app ke un users ko jayegi jinhon ne notifications on ki hui hain. Sirf active admin ise bhej sakta hai.</div>
     <label class="f" for="push_title">Title</label><input id="push_title" maxlength="80" placeholder="Misal: Nayi offer!">
     <label class="f" for="push_body">Message</label><textarea id="push_body" maxlength="300" rows="3" placeholder="Misal: Aaj raat 8 baje tak free delivery"></textarea>
     <label class="f" for="push_app">Kis app ko</label><select id="push_app"><option value="all">Sab apps</option><option value="customer">Customer app</option><option value="shop">Shop app</option><option value="rider">Rider app</option></select>
@@ -2708,9 +2708,9 @@ async function sendPushMsg(){
     if (r) r.textContent = 'Bheja ja raha hai...';
     const { data:{ session } } = await sb.auth.getSession();
     if (!session){ if (r) r.textContent = 'Session khatam ho gayi hai. Dobara login karo.'; return; }
-    const res = await fetch(SUPABASE_URL + '/functions/v1/send-push', { method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPABASE_KEY, 'Authorization':'Bearer ' + session.access_token }, body: JSON.stringify({ app: ap, title: t.trim(), body: b.trim() }) });
+    const res = await fetch(SUPABASE_URL + '/functions/v1/admin-send-push', { method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPABASE_KEY, 'Authorization':'Bearer ' + session.access_token }, body: JSON.stringify({ app: ap, title: t.trim(), body: b.trim() }) });
     const j = await res.json().catch(() => ({}));
-    if (!res.ok){ if (r) r.textContent = 'Nahi bheja ja saka: ' + (j.error || ('HTTP ' + res.status)) + ' (Edge Function deploy pending ho sakta hai).'; return; }
+    if (!res.ok){ if (r) r.textContent = 'Nahi bheja ja saka: ' + (j.error || ('HTTP ' + res.status)) + '.'; return; }
     if (r) r.textContent = 'Ho gaya — ' + (j.sent || 0) + ' devices ko bheja gaya' + (j.failed ? ', ' + j.failed + ' fail hue' : '') + '.';
   } catch (e) { const r = document.getElementById('push_result'); if (r) r.textContent = 'Error: ' + (e && e.message ? e.message : e); }
 }
