@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.63';
+const APP_VERSION = '7.64';
 const APP_DATE = '1 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2708,7 +2708,7 @@ async function sendPushMsg(){
     if (r) r.textContent = 'Bheja ja raha hai...';
     const { data:{ session } } = await sb.auth.getSession();
     if (!session){ if (r) r.textContent = 'Session khatam ho gayi hai. Dobara login karo.'; return; }
-    const res = await fetch(SUPABASE_URL + '/functions/v1/send-push', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + session.access_token }, body: JSON.stringify({ app: ap, title: t.trim(), body: b.trim() }) });
+    const res = await fetch(SUPABASE_URL + '/functions/v1/send-push', { method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPABASE_KEY, 'Authorization':'Bearer ' + session.access_token }, body: JSON.stringify({ app: ap, title: t.trim(), body: b.trim() }) });
     const j = await res.json().catch(() => ({}));
     if (!res.ok){ if (r) r.textContent = 'Nahi bheja ja saka: ' + (j.error || ('HTTP ' + res.status)) + ' (Edge Function deploy pending ho sakta hai).'; return; }
     if (r) r.textContent = 'Ho gaya — ' + (j.sent || 0) + ' devices ko bheja gaya' + (j.failed ? ', ' + j.failed + ' fail hue' : '') + '.';
