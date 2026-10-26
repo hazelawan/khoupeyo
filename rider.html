@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.43';
+const APP_VERSION = '5.44';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2360,7 +2360,7 @@ function viewAcct(){
     </div>
     <div class="grp"><div class="grp-h">🛟 Rider support & help</div>
     <div class="card">
-      <button class="row" style="width:100%;border:none;background:none" onclick="openSupportCenter()"><div class="row-main"><div class="row-title">🛟 Rider Help Center</div><div class="muted" style="font-size:13px">Tickets and replies for rider support</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="openSupportCenter()"><div class="row-main"><div class="row-title">🛟 Feedback / screenshot</div><div class="muted" style="font-size:13px">Send feedback or attach a screenshot to rider support</div></div><span class="muted">›</span></button>
       <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
       ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
       ${Legal.links(state.lang)}
@@ -2381,9 +2381,55 @@ async function showMyFace(){
 // ================= ACTIONS =================
 let pollTimer = null, channel = null;
 // ================= RIDER HELP CENTER =================
-function supportClose(){ document.getElementById('riderSupportModal')?.remove(); state.supportSelected=null; state.supportOrderId=null; state.supportContext=null; }
+function supportClose(){ document.getElementById('riderSupportModal')?.remove(); state.supportSelected=null; state.supportOrderId=null; state.supportContext=null; state.supportAttachments=[]; }
 function supportStatusLabel(status){ return ({open:'Open',in_progress:'In progress',waiting_on_requester:'Waiting on you',resolved:'Resolved',closed:'Closed'})[status] || status || 'Open'; }
 function supportPriorityLabel(priority){ return priority || 'normal'; }
+const SUPPORT_ATTACHMENT_MAX=5*1024*1024, SUPPORT_MAX_FILES=5;
+let supportCreateBusy=false, supportAttachBusy=false;
+function supportValidateFiles(input){
+  const files=Array.from(input?.files||input||[]), allowed={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+  if(files.length>SUPPORT_MAX_FILES)return 'Choose no more than 5 screenshots per operation.';
+  for(const file of files){ if(!allowed[file.type]) return 'Choose JPEG, PNG, or WebP screenshots only.'; if(!(file.size>0)||file.size>SUPPORT_ATTACHMENT_MAX) return 'Each screenshot must be larger than 0 bytes and 5 MiB or smaller.'; if(String(file.name||'').length>255)return 'Screenshot file names must be 255 characters or fewer.'; }
+  return '';
+}
+async function supportUploadFiles(ticketId,input){
+  const files=Array.from(input?.files||input||[]), allowed={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+  if(!files.length)return 0;
+  const validation=supportValidateFiles(files); if(validation)throw new Error(validation);
+  if(!state.user?.id)throw new Error('Sign in again before attaching screenshots.');
+  let uploaded=0;
+  for(const file of files){
+    const ext=allowed[file.type], path=`${state.user.id}/${ticketId}/${crypto.randomUUID()}.${ext}`;
+    const stored=await sb.storage.from('support-attachments').upload(path,file,{contentType:file.type,upsert:false});
+    if(stored.error)throw stored.error;
+    const meta=await sb.from('support_attachments').insert({ticket_id:ticketId,uploader_id:state.user.id,storage_path:path,file_name:file.name,mime_type:file.type,size_bytes:file.size});
+    if(meta.error){ await sb.storage.from('support-attachments').remove([path]); throw meta.error; }
+    uploaded++;
+  }
+  return uploaded;
+}
+async function supportLoadAttachments(ticketId){
+  try{
+    const res=await sb.from('support_attachments').select('id,ticket_id,storage_path,file_name,mime_type,size_bytes,created_at').eq('ticket_id',ticketId).order('created_at',{ascending:true}).limit(30);
+    if(state.supportSelected!==ticketId)return false;
+    if(res.error)throw res.error;
+    const rows=res.data||[];
+    const signedRows=await Promise.all(rows.map(async a=>{
+      const signed=await sb.storage.from('support-attachments').createSignedUrl(a.storage_path,600);
+      if(state.supportSelected!==ticketId)return null;
+      return {...a,url:signed.error?'':signed.data?.signedUrl||''};
+    }));
+    if(state.supportSelected!==ticketId)return false;
+    state.supportAttachments=signedRows.filter(Boolean);
+    return true;
+  }catch(e){logErr(e);if(state.supportSelected===ticketId)toast('Could not load ticket screenshots',true);return false;}
+}
+function supportAttachmentMarkup(){
+  return (state.supportAttachments||[]).map(a=>{
+    const name=esc(a.file_name||'Screenshot'), url=esc(a.url||''), isImage=['image/jpeg','image/png','image/webp'].includes(a.mime_type);
+    return `<div class="card" style="display:flex;gap:10px;align-items:center;margin:8px 0">${isImage&&a.url?`<a href="${url}" target="_blank" rel="noopener"><img loading="lazy" src="${url}" alt="${name}" style="width:64px;height:64px;object-fit:cover;border-radius:8px"></a>`:''}${a.url?`<a href="${url}" target="_blank" rel="noopener" style="overflow-wrap:anywhere">${name}</a>`:`<span style="overflow-wrap:anywhere">${name} (preview unavailable)</span>`}<span class="muted" style="font-size:12px">${(Number(a.size_bytes)||0).toLocaleString()} B</span></div>`;
+  }).join('')||'<div class="muted">No screenshots attached.</div>';
+}
 async function openSupportCenter(orderId,contextKind,contextId){
   if (!state.user){ showAuth(); return; }
   state.supportOrderId=orderId || null; state.supportContext=contextId?{kind:contextKind||'delivery',id:contextId}:null; state.supportSelected=null; state.supportMessages=[];
@@ -2409,16 +2455,60 @@ function renderSupportCenter(){
  if(selected){
    const messages=(state.supportMessages||[]).map(m=>`<div class="card" style="margin:8px 0"><div class="ch"><b>${m.author_role==='admin'?'Rider support':'You'}</b><span class="muted" style="font-size:12px">${esc(when(m.created_at))}</span></div><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(m.body)}</div></div>`).join('')||'<div class="muted">No messages yet.</div>';
    const canReopen=['resolved','closed'].includes(selected.status);
-   b.innerHTML=`<button class="link" onclick="supportBackToList()">‹ All tickets</button><div class="card"><div class="ch"><b>${esc(selected.subject)}</b><span class="pill">${esc(supportStatusLabel(selected.status))}</span></div><div class="muted" style="font-size:13px">${esc(selected.category)} · ${selected.order_id?'Order / parcel '+esc(selected.order_id.slice(-8).toUpperCase()):'General rider support'} · ${esc(when(selected.created_at))}</div>${selected.first_response_at?'<div class="muted" style="font-size:13px;margin-top:6px">First response received</div>':target}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost small" onclick="supportEscalate('${selected.id}')">Escalate</button>${canReopen?`<button class="btn ghost small" onclick="supportReopen('${selected.id}')">Reopen</button>`:''}</div></div><div style="max-height:38vh;overflow:auto">${messages}</div><label class="f" for="supportReply">Reply to rider support</label><textarea id="supportReply" maxlength="10000" rows="3" placeholder="Write a reply…"></textarea><button class="btn" style="margin-top:8px" onclick="supportReply('${selected.id}')">Send reply</button>${call}`;
+   b.innerHTML=`<button class="link" onclick="supportBackToList()">‹ All tickets</button><div class="card"><div class="ch"><b>${esc(selected.subject)}</b><span class="pill">${esc(supportStatusLabel(selected.status))}</span></div><div class="muted" style="font-size:13px">${esc(selected.category)} · ${selected.order_id?'Order / parcel '+esc(selected.order_id.slice(-8).toUpperCase()):'General rider support'} · ${esc(when(selected.created_at))}</div>${selected.first_response_at?'<div class="muted" style="font-size:13px;margin-top:6px">First response received</div>':target}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost small" onclick="supportEscalate('${selected.id}')">Escalate</button>${canReopen?`<button class="btn ghost small" onclick="supportReopen('${selected.id}')">Reopen</button>`:''}</div></div><div class="card"><b>Screenshots</b><div class="muted" style="font-size:13px">Private to this ticket. Never attach passwords, payment card details, or other sensitive information.</div>${supportAttachmentMarkup()}<label class="f" for="supportExistingFiles">Attach screenshot (JPEG, PNG, WebP; up to 5 MiB each)</label><input id="supportExistingFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="supportCheckFiles(this)"><button class="btn ghost small" style="margin-top:8px" onclick="supportAttachExisting('${selected.id}')">Upload screenshots</button></div><div style="max-height:38vh;overflow:auto">${messages}</div><label class="f" for="supportReply">Reply to rider support</label><textarea id="supportReply" maxlength="10000" rows="3" placeholder="Write a reply…"></textarea><button class="btn" style="margin-top:8px" onclick="supportReply('${selected.id}')">Send reply</button>${call}`;
    return;
  }
  const rows=(state.supportTickets||[]).map(x=>`<button class="card" style="display:block;width:100%;text-align:left;color:inherit;cursor:pointer" onclick="supportOpenTicket('${x.id}')"><div class="ch"><b>${esc(x.subject)}</b><span class="pill">${esc(supportStatusLabel(x.status))}</span></div><div class="muted" style="font-size:13px">${esc(x.category)} · ${x.order_id?'Order / parcel '+esc(x.order_id.slice(-8).toUpperCase()):'General'} · ${esc(when(x.updated_at||x.created_at))}</div></button>`).join('')||'<div class="card muted">No rider support tickets yet.</div>';
  const order=state.supportOrderId;
- b.innerHTML=`<div class="card" style="background:var(--soft)"><b>Rider support</b><div class="muted" style="font-size:13px;margin-top:4px">A rider-focused support channel, separate from delivery chat. ${order?'This request will be linked to the selected active delivery.':state.supportContext?.kind==='parcel'?'Parcel reference '+esc(String(state.supportContext.id).slice(-8).toUpperCase())+' will be included in the ticket message (the support schema links orders, not standalone parcels).':''}</div></div>${target}<div class="ch"><h3 style="margin:8px 0">Your tickets</h3><span class="muted">Most recent 30</span></div>${rows}<h3>Start a support ticket</h3><label class="f" for="supportSubject">Subject</label><input id="supportSubject" type="text" maxlength="180" placeholder="Briefly describe what you need"><label class="f" for="supportCategory">Category</label><select id="supportCategory"><option value="delivery">Delivery / parcel</option><option value="account">Rider account</option><option value="earnings">Earnings or payout question</option><option value="app">App or technical issue</option><option value="safety">Rider safety concern</option><option value="general">Other rider support</option></select><label class="f" for="supportMessage">Message</label><textarea id="supportMessage" maxlength="10000" rows="4" placeholder="Describe the issue. Do not include payment details."></textarea><button class="btn" style="margin-top:8px" onclick="supportCreateTicket()">Create ticket</button>${call}`;
+ b.innerHTML=`<div class="card" style="background:var(--soft)"><b>Rider support</b><div class="muted" style="font-size:13px;margin-top:4px">A rider-focused support channel, separate from delivery chat. ${order?'This request will be linked to the selected active delivery.':state.supportContext?.kind==='parcel'?'Parcel reference '+esc(String(state.supportContext.id).slice(-8).toUpperCase())+' will be included in the ticket message (the support schema links orders, not standalone parcels).':''}</div></div>${target}<div class="ch"><h3 style="margin:8px 0">Your tickets</h3><span class="muted">Most recent 30</span></div>${rows}<h3>Start a support ticket</h3><label class="f" for="supportSubject">Subject</label><input id="supportSubject" type="text" maxlength="180" placeholder="Briefly describe what you need"><label class="f" for="supportCategory">Category</label><select id="supportCategory"><option value="delivery">Delivery / parcel</option><option value="account">Rider account</option><option value="earnings">Earnings or payout question</option><option value="app">App or technical issue</option><option value="safety">Rider safety concern</option><option value="general">Other rider support</option></select><label class="f" for="supportMessage">Message</label><textarea id="supportMessage" maxlength="10000" rows="4" placeholder="Describe the issue. Do not include payment details."></textarea><label class="f" for="supportNewFiles">Optional screenshot (JPEG, PNG, WebP; up to 5 MiB each)</label><input id="supportNewFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="supportCheckFiles(this)"><div class="muted" style="font-size:13px;margin-top:6px">Please do not include passwords, payment card details, or other sensitive information.</div><button class="btn" style="margin-top:8px" onclick="supportCreateTicket()">Create ticket</button>${call}`;
 }
-async function supportOpenTicket(id){ state.supportSelected=id; state.supportMessages=[]; renderSupportCenter(); try{ const res=await sb.from('support_ticket_messages').select('id,ticket_id,author_id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:false}).limit(100); if(res.error)throw res.error; state.supportMessages=(res.data||[]).reverse(); renderSupportCenter(); }catch(e){ logErr(e); toast('Could not load ticket messages',true); } }
+function supportCheckFiles(input){if(!input)return true;const error=supportValidateFiles(input);if(error){input.value='';toast(error,true);return false;}return true;}
+async function supportAttachExisting(id){
+  if(supportAttachBusy)return;
+  const input=document.getElementById('supportExistingFiles');
+  if(!input?.files?.length)return toast('Choose one or more screenshots first',true);
+  if(!supportCheckFiles(input))return;
+  const files=Array.from(input.files), button=input.parentElement?.querySelector('button[onclick^="supportAttachExisting"]');
+  supportAttachBusy=true;if(button)button.disabled=true;
+  try{const n=await supportUploadFiles(id,files);if(input.isConnected)input.value='';toast(`${n} screenshot${n===1?'':'s'} attached`);if(state.supportSelected===id)await supportLoadAttachments(id);if(state.supportSelected===id)renderSupportCenter();}
+  catch(e){logErr(e);toast(e.message||'Could not upload screenshots',true);}
+  finally{supportAttachBusy=false;if(button?.isConnected)button.disabled=false;}
+}
+async function supportOpenTicket(id){
+  state.supportSelected=id;state.supportMessages=[];state.supportAttachments=[];renderSupportCenter();
+  const [messageResult]=await Promise.all([
+    sb.from('support_ticket_messages').select('id,ticket_id,author_id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:false}).limit(100),
+    supportLoadAttachments(id)
+  ]);
+  if(state.supportSelected!==id)return;
+  if(messageResult.error){logErr(messageResult.error);toast('Could not load ticket messages',true);return;}
+  if(state.supportSelected!==id)return;
+  state.supportMessages=(messageResult.data||[]).reverse();
+  renderSupportCenter();
+}
 function supportBackToList(){ state.supportSelected=null; renderSupportCenter(); }
-async function supportCreateTicket(){ const subject=String(document.getElementById('supportSubject')?.value||'').trim(), category=document.getElementById('supportCategory')?.value||'general', message=String(document.getElementById('supportMessage')?.value||'').trim(); if(!subject||!message)return toast('Add a subject and message first',true); if(subject.length>180||message.length>10000)return toast('Please shorten your message',true); try{ const contextNote=state.supportContext?.kind==='parcel'?`[Active parcel reference: ${state.supportContext.id}]\n\n`:''; const id=need(await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:state.supportOrderId,p_message:contextNote+message})); toast('Rider support ticket created'); await openSupportCenter(state.supportOrderId); await supportOpenTicket(id); }catch(e){logErr(e);toast(e.message||'Could not create support ticket',true);} }
+async function supportCreateTicket(){
+  if(supportCreateBusy)return;
+  const subject=String(document.getElementById('supportSubject')?.value||'').trim(), category=document.getElementById('supportCategory')?.value||'general', message=String(document.getElementById('supportMessage')?.value||'').trim(), filesInput=document.getElementById('supportNewFiles');
+  if(!subject||!message)return toast('Add a subject and message first',true);
+  if(subject.length>180||message.length>10000)return toast('Please shorten your message',true);
+  if(!supportCheckFiles(filesInput))return;
+  const files=Array.from(filesInput?.files||[]);
+  const createButton=document.querySelector('#riderSupportBody button[onclick="supportCreateTicket()"]');
+  supportCreateBusy=true;if(createButton)createButton.disabled=true;
+  let id;
+  try{
+    const contextNote=state.supportContext?.kind==='parcel'?`[Active parcel reference: ${state.supportContext.id}]\n\n`:'';
+    id=need(await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:state.supportOrderId,p_message:contextNote+message}));
+  }catch(e){logErr(e);toast(e.message||'Could not create support ticket',true);supportCreateBusy=false;if(createButton?.isConnected)createButton.disabled=false;return;}
+  toast('Rider support ticket created');
+  try{
+    await openSupportCenter(state.supportOrderId);
+    await supportOpenTicket(id);
+    if(files.length){try{const n=await supportUploadFiles(id,files);toast(`${n} screenshot${n===1?'':'s'} attached`);if(state.supportSelected===id)await supportLoadAttachments(id);if(state.supportSelected===id)renderSupportCenter();}catch(uploadError){logErr(uploadError);toast('Ticket created, but screenshot upload failed. You can attach it from the ticket details.',true);}}
+  }catch(e){logErr(e);toast('Ticket created, but details could not be refreshed. Open the ticket from your support list.',true);}
+  finally{supportCreateBusy=false;if(createButton?.isConnected)createButton.disabled=false;}
+}
 async function supportReply(id){ const body=String(document.getElementById('supportReply')?.value||'').trim(); if(!body)return toast('Write a reply first',true); try{need(await sb.rpc('support_send_message',{p_ticket_id:id,p_body:body}));toast('Reply sent');await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not send reply',true);} }
 async function supportReopen(id){ try{need(await sb.rpc('support_reopen_ticket',{p_ticket_id:id}));toast('Ticket reopened');await openSupportCenter(state.supportOrderId);await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not reopen ticket',true);} }
 async function supportEscalate(id){ try{need(await sb.rpc('support_escalate_ticket',{p_ticket_id:id}));toast('Ticket escalated to high priority');await openSupportCenter(state.supportOrderId);await supportOpenTicket(id);}catch(e){logErr(e);toast(e.message||'Could not escalate ticket',true);} }

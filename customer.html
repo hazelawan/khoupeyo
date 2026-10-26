@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.69';
+const APP_VERSION = '5.70';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2025,7 +2025,7 @@ async function loadRegionsC(){
   else {
     const a = (state.addresses || []).find(x => x.id === state.selAddr) || (state.addresses || [])[0];
     state.region = (a && nearestRegion(a.lat, a.lng)) || (state.regions[0] || {}).id || null;
-    if (state.regions.length > 1 && !a && navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { const n = nearestRegion(p.coords.latitude, p.coords.longitude); if (n && n !== state.region) A.setRegion(n, true); }, () => {}, { timeout:10000, maximumAge:600000 });
+    // Do not request location during startup; users can choose a region or explicitly use location in address entry.
   }
   await loadRegionSettings();
   refreshCityBtn();
@@ -3333,7 +3333,7 @@ async function showAccount(){
     </div>
     <div class="grp"><div class="grp-h">👤 ${t('grp_profile')}</div>
     <button class="menu-row" onclick="A.accSection('profile')"><span>👤 ${t('edit_profile')}<small class="muted" style="display:block;font-size:12px">${esc(p.full_name || state.user.email)}</small></span><span class="muted">›</span></button>
-    ${(state.regions || []).length > 1 ? `<button class="menu-row" onclick="A.pickRegion()" style="border:2px solid var(--brand)"><span>📍 ${t('delivery_region') || 'Delivery Region'}<small class="muted" style="display:block;font-size:12px;color:var(--brand);font-weight:700">${esc(regionName())}</small></span><span class="muted">›</span></button>` : ''}    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
+    ${(state.regions || []).length > 1 ? `<button class="menu-row" onclick="A.pickRegion()" style="border:2px solid var(--brand)"><span>📍 ${t('delivery_region') || 'Delivery Region'}<small class="muted" style="display:block;font-size:12px;color:var(--brand);font-weight:700">${esc(regionName())}</small></span><span class="muted">›</span></button>` : ''}    <button class="menu-row" onclick="A.privacySecurity()"><span>🔐 ${state.lang==='ur'?'پرائیویسی اور سیکیورٹی':'Privacy & Security'}<small class="muted" style="display:block;font-size:12px">${state.lang==='ur'?'اجازتیں، ڈیٹا اور اکاؤنٹ':'Permissions, data & account'}</small></span><span class="muted">›</span></button>    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
       <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
       <label class="f" for="p_phone">${t('phone')}</label><input id="p_phone" type="tel" inputmode="tel" value="${esc(p.phone)}">
       <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
@@ -3462,6 +3462,24 @@ function showReceipt(o){
 // ================= ACTIONS =================
 let searchTimer = null;
 const A = {
+  privacySecurity(){
+    const ur=state.lang==='ur', capable=('speechSynthesis' in window && !!window.SpeechSynthesisUtterance), enabled=!!ls.get('kh_voice_order_alerts',false);
+    openSheet(ur?'پرائیویسی اور سیکیورٹی':'Privacy & Security', `<p class="muted" style="font-size:14px">${ur?'Dera آپ کے اکاؤنٹ اور آرڈر چلانے کے لیے ضروری معلومات استعمال کرتا ہے۔ لوکیشن صرف پتہ لگانے کے لیے آپ کی درخواست پر لی جاتی ہے؛ اسے براؤزر کی اجازتوں میں بھی کنٹرول کیا جا سکتا ہے۔':'Dera uses information needed to provide your account and orders. Location is requested only when you ask to use it for an address; you can also manage permissions in your browser settings.'}</p><button class="menu-row" style="width:100%" onclick="A.dataDownloadRequest()"><span>📥 ${ur?'میرے ڈیٹا کی کاپی کی درخواست':'Request a copy of my data'}<small class="muted" style="display:block;font-size:12px">${ur?'سپورٹ ٹکٹ بنے گا؛ یہ ڈاؤن لوڈ نہیں':'Creates a support ticket; no export is prepared here'}</small></span><span>›</span></button><div class="box" style="margin-top:10px"><b>🔊 ${ur?'آرڈر کی آواز میں اطلاع':'Spoken order alerts'}</b><p class="muted" style="font-size:13px;margin:5px 0">${ur?'یہ ترتیب صرف اس ڈیوائس/براؤزر میں محفوظ ہے اور بطورِ طے بند ہے۔ صرف عمومی آرڈر اپ ڈیٹ بولی جائے گی۔':'Stored only on this device/browser and off by default. Speech uses generic order-update wording only, not order details.'} ${capable?'':(ur?'اس براؤزر میں آواز کی سہولت دستیاب نہیں۔':'Speech is not available in this browser.')}</p><label><input id="privacyVoiceToggle" type="checkbox" ${enabled?'checked':''} ${capable?'':'disabled'} onchange="A.setVoiceAlerts(this.checked)"> ${ur?'آواز کی اطلاع فعال کریں':'Enable spoken alerts (device only)'}</label><div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" style="flex:1" ${capable?'':'disabled'} onclick="A.testVoiceAlert()">${ur?'آزمائیں':'Test'}</button><button class="btn warn" style="flex:1" onclick="A.stopVoiceAlert()">${ur?'روکیں':'Stop'}</button></div></div><p class="muted" style="font-size:13px">${ur?'پاس کی، دو مرحلہ تصدیق اور پاس ورڈ کی تبدیلی یہاں دستیاب نہیں؛ کوئی غیر فعال حفاظتی فیچر دکھا کر فعال نہیں کیا جاتا۔':'Passkeys, two-factor setup, and password change are not currently supported here; no placeholder security feature is presented as enabled.'}</p><button class="menu-row danger" style="width:100%" onclick="closeSheet();Legal.del()"><span>🗑️ ${ur?'اکاؤنٹ حذف کرنے کا موجودہ راستہ':'Delete account (existing flow)'}</span><span>›</span></button><button class="menu-row" style="width:100%" onclick="closeSheet();A.logout()"><span>🚪 ${ur?'لاگ آؤٹ':'Log out (existing sign-out flow)'}</span><span>›</span></button>`);
+  },
+  setVoiceAlerts(on){ ls.set('kh_voice_order_alerts',!!on); if(!on) A.stopVoiceAlert(); toast(state.lang==='ur'?(on?'آواز کی اطلاع فعال':'آواز کی اطلاع بند'):(on?'Spoken alerts enabled on this device':'Spoken alerts disabled')); },
+  testVoiceAlert(){ if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance) return toast(state.lang==='ur'?'آواز دستیاب نہیں':'Speech unavailable',true); try { window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(state.lang==='ur'?'یہ Dera آرڈر کی آزمائشی اطلاع ہے۔':'This is a test of Dera order alerts.'); u.lang=state.lang==='ur'?'ur-PK':'en-IN'; window.speechSynthesis.speak(u); } catch(e) { toast(state.lang==='ur'?'آواز دستیاب نہیں':'Speech unavailable',true); } },
+  stopVoiceAlert(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); },
+  async dataDownloadRequest(){
+    if(!state.user) return showAuth();
+    if(state.dataDownloadBusy) return;
+    state.dataDownloadBusy=true;
+    const button=document.querySelector('[onclick="A.dataDownloadRequest()"]'); if(button)button.disabled=true;
+    try { await run(async()=>{
+      const existing=need(await sb.from('support_tickets').select('id').eq('requester_id',state.user.id).eq('category','privacy').eq('subject','Data download request').in('status',['open','in_progress','waiting_on_requester']).order('created_at',{ascending:false}).limit(1).maybeSingle());
+      const id=existing?.id || need(await sb.rpc('support_create_ticket',{p_subject:'Data download request',p_category:'privacy',p_order_id:null,p_message:'I request a copy of the personal data associated with my signed-in Dera account. Please review and tell me the verified delivery steps.'}));
+      closeSheet(); toast(state.lang==='ur'?(existing?'آپ کی موجودہ ڈیٹا درخواست کھول دی گئی':'ڈیٹا درخواست کا ٹکٹ بنا دیا گیا'):(existing?'Opened your existing data request':'Data request ticket created')); nav('/help/ticket/'+id);
+    }); } finally { state.dataDownloadBusy=false; if(button?.isConnected)button.disabled=false; }
+  },
   pickRegion(){
     openSheet(t('city_title'), `<div class="muted" style="margin-bottom:10px">${t('city_note')}</div>${state.regions.map(r => `<button class="menu-row" style="width:100%" onclick="A.setRegion('${r.id}')"><span><b>${r.id === state.region ? '✅ ' : '📍 '}${esc(r.name)}</b></span><span class="muted">›</span></button>`).join('')}`);
   },
@@ -3834,6 +3852,8 @@ const A = {
   },
   useLocation(){
     if (!navigator.geolocation) return toast(t('location_denied'), true);
+    const ur=state.lang==='ur';
+    if (!window.confirm(ur?'اپنا پتہ آسانی سے نشان زد کرنے کے لیے Dera آپ کی موجودہ لوکیشن استعمال کرے گا۔ براؤزر کی اجازت صرف آپ کے جاری رکھنے پر مانگی جائے گی۔ جاری رکھیں؟':'To help pin your address, Dera can use your current location. Your browser will ask permission only if you continue. Continue?')) return;
     const btn = $('locBtn'); if (btn) btn.textContent = t('loading');
     navigator.geolocation.getCurrentPosition(
       pos => { state.newCoords = { lat:pos.coords.latitude, lng:pos.coords.longitude }; const b = $('locBtn'); if (b) b.textContent = t('location_added');
@@ -4252,9 +4272,15 @@ function sysNotify(msg){
 const seenAlerts = new Set(ls.get('kh_seen_alerts', []));
 function markSeen(k){ seenAlerts.add(k); ls.set('kh_seen_alerts', Array.from(seenAlerts).slice(-200)); }
 const alertQueue = [];
+const spokenAlerts = new Set(ls.get('kh_spoken_alerts', []));
+function speakOrderAlert(key){
+  if (!ls.get('kh_voice_order_alerts', false) || spokenAlerts.has(key) || !('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) return;
+  spokenAlerts.add(key); ls.set('kh_spoken_alerts', Array.from(spokenAlerts).slice(-200));
+  try { const u = new SpeechSynthesisUtterance(state.lang === 'ur' ? 'آپ کے آرڈر کی ایک نئی اپ ڈیٹ ہے۔ تفصیل کے لیے Dera ایپ کھولیں۔' : 'There is a new update on your order. Open Dera to see details.'); u.lang = state.lang === 'ur' ? 'ur-PK' : 'en-IN'; window.speechSynthesis.speak(u); } catch(e) {}
+}
 function pushAlert(key, msg, orderId, isInfo){
   if (seenAlerts.has(key) || alertQueue.some(a => a.key === key)) return;
-  alertQueue.push({ key, msg, orderId, isInfo }); sysNotify(msg); ring(); showNextAlert();
+  alertQueue.push({ key, msg, orderId, isInfo }); speakOrderAlert(key); sysNotify(msg); ring(); showNextAlert();
 }
 function showNextAlert(){
   if ($('alertSheet') || !alertQueue.length) return;

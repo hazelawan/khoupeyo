@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.59';
+const APP_VERSION = '6.60';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2116,6 +2116,7 @@ function viewShop(){
     <div class="card">
       <button class="row" style="width:100%;border:none;background:none" onclick='Chat.open(null, "sup", state.user.id)'><div class="row-main"><div class="row-title">💬 ${t('chat_support')}</div></div><span class="muted">›</span></button>
       <button class="row" style="width:100%;border:none;background:none" onclick="A.supportCenter()"><div class="row-main"><div class="row-title">🛟 ${state.lang === 'ur' ? 'سپورٹ پیغامات' : 'Support messages'}</div><div class="row-sub">${state.lang === 'ur' ? 'مدد کی درخواست بنائیں اور جواب دیں' : 'Create a request and reply to support'}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="A.supportNew(null)"><div class="row-main"><div class="row-title">🐞 ${state.lang === 'ur' ? 'بگ رپورٹ کریں / اسکرین شاٹ بھیجیں' : 'Report a bug / screenshot'}</div><div class="row-sub">${state.lang === 'ur' ? 'اختیاری اسکرین شاٹ کے ساتھ مدد کی درخواست' : 'Create a support request with an optional screenshot'}</div></div><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
     </div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
@@ -3272,6 +3273,7 @@ const A = {
   ,supportTicket(id){ return ShopSupport.detail(id); }
   ,supportNew(orderId){ return ShopSupport.createForm(orderId || null); }
   ,supportSubmit(){ return ShopSupport.submit(); }
+  ,supportAttach(id){ return ShopSupport.attach(id); }
   ,supportReply(id){ return ShopSupport.reply(id); }
   ,supportReopen(id){ return ShopSupport.reopen(id); }
   ,supportEscalate(id){ return ShopSupport.escalate(id); }
@@ -4932,9 +4934,26 @@ const ShopSupport = (() => {
   const safeId = id => JSON.stringify(String(id));
   const showError = e => toast((e && e.message) || txt('Support could not be loaded. Please try again.','سپورٹ لوڈ نہیں ہو سکی۔ دوبارہ کوشش کریں۔'), true);
   const dateText = d => d ? new Date(d).toLocaleString(ur() ? 'ur-PK' : 'en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+  const allowed = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+  const validFile = file => {
+    if(!file)return null;
+    if(file.size<=0)return txt('Screenshot file is empty. Choose a non-empty image.','اسکرین شاٹ خالی ہے۔ کوئی تصویر منتخب کریں۔');
+    if(!allowed[file.type])return txt('Choose a JPEG, PNG, or WebP image.','JPEG، PNG یا WebP تصویر منتخب کریں۔');
+    if(file.size>5*1024*1024)return txt('Screenshot must be 5 MiB or smaller.','اسکرین شاٹ 5 MiB یا اس سے کم ہونا چاہیے۔');
+    return null;
+  };
+  const fileControl = id => `<label class="f" for="${id}">${txt('Optional screenshot attachment','اختیاری اسکرین شاٹ')}</label><input id="${id}" type="file" accept="image/jpeg,image/png,image/webp" style="width:100%;padding:8px"><p class="muted" style="font-size:12px">${txt('JPEG, PNG, or WebP · up to 5 MiB. Do not upload passwords or card data.','JPEG، PNG یا WebP · زیادہ سے زیادہ 5 MiB۔ پاس ورڈ یا کارڈ کی معلومات اپ لوڈ نہ کریں۔')}</p><div id="${id}_error" class="err-text" role="alert"></div>`;
+  async function uploadAttachment(ticketId,file){
+    const problem=validFile(file);if(problem)throw new Error(problem);
+    const ext=allowed[file.type],path=`${state.user.id}/${ticketId}/${crypto.randomUUID()}.${ext}`;
+    const {error:upErr}=await sb.storage.from('support-attachments').upload(path,file,{contentType:file.type,upsert:false});
+    if(upErr)throw upErr;
+    const {error:metaErr}=await sb.from('support_attachments').insert({ticket_id:ticketId,uploader_id:state.user.id,storage_path:path,file_name:file.name.slice(0,255),mime_type:file.type,size_bytes:file.size});
+    if(metaErr){try{await sb.storage.from('support-attachments').remove([path]);}catch(_){}throw metaErr;}
+  }
   async function open(orderId){
     const {data:rows,error}=await sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_due_at,first_response_at,created_at,updated_at').order('updated_at',{ascending:false}).limit(20);
-    if(error) return showError(error);
+    if(error)return showError(error);
     const {data:cfg}=await sb.from('support_center_config').select('first_response_target_hours').eq('singleton',true).limit(1).maybeSingle();
     const list=(rows||[]).map(x=>`<button class="row" style="width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;margin:7px 0" onclick='A.supportTicket(${safeId(x.id)})'><div class="row-main"><div class="row-title">${esc(x.subject)}</div><div class="row-sub">${esc(statusText(x.status))} · ${esc(x.category)}${x.order_id?' · '+txt('Order','آرڈر')+' #'+esc(String(x.order_id).slice(-4).toUpperCase()):''} · ${esc(dateText(x.updated_at))}</div></div><span class="muted">›</span></button>`).join('');
     const hours=Number((cfg||{}).first_response_target_hours)||24;
@@ -4943,27 +4962,47 @@ const ShopSupport = (() => {
   function createForm(orderId){
     const categories=[['general',txt('General','عام')],['orders',txt('Orders','آرڈرز')],['account',txt('Account','اکاؤنٹ')],['payments',txt('Payments','ادائیگیاں')],['technical',txt('App or technical','ایپ یا تکنیکی')],['other',txt('Other','دیگر')]];
     window.__shopSupportOrderId=orderId||null;
-    openSheet(txt('New support request','نئی سپورٹ درخواست'),`<label class="f" for="sc_subject">${txt('Subject','عنوان')}</label><input id="sc_subject" maxlength="180" required><label class="f" for="sc_category">${txt('Category','قسم')}</label><select id="sc_category">${categories.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>${orderId?`<div class="note">${txt('Linked order','منسلک آرڈر')} #${esc(String(orderId).slice(-4).toUpperCase())}</div>`:''}<label class="f" for="sc_message">${txt('Message','پیغام')}</label><textarea id="sc_message" maxlength="10000" rows="5" placeholder="${txt('Describe how we can help','بتائیں ہم کیسے مدد کر سکتے ہیں')}" required></textarea><div class="actions"><button class="btn" onclick='A.supportSubmit()'>${txt('Send request','درخواست بھیجیں')}</button></div>`);
+    openSheet(txt('New support request','نئی سپورٹ درخواست'),`<label class="f" for="sc_subject">${txt('Subject','عنوان')}</label><input id="sc_subject" maxlength="180" required><label class="f" for="sc_category">${txt('Category','قسم')}</label><select id="sc_category">${categories.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select>${orderId?`<div class="note">${txt('Linked order','منسلک آرڈر')} #${esc(String(orderId).slice(-4).toUpperCase())}</div>`:''}<label class="f" for="sc_message">${txt('Message','پیغام')}</label><textarea id="sc_message" maxlength="10000" rows="5" placeholder="${txt('Describe how we can help','بتائیں ہم کیسے مدد کر سکتے ہیں')}" required></textarea>${fileControl('sc_attachment')}<div class="actions"><button id="sc_submit" class="btn" onclick='A.supportSubmit()'>${txt('Send request','درخواست بھیجیں')}</button></div>`);
   }
   async function submit(){
-    const subject=($('sc_subject')?.value||'').trim(),category=$('sc_category')?.value||'general',body=($('sc_message')?.value||'').trim();
+    const subject=($('sc_subject')?.value||'').trim(),category=$('sc_category')?.value||'general',body=($('sc_message')?.value||'').trim(),file=$('sc_attachment')?.files?.[0]||null;
     if(!subject||!body)return toast(txt('Add a subject and message.','عنوان اور پیغام لکھیں۔'),true);
-    try{const {data:id,error}=await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:window.__shopSupportOrderId||null,p_message:body});if(error)throw error;window.__shopSupportOrderId=null;await detail(id);}catch(e){showError(e);}
+    const problem=validFile(file);if(problem){const el=$('sc_attachment_error');if(el)el.textContent=problem;return;}
+    const button=$('sc_submit');if(button?.disabled)return;if(button)button.disabled=true;
+    let createdId=null;
+    try{const {data:id,error}=await sb.rpc('support_create_ticket',{p_subject:subject,p_category:category,p_order_id:window.__shopSupportOrderId||null,p_message:body});if(error)throw error;createdId=id;window.__shopSupportOrderId=null;if(button){button.disabled=true;button.textContent=txt('Request created','درخواست بن گئی');}
+      if(file){try{await uploadAttachment(id,file);window.__shopSupportUploadWarning=null;}catch(e){window.__shopSupportUploadWarning=txt('Your request was created, but the screenshot could not be attached. You can attach it from this request; do not create another ticket.','آپ کی درخواست بن گئی، لیکن اسکرین شاٹ منسلک نہیں ہو سکا۔ اسی درخواست میں منسلک کریں؛ نئی درخواست نہ بنائیں۔');}}
+      await detail(id,true);
+    }catch(e){if(createdId){window.__shopSupportUploadWarning=window.__shopSupportUploadWarning||txt('Your request was created, but its details could not be loaded. Return to request history and open it there; do not create another ticket.','آپ کی درخواست بن گئی، لیکن تفصیل لوڈ نہیں ہو سکی۔ درخواستوں کی فہرست میں واپس جا کر اسے کھولیں؛ نئی درخواست نہ بنائیں۔');await createdDetailFallback(createdId);}else{showError(e);if(button)button.disabled=false;}}
   }
-  async function detail(id){
-    const {data:tkt,error}=await sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_due_at,first_response_at,created_at,updated_at').eq('id',id).limit(1).maybeSingle();if(error||!tkt)return showError(error||new Error('Ticket not found'));
-    const {data:msgs,error:me}=await sb.from('support_ticket_messages').select('id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:true}).limit(100);if(me)return showError(me);
+  async function attach(id){
+    const file=$('sc_existing_attachment')?.files?.[0]||null;if(!file)return toast(txt('Choose an image first.','پہلے تصویر منتخب کریں۔'),true);
+    const problem=validFile(file);if(problem){const el=$('sc_existing_attachment_error');if(el)el.textContent=problem;return;}
+    const button=$('sc_attach_button');if(button?.disabled)return;if(button)button.disabled=true;
+    try{await uploadAttachment(id,file);window.__shopSupportUploadWarning=null;await detail(id);}catch(e){if(button)button.disabled=false;const el=$('sc_existing_attachment_error');if(el)el.textContent=(e&&e.message)||txt('Screenshot upload failed. Please try again.','اسکرین شاٹ اپ لوڈ نہیں ہو سکا۔ دوبارہ کوشش کریں۔');}
+  }
+  async function createdDetailFallback(id){
+    openSheet(txt('Request created','درخواست بن گئی'),`<div class="issuebox" role="alert">${esc(window.__shopSupportUploadWarning||txt('Your request was created, but its details could not be loaded.','آپ کی درخواست بن گئی، لیکن تفصیل لوڈ نہیں ہو سکی۔'))}</div><p><b>${txt('Ticket ID','ٹکٹ آئی ڈی')}:</b> <code>${esc(String(id))}</code></p><p>${txt('Your message is saved in this request. Open request history to view the conversation and continue there.','آپ کا پیغام اس درخواست میں محفوظ ہے۔ گفتگو دیکھنے اور جاری رکھنے کے لیے درخواستوں کی فہرست کھولیں۔')}</p><button class="btn" onclick="A.supportCenter()">${txt('Open request history','درخواستوں کی فہرست کھولیں')}</button>`);
+  }
+  async function detail(id,created=false){
+    const {data:tkt,error}=await sb.from('support_tickets').select('id,subject,category,order_id,status,priority,first_response_due_at,first_response_at,created_at,updated_at').eq('id',id).limit(1).maybeSingle();if(error||!tkt){if(created)return createdDetailFallback(id);return showError(error||new Error('Ticket not found'));}
+    const {data:msgs,error:me}=await sb.from('support_ticket_messages').select('id,author_role,body,created_at').eq('ticket_id',id).order('created_at',{ascending:true}).limit(100);if(me){if(created)return createdDetailFallback(id);return showError(me);}
+    let attachmentError=null;let attachments=[];
+    try{const result=await sb.from('support_attachments').select('id,storage_path,file_name,mime_type,created_at').eq('ticket_id',id).order('created_at',{ascending:true}).limit(20);if(result.error)throw result.error;attachments=result.data||[];}catch(e){attachmentError=e;}
+    const signed=await Promise.all(attachments.map(async a=>{try{const {data,error}=await sb.storage.from('support-attachments').createSignedUrl(a.storage_path,600);if(error||!data?.signedUrl){attachmentError=attachmentError||error||new Error('Could not create attachment link');return null;}return {a,url:data.signedUrl};}catch(e){attachmentError=attachmentError||e;return null;}}));
+    const attachHtml=signed.filter(Boolean).map(({a,url})=>`<a class="note" style="display:flex;gap:10px;align-items:center;color:inherit" href="${esc(url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(url)}" alt="${esc(a.file_name)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><span>${esc(a.file_name)}</span></a>`).join('');
     const body=(msgs||[]).map(m=>`<div class="note" style="margin:7px 0"><b>${m.author_role==='admin'?txt('Dera support','Dera سپورٹ'):txt('You','آپ')}</b><span class="muted" style="font-size:12px"> · ${esc(dateText(m.created_at))}</span><div style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(m.body)}</div></div>`).join('');
     const target=tkt.first_response_at?txt('First response received','پہلا جواب موصول ہو گیا'):txt('First-response target (not a guarantee): ','پہلے جواب کا ہدف (ضمانت نہیں): ')+dateText(tkt.first_response_due_at);
     const actions=['resolved','closed'].includes(tkt.status)?`<button class="btn ghost" onclick='A.supportReopen(${safeId(id)})'>${txt('Reopen request','درخواست دوبارہ کھولیں')}</button>`:`<button class="btn ghost" onclick='A.supportEscalate(${safeId(id)})'>${txt('Escalate','ترجیح بڑھائیں')}</button>`;
-    openSheet(txt('Support request','سپورٹ درخواست'),`<h3>${esc(tkt.subject)}</h3><div class="muted">${esc(statusText(tkt.status))} · ${esc(tkt.category)}${tkt.order_id?' · '+txt('Order','آرڈر')+' #'+esc(String(tkt.order_id).slice(-4).toUpperCase()):''}</div><p class="muted" style="font-size:13px">${esc(target)}</p><div style="max-height:38vh;overflow:auto">${body||`<div class="muted">${txt('No messages yet.','ابھی کوئی پیغام نہیں۔')}</div>`}${(msgs||[]).length>=100?`<div class="muted">${txt('Showing the first 100 messages.','پہلے 100 پیغامات دکھائے جا رہے ہیں۔')}</div>`:''}</div><label class="f" for="sc_reply">${txt('Reply','جواب')}</label><textarea id="sc_reply" maxlength="10000" rows="3"></textarea><button class="btn" style="width:100%" onclick='A.supportReply(${safeId(id)})'>${txt('Send reply','جواب بھیجیں')}</button><div style="display:flex;gap:8px;margin-top:8px">${actions}<button class="btn ghost" onclick="A.supportCenter()">${txt('Back to requests','درخواستوں پر واپس')}</button></div>`);
+    const warning=window.__shopSupportUploadWarning?`<div class="issuebox" role="alert">${esc(window.__shopSupportUploadWarning)}</div>`:'';
+    const attachWarning=attachmentError?`<div class="issuebox" role="alert">${txt('Attachments could not be loaded. Your messages are still available; try again later.','منسلکات لوڈ نہیں ہو سکے۔ آپ کے پیغامات دستیاب ہیں؛ بعد میں دوبارہ کوشش کریں۔')}</div>`:'';
+    openSheet(txt('Support request','سپورٹ درخواست'),`<h3>${esc(tkt.subject)}</h3><div class="muted">${esc(statusText(tkt.status))} · ${esc(tkt.category)}${tkt.order_id?' · '+txt('Order','آرڈر')+' #'+esc(String(tkt.order_id).slice(-4).toUpperCase()):''}</div><p class="muted" style="font-size:13px">${esc(target)}</p>${warning}<h4>${txt('Screenshots','اسکرین شاٹس')}</h4>${attachWarning}${attachHtml||(!attachmentError?`<p class="muted">${txt('No screenshots attached.','کوئی اسکرین شاٹ منسلک نہیں۔')}</p>`:'')}${fileControl('sc_existing_attachment')}<button id="sc_attach_button" class="btn ghost" style="width:100%" onclick='A.supportAttach(${safeId(id)})'>${txt('Attach screenshot to this request','اس درخواست میں اسکرین شاٹ منسلک کریں')}</button><div style="max-height:38vh;overflow:auto">${body||`<div class="muted">${txt('No messages yet.','ابھی کوئی پیغام نہیں۔')}</div>`}${(msgs||[]).length>=100?`<div class="muted">${txt('Showing the first 100 messages.','پہلے 100 پیغامات دکھائے جا رہے ہیں۔')}</div>`:''}</div><label class="f" for="sc_reply">${txt('Reply','جواب')}</label><textarea id="sc_reply" maxlength="10000" rows="3"></textarea><button class="btn" style="width:100%" onclick='A.supportReply(${safeId(id)})'>${txt('Send reply','جواب بھیجیں')}</button><div style="display:flex;gap:8px;margin-top:8px">${actions}<button class="btn ghost" onclick="A.supportCenter()">${txt('Back to requests','درخواستوں پر واپس')}</button></div>`);
   }
   async function reply(id){const body=($('sc_reply')?.value||'').trim();if(!body)return toast(txt('Write a reply first.','پہلے جواب لکھیں۔'),true);try{const {error}=await sb.rpc('support_send_message',{p_ticket_id:id,p_body:body});if(error)throw error;await detail(id);}catch(e){showError(e);}}
   async function reopen(id){try{const {error}=await sb.rpc('support_reopen_ticket',{p_ticket_id:id});if(error)throw error;await detail(id);}catch(e){showError(e);}}
   async function escalate(id){try{const {error}=await sb.rpc('support_escalate_ticket',{p_ticket_id:id});if(error)throw error;await detail(id);}catch(e){showError(e);}}
-  return {open,detail,createForm,submit,reply,reopen,escalate};
+  return {open,detail,createForm,submit,attach,reply,reopen,escalate};
 })();
-
 // ================= REPORTS: Excel and PDF (Shop app and Admin) =================
 const Report = (() => {
   let xlsxP = null;
