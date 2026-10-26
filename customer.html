@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.74';
+const APP_VERSION = '5.75';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -3397,6 +3397,7 @@ async function showAccount(){
   try { const [b, l] = await Promise.all([sb.rpc('my_wallet'), sb.from('wallet_tx').select('amount,kind,note,created_at').eq('user_id', state.user.id).order('created_at', { ascending:false }).limit(8)]); wbal = num(b.data); wtx = l.data || []; } catch (e) {}
   let pts = 0; try { const { data } = await sb.from('point_ledger').select('points').eq('user_id', state.user.id); pts = (data || []).reduce((n, x) => n + num(x.points), 0); } catch (e) {}
   $('view').innerHTML = `<h1>${t('account')}</h1>
+    <a href="#/help" class="support-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px;text-decoration:none"><span><b>${t('faq_t')}</b><small class="muted" style="display:block;font-size:13px;margin-top:3px">${state.lang === 'ur' ? 'پہلے عام سوالات دیکھیں، پھر ضرورت ہو تو رابطہ کریں۔' : 'Browse quick answers first, then contact support if needed.'}</small></span><span aria-hidden="true">›</span></a>
     <div class="accpage"><div class="walletcard"><div><small>${t('wallet')}</small><b>${money(wbal)}</b></div><span>💰</span></div>
     <div class="walletcard pts"><div><small>⭐ ${t('loyalty_pts')}</small><b>${pts} pts</b><div class="muted" style="font-size:12px">${t('loyalty_earn', { n:state.loyalty_per || 100 })} · ${t('pts_wallet_note')}</div></div></div>
     <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn" style="width:auto;padding:10px 18px" onclick="A.withdrawReq()">💸 ${t('wd_title')}</button></div>
@@ -3426,7 +3427,6 @@ async function showAccount(){
     </div>
     <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
       <button class="menu-row" onclick='Chat.open(null, "sup", state.user.id)'><span>💬 ${t('chat_support')}</span><span class="muted">›</span></button>
-      <a class="menu-row" href="#/help"><span>❓ Help Center</span><span class="muted">›</span></a><button class="menu-row" onclick="A.faq()"><span>${t('faq_link')}</span><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
     </div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>

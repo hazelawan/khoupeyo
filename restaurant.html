@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.63';
+const APP_VERSION = '6.64';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -956,6 +956,9 @@ const state = {
   settings:{}, specialHours:[], promoRequests:[], insights:null, pwChecked:false, pwBlocking:false,
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
+state.pastExtraOrders = []; state.pastCursor = null; state.pastHasMore = true; state.pastVisible = 30; state.pastLoading = false; state.pastPageShopId = null;
+function resetPastOrders(){ state.pastExtraOrders = []; state.pastCursor = null; state.pastHasMore = true; state.pastVisible = 30; state.pastLoading = false; state.pastPageShopId = null; }
+const compareOrdersDesc = (a,b) => String(b.created_at || '').localeCompare(String(a.created_at || '')) || String(b.id).localeCompare(String(a.id));
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
 function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
 function toast(msg, isErr){
@@ -1227,13 +1230,16 @@ function renderTab(){
 
 // ================= ORDERS =================
 async function loadOrders(){
+  if (state.restaurant && state.pastPageShopId !== state.restaurant.id){ resetPastOrders(); state.pastPageShopId = state.restaurant.id; }
   if (state.restaurant && isServices()){ try { const { data } = await sb.rpc('shop_bookings_v2', { p_shop:state.restaurant.id }); state.appts = data || []; } catch (e) { state.appts = []; } } else state.appts = [];
   if (state.restaurant){ sb.rpc('shop_booking_terms', { p_shop:state.restaurant.id }).then(({ data }) => { if (data) state.bkTerms = data; }, () => {}); }
   const allOrders = need(await sb.from('orders')
     .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
-    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(120));
+    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).order('id', { ascending:false }).limit(120));
+  if (!state.pastExtraOrders.length){ state.pastCursor = allOrders.length ? allOrders[allOrders.length - 1] : null; state.pastHasMore = allOrders.length === 120; }
   state.payChecks = allOrders.filter(o => o.payment_status === 'checking' && o.pay_destination === 'shop');
-  const data = allOrders
+  const orderMap = new Map((state.pastExtraOrders || []).map(o => [o.id, o])); allOrders.forEach(o => orderMap.set(o.id, o));
+  const data = Array.from(orderMap.values()).sort(compareOrdersDesc)
     .filter(o => !(o.payment_method === 'wallet' && ['unpaid', 'checking'].includes(o.payment_status)));  // online orders show only after the money is received
   const active = data.filter(o => ['accepted','preparing'].includes(o.status)).map(o => o.id);
   if (active.length){
@@ -1258,6 +1264,20 @@ async function loadOrders(){
   if (fresh.length && state.loadedOnce && !$('sheet')) showNewOrder(fresh[0]);
   state.loadedOnce = true;
   updateTitle(); markTab();
+}
+async function loadOlderPastOrders(){
+  const cursor = state.pastCursor;
+  if (!state.restaurant || !cursor || !cursor.created_at){ state.pastHasMore = false; return; }
+  const filter = `created_at.lt.${cursor.created_at},and(created_at.eq.${cursor.created_at},id.lt.${cursor.id})`;
+  const rows = need(await sb.from('orders')
+    .select('*, customer:profiles!customer_id(full_name,phone), order_items(name,quantity,price,note)')
+    .eq('restaurant_id', state.restaurant.id).in('status', ['delivered','cancelled','rejected']).or(filter)
+    .order('created_at', { ascending:false }).order('id', { ascending:false }).limit(60));
+  const page = rows || []; const known = new Set(state.pastExtraOrders.map(o => o.id));
+  state.pastExtraOrders = state.pastExtraOrders.concat(page.filter(o => !known.has(o.id))).sort(compareOrdersDesc);
+  if (page.length) state.pastCursor = page[page.length - 1];
+  state.pastHasMore = page.length === 60;
+  await loadOrders();
 }
 async function loadInsights(){
   if (state.staffMode || !state.restaurant) throw new Error('Insights are available to the shop owner only');
@@ -1450,7 +1470,10 @@ function viewOrders(){
   const kitchen = by(o => ['accepted','preparing'].includes(o.status) && show(o));
   const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status) && show(o));
   const back = by(o => o.return_status === 'returning');
-  const past = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning' && show(o)).slice(0, 30);
+  const pastAll = by(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning' && show(o));
+  const past = pastAll.slice(0, state.pastVisible || 30);
+  const pastMoreLabel = pastAll.length > past.length ? (state.lang === 'ur' ? 'مزید آرڈر دکھائیں' : 'Show 30 more orders') : state.pastHasMore ? (state.lang === 'ur' ? 'پرانے آرڈر لوڈ کریں' : 'Load older orders') : '';
+  const pastMore = pastMoreLabel ? `<button type="button" class="btn ghost block" style="margin-top:10px" onclick="A.showMorePast()" ${state.pastLoading ? 'disabled' : ''}>${state.pastLoading ? (state.lang === 'ur' ? 'لوڈ ہو رہا ہے…' : 'Loading…') : pastMoreLabel}</button>` : '';
   const sect = (title, list) => list.length ? `<h2>${title} <span class="count">${list.length}</span></h2>${list.map(orderCard).join('')}` : '';
   const sound = (!audioReady() && state.sound) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const closed = r.is_open ? (withinHours(r) ? '' : `<div class="closedbar"><span>${esc(hoursText(r))}</span></div>`) : `<div class="closedbar"><span>${t('closed_bar')}</span><button class="btn small" onclick="A.toggleOpen(true)">${t('open_it')}</button></div>`;
@@ -1470,7 +1493,7 @@ function viewOrders(){
   const pipeline = `<div class="chips" role="tablist">${filterLabels.map(([k,l]) => `<button type="button" class="chip ${state.orderFilter === k ? 'on' : ''}" role="tab" aria-selected="${state.orderFilter === k}" onclick="A.setOrderFilter('${k}')">${l}</button>`).join('')}</div>`;
   return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${pipeline}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
-    ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}`;
+    ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}${state.orderFilter === 'past' ? pastMore : ''}`;
 }
 function showNewOrder(o){
   beep();
@@ -2826,7 +2849,7 @@ const A = {
     if (alertTimer){ clearInterval(alertTimer); alertTimer = null; }
     if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
     if (channel){ sb.removeChannel(channel); channel = null; }
-    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; state.authMode = 'login'; state.pwChecked = false; state.pwBlocking = false; document.title = 'Dera Shop'; showAuth();
+    closeSheet(); state.user = null; state.restaurant = null; state.orders = []; resetPastOrders(); state.authMode = 'login'; state.pwChecked = false; state.pwBlocking = false; document.title = 'Dera Shop'; showAuth();
   },
   rqCity(id){ rqKeep(); state.rqForm.region_id = id; document.querySelectorAll('#rqCity .chip').forEach(b => b.classList.toggle('on', b.getAttribute('onclick').includes(id))); },
   rqCat(k){ const l = state.rqForm.categories; const i = l.indexOf(k); if (i > -1) l.splice(i, 1); else l.push(k);
@@ -2918,6 +2941,15 @@ const A = {
 
   // ---- Shop ops ----
   setOrderFilter(k){ state.orderFilter = ['live','new','prep','ready','past'].includes(k) ? k : 'live'; renderTab(); },
+  async showMorePast(){
+    if (state.pastLoading) return;
+    const loaded = (state.orders || []).filter(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').length;
+    if ((state.pastVisible || 30) < loaded){ state.pastVisible += 30; renderTab(); return; }
+    if (!state.pastHasMore) return;
+    state.pastLoading = true; renderTab();
+    await run(async () => { await loadOlderPastOrders(); state.pastVisible += 30; });
+    state.pastLoading = false; renderTab();
+  },
   async refreshInsights(){ await run(async () => { await loadInsights(); renderTab(); }); },
   async shopPreview(){
     await run(async () => {
