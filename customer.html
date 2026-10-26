@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.71';
+const APP_VERSION = '5.72';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1342,7 +1342,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, restaurants:[], products:[], stats:{ items:{}, shops:{} },
   curMenu:null, curRest:null, addresses:[], selAddr:null, newCoords:null, promo:'', promoRes:null, authMode:'login', pending:null,
-  itemsCache:{}, homeQuery:'', searchCategory:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), savedShopIds:new Set(), qty:1,
+  itemsCache:{}, homeQuery:'', groceryHome:false, searchCategory:'', sort:'best', shopQuery:'', favs: ls.get('kh_favs', []), savedShopIds:new Set(), qty:1,
   cart: ls.get('kh_cart', { rid:null, items:[], note:'' }),
   optItems:new Set(), optCache:{}, banners:[], promos:null, tip:0, when:'asap', schedDay:null, schedAt:null, badges:new Set()
 };
@@ -2337,6 +2337,13 @@ function renderSearchResults(){
   return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1><div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}<div class="grid2">${sortProducts(filtered).map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
 }
 async function showSearchResults(){ await ensureData(); $('view').innerHTML = renderSearchResults(); }
+function groceryBody(zoneBar, noRider){
+  const ur = state.lang === 'ur';
+  const shops = state.restaurants.filter(r => r && r.shop_kind !== 'services' && isMart(r));
+  const ids = new Set(shops.map(r => r.id));
+  const products = sortProducts(state.products.filter(p => ids.has(p.restaurant_id)));
+  return `${noRider}${zoneBar}<button type="button" class="btn ghost" style="margin:0 0 14px" onclick="A.setGroceryHome(false)">${ur ? '← مکمل ہوم پر واپس جائیں' : '← Back to full home'}</button><div class="banner"><div><b>${ur ? 'کریانہ اور روزمرہ اشیاء' : 'Groceries & daily essentials'}</b><span style="opacity:.9;font-size:14px">${ur ? 'آپ کے شہر کی دکانیں اور دستیاب اشیاء' : 'Shops and items available in your city'}</span></div><div class="big" aria-hidden="true">🛒</div></div><h2>${ur ? 'کریانہ کی دکانیں' : 'Grocery shops'}</h2>${shops.length ? `<div class="shoplist">${shops.map(restaurantCard).join('')}</div>` : `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`}<h2>${ur ? 'دستیاب اشیاء' : 'Available products'}</h2>${products.length ? `<div class="grid2">${products.map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}`;
+}
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
   const cz = customerZone();
@@ -2344,6 +2351,7 @@ function homeBody(){
   const zoneBar = cz ? `<div style="margin:0 16px 10px;padding:10px 14px;background:#eef7f0;border:1px solid #cfe6d4;border-radius:12px;font-size:14px">📍 You are in <b style="color:#0b5c2f">${esc(cz.name)}</b> — delivery charges for your zone</div>` : '';
   if (!state.products.length && !state.restaurants.length) return `${zoneBar}<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`;
   const noRider = state.ridersOnline === 0 ? `<div class="warnbox" style="margin:0 16px 10px">${t('no_rider')}</div>` : '';
+  if (state.groceryHome) return groceryBody(zoneBar, noRider);
   const PR = typeProducts(), RS = typeShops();
   const cats = categories(PR);
   const deals = PR.filter(p => pctOff(p) > 0).sort((a, b) => pctOff(b) - pctOff(a)).slice(0, 12);
@@ -2357,6 +2365,7 @@ function homeBody(){
   return `
     ${noRider}
     ${zoneBar}
+    <button type="button" class="btn ghost" style="margin:0 0 12px" onclick="A.setGroceryHome(true)">${state.lang === 'ur' ? '🛒 کریانہ ہوم کھولیں' : '🛒 Browse groceries'}</button>
     ${banner}
     ${typeChips()}
     ${flashSection()}
@@ -3813,6 +3822,7 @@ const A = {
       need(await sb.storage.from('shop-docs').upload(path, f, { contentType:f.type || 'image/jpeg' })); state.rxPath = path; toast(t('rx_ok')); drawCheckout(); });
   },
   setShopCat(k){ state.shopCat = k || null; if (currentRoute === 'shops') showShops(); else { const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } },
+  setGroceryHome(on){ state.groceryHome = !!on; if (currentRoute === 'home' && !state.homeQuery.trim()){ const b = $('homeBody'); if (b) b.innerHTML = homeBody(); } },
   async copyTxt(v){ try { await navigator.clipboard.writeText(v); toast(t('copied')); } catch (e) { await uiPrompt('', v); } },
   payLabel(v){ state.payLbl = v; document.querySelectorAll('#payLbls .chip2').forEach(b => b.classList.toggle('on', b.dataset.v === v)); },
   payShot(inp){ const f = inp.files && inp.files[0]; if (!f) return; if (f.size > 8e6) return toast('Max 8 MB', true); state.payFile = f; const l = $('payShotL'); if (l) l.textContent = t('pay_shot_ok'); },
