@@ -918,6 +918,8 @@ html[dir=rtl] .grid2 .qadd{right:auto!important;left:6px!important}
 .gcard .prow .qadd{position:static!important;flex:none;margin:0}
 .gcard,.grid2 .gcard{padding-bottom:10px!important}
 .grid2 .gcard .qadd{width:28px!important;height:28px!important;font-size:18px!important;border-radius:9px!important}
+.grid2 > .gcard{content-visibility:auto;contain-intrinsic-size:auto 280px}
+@media (min-width:560px){.grid2 > .gcard{contain-intrinsic-size:auto 400px}}
 .pchip{border:2px solid var(--line);border-radius:999px;padding:8px 13px;font-size:14px;background:var(--surface);cursor:pointer;color:var(--ink)}
 .pchip.on{border-color:var(--brand);background:#FFF1E3;font-weight:700;color:#C24E02}
 .pkprice{display:flex;justify-content:space-between;align-items:center;background:#FFF4E4;border:2px solid #F5C98F;border-radius:14px;padding:13px 15px}
@@ -1062,7 +1064,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.78';
+const APP_VERSION = '5.79';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
