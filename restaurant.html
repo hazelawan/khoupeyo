@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.65';
+const APP_VERSION = '6.66';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1252,7 +1252,7 @@ async function loadOrders(){
   state.issues = {};
   const recent = data.filter(o => !['delivered','rejected'].includes(o.status) && (o.status !== 'cancelled' || o.return_status === 'returning')).map(o => o.id);
   if (recent.length){
-    const rows = need(await sb.from('order_issues').select('*').in('order_id', recent).in('status', ['open','returning']).order('created_at', { ascending:false }));
+    const rows = need(await sb.from('order_issues').select('id,order_id,restaurant_id,kind,note,status,wait_until,resolution,created_at').in('order_id', recent).in('status', ['open','returning']).order('created_at', { ascending:false }));
     rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
     const newIss = rows.filter(i => !state.seenIssues.has(i.id));
     newIss.forEach(i => state.seenIssues.add(i.id));
@@ -1457,6 +1457,21 @@ function apptsHtml(){
       ${a.rating ? `<div style="margin-top:4px"><b style="color:#E2A400">${'★'.repeat(a.rating)}</b>${a.rating_comment ? ' · ' + esc(a.rating_comment) : ''}</div>` : ''}</div>`; };
   return `<h2>${t('bk_title')} <span class="count">${live.length}</span></h2><button class="btn ghost block" style="margin:0 0 10px" onclick="A.walkIn()">${t('wi_t')}</button>${live.map(card).join('') || `<div class="muted" style="margin-bottom:10px">${t('bk_none')}</div>`}${recent.map(card).join('')}`;
 }
+function renderShopIssueHistory(){
+  const ur = state.lang === 'ur';
+  if (!state.restaurant || state.issueRowsRestaurant !== state.restaurant.id) return `<div class="empty">${ur ? 'اس دکان کی فہرست لوڈ کرنے کے لیے دبائیں۔' : 'Load this shop’s issue history.'} <button type="button" class="link" onclick="A.setOrderFilter('issues')">${ur ? 'لوڈ کریں' : 'Load'}</button></div>`;
+  if (state.issueLoading) return `<div class="empty">${ur ? 'آرڈر کے مسائل لوڈ ہو رہے ہیں…' : 'Loading order issues…'}</div>`;
+  if (state.issueLoadError) return `<div class="issuebox" role="alert">${ur ? 'مسائل کی فہرست لوڈ نہیں ہو سکی۔' : 'Could not load issue history.'} <button type="button" class="link" onclick="A.setOrderFilter('issues')">${ur ? 'دوبارہ کوشش' : 'Retry'}</button></div>`;
+  const rows = state.issueRows || [];
+  if (!rows.length) return `<div class="empty">${ur ? 'ابھی کوئی رپورٹ شدہ مسئلہ نہیں۔' : 'No reported order issues yet.'}</div>`;
+  const statusText = status => ur ? ({open:'کھلا', returning:'دکان واپس آ رہا ہے', resolved:'حل ہو گیا'}[status] || status) : ({open:'Open', returning:'Returning to shop', resolved:'Resolved'}[status] || status);
+  const cards = rows.map(i => {
+    const k = 'k_' + String(i.kind || ''); const translated = t(k); const kind = translated === k ? String(i.kind || '').replace(/_/g, ' ') : translated;
+    const status = statusText(i.status); const statusClass = i.status === 'resolved' ? 'g' : i.status === 'returning' ? 'y' : 'r';
+    return `<div class="card"><div class="ch"><span class="oid">#${esc(String(i.order_id || '').slice(-4).toUpperCase())}</span><span class="pill ${statusClass}">${esc(status)}</span></div><b>${esc(kind)}</b>${i.note ? `<div class="muted" style="margin-top:5px">${esc(i.note)}</div>` : ''}${i.resolution ? `<div class="muted" style="margin-top:5px"><b>${ur ? 'حل' : 'Resolution'}:</b> ${esc(i.resolution)}</div>` : ''}<div class="muted" style="font-size:12px;margin-top:7px">${esc(when(i.created_at))}</div></div>`;
+  }).join('');
+  return `<div class="muted" style="margin:0 0 10px">${ur ? 'تازہ ترین 100 مسائل؛ حل/فیصلے Dera کے ذریعے ہوتے ہیں۔ یہ فہرست صرف دیکھنے کے لیے ہے۔' : 'Latest 100 issues. Resolution decisions stay with Dera; this list is read-only.'}</div>${cards}`;
+}
 function viewOrders(){
   const r = state.restaurant;
   if (isServices()){
@@ -1465,7 +1480,7 @@ function viewOrders(){
     return `${sound}${closed}${apptsHtml()}`;
   }
   const by = fn => state.orders.filter(fn);
-  const show = o => state.orderFilter === 'live' ? !['delivered','cancelled','rejected'].includes(o.status) : state.orderFilter === 'new' ? o.status === 'placed' : state.orderFilter === 'prep' ? ['accepted','preparing'].includes(o.status) : state.orderFilter === 'ready' ? ['ready','rider_assigned','picked_up'].includes(o.status) : ['delivered','cancelled','rejected'].includes(o.status);
+  const show = o => state.orderFilter === 'live' ? !['delivered','cancelled','rejected'].includes(o.status) : state.orderFilter === 'new' ? o.status === 'placed' : state.orderFilter === 'prep' ? ['accepted','preparing'].includes(o.status) : state.orderFilter === 'ready' ? ['ready','rider_assigned','picked_up'].includes(o.status) : state.orderFilter === 'past' ? ['delivered','cancelled','rejected'].includes(o.status) : false;
   const fresh = by(o => o.status === 'placed' && show(o));
   const kitchen = by(o => ['accepted','preparing'].includes(o.status) && show(o));
   const ready = by(o => ['ready','rider_assigned','picked_up'].includes(o.status) && show(o));
@@ -1489,8 +1504,9 @@ function viewOrders(){
     : (r.is_open ? `<button type="button" class="busybtn" onclick="A.busyMenu()">${t('busy_b')}</button>` : '');
   const lowN = (state.items || []).filter(i => i.stock_qty != null && num(i.stock_qty) <= 3).length;
   const lowHtml = lowN ? `<button class="note" style="width:100%;text-align:start;border-color:#E2A400;cursor:pointer;margin-bottom:10px" onclick="go('menu')">${t('low_stock_n', { n:lowN })} ›</button>` : '';
-  const filterLabels = state.lang === 'ur' ? [['live','📋 سب'],['new','🛎️ نئے'],['prep','🍳 تیاری'],['ready','✅ تیار'],['past','🗂️ سابقہ']] : [['live','📋 All'],['new','🛎️ New'],['prep','🍳 Preparing'],['ready','✅ Ready'],['past','🗂️ Past']];
+  const filterLabels = state.lang === 'ur' ? [['live','📋 سب'],['new','🛎️ نئے'],['prep','🍳 تیاری'],['ready','✅ تیار'],['past','🗂️ سابقہ'],['issues','⚠ مسائل']] : [['live','📋 All'],['new','🛎️ New'],['prep','🍳 Preparing'],['ready','✅ Ready'],['past','🗂️ Past'],['issues','⚠ Issues']];
   const pipeline = `<div class="chips" role="tablist">${filterLabels.map(([k,l]) => `<button type="button" class="chip ${state.orderFilter === k ? 'on' : ''}" role="tab" aria-selected="${state.orderFilter === k}" onclick="A.setOrderFilter('${k}')">${l}</button>`).join('')}</div>`;
+  if (state.orderFilter === 'issues') return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${pipeline}${renderShopIssueHistory()}`;
   return `${sound}${closed}${payChecks}${busyHtml}${lowHtml}${pipeline}${backHtml}${apptsHtml()}${sect(t('new_orders'), fresh)}${sect(t('in_kitchen'), kitchen)}${sect(t('ready_pickup'), ready)}
     ${live ? '' : `<div class="empty">${t('no_orders')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`}
     ${past.length ? `<h2>${t('past')}</h2>${past.map(pastRow).join('')}` : ''}${state.orderFilter === 'past' ? pastMore : ''}`;
@@ -2940,7 +2956,23 @@ const A = {
   },
 
   // ---- Shop ops ----
-  setOrderFilter(k){ state.orderFilter = ['live','new','prep','ready','past'].includes(k) ? k : 'live'; renderTab(); },
+  async setOrderFilter(k){
+    state.orderFilter = ['live','new','prep','ready','past','issues'].includes(k) ? k : 'live';
+    if (state.orderFilter === 'issues' && state.restaurant){
+      const rid = state.restaurant.id; const token = state.issueLoadToken = (state.issueLoadToken || 0) + 1;
+      state.issueLoading = true; state.issueLoadError = false; state.issueRowsRestaurant = rid; renderTab();
+      try {
+        const rows = need(await sb.from('order_issues').select('id,order_id,restaurant_id,kind,note,status,wait_until,resolution,created_at').eq('restaurant_id', rid).order('created_at', { ascending:false }).limit(100));
+        if (token === state.issueLoadToken && state.restaurant && state.restaurant.id === rid){ state.issueRows = rows || []; state.issueRowsRestaurant = rid; }
+      } catch (e) {
+        if (token === state.issueLoadToken && state.restaurant && state.restaurant.id === rid){ state.issueRows = []; state.issueLoadError = true; state.issueRowsRestaurant = rid; }
+      } finally {
+        if (token === state.issueLoadToken && state.restaurant && state.restaurant.id === rid){ state.issueLoading = false; renderTab(); }
+      }
+      return;
+    }
+    renderTab();
+  },
   async showMorePast(){
     if (state.pastLoading) return;
     const loaded = (state.orders || []).filter(o => ['delivered','cancelled','rejected'].includes(o.status) && o.return_status !== 'returning').length;
