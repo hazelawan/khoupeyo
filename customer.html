@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.77';
+const APP_VERSION = '5.78';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2099,10 +2099,15 @@ async function loadRegionSettings(){
   state.rset = {};
   state.gateway = null;
   if (!state.region) return;
-  try { const { data } = await sb.from('region_settings').select('key,value').eq('region_id', state.region); (data || []).forEach(x => { state.rset[x.key] = x.value; }); } catch (e) {}
-  try { const { data } = await sb.rpc('gateway_public_status', { p_region:state.region }); state.gateway = data || null; } catch (e) { state.gateway = null; }
-  state.badges = new Set();
-  try { const { data } = await sb.rpc('shop_badges', { p_region:state.region }); state.badges = new Set((data || []).map(x => typeof x === 'string' ? x : Object.values(x)[0])); } catch (e) { state.badges = new Set(); }
+  const safe = async fn => { try { return await fn(); } catch (e) { return { data:null, error:e }; } };
+  const [settingsRes, gatewayRes, badgesRes] = await Promise.all([
+    safe(() => sb.from('region_settings').select('key,value').eq('region_id', state.region)),
+    safe(() => sb.rpc('gateway_public_status', { p_region:state.region })),
+    safe(() => sb.rpc('shop_badges', { p_region:state.region }))
+  ]);
+  if (!settingsRes.error) (settingsRes.data || []).forEach(x => { state.rset[x.key] = x.value; });
+  state.gateway = gatewayRes.error ? null : gatewayRes.data || null;
+  state.badges = new Set((badgesRes.error ? [] : badgesRes.data || []).map(x => typeof x === 'string' ? x : Object.values(x)[0]));
 }
 const regionName = () => ((state.regions || []).find(r => r.id === state.region) || {}).name || '';
 const cityBtn = () => (state.regions || []).length > 1 ? `<button class="citybtn" onclick="A.pickRegion()" aria-label="Change city">${esc(regionName())}<span aria-hidden="true">▾</span></button>` : '';
@@ -2115,12 +2120,25 @@ async function loadRestaurantsFresh(){
   if (state.region) q = q.eq('region_id', state.region);
   const list = need(await q);
   const today = PKD.format(new Date()), untilDate = PKD.format(new Date(Date.now() + 8 * 864e5));
-  try {
-    const ids = list.map(r => r.id);
-    if (ids.length){ const { data, error } = await sb.from('restaurant_special_hours').select('restaurant_id,exception_date,is_closed,open_time,close_time,note').in('restaurant_id', ids).gte('exception_date', today).lte('exception_date', untilDate).limit(500); if (error) throw error; const byShop = new Map(); (data || []).forEach(x => { if (!byShop.has(x.restaurant_id)) byShop.set(x.restaurant_id, []); byShop.get(x.restaurant_id).push(x); }); list.forEach(r => { r.special_hours = byShop.get(r.id) || []; }); }
-  } catch (e) { console.warn('Special shop hours unavailable', e); list.forEach(r => { r.special_hours = []; }); }
+  const ids = list.map(r => r.id);
+  const [specialByShop, topShops] = await Promise.all([
+    (async () => {
+      if (!ids.length) return new Map();
+      try {
+        const { data, error } = await sb.from('restaurant_special_hours').select('restaurant_id,exception_date,is_closed,open_time,close_time,note').in('restaurant_id', ids).gte('exception_date', today).lte('exception_date', untilDate).limit(500);
+        if (error) throw error;
+        const byShop = new Map(); (data || []).forEach(x => { if (!byShop.has(x.restaurant_id)) byShop.set(x.restaurant_id, []); byShop.get(x.restaurant_id).push(x); });
+        return byShop;
+      } catch (e) { console.warn('Special shop hours unavailable', e); return new Map(); }
+    })(),
+    (async () => {
+      try { const { data:ts } = await sb.from('app_settings').select('value').eq('key', 'top_shops').maybeSingle(); return (ts && ts.value && Array.isArray(ts.value.ids)) ? ts.value.ids : []; }
+      catch (e) { return []; }
+    })()
+  ]);
+  state.topShops = topShops;
+  list.forEach(r => { r.special_hours = specialByShop.get(r.id) || []; });
   const now = Date.now();
-  try { const { data:ts } = await sb.from('app_settings').select('value').eq('key', 'top_shops').maybeSingle(); state.topShops = (ts && ts.value && Array.isArray(ts.value.ids)) ? ts.value.ids : []; } catch (e) { state.topShops = []; }
   list.forEach(r => { r.manual_open = r.is_open; r.busy = !!(r.busy_until && new Date(r.busy_until).getTime() > now); r.ad = !!(r.sponsored_until && new Date(r.sponsored_until).getTime() > now); r.is_open = !!r.is_open && withinHours(r) && !r.busy; const ti = state.topShops.indexOf(r.id); r.top = ti >= 0; r.topRank = ti >= 0 ? ti : 99; });
   list.sort((a, b) => a.topRank - b.topRank || (b.is_open ? 1 : 0) - (a.is_open ? 1 : 0) || (b.ad ? 1 : 0) - (a.ad ? 1 : 0));
   state.restaurants = list;
