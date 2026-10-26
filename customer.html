@@ -1062,7 +1062,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.70';
+const APP_VERSION = '5.71';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1178,7 +1178,7 @@ const I18N = {
     need_details:'Please add your name and phone so the shop and rider can reach you.',
     arrive_by:'Rider arriving by about {t}', deliver_around:'Delivery by about {t}', cmp_btn:'Problem with the delivery? Complain', cmp_title:'Complain about the rider', cmp_q:'What happened?', cmp_late:'Rider came late', cmp_damaged:'Items were damaged or spoiled', cmp_rude:'Rider was rude', cmp_other:'Something else', cmp_note:'Tell us more', cmp_send:'Send complaint', cmp_pick:'Please choose the problem', cmp_need_note:'Please write what happened', cmp_done:'Thank you. Your complaint is counted and action is taken on the rider.', cmp_sent:'Thank you. Dera will check your complaint.', cmp_status:'Your complaint', cmp_pending:'Dera is checking it', cmp_approved:'Complaint accepted, action taken on the rider', cmp_rejected:'Checked by Dera: {n}', cmp_late_by:'The order came {m} minutes late',
     city_title:'Choose your city', city_note:'You will see shops and products of this city.', city_now:'Now showing shops in {c}', delivery_region:'Delivery Region',
-    ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map', expected_by:'Expected delivery', eta_note:'Based on shop prep time + distance', no_rider:'⚠️ No riders online right now — delivery may take longer',
+    ready_by:'Ready around {time}', your_rider:'Your rider', call_rider:'Call', track_rider:'See rider on the map', expected_by:'Current delivery estimate', eta_note:'This is an estimate, not a guaranteed arrival time. Based on shop prep time and distance; it may change as the order progresses.', no_rider:'⚠️ No riders online right now — delivery may take longer',
     rate_title:'How was your order?', rate_food:'Products', rate_rider:'Delivery',
     rate_comment:'Comment (optional)', rate_send:'Send rating', rate_thanks:'Thank you for your rating', rate_need:'Please tap the stars for the products',
     delete_confirm:'Delete this address?', edit:'Edit', visit_shop:'See everything from this shop', related:'You might also like', add_new_address:'Add a new address',
@@ -1303,7 +1303,7 @@ const I18N = {
     need_details:'براہ کرم اپنا نام اور فون نمبر لکھیں تاکہ دکان اور رائیڈر آپ سے رابطہ کر سکیں۔',
     arrive_by:'رائیڈر تقریباً {t} تک پہنچے گا', deliver_around:'ڈیلیوری تقریباً {t} تک', cmp_btn:'ڈیلیوری میں مسئلہ؟ شکایت کریں', cmp_title:'رائیڈر کی شکایت', cmp_q:'کیا ہوا؟', cmp_late:'دیر سے پہنچا', cmp_damaged:'سامان خراب یا ٹوٹا ہوا تھا', cmp_rude:'رائیڈر نے بدتمیزی کی', cmp_other:'کچھ اور', cmp_note:'تفصیل لکھیں', cmp_send:'شکایت بھیجیں', cmp_pick:'براہ کرم مسئلہ چنیں', cmp_need_note:'براہ کرم لکھیں کیا ہوا', cmp_done:'شکریہ۔ آپ کی شکایت درج ہو گئی اور رائیڈر پر لاگو ہو گئی۔', cmp_sent:'شکریہ۔ Dera آپ کی شکایت چیک کرے گا۔', cmp_status:'آپ کی شکایت', cmp_pending:'Dera چیک کر رہا ہے', cmp_approved:'شکایت منظور، رائیڈر کے خلاف کارروائی ہو گئی', cmp_rejected:'Dera نے چیک کیا: {n}', cmp_late_by:'آرڈر {m} منٹ دیر سے پہنچا',
     city_title:'اپنا شہر چنیں', city_note:'آپ کو اسی شہر کی دکانیں اور چیزیں نظر آئیں گی۔', city_now:'اب {c} کی دکانیں دکھائی جا رہی ہیں', delivery_region:'ڈیلیوری ریجن',
-    ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں', expected_by:'متوقع ڈیلیوری', eta_note:'دکان کے تیاری وقت + فاصلے کے حساب سے', no_rider:'⚠️ ابھی کوئی رائیڈر آن لائن نہیں — ڈیلیوری میں زیادہ وقت لگ سکتا ہے',
+    ready_by:'تقریباً {time} تک تیار', your_rider:'آپ کا رائیڈر', call_rider:'کال', track_rider:'رائیڈر کو نقشے پر دیکھیں', expected_by:'ڈیلیوری کا موجودہ اندازہ', eta_note:'یہ صرف اندازہ ہے، پہنچنے کے وقت کی ضمانت نہیں۔ دکان کے تیاری وقت اور فاصلے کے حساب سے ہے؛ آرڈر آگے بڑھنے پر بدل سکتا ہے۔', no_rider:'⚠️ ابھی کوئی رائیڈر آن لائن نہیں — ڈیلیوری میں زیادہ وقت لگ سکتا ہے',
     rate_title:'آپ کا آرڈر کیسا رہا؟', rate_food:'چیزیں', rate_rider:'ڈیلیوری',
     rate_comment:'رائے (اختیاری)', rate_send:'ریٹنگ بھیجیں', rate_thanks:'ریٹنگ کا شکریہ', rate_need:'براہ کرم چیزوں کے لیے ستارے دبائیں',
     delete_confirm:'یہ پتہ حذف کریں؟', edit:'تبدیل کریں', visit_shop:'اس دکان کی تمام چیزیں دیکھیں', related:'یہ بھی پسند آ سکتا ہے', add_new_address:'نیا پتہ شامل کریں',

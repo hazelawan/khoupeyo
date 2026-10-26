@@ -655,7 +655,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.44';
+const APP_VERSION = '5.45';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -788,7 +788,7 @@ const I18N = {
     bx_title:'🎁 Bonus levels — extra on top of your pay', bx_each:'+{p} extra each', bx_how:'How your bonus is counted', bx_total:'Bonus so far',
     bx_next:'Your next {k} deliveries get {p} extra each. From delivery number {f}, every delivery gets {q} extra.', bx_top:'You are on the highest bonus level: every delivery gets {p} extra.',
     bx_pre:'Bonus starts at delivery number {f}: every delivery then gets {q} extra. {k} deliveries to go.', bx_note:'This bonus is paid on top of your normal delivery pay.',
-    rider_tools:'Rider tools', trip_preferences:'Trip preferences', trip_preferences_note:'Choose which new work offers you want to see. Active trips always stay visible.', orders_enabled:'Order delivery offers', parcels_enabled:'Parcel offers', night_map:'Night map', auto_navigation:'Auto-open maps after accepting', live_traffic:'Live-traffic handoff', navigation_note:'Maps never open from a new-offer popup. Auto-open is opt-in and runs only after you accept a job; the live-traffic button always requires a tap.', radar_title:'Trip Radar', radar_note:'Available orders and parcels · accept or skip each offer', pro_hub:'Rider Pro & quests', pro_note:'Your existing goals, active boosts, company offers and earnings at a glance.', pro_earn:'Delivery earnings this month', speak_offer:'🔊 Read offer aloud', spoken_order:'New order. Pay {p}. Pickup: {a}. Deliver to: {b}.', spoken_parcel:'New parcel. Pay {p}. Pickup: {a}. Deliver to: {b}.',
+    rider_tools:'Rider tools', trip_preferences:'Trip preferences', trip_preferences_note:'Choose which new work offers you want to see. Active trips always stay visible.', orders_enabled:'Order delivery offers', parcels_enabled:'Parcel offers', night_map:'Night map', auto_navigation:'Auto-open maps after accepting', live_traffic:'Live-traffic handoff', navigation_note:'Maps never open from a new-offer popup. Auto-open is opt-in and runs only after you accept a job; the live-traffic button always requires a tap.', radar_title:'Trip Radar', radar_note:'Available orders and parcels · accept or skip each offer', pro_hub:'Rider Pro & quests', pro_note:'Your existing goals, active boosts, company offers and earnings at a glance.', pro_earn:'Delivery earnings this month', speak_offer:'🔊 Read offer aloud', handsfree_offer:'🎧 Auto-read new offers (this device)', offer_thanks:'👍 Got it — offer acknowledged', spoken_order:'New order. Pay {p}. Pickup: {a}. Deliver to: {b}.', spoken_parcel:'New parcel. Pay {p}. Pickup: {a}. Deliver to: {b}.',
     safety_check_title:'Bike safety check', safety_check_note:'A quick reminder before riding. This is not emergency assistance or a substitute for local emergency services.', safety_helmet:'Helmet secured', safety_brakes:'Brakes working', safety_lights:'Lights and reflectors visible', safety_tires:'Tires look ready', safety_done:'Checklist saved on this device for this rider.', barcode_scan:'Scan parcel code', barcode_scan_note:'Point your camera at a parcel barcode or QR code. Camera access requires a supported browser and secure connection.', barcode_unavailable:'Barcode scanning is unavailable here. Enter the code manually.', barcode_typed:'Enter code manually', barcode_close:'Close scanner', barcode_camera_error:'Camera could not start. Enter the code manually.', barcode_placeholder:'Pickup or delivery code', barcode_submit:'Use code',
     tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
   },
@@ -875,7 +875,7 @@ const I18N = {
     bx_title:'🎁 بونس لیول — معمول کے پیسوں کے علاوہ اضافی', bx_each:'ہر ایک پر +{p} اضافی', bx_how:'آپ کا بونس کیسے بنتا ہے', bx_total:'اب تک کا بونس',
     bx_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} اضافی ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری پر {q} اضافی ملے گا۔', bx_top:'آپ سب سے اوپر والے بونس لیول پر ہیں: ہر ڈیلیوری پر {p} اضافی۔',
     bx_pre:'بونس ڈیلیوری نمبر {f} سے شروع ہوگا: پھر ہر ڈیلیوری پر {q} اضافی ملے گا۔ ابھی {k} ڈیلیوریاں باقی ہیں۔', bx_note:'یہ بونس آپ کے معمول کے ڈیلیوری پیسوں کے علاوہ ملتا ہے۔',
-    rider_tools:'رائیڈر کے اوزار', trip_preferences:'کام کی ترجیحات', trip_preferences_note:'چنیں کہ کون سے نئے کام کے آفر دکھائے جائیں۔ جاری سفر ہمیشہ نظر آئیں گے۔', orders_enabled:'آرڈر ڈیلیوری کے آفر', parcels_enabled:'پارسل کے آفر', night_map:'رات کا نقشہ', auto_navigation:'قبول کرنے کے بعد نقشہ خود کھولیں', live_traffic:'لائیو ٹریفک نقشے پر', navigation_note:'نئے آفر سے نقشہ خود نہیں کھلے گا۔ خودکار کھولنا اختیاری ہے اور صرف کام قبول کرنے کے بعد ہوگا؛ لائیو ٹریفک کے لیے ہمیشہ بٹن دبائیں۔', radar_title:'ٹرپ ریڈار', radar_note:'دستیاب آرڈر اور پارسل · ہر آفر قبول یا چھوڑیں', pro_hub:'رائیڈر پرو اور کویسٹس', pro_note:'آپ کے موجودہ اہداف، فعال بوسٹ، کمپنی آفر اور کمائی ایک جگہ۔', pro_earn:'اس ماہ ڈیلیوری کی کمائی', speak_offer:'🔊 آفر پڑھ کر سنائیں', spoken_order:'نیا آرڈر۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔', spoken_parcel:'نیا پارسل۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔',
+    rider_tools:'رائیڈر کے اوزار', trip_preferences:'کام کی ترجیحات', trip_preferences_note:'چنیں کہ کون سے نئے کام کے آفر دکھائے جائیں۔ جاری سفر ہمیشہ نظر آئیں گے۔', orders_enabled:'آرڈر ڈیلیوری کے آفر', parcels_enabled:'پارسل کے آفر', night_map:'رات کا نقشہ', auto_navigation:'قبول کرنے کے بعد نقشہ خود کھولیں', live_traffic:'لائیو ٹریفک نقشے پر', navigation_note:'نئے آفر سے نقشہ خود نہیں کھلے گا۔ خودکار کھولنا اختیاری ہے اور صرف کام قبول کرنے کے بعد ہوگا؛ لائیو ٹریفک کے لیے ہمیشہ بٹن دبائیں۔', radar_title:'ٹرپ ریڈار', radar_note:'دستیاب آرڈر اور پارسل · ہر آفر قبول یا چھوڑیں', pro_hub:'رائیڈر پرو اور کویسٹس', pro_note:'آپ کے موجودہ اہداف، فعال بوسٹ، کمپنی آفر اور کمائی ایک جگہ۔', pro_earn:'اس ماہ ڈیلیوری کی کمائی', speak_offer:'🔊 آفر پڑھ کر سنائیں', handsfree_offer:'🎧 نئے آفر خود پڑھیں (یہی ڈیوائس)', offer_thanks:'👍 سمجھ گیا — آفر دیکھ لیا', spoken_order:'نیا آرڈر۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔', spoken_parcel:'نیا پارسل۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔',
     safety_check_title:'موٹر سائیکل کی حفاظتی جانچ', safety_check_note:'سواری سے پہلے ایک مختصر یاد دہانی۔ یہ ہنگامی مدد نہیں اور مقامی ہنگامی خدمات کا متبادل نہیں۔', safety_helmet:'ہیلمٹ مضبوطی سے باندھا ہے', safety_brakes:'بریک درست کام کر رہے ہیں', safety_lights:'لائٹس اور ریفلیکٹر نظر آ رہے ہیں', safety_tires:'ٹائر ٹھیک حالت میں ہیں', safety_done:'چیک لسٹ اس ڈیوائس پر اسی رائیڈر کے لیے محفوظ ہے۔', barcode_scan:'پارسل کوڈ اسکین کریں', barcode_scan_note:'پارسل بارکوڈ یا QR کوڈ پر کیمرہ رکھیں۔ کیمرہ کے لیے معاون براؤزر اور محفوظ کنکشن ضروری ہے۔', barcode_unavailable:'یہاں بارکوڈ اسکیننگ دستیاب نہیں۔ کوڈ خود درج کریں۔', barcode_typed:'کوڈ خود درج کریں', barcode_close:'اسکینر بند کریں', barcode_camera_error:'کیمرہ شروع نہیں ہو سکا۔ کوڈ خود درج کریں۔', barcode_placeholder:'پک اپ یا ڈیلیوری کوڈ', barcode_submit:'کوڈ استعمال کریں',
     tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے'
   }
@@ -1326,6 +1326,7 @@ function payNote(extra, tip){
   const parts = []; if (num(extra)) parts.push(t('incl_extra').replace('{r}', money(extra))); if (num(tip)) parts.push(t('incl_tip').replace('{r}', money(tip)));
   return parts.length ? `<div class="muted" style="font-size:13px">${parts.join(' · ')}</div>` : '';
 }
+function offerAutoReadEnabled(){ try { return localStorage.getItem('kh_rider_offer_autoread') === '1'; } catch (e) { return false; } }
 function showJobPopup(j){
   if ($('overlay')) return beep();
   const d = jobDistances(j);
@@ -1341,9 +1342,11 @@ function showJobPopup(j){
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
     <button class="btn ghost small" style="width:100%;margin-top:12px" onclick='A.speakOffer("order", ${jsArg(j.restaurant_name || '')}, ${jsArg(j.restaurant_address || '')}, ${jsArg(j.drop_address || '')}, ${num(j.rider_pay)})'>${t('speak_offer')}</button>
+    <label style="display:flex;align-items:center;gap:9px;padding:9px 2px;font-size:14px"><input type="checkbox" ${offerAutoReadEnabled() ? 'checked' : ''} onchange="A.setOfferAutoRead(this.checked)">${t('handsfree_offer')}</label><button class="btn ghost small" style="width:100%" onclick="A.ackOffer()">${t('offer_thanks')}</button>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', ${j.offered_to_me ? 'true' : 'false'})">${j.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>
   </div>`;
   document.body.appendChild(el);
+  if (offerAutoReadEnabled()) A.speakOffer('order', j.restaurant_name || '', j.restaurant_address || '', j.drop_address || '', num(j.rider_pay));
   const total = j.offered_to_me && j.offer_expires_at ? Math.max(5, Math.round((new Date(j.offer_expires_at) - Date.now()) / 1000)) : JOB_SECONDS;
   let left = total; beep();
   popBeep = setInterval(beep, 3000);
@@ -1893,9 +1896,11 @@ function showParcelPopup(p){
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(p.pickup_text || p.pickup_zone || '')}</b></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(p.drop_text || p.drop_zone || '')}</b></div></div>
     <button class="btn ghost small" style="width:100%;margin-top:12px" onclick='A.speakOffer("parcel", ${jsArg(p.item_type || t('pk_parcel'))}, ${jsArg(p.pickup_text || p.pickup_zone || '')}, ${jsArg(p.drop_text || p.drop_zone || '')}, ${num(p.rider_pay)})'>${t('speak_offer')}</button>
+    <label style="display:flex;align-items:center;gap:9px;padding:9px 2px;font-size:14px"><input type="checkbox" ${offerAutoReadEnabled() ? 'checked' : ''} onchange="A.setOfferAutoRead(this.checked)">${t('handsfree_offer')}</label><button class="btn ghost small" style="width:100%" onclick="A.ackOffer()">${t('offer_thanks')}</button>
     <div class="two" style="margin-top:8px"><button class="btn ghost" onclick="A.skipParcel('${p.parcel_id}', ${p.offered_to_me ? 'true' : 'false'})">${p.offered_to_me ? t('decline') : t('skip')}</button><button class="btn" onclick="A.acceptParcel('${p.parcel_id}')">${t('accept')}</button></div>
   </div>`;
   document.body.appendChild(el);
+  if (offerAutoReadEnabled()) A.speakOffer('parcel', p.item_type || t('pk_parcel'), p.pickup_text || p.pickup_zone || '', p.drop_text || p.drop_zone || '', num(p.rider_pay));
   const total = p.offered_to_me && p.offer_expires_at ? Math.max(5, Math.round((new Date(p.offer_expires_at) - Date.now()) / 1000)) : JOB_SECONDS;
   let left = total; beep();
   popBeep = setInterval(beep, 3000);
@@ -2542,6 +2547,11 @@ const A = {
     const summary = t(kind === 'parcel' ? 'spoken_parcel' : 'spoken_order', { p:money(pay), a:[pickup, from].filter(Boolean).join(', '), b:to || '' });
     try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(summary); u.lang = state.lang === 'ur' ? 'ur-PK' : 'en-US'; speechSynthesis.speak(u); } catch (e) { logErr(e); }
   },
+  setOfferAutoRead(enabled){
+    try { localStorage.setItem('kh_rider_offer_autoread', enabled ? '1' : '0'); } catch (e) { toast(t('error'), true); return; }
+    if (enabled && $('overlay')) { const b = $('overlay').querySelector('[onclick*=speakOffer]'); if (b) b.click(); }
+  },
+  ackOffer(){ toast(t('offer_thanks')); },
   toggleLang(onAuth){
     state.lang = state.lang === 'ur' ? 'en' : 'ur'; ls.set('kh_lang', state.lang); applyLang();
     if (onAuth || !state.rider || !state.rider.is_approved){ if (state.user) return route(); return showAuth(); }

@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.60';
+const APP_VERSION = '6.61';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -953,7 +953,7 @@ const I18N = {
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, restaurant:null, orders:[], payChecks:[], issues:{}, seenIssues:new Set(), acceptedAt:{}, cats:[], items:[], tab:'orders',
   sound: ls.get('kh_r_sound', true), authMode:'login', prep:20, orderFilter:'live', period:'today', earn:null, stmt:null, stmtMonth:null, productFilter:'all', productQ:'', alerted:new Set(),
-  settings:{}, specialHours:[], promoRequests:[], pwChecked:false, pwBlocking:false,
+  settings:{}, specialHours:[], promoRequests:[], insights:null, pwChecked:false, pwBlocking:false,
   pendingKind:null // shop kind chosen BEFORE the request form (products/services); saved with the request
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -1180,7 +1180,7 @@ function noImg(name, cat){
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
 function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
 function markTab(){
-  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k || (k === 'earn' && state.tab === 'stmt')); });
+  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k || (k === 'earn' && state.tab === 'stmt') || (k === 'shop' && state.tab === 'insights')); });
   const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = (isServices() ? t('bk_title') : t('orders')) + (n ? `<span class="dot">${n}</span>` : ''); }
 }
 // ================= SHELL =================
@@ -1200,7 +1200,7 @@ function renderShell(){
     </div></nav>`;
 }
 async function go(tab){
-  if (state.staffMode && (tab === 'earn' || tab === 'shop' || tab === 'stmt')) tab = 'orders';
+  if (state.staffMode && (tab === 'earn' || tab === 'shop' || tab === 'stmt' || tab === 'insights')) tab = 'orders';
   state.tab = tab; markTab();
   const v = $('view'); if (!v) return;
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
@@ -1209,6 +1209,7 @@ async function go(tab){
     if (tab === 'menu') await loadMenu();
     if (tab === 'earn') await loadEarn();
     if (tab === 'stmt') await loadStmt();
+    if (tab === 'insights') await loadInsights();
     if (tab === 'shop'){ loadStaff(); await loadReviews(); await loadPromoRequests(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
@@ -1219,6 +1220,7 @@ function renderTab(){
   if (state.tab === 'menu') v.innerHTML = viewMenu();
   if (state.tab === 'earn') v.innerHTML = viewEarn();
   if (state.tab === 'stmt') v.innerHTML = viewStmt();
+  if (state.tab === 'insights') v.innerHTML = viewInsights();
   if (state.tab === 'shop') v.innerHTML = viewShop();
   markTab(); updateTitle();
 }
@@ -1256,6 +1258,39 @@ async function loadOrders(){
   if (fresh.length && state.loadedOnce && !$('sheet')) showNewOrder(fresh[0]);
   state.loadedOnce = true;
   updateTitle(); markTab();
+}
+async function loadInsights(){
+  if (state.staffMode || !state.restaurant) throw new Error('Insights are available to the shop owner only');
+  const rows = need(await sb.from('orders').select('customer_id,created_at,status')
+    .eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(1000));
+  state.insights = { rows:rows || [], capped:(rows || []).length === 1000, loadedAt:new Date().toISOString() };
+}
+function viewInsights(){
+  const data = state.insights || {}, rows = data.rows || [], now = Date.now(), day = 86400000;
+  const end = now, start30 = now - 30 * day, start60 = now - 60 * day, start90 = now - 90 * day;
+  const delivered = rows.filter(o => o.status === 'delivered');
+  const recent = delivered.filter(o => { const x = Date.parse(o.created_at); return x >= start30 && x <= end; }).length;
+  const previous = delivered.filter(o => { const x = Date.parse(o.created_at); return x >= start60 && x < start30; }).length;
+  const cust = new Map();
+  delivered.filter(o => Date.parse(o.created_at) >= start90 && o.customer_id).forEach(o => cust.set(o.customer_id, (cust.get(o.customer_id) || 0) + 1));
+  const groups = { first:0, repeat:0, frequent:0 };
+  cust.forEach(n => { groups[n >= 3 ? 'frequent' : n >= 2 ? 'repeat' : 'first']++; });
+  const max = Math.max(1, ...Array.from({length:4}, (_, i) => delivered.filter(o => { const x = Date.parse(o.created_at); return x >= now - (i + 1) * 7 * day && x < now - i * 7 * day; }).length));
+  const bars = Array.from({length:4}, (_, i) => {
+    const count = delivered.filter(o => { const x = Date.parse(o.created_at); return x >= now - (i + 1) * 7 * day && x < now - i * 7 * day; }).length;
+    const label = i === 0 ? (state.lang === 'ur' ? 'یہ ہفتہ' : 'This week') : (state.lang === 'ur' ? `${i} ہفتے پہلے` : `${i} week${i > 1 ? 's' : ''} ago`);
+    return `<div class="line" style="align-items:center;gap:10px"><span class="muted" style="min-width:90px">${label}</span><span style="flex:1;background:var(--soft);border-radius:99px;height:10px;overflow:hidden"><i style="display:block;width:${Math.round(count / max * 100)}%;height:100%;background:var(--brand);border-radius:99px"></i></span><b>${count}</b></div>`;
+  }).reverse().join('');
+  const delta = previous ? Math.round((recent - previous) / previous * 100) : null;
+  const change = delta === null ? (state.lang === 'ur' ? 'پچھلے 30 دن میں آرڈر نہیں' : 'No delivered orders in the prior 30 days') : `${delta > 0 ? '+' : ''}${delta}% ${state.lang === 'ur' ? 'گزشتہ 30 دن کے مقابلے میں' : 'vs prior 30 days'}`;
+  const capNote = data.capped ? (state.lang === 'ur' ? 'یہ خلاصہ تازہ ترین 1,000 آرڈرز تک محدود ہے۔' : 'Summary is limited to the latest 1,000 shop-visible orders.') : (state.lang === 'ur' ? 'صرف اس دکان کے نظر آنے والے آرڈرز؛ گاہک کی شناخت یا رابطہ معلومات شامل نہیں۔' : 'Only orders visible to this shop are used. No customer identity or contact details are shown.');
+  return `<h1>${state.lang === 'ur' ? '📈 دکان کے رجحانات' : '📈 Shop insights'}</h1>
+    <p class="muted" style="margin-top:-6px">${state.lang === 'ur' ? 'پچھلے 30 اور 90 دن کے مکمل شدہ آرڈرز' : 'Delivered-order trends over the last 30 and 90 days'}</p>
+    <div class="tiles"><div class="tile hi"><b>${recent}</b><span>${state.lang === 'ur' ? 'مکمل آرڈر · 30 دن' : 'Delivered · 30 days'}</span></div><div class="tile"><b>${previous}</b><span>${state.lang === 'ur' ? 'اس سے پچھلے 30 دن' : 'Prior 30 days'}</span></div></div>
+    <div class="card" style="margin-top:10px"><b>${esc(change)}</b><div class="muted" style="font-size:13px;margin-top:4px">${state.lang === 'ur' ? 'صرف سمت کا موازنہ؛ موسمی اثرات یا منسوخیوں کی وجہ نہیں بتاتا۔' : 'A simple comparison, not an explanation of seasonality or cancellations.'}</div></div>
+    <h2>${state.lang === 'ur' ? 'ہفتہ وار رجحان' : 'Weekly order trend'}</h2><div class="card">${bars}</div>
+    <h2>${state.lang === 'ur' ? 'گاہکوں کے مجموعی گروپ · 90 دن' : 'Aggregate customer groups · 90 days'}</h2><div class="card"><div class="line"><span>${state.lang === 'ur' ? 'ایک مکمل آرڈر' : 'One delivered order'}</span><b>${groups.first}</b></div><div class="line"><span>${state.lang === 'ur' ? '2 مکمل آرڈر' : '2 delivered orders'}</span><b>${groups.repeat}</b></div><div class="line"><span>${state.lang === 'ur' ? '3 یا زیادہ مکمل آرڈر' : '3+ delivered orders'}</span><b>${groups.frequent}</b></div></div>
+    <div class="note">${esc(capNote)}</div><button class="btn ghost" onclick="A.refreshInsights()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh insights'}</button>`;
 }
 let refreshing = false;
 async function refreshOrders(){
@@ -2062,6 +2097,7 @@ function viewShop(){
       <div class="tile"><b>${num(r.commission_percent)}%</b><span>${t('commission_rate')}</span></div>
     </div>
     <button type="button" class="btn ghost" style="margin:8px 0 12px" onclick="A.shopPreview()">👁️ ${state.lang === 'ur' ? 'کسٹمر ویو دیکھیں' : 'Preview customer view'}</button>
+    ${!state.staffMode ? `<button type="button" class="btn ghost" style="margin:0 0 12px" onclick="go('insights')">📈 ${state.lang === 'ur' ? 'دکان کے رجحانات اور گاہکوں کے مجموعی گروپ' : 'Shop trends & aggregate customer groups'}</button>` : ''}
     <h2>${state.lang === 'ur' ? '📣 تشہیر کی درخواست' : '📣 Request a promotion'}</h2>
     <div class="card">
       <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے تشہیری بینر کی درخواست دیں۔ بینر انتظامیہ کی منظوری کے بعد ہی شائع ہوگا۔' : 'Request a promotional banner for your shop. It will only be published after admin approval.'}</p>
@@ -2871,6 +2907,7 @@ const A = {
 
   // ---- Shop ops ----
   setOrderFilter(k){ state.orderFilter = ['live','new','prep','ready','past'].includes(k) ? k : 'live'; renderTab(); },
+  async refreshInsights(){ await run(async () => { await loadInsights(); renderTab(); }); },
   async shopPreview(){
     await run(async () => {
       if (!state.items) await loadMenu();
