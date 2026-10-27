@@ -296,6 +296,12 @@ h2{font-size:18px}
 .timer{border-radius:9px;overflow:hidden}
 .slide{border-radius:18px;background:var(--grad);box-shadow:0 8px 20px rgba(198,94,27,.3)}
 .slide .knob{border-radius:14px}
+.duty-go-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.duty-go-mark{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;flex:none;background:var(--grad-gold);color:#241a00;font-size:17px;font-weight:900;box-shadow:0 6px 16px rgba(255,170,0,.24)}
+.duty-go-title{margin:0;font-size:19px}
+.duty-go-note{font-size:13px;margin-top:3px}
+.duty-go-button{display:flex;align-items:center;justify-content:center;gap:9px}
+.duty-go-button b{font-size:18px;letter-spacing:.04em}
 .step .n{box-shadow:0 0 0 4px var(--soft)}
 .bar{border-radius:9px;background:var(--field)}
 .bar i{background:var(--grad);border-radius:9px}
@@ -658,7 +664,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.47';
+const APP_VERSION = '5.48';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -720,7 +726,7 @@ const I18N = {
     check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', rules:'Rules', account:'Account',
     on_duty:'On duty', off_duty:'Off duty', start_duty:'Start duty', end_duty:'End duty',
     end_duty_q:'End your duty now? You will stop getting new deliveries.',
-    off_msg:'You are off duty. Start your duty to get deliveries.',
+    off_msg:'You are off duty. Start your duty to get deliveries.', go_title:'Ready for deliveries?', go_note:'Start duty to receive deliveries. Face and location checks remain required.', go_swipe:'Swipe to start duty',
     my_deliveries:'My deliveries', new_jobs:'Available deliveries', no_jobs:'No deliveries right now. New ones will ring here.',
     keep_open:'Keep this app open and the screen on while on duty.',
     accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
@@ -807,7 +813,7 @@ const I18N = {
     check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', rules:'اصول', account:'اکاؤنٹ',
     on_duty:'ڈیوٹی پر', off_duty:'ڈیوٹی بند', start_duty:'ڈیوٹی شروع کریں', end_duty:'ڈیوٹی ختم کریں',
     end_duty_q:'ڈیوٹی ابھی ختم کریں؟ نئی ڈیلیوریاں آنا بند ہو جائیں گی۔',
-    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔',
+    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔', go_title:'ڈیلیوری کے لیے تیار ہیں؟', go_note:'ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔ چہرے اور لوکیشن کی معمول کی تصدیق برقرار رہے گی۔', go_swipe:'ڈیوٹی شروع کرنے کے لیے سلائیڈ کریں',
     my_deliveries:'میری ڈیلیوریاں', new_jobs:'دستیاب ڈیلیوریاں', no_jobs:'ابھی کوئی ڈیلیوری نہیں۔ نئی آنے پر یہاں گھنٹی بجے گی۔',
     keep_open:'ڈیوٹی کے دوران ایپ کھلی اور اسکرین آن رکھیں۔',
     accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
@@ -1959,6 +1965,11 @@ async function startParcelBarcodeDetection(overlay, id, action){
   } catch (e) { if(status) status.textContent=t('barcode_camera_error'); }
 }
 function stopParcelScanner(){ if (parcelScanFrame) cancelAnimationFrame(parcelScanFrame); parcelScanFrame=null; if(parcelScanStream){ parcelScanStream.getTracks().forEach(x=>x.stop()); parcelScanStream=null; } }
+function dutyGoCard(){
+  return `<section class="card duty-go-card" aria-labelledby="dutyGoTitle"><div class="duty-go-head"><span class="duty-go-mark" aria-hidden="true">GO</span><div><h2 class="duty-go-title" id="dutyGoTitle">${t('go_title')}</h2><div class="muted duty-go-note">${t('go_note')}</div></div></div>
+    <button class="btn duty-go-button" type="button" onclick="A.toggleDuty()"><b>GO</b><span>${t('start_duty')}</span></button>
+    ${slider(t('go_swipe'), 'A.toggleDuty()', true)}</section>`;
+}
 function viewJobs(){
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
@@ -1972,7 +1983,7 @@ function viewJobs(){
   const safety = safetyChecklistCard();
   if (suspended() && !state.mine.length) return safety + suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return `${safety}${boost}${goalCard()}${stats}${cashWarning()}<div class="empty">${t('off_msg')}<br><br><button class="btn" style="max-width:280px;margin:0 auto" onclick="A.toggleDuty()">${t('start_duty')}</button></div>`;
+    return `${safety}${boost}${goalCard()}${stats}${cashWarning()}${dutyGoCard()}`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
   const myP = (state.myParcels || []).length ? `<h2>📦 ${t('pk_mine')} <span class="count">${state.myParcels.length}</span></h2>${state.myParcels.map(parcelActiveCard).join('')}` : '';
