@@ -931,7 +931,6 @@ html[dir=rtl] .grid2 .qadd{right:auto!important;left:6px!important}
 .pkhead span{font-size:13.5px;opacity:.93}
 
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 <div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🛍️</div><div class="sp-word"><span style="animation-delay:0.65s">D</span><span style="animation-delay:0.70s">e</span><span style="animation-delay:0.74s">r</span><span style="animation-delay:0.79s">a</span><span class="dot" style="animation-delay:0.85s">.</span></div><div class="sp-tag" style="font-weight:700">Jahan SAB MILTA hai!</div><div style="font-size:12px;color:#A89880;margin-top:6px;letter-spacing:.04em">Products • Services • Appointments</div><div class="sp-load"><i></i></div></div>
@@ -1064,7 +1063,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.82';
+const APP_VERSION = '5.83';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1467,11 +1466,12 @@ async function loadOptions(id){
   return g;
 }
 // ---- Leaflet map (loaded only when needed) ----
-let leafletP = null;
+let leafletP = null, leafletCssP = null;
 function loadLeaflet(){
-  if (window.L) return Promise.resolve(window.L);
-  if (!leafletP) leafletP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = () => res(window.L); s.onerror = () => { leafletP = null; rej(new Error('map')); }; document.head.appendChild(s); });
-  return leafletP;
+  if (!leafletCssP) leafletCssP = new Promise(res => { if (document.getElementById('customerLeafletCss')) return res(); const l = document.createElement('link'); l.id = 'customerLeafletCss'; l.rel = 'stylesheet'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; l.onload = res; l.onerror = res; document.head.appendChild(l); });
+  if (!window.L && !leafletP) leafletP = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload = () => res(window.L); s.onerror = () => { leafletP = null; rej(new Error('map')); }; document.head.appendChild(s); });
+  const scriptReady = window.L ? Promise.resolve(window.L) : leafletP;
+  return Promise.all([leafletCssP, scriptReady]).then(([, L]) => L);
 }
 const TOWN = [32.7797, 72.6986];
 function pinIcon(L, emoji, bg){ return L.divIcon({ className:'', iconSize:[34, 34], iconAnchor:[17, 34], html:`<div style="width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${bg};display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.35);border:2px solid #fff"><span style="transform:rotate(45deg);font-size:16px">${emoji}</span></div>` }); }
