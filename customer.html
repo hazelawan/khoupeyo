@@ -1064,7 +1064,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.80';
+const APP_VERSION = '5.81';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2020,7 +2020,7 @@ let routeRunning = false, routeQueued = false;
 async function route(soft){
   if (routeRunning){ routeQueued = true; return; }
   routeRunning = true;
-  try { await routeImpl(soft); } finally { routeRunning = false; if (routeQueued){ routeQueued = false; route(); } }
+  try { await routeImpl(soft); } finally { scheduleProductGridUpdate(); routeRunning = false; if (routeQueued){ routeQueued = false; route(); } }
 }
 async function routeImpl(soft){
   stopPoll();
@@ -2333,6 +2333,60 @@ function noImg(name, cat){
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
 // ================= CARDS =================
 function itemRate(id){ const r = state.stats && state.stats.ritems && state.stats.ritems[id]; return r && r.n ? r : null; }
+// Window only the tall, two-dimensional product result grids. Keep the card
+// renderer and grid styling unchanged; spacer rows preserve the full scroll range.
+const PRODUCT_GRID_WINDOW_THRESHOLD = 60;
+const PRODUCT_GRID_OVERSCAN_ROWS = 6;
+const productGridData = new Map();
+let productGridSeq = 0, productGridFrame = 0;
+function productGrid(items){
+  const list = Array.isArray(items) ? items : [];
+  if (list.length <= PRODUCT_GRID_WINDOW_THRESHOLD) return `<div class="grid2">${list.map(p => productCard(p)).join('')}</div>`;
+  const id = 'product-grid-' + (++productGridSeq);
+  productGridData.set(id, list);
+  const initialEnd = Math.min(list.length, 36);
+  const initialCols = innerWidth >= 560 ? 3 : 2;
+  const initialRowH = innerWidth >= 560 ? 412 : 362;
+  const html = list.slice(0, initialEnd).map(p => productCard(p)).join('');
+  scheduleProductGridUpdate();
+  return `<div class="grid2" data-product-grid="${id}" data-total="${list.length}" style="overflow-anchor:none" data-window-start="0" data-window-end="${initialEnd}">${html}<div data-grid-bottom-spacer aria-hidden="true" style="grid-column:1/-1;height:${Math.max(0,Math.ceil((list.length-initialEnd)/initialCols)*initialRowH-12)}px"></div></div>`;
+}
+function updateProductGrids(){
+  productGridFrame = 0;
+  document.querySelectorAll('.grid2[data-product-grid]').forEach(grid => {
+    const id = grid.dataset.productGrid, list = productGridData.get(id);
+    if (!list || !grid.isConnected) return;
+    const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length || 2;
+    const rows = Math.ceil(list.length / cols);
+    const cards = [...grid.querySelectorAll(':scope > .gcard')];
+    const measuredRows = new Map();
+    cards.forEach(card => { const rect = card.getBoundingClientRect(), key = Math.round(rect.top); measuredRows.set(key, Math.max(measuredRows.get(key) || 0, rect.height)); });
+    const measuredCardH = measuredRows.size ? Array.from(measuredRows.values()).reduce((sum, height) => sum + height, 0) / measuredRows.size : (innerWidth >= 560 ? 400 : 350);
+    const savedRowH = Number(grid.dataset.rowHeight) || 0;
+    const rowH = Math.max(1, Number(grid.dataset.columns) === cols && savedRowH ? savedRowH : measuredCardH + 12);
+    const top = grid.getBoundingClientRect().top + scrollY;
+    const visibleRows = Math.max(1, Math.ceil(innerHeight / rowH));
+    const maxFirstVisible = Math.max(0, rows - visibleRows);
+    const firstVisible = Math.min(maxFirstVisible, Math.max(0, Math.floor((scrollY - top) / rowH)));
+    const startRow = Math.max(0, firstVisible - PRODUCT_GRID_OVERSCAN_ROWS);
+    const endRow = Math.min(rows, firstVisible + visibleRows + PRODUCT_GRID_OVERSCAN_ROWS + 1);
+    const start = startRow * cols, end = Math.min(list.length, endRow * cols);
+    const currentStart = Number(grid.dataset.windowStart || 0), currentEnd = Number(grid.dataset.windowEnd || 36);
+    if (start === currentStart && end === currentEnd && grid.dataset.windowReady === '1' && Number(grid.dataset.rowHeight) === rowH && Number(grid.dataset.columns) === cols) return;
+    const topHeight = Math.max(0, startRow * rowH - (startRow ? 12 : 0)), bottomHeight = Math.max(0, (rows-endRow) * rowH - (endRow < rows ? 12 : 0));
+    grid.innerHTML = `${topHeight ? `<div data-grid-top-spacer aria-hidden="true" style="grid-column:1/-1;height:${topHeight}px"></div>` : ''}${list.slice(start,end).map(p => productCard(p)).join('')}${bottomHeight ? `<div data-grid-bottom-spacer aria-hidden="true" style="grid-column:1/-1;height:${bottomHeight}px"></div>` : ''}`;
+    grid.dataset.windowStart = String(start); grid.dataset.windowEnd = String(end); grid.dataset.windowReady = '1'; grid.dataset.rowHeight = String(rowH); grid.dataset.columns = String(cols);
+  });
+  for (const id of productGridData.keys()) if (!document.querySelector(`[data-product-grid="${id}"]`)) productGridData.delete(id);
+}
+function scheduleProductGridUpdate(){ if (!productGridFrame) productGridFrame = requestAnimationFrame(updateProductGrids); }
+window.addEventListener('scroll', scheduleProductGridUpdate, { passive:true });
+window.addEventListener('focusin', scheduleProductGridUpdate);
+function resetProductGridMeasurements(){ document.querySelectorAll('.grid2[data-product-grid]').forEach(grid => { grid.dataset.rowHeight = '0'; }); scheduleProductGridUpdate(); }
+window.addEventListener('resize', resetProductGridMeasurements, { passive:true });
+window.addEventListener('orientationchange', resetProductGridMeasurements, { passive:true });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(resetProductGridMeasurements);
+
 function productCard(p, why){
   const shop = p.restaurants || p._shop || {}; const s = sold(p.id);
   const fl = p._flash;
@@ -2424,7 +2478,7 @@ function refreshSearchView(){
 function searchResults(q){
   const { prods, shops } = searchResultData(q);
   state.lastSearch = { q:normQ(q), n:prods.length + shops.length };
-  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(q.trim()) })}</h2>${searchStatusNotice(q)}${shops.length ? shops.map(restaurantCard).join('') : ''}${prods.length ? sortBar() + `<div class="grid2">${sortProducts(prods).map(productCard).join('')}</div>` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
+  return `<h2 style="margin-top:4px">${t('results_for', { q:esc(q.trim()) })}</h2>${searchStatusNotice(q)}${shops.length ? shops.map(restaurantCard).join('') : ''}${prods.length ? sortBar() + `${productGrid(sortProducts(prods))}` : (shops.length ? '' : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`)}`;
 }
 function renderSearchResults(){
   const ur = state.lang === 'ur'; const labels = ur ? { back:'‹ واپس', category:'قسم', any:'تمام اقسام', price:'زیادہ سے زیادہ قیمت', clear:'فلٹر صاف کریں', count:'نتائج', empty:'ان فلٹرز کے مطابق کچھ نہیں ملا۔', all:'تمام نتائج' } : { back:'‹ Back', category:'Category', any:'All categories', price:'Maximum price', clear:'Clear filters', count:'results', empty:'No items match these filters.', all:'All results' };
@@ -2433,7 +2487,7 @@ function renderSearchResults(){
   const filtered = prods.filter(p => (!state.searchCategory || (p.category && p.category.name === state.searchCategory)) && (!state.priceMax || num(p.price) <= state.priceMax));
   state.lastSearch = { q:normQ(q), n:filtered.length + shops.length };
   const opts = cats.map(c => `<option value="${esc(c)}" ${state.searchCategory === c ? 'selected' : ''}>${esc(c)}</option>`).join('');
-  return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1>${searchStatusNotice(q)}<div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}<div class="grid2">${sortProducts(filtered).map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
+  return `<button class="chip2" onclick="A.closeSearch()">${labels.back}</button><h1 style="margin-top:12px">${t('results_for', { q:esc(q) })}</h1>${searchStatusNotice(q)}<div class="box" style="padding:12px;margin:8px 0 14px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><label class="f" style="margin:0">${labels.category}<select onchange="A.searchFilter('category',this.value)" aria-label="${labels.category}" style="margin-top:5px"><option value="">${labels.any}</option>${opts}</select></label><label class="f" style="margin:0">${labels.price}<select onchange="A.searchFilter('price',this.value)" aria-label="${labels.price}" style="margin-top:5px"><option value="0">${t('price_any')}</option>${[200,500,1000,2000].map(x => `<option value="${x}" ${Number(state.priceMax) === x ? 'selected' : ''}>${t('price_under',{p:money(x)})}</option>`).join('')}</select></label></div><button class="chip2" style="margin-top:10px" onclick="A.clearSearchFilters()">${labels.clear}</button></div><div class="muted" style="margin-bottom:8px">${filtered.length + shops.length} ${labels.count}</div>${shops.length ? shops.map(restaurantCard).join('') : ''}${filtered.length ? `${sortBar()}${productGrid(sortProducts(filtered))}` : `<div class="empty"><div class="eic">🔍</div>${labels.empty} <button class="link" onclick="A.clearSearchFilters()">${labels.all}</button></div>`}`;
 }
 async function showSearchResults(){ await ensureData(); $('view').innerHTML = renderSearchResults(); }
 function groceryBody(zoneBar, noRider){
@@ -2441,7 +2495,7 @@ function groceryBody(zoneBar, noRider){
   const shops = state.restaurants.filter(r => r && r.shop_kind !== 'services' && isMart(r));
   const ids = new Set(shops.map(r => r.id));
   const products = sortProducts(state.products.filter(p => ids.has(p.restaurant_id)));
-  return `${noRider}${zoneBar}<button type="button" class="btn ghost" style="margin:0 0 14px" onclick="A.setGroceryHome(false)">${ur ? '← مکمل ہوم پر واپس جائیں' : '← Back to full home'}</button><div class="banner"><div><b>${ur ? 'کریانہ اور روزمرہ اشیاء' : 'Groceries & daily essentials'}</b><span style="opacity:.9;font-size:14px">${ur ? 'آپ کے شہر کی دکانیں اور دستیاب اشیاء' : 'Shops and items available in your city'}</span></div><div class="big" aria-hidden="true">🛒</div></div><h2>${ur ? 'کریانہ کی دکانیں' : 'Grocery shops'}</h2>${shops.length ? `<div class="shoplist">${shops.map(restaurantCard).join('')}</div>` : `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`}<h2>${ur ? 'دستیاب اشیاء' : 'Available products'}</h2>${products.length ? `<div class="grid2">${products.map(productCard).join('')}</div>` : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}`;
+  return `${noRider}${zoneBar}<button type="button" class="btn ghost" style="margin:0 0 14px" onclick="A.setGroceryHome(false)">${ur ? '← مکمل ہوم پر واپس جائیں' : '← Back to full home'}</button><div class="banner"><div><b>${ur ? 'کریانہ اور روزمرہ اشیاء' : 'Groceries & daily essentials'}</b><span style="opacity:.9;font-size:14px">${ur ? 'آپ کے شہر کی دکانیں اور دستیاب اشیاء' : 'Shops and items available in your city'}</span></div><div class="big" aria-hidden="true">🛒</div></div><h2>${ur ? 'کریانہ کی دکانیں' : 'Grocery shops'}</h2>${shops.length ? `<div class="shoplist">${shops.map(restaurantCard).join('')}</div>` : `<div class="empty"><div class="eic">🏪</div>${t('no_shops')}</div>`}<h2>${ur ? 'دستیاب اشیاء' : 'Available products'}</h2>${products.length ? `${productGrid(products)}` : `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}`;
 }
 function homeBody(){
   if (state.homeQuery.trim()) return searchResults(state.homeQuery.trim());
@@ -2456,6 +2510,7 @@ function homeBody(){
   const deals = PR.filter(p => pctOff(p) > 0).sort((a, b) => pctOff(b) - pctOff(a)).slice(0, 12);
   const feat = PR.filter(p => p.is_featured).slice(0, 12);
   const maxOff = deals.length ? pctOff(deals[0]) : 0;
+  const sortedProducts = sortProducts(PR);
   const bn = state.banners || [];
   const banner = bn.length ? `<div class="bcar" id="bcar" onscroll="bannerDots()">${bn.map((b, i) => `<div class="bslide ${b.image_url ? 'img' : ''}" role="button" tabindex="0" onclick="A.bannerTap(${i})" style="${b.image_url ? `background-image:url('${esc(b.image_url)}');` : ''}background-color:${/^#[0-9a-f]{3,8}$/i.test(b.bg_color || '') ? b.bg_color : 'var(--brand)'}">
       <b>${esc(b.title)}</b>${b.subtitle ? `<span style="opacity:.95;font-size:14px">${esc(b.subtitle)}</span>` : ''}${b.action_type === 'promo' && b.action_value ? `<span style="margin-top:6px"><span class="schedpill">${esc(b.action_value)}</span></span>` : ''}</div>`).join('')}</div>
@@ -2472,11 +2527,11 @@ function homeBody(){
     ${recoSections(PR)}
     ${state.user ? `<a class="menu-row" href="#/offers" style="border:1px dashed var(--brand);border-radius:14px;padding:12px 14px;margin:6px 0;color:var(--brand)"><span>${t('offers_invite')}</span><span>›</span></a>` : ''}
     ${cats.length ? `<h2>${t('categories')}</h2><div class="cats">${cats.map(c => `<a class="catchip" href="#/c/${encodeURIComponent(c.name)}"><span class="ic">${c.img ? `<img src="${esc(c.img)}" alt="" loading="lazy">` : esc(c.name[0])}</span><span>${esc(c.name)}</span></a>`).join('')}</div>` : ''}
-    ${deals.length ? `<h2>${t('deals')}</h2><div class="hscroll">${deals.map(productCard).join('')}</div>` : ''}
-    ${feat.length ? `<h2>${t('featured')}</h2><div class="hscroll">${feat.map(productCard).join('')}</div>` : ''}
+    ${deals.length ? `<h2>${t('deals')}</h2><div class="hscroll">${deals.map(p => productCard(p)).join('')}</div>` : ''}
+    ${feat.length ? `<h2>${t('featured')}</h2><div class="hscroll">${feat.map(p => productCard(p)).join('')}</div>` : ''}
     ${RS.length ? `<h2>${t('top_shops')} <a href="#/shops">${t('see_all')}</a></h2><div class="hscroll">${RS.slice(0, 12).map(shopMini).join('')}</div>` : ''}
     <h2>${t('all_products')}</h2>${sortBar()}
-    <div class="grid2">${sortProducts(PR).map(productCard).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}</div>`;
+    ${sortedProducts.length ? productGrid(sortedProducts) : `<div class="grid2"><div class="empty"><div class="eic">🔍</div>${t('no_results')}</div></div>`}`;
 }
 async function showHome(){ await ensureData();
   if (state.user && state.walletBal === undefined){ state.walletBal = 0; sb.rpc('my_wallet').then(({ data }) => { state.walletBal = num(data); const w = $('walletPill'); if (w) w.innerHTML = walletPillHtml(); }, () => {}); sb.rpc('my_points').then(({ data }) => { state.pointsBal = num(data); }, () => {}); }
@@ -2518,7 +2573,7 @@ async function showCategory(name){
   await ensureData();
   const k = name.trim().toLowerCase();
   const list = sortProducts(state.products.filter(p => p.category && p.category.name.trim().toLowerCase() === k));
-  $('view').innerHTML = `<h1>${esc(name)}</h1>${sortBar()}<div class="grid2">${list.map(productCard).join('') || `<div class="empty"><div class="eic">🔍</div>${t('no_results')}</div>`}</div>`;
+  $('view').innerHTML = `<h1>${esc(name)}</h1>${sortBar()}${list.length ? productGrid(list) : `<div class="grid2"><div class="empty"><div class="eic">🔍</div>${t('no_results')}</div></div>`}`;
 }
 async function loadSavedShops(){
   if (!state.user) { state.savedShopIds = new Set(); return; }
@@ -2715,7 +2770,7 @@ async function showProduct(id){
       <span class="muted">›</span>
     </a>
     ${itemRate(item.id) ? `<h2>${t('reviews_t')}</h2><div id="revBox"><div class="muted">…</div></div>` : ''}
-    ${rel.length ? `<h2>${t('related')}</h2><div class="grid2">${rel.map(productCard).join('')}</div>` : ''}
+    ${rel.length ? `<h2>${t('related')}</h2><div class="grid2">${rel.map(p => productCard(p)).join('')}</div>` : ''}
     <div style="height:70px"></div>
     ${item.duration_min && full.booking_on && item.is_available ? `<div class="buybar"><div class="in"><button class="btn" style="flex:1" onclick="A.bookItem('${item.id}','${shop.id}')">${t('book')} · ${money(item.price)}</button></div></div>` : canBuy ? `<div class="buybar"><div class="in">
       <div class="stepper"><button onclick="A.qty(-1)" aria-label="-">−</button><b id="qtyN">1</b><button onclick="A.qty(1)" aria-label="+">+</button></div>
