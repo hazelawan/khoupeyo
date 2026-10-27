@@ -143,6 +143,17 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .slide .knob{position:absolute;top:5px;left:5px;width:50px;height:50px;border-radius:11px;background:#fff;color:var(--brand);display:grid;place-items:center;font-size:24px;font-weight:800;border:0;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .slide.gold .knob{color:#B7791F}
 html[dir=rtl] .slide .knob{left:auto;right:5px}
+/* FEATURE 29 — swipe gestures (cards only; maps/sliders/buttons untouched) */
+.gst-job{touch-action:pan-y;-webkit-touch-callout:none;transition:transform .18s ease}
+.gst-job.gst-drag{transition:none}
+.gst-job.gst-hide{background:rgba(179,38,30,.08)}
+.gst-job.gst-map{background:rgba(37,99,235,.08)}
+.gst-label{position:fixed;left:50%;transform:translateX(-50%);z-index:9600;background:#111;color:#fff;font-size:13px;font-weight:800;padding:6px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .15s}
+.gst-label.on{opacity:1}
+.gst-hintbar{font-size:12.5px;color:var(--muted);margin:2px 2px 8px}
+.gst-undobar{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(255,180,0,.16);border-radius:12px;padding:8px 10px;margin:2px 2px 10px;font-size:13px;font-weight:600}
+.gst-map-pulse{animation:gstPulse 1s ease 2}
+@keyframes gstPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.45)}100%{box-shadow:0 0 0 14px rgba(37,99,235,0)}}
 /* Full screen overlays */
 .over{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
 .over .panel{background:var(--surface);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -662,12 +673,16 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.51';
+const APP_VERSION = '5.69';
+  // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
+  const pfmMarks = { script: Math.round(performance.now()) };
+  function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
+  function pfmLine(){ try { const m = pfmMarks; const f = function(v){ return (typeof v === 'number' ? v + ' ms' : '—'); }; return '<div class="ver" style="margin-top:6px">⏱ Startup: script ' + f(m.script) + ' · boot ' + f(m.boot) + ' · first screen ' + f(m.ready) + '</div>'; } catch(e){ return ''; } }
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-rider-auth' } });
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-rider-auth', experimental: { passkey: true } } });
 const FACE_JS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js';
 const FACE_MODELS = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/';
 const JOB_SECONDS = 45;
@@ -707,35 +722,60 @@ function km(aLat, aLng, bLat, bLng){
   return 2 * R * Math.asin(Math.sqrt(d));
 }
 const fmtKm = d => d == null ? '' : (d < 1 ? Math.round(d * 1000) + ' m' : d.toFixed(1) + ' km');
+// ---- Courier ETA (Feature 8): same model as the customer app — haversine
+// distance at the region rider speed (state.settings.rider_speed_kmh,
+// fallback 20 km/h), so rider and customer see the same number. Display
+// only: never touches totals, promise, dispatch or backend.
+function etacSpeed(){ return num(state.settings && state.settings.rider_speed_kmh) || 20; }
+function etacEtaMin(aLat, aLng, bLat, bLng){
+  if (aLat == null || aLng == null || bLat == null || bLng == null) return null;
+  const d = km(Number(aLat), Number(aLng), Number(bLat), Number(bLng));
+  if (d == null || !Number.isFinite(d)) return null;
+  return Math.max(1, Math.ceil(d / etacSpeed() * 60));
+}
+function etacRiderEtaInner(o){
+  if (!o || !['rider_assigned', 'picked_up'].includes(o.status)) return '';
+  const picked = o.status === 'picked_up';
+  const r = o.restaurant || {};
+  const tLat = picked ? o.address_lat : r.lat;
+  const tLng = picked ? o.address_lng : r.lng;
+  if (tLat == null || tLng == null) return '';
+  if (!state.pos || state.pos.lat == null || state.pos.lng == null) return `🛵 ${t('etac_updating')}`;
+  if (!state.posAt || !Number.isFinite(Date.now() - state.posAt) || Date.now() - state.posAt > 120000) return `🛵 ${t('etac_updating')}`;
+  const m = etacEtaMin(state.pos.lat, state.pos.lng, tLat, tLng);
+  if (m == null) return '';
+  return `🛵 ${t(picked ? 'etac_to_you' : 'etac_to_shop', { n:m })}`;
+}
+
 function monthStart(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }
 const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    grp_profile:'Profile', appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dphoto_saved:'Photo saved',
+    grp_profile:'Profile', appearance:'Appearance', help_legal:'Help & legal', delete_account:'Delete my account', prayer_busy:'Complete your delivery first', rider:'Rider', prayer_started:'Prayer break started', rcv_for:'Give the order to {n} · ordered by {c}', dphoto:'📷 Photo of the delivery', dphoto_ok:'✅ Delivery photo saved', dphoto_need:'Take a photo of the delivery first (the order in the customer’s hand or at the door).', dlv_contactless:'🚪 CONTACTLESS — leave at the door, no code needed', otp_badge:'On-time Promise', otp_promised_by:'Promised by {t}', dlv_instr_lbl:'Door instruction', dlv_photo_req:'Take a photo of the delivery at the door first — a photo is required for contactless deliveries.', dlv_code_skip:'No delivery code for this order (contactless).', dphoto_saved:'Photo saved',
     login:'Log in', signup:'Create account', name:'Your name', phone:'Phone number', email:'Email', password:'Password', pw_ph:'Enter your password',
     pw_title:'Create your password', pw_change:'Change password', pw_temp_note:'The office gave you a temporary password. Enter it below, then choose your own password. Choose carefully — this password cannot be changed again. If you forget it, ask the Dera office for a new one.', pw_current:'Current password', pw_current_ph:'The temporary password from the office', pw_current_wrong:'Current password is wrong', pw_new:'New password', pw_new_ph:'At least 6 characters', pw_confirm:'Type the new password again', pw_mismatch:'The two passwords do not match', pw_save:'Save password', pw_changed:'✅ Password changed',
     forgot_pw:'Forgot password?', reset_sent:'We sent a password reset link to your email. Open it on this phone.', enter_email_first:'Write your email above first', have_account:'Already have an account? Log in', no_account:'New rider? Create an account',
-    rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)',
+    rider_profile:'Your rider details', vehicle:'Vehicle', v_bike:'Motorbike', v_bicycle:'Bicycle', v_car:'Car', cnic:'CNIC number (optional)', dsc_title:'My documents', dsc_sub:'Onboarding documents for the Dera office', dsc_note:'Document verification does not approve or reject the rider itself — it only marks this document.', dsc_pending_note:'Documents are not switched on yet — the office backend update is still pending. Nothing is saved until then.', dsc_t_cnic_front:'CNIC front', dsc_t_cnic_back:'CNIC back', dsc_t_licence:'Driving licence', dsc_t_vehicle:'Vehicle registration', dsc_t_other:'Other document', dsc_not_submitted:'Not submitted', dsc_pending:'Pending', dsc_verified:'Verified', dsc_rejected:'Rejected', dsc_upload:'Upload', dsc_take_photo:'Take photo', dsc_replace:'Replace', dsc_delete:'Delete', dsc_view:'View', dsc_del_q:'Delete this document?', dsc_deleted:'Document deleted', dsc_saved:'Document saved — waiting for office review', dsc_reason:'Reason: ', dsc_file_needed:'Choose a photo or PDF first', dsc_file_type:'Only a photo or PDF is accepted', dsc_uploading:'Uploading…', dsc_view_fail:'Could not open the document', dsc_row_sub:'CNIC, licence and vehicle papers for the office',
     submit:'Send for approval', pending_title:'Waiting for approval',
     pending_msg:'Your account is with the Dera admin. You will see deliveries once it is approved.',
     blocked_title:'Your account is blocked', blocked_msg:'Please contact the Dera office.',
     check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', rules:'Rules', account:'Account',
     on_duty:'On duty', off_duty:'Off duty', start_duty:'Start duty', end_duty:'End duty',
     end_duty_q:'End your duty now? You will stop getting new deliveries.',
-    off_msg:'You are off duty. Start your duty to get deliveries.', go_title:'Ready for deliveries?', go_note:'Start duty to receive deliveries. Face and location checks remain required.', go_swipe:'Swipe to start duty',
+    off_msg:'You are off duty. Start your duty to get deliveries.', go_title:'Ready for deliveries?', go_note:'Start duty to receive deliveries. Face and location checks remain required.', go_swipe:'Swipe to start duty', gst_hint_jobs:'Tip: swipe a job left to hide it, right to see it on the map.', gst_hidden:'Job hidden from this list', gst_hidden_offer:'Job hidden — your offer still counts down', gst_undo:'Undo', gst_hide_lbl:'Hide', gst_map_lbl:'On map', gst_guide_t:'5 · Swipes', gst_guide_d:'Swipe a job left to hide it, right to see it on the map. Swipe sideways on a tab to move to the next tab. Nothing important happens by swipe alone — Accept and Decline still need their buttons.', gst_acct_t:'👆 Swipes', gst_acct_d:'On a job card: swipe left to hide it (Undo appears above the list), swipe right to see it on the map. Swipe sideways anywhere else to move between tabs. Maps, sliders and buttons are never hijacked.',
     my_deliveries:'My deliveries', new_jobs:'Available deliveries', no_jobs:'No deliveries right now. New ones will ring here.',
     keep_open:'Keep this app open and the screen on while on duty.',
     accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
     slide_picked:'Slide when you have the order', slide_delivered:'Slide when delivered and cash collected',
     give_back:'Give back this delivery', open_maps:'Directions', call:'Call', nav_shop:'Go to shop', nav_cust:'Deliver to customer', navigate:'Navigate', nav_noloc:'Location not available', you:'You',
-    cash_collect:'Collect cash', paid_short:'Paid online', batch_same:'➕ Same shop as your order — take both in one trip', batch_near:'➕ Shop next to your order — take both in one trip', hot_t:'🔥 Busy areas at this time', hot_n:'{n} orders', hot_s:'Wait near these places to get orders faster.', code_q:'Ask the customer for the 4-digit delivery code (it is in their app)', pickup_code_q:'Ask the shop for the 4-digit pickup code (it is on their screen)', sos:'🆘 SOS — I need help', sos_q:'Send an emergency alert to Dera with your location?', sos_sent:'Alert sent. Dera will call you now.', code_pick_note:'Customer has the code in their app', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
+    cash_collect:'Collect cash', paid_short:'Paid online', batch_same:'➕ Same shop as your order — take both in one trip', batch_near:'➕ Shop next to your order — take both in one trip', hot_t:'🔥 Busy areas at this time', hot_n:'{n} orders', hot_s:'Wait near these places to get orders faster.', code_q:'Ask the customer for the 4-digit delivery code (it is in their app)', pickup_code_q:'Ask the shop for the 4-digit pickup code (it is on their screen)', sos:'🆘 SOS — I need help', sos_q:'Send an emergency alert to Dera with your location?', sos_sent:'Alert sent. Dera will call you now.', sfty_share_trip:'📤 Share trip', sfty_share_title:'Share your trip', sfty_share_note:'Location at {t} — this is a point-in-time location, not live tracking.', sfty_share_msg:'I am {n} on a Dera delivery trip from {s}. My location now: {u}', sfty_share_wa:'WhatsApp', sfty_share_copy:'Copy message', sfty_copied:'Copied', sfty_share_sys:'Share…', sfty_share_emerg:'WhatsApp emergency contact', sfty_emerg_t:'Emergency contact', sfty_emerg_note:'Only you can change this. It is shown only on your own Share trip sheet.', sfty_emerg_name:'Contact name', sfty_emerg_phone:'Contact phone', sfty_emerg_save:'Save contact', sfty_emerg_saved:'Emergency contact saved', sfty_emerg_na:'Emergency contacts need the backend update — ask Dera to apply it, then save again.', sfty_rc_title:'Are you OK?', sfty_rc_note:'You have been on this trip for a while. Tap “I’m OK” to let Dera know you are fine.', sfty_rc_ok:'✅ I’m OK', sfty_rc_sos:'🆘 I need help', sfty_rc_auto:'No reply — an automatic SOS alert was sent to Dera.', sfty_sos_active:'🆘 SOS sent — Dera has your location. Tap “I’m OK now” when you are safe.', sfty_sos_oknow:'✅ I’m OK now — resolve SOS', sfty_sos_resolved:'SOS marked resolved.', sfty_sos_resolve_na:'Could not mark it resolved yet — Dera will resolve it from their side.', sfty_no_trip:'No active trip right now.', sfty_no_loc:'Location not available yet — turn on GPS and try again.', sfty_next_check:'Next safety check in ~{m} min', code_pick_note:'Customer has the code in their app', slide_delivered_paid:'Slide when delivered', paid_online:'✅ Already paid online — do NOT take cash', qr_check:'⏳ QR payment is being checked — do not take cash',
     qr_btn:'📲 Customer wants to pay by QR', qr_t:'Pay by QR', qr_s:'Ask the customer to scan this QR and pay {n}. Then type the Transaction ID (TID) from their phone.', qr_none:'QR payment is not set up in your area. Take cash.', tid:'Transaction ID (TID)', qr_send:'Payment done — send for check',
     payout_t:'My payment account', payout_s:'Your pay is sent to this account.', payout_none:'Not added yet', pay_method:'Account type', acc_title:'Account holder name', acc_number:'Account number', iban_l:'IBAN (PK…)', bank_name:'Bank name', save_acc:'Save account', acc_saved:'Account saved', edit_w:'Edit', wa:'WhatsApp', wa_hi:'Hello, I am your Dera rider for order #{n}.', your_pay:'Your pay', pk_parcel:'Parcel', pk_new:'New parcels', pk_mine:'My parcels', pk_sender:'Sender', pk_receiver:'Receiver', pk_call:'Call', pk_urgent:'Urgent', pk_w1:'Up to 10 kg', pk_w2:'10-15 kg', pk_w3:'15-25 kg', pk_pick_first:'Pickup first', pk_on_way:'On the way', pk_pick_btn:'Picked up — code', pk_del_btn:'Delivered — code', pk_release:'Release parcel', pk_map:'Map', items:'Items', cust_note:'Customer note', order_no:'Order',
     confirm_giveback:'Give back this delivery? Another rider can take it.',
-    today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Dera at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips',
-    wal_title:'My wallet', wal_tip_note:'Customer tips arrive here. Withdraw any amount, any time — Dera pays the fee.', wal_withdraw:'Withdraw', wal_acct:'Your payout account number', wal_amt:'Amount (no minimum)', wal_to:'To account {n}', wal_done:'Withdrawal requested. You will receive it within 24 hours.', wal_noacct:'Enter your payout account number first.', wal_fee_note:'Dera pays the fee.', wal_refresh:'Refresh', wal_none:'No withdrawals yet.', wal_st_requested:'Requested', wal_st_approved:'Approved', wal_st_paid:'Paid', wal_st_rejected:'Rejected', bg_title:'Location while on duty', bg_text:'Dera needs your location in the background while you are on duty, so customers can track their order even when the app is closed. It stops when your duty ends.', bg_allow:'Allow background location', bg_fg:'Foreground only', nav_steps:'Route steps', nav_speak:'Speak next turn', nav_osrm:'Free route (OpenStreetMap)', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
+    today:'Today', big_order:'Big order', heavy_items:'Heavy items', incl_extra:'incl. {r} for big/heavy order', incl_tip:'incl. {r} tip', srg_incl:'Peak fee included: {r}', heavy_note:'Heavy or large items. Check you can carry them safely before picking up.', only_you:'Only for you', decline:'Decline', targets:'Targets and bonus', p_day:'today', p_week:'this week', p_month:'this month', target_done:'Done! Bonus added to your pay.', target_left:'{d} of {g} deliveries · {k} more', bonus_word:'Bonus', pay_slip:'Pay slip', pay_slip_btn:'Pay slip (PDF)', print_pdf:'Print or save as PDF', close_word:'Close', slip_note:'Pay for this month so far. Final amount is confirmed by Dera at month end.', name:'Name', phone:'Phone', rider_day:'Rider of the day', rider_month:'Rider of the month', prize_word:'Prize', your_rank:'You are #{r} with {n} deliveries', to_first:'{k} more to be #1', lb_start:'Make your first delivery to join the race!', lb_empty:'No deliveries yet. Be the first!', winner_yday:"Yesterday's winner", winner_lmonth:"Last month's winner", you_word:'you', your_timing:'Your duty', break_word:'Break', min_word:'min', on_break:'You are on break', break_left:'Break time left. You will not get new deliveries.', break_over:'Break time is over. Please end your break.', end_break:'End break, back to work', start_break:'Take a break', left_word:'left', break_q:'Start your break? You will not get new deliveries until you end it.', break_ended:'Welcome back! You will get deliveries again.', late_today:'You started {m} minutes late today', company_note:'Fixed salary {s} a month. Overtime {r} per hour after your duty hours. Customer tips are added.', free_note:'You earn for every delivery, plus customer tips. More deliveries in the month means higher pay.', tier_title:'Pay per delivery', tier_range:'Delivery {a} {b}', tier_now:'This month: {n} deliveries. Your next delivery pays {p}.', tier_next:'{k} more deliveries to earn {p} each', tips_word:'Customer tips',
+    wal_title:'My wallet', wal_tip_note:'Customer tips arrive here. Withdraw any amount, any time — Dera pays the fee.', wal_withdraw:'Withdraw', wal_acct:'Your payout account number', wal_amt:'Amount (no minimum)', wal_to:'To account {n}', wal_done:'Withdrawal requested. You will receive it within 24 hours.', wal_noacct:'Enter your payout account number first.', wal_fee_note:'Dera pays the fee.', wal_refresh:'Refresh', wal_none:'No withdrawals yet.', wal_st_requested:'Requested', wal_st_approved:'Approved', wal_st_paid:'Paid', wal_st_rejected:'Rejected', bg_title:'Location while on duty', bg_text:'Dera needs your location in the background while you are on duty, so customers can track their order even when the app is closed. It stops when your duty ends.', bg_allow:'Allow background location', bg_fg:'Foreground only', nav_steps:'Route steps', nav_speak:'Speak next turn', nav_osrm:'Free route (OpenStreetMap)',mst_title:'Multi-stop route',mst_orders:'{n} active orders',mst_rule:'Pickups first (nearest first), then deliveries (nearest first) — so you never ride to a drop before its pickup.',mst_pickup:'Pickup',mst_drop:'Delivery',mst_pickup_btn:'Confirm pickup',mst_deliver_btn:'Confirm delivery',mst_note:'This route is planned on your phone from your active orders. Accepting, pay and dispatch are unchanged — each stop still uses its own code.', late_days:'Late days this month', tip_incl:'Customer tip (included in your pay)', deliveries_n:'Deliveries', on_duty_time:'On duty', contract:'Contract', c_company:'Company bike + petrol · fixed salary', c_freelance:'Own bike + petrol · paid per delivery', per_delivery:'per delivery', duty_today:'Duty today', of_hours:'of {h} hours', hours_done:'Duty hours complete ✅', overtime:'Overtime', ot_rate:'Overtime {r} per hour after {h} hours a day', ot_now:'You are in overtime', days_worked:'Days worked', hours_left:'{t} left',
     this_month:'This month', salary:'Monthly salary', delivery_pay:'Delivery pay', fines:'Fines', month_pay:'Month pay',
     paid:'Already paid', to_pay:'Still to receive', cash_in_hand:'Cash in hand', handover_code:'Confirm cash handover', handover_t:'Enter the 4-digit code the admin shows you', handover_ph:'Code', handover_ok:'Cash handover confirmed', salary_code_btn:'Confirm salary receipt', salary_code_t:'Salary confirmation code', salary_code_s:'Enter the 4-digit code the admin gave you to confirm you received your salary', salary_ok:'Salary confirmed',
     cash_note:'All cash you collected must be deposited at the Dera office. Your pay comes with your salary.',
@@ -759,7 +799,7 @@ const I18N = {
     face_saved:'Face registered', cam_denied:'Camera is blocked. Allow the camera for this site in your browser settings.',
     face_ok:'Face registered', face_missing:'Face not registered', register_face:'Register face',
     duty_started:'Duty started. Good luck!', duty_ended:'Duty ended', getting_loc:'Getting your location…',
-    earn_today:'Earned today', distance:'Distance', pickup_in:'to shop', trip:'trip', ready_since:'ready', gps_hint:'📍 Turn on GPS — your location is needed to show pickup distances', no_loc:'no location', km_today:'KM today',
+    earn_today:'Earned today', rhome_map_t:'Your area', rhome_loc_off:'Location off — turn on location to see yourself on the map', rhome_map_note:'Pins show your active and available jobs. Your own pin appears when location is on.', rhome_nomap:'No map yet — turn on location or wait for a job near you.', rhome_est_t:'Estimated payout this month', rhome_est_only:'Estimate only', rhome_est_note:'Delivery pay only. Salary, bonuses, overtime, fines and deductions are not included. Final pay is settled at month end.', rhome_est_empty:'No delivered orders yet this month', rhome_est_month:'{n} deliveries this month', rhome_est_today:'Today: {n} deliveries · {a}', rhome_est_earn:'See full pay in Earn', rhome_guide_t:'Rider guide', rhome_guide_dismiss:'Dismiss', rhome_guide_again:'Show rider guide again', rhome_g1_t:'1 · Go on duty', rhome_g1_d:'Turn duty on to receive job offers.', rhome_g1_btn:'Go on duty', rhome_g1_done:'Duty is on', rhome_g2_t:'2 · Turn on location', rhome_g2_d:'Customers and shops see you on the map only while location is on.', rhome_g2_btn:'Turn on location', rhome_g2_done:'Location is on', rhome_g3_t:'3 · How jobs arrive', rhome_g3_d:'A new offer gives you 40 seconds to accept. Then ask the shop for the pickup code, and the customer for the delivery code.', rhome_g3_btn:'View jobs', rhome_g4_t:'4 · SOS and Share trip', rhome_g4_d:'SOS is on your trip card and in Account. Share trip is on an active trip card.', rhome_g4_btn:'Open Account', dest_t:'🎯 Destination mode', dest_on:'On', dest_off:'Off', dest_none:'No destination set yet', dest_set:'Set on map', dest_change:'Change on map', dest_pick_hint:'Tap the map to drop your destination pin', dest_pick_cancel:'Cancel picking', dest_pin:'Destination', dest_sheet_t:'Name this destination (optional)', dest_name_l:'Destination name', dest_name_ph:'e.g. Makhial, home', dest_save:'Save destination', dest_saved:'Destination saved — mode is ON', dest_need:'Set a destination first', dest_on_toast:'Destination mode on — only orders towards your destination', dest_off_done:'Destination mode off — normal orders resumed', dest_cleared:'Destination cleared — mode off', dest_clear:'Clear destination', dest_toggle_on:'Turn mode on', dest_toggle_off:'Turn mode off', dest_away:'About {d} away', dest_radius_note:'Orders within 5 km of your destination (shop or drop point) will be offered.', dest_active_note:'Your active orders are never affected by destination mode.', dest_na:'Destination is saved on this phone only — dispatch filtering needs the backend update. Ask Dera to apply it, then it will filter automatically.', dest_acct:'🎯 Destination mode',  distance:'Distance', pickup_in:'to shop', etac_to_shop:'About ~{n} min to the shop', etac_to_you:'About ~{n} min to your address', etac_updating:'Updating rider location…', trip:'trip', ready_since:'ready', gps_hint:'📍 Turn on GPS — your location is needed to show pickup distances', no_loc:'no location', km_today:'KM today',
     arrived_btn:'I have arrived at the customer', arrived_at:'Arrived at {t}', report:'Report a problem', report_title:'What is the problem?',
     note_opt:'More details (optional)', send_report:'Send to Dera', reported:'Dera and the shop have been informed',
     waiting_cust:'Waiting for the customer', wait_note:'Call the customer again. When the time ends you can take the order back to the shop.',
@@ -768,7 +808,7 @@ const I18N = {
     problem_open:'Problem reported', k_customer_unreachable:'Customer is not answering calls', k_customer_absent:'Customer is not at the address',
     k_customer_refused_pay:'Customer is not paying cash', k_wrong_address:'Wrong or unclear address', k_shop_delay:'Order is not ready at the shop',
     k_shop_closed:'Shop is closed', k_order_damaged:'Order is damaged or spilled', k_accident:'Accident or vehicle problem',
-    k_order_lost:'🚨 Order stolen or lost', lost_btn:'🚨 Order stolen or lost', lost_title:'Order stolen or lost', lost_what:'What happened?', lr_stolen:'Stolen (taken when I was not looking)', lr_robbed:'Robbed (snatched by force)', lr_lost:'Lost or fell on the way', lost_note_l:'Write clearly: where, what time, how it happened', lost_photo_l:'Photo: police report (roznamcha), the place, or your bike', lost_warn:'⚠️ The office will check your location and the times. If the report is false, the full order price and a fine are cut from your pay and your ID can be closed. If it is true, you pay nothing.', lost_send:'Send report to the office', lost_need_what:'Choose what happened', lost_need_note:'Write clearly what happened', lost_sent:'Report sent. Wait for the office. Do not deliver this order.', lost_open:'Lost report sent · waiting for the office', k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
+    k_order_lost:'🚨 Order stolen or lost', lost_btn:'🚨 Order stolen or lost', lost_title:'Order stolen or lost', lost_what:'What happened?', lr_stolen:'Stolen (taken when I was not looking)', lr_robbed:'Robbed (snatched by force)', lr_lost:'Lost or fell on the way', lost_note_l:'Write clearly: where, what time, how it happened', lost_photo_l:'Photo: police report, the place, or your bike', lost_warn:'⚠️ The office will check your location and the times. If the report is false, the full order price and a fine are cut from your pay and your ID can be closed. If it is true, you pay nothing.', lost_send:'Send report to the office', lost_need_what:'Choose what happened', lost_need_note:'Write clearly what happened', lost_sent:'Report sent. Wait for the office. Do not deliver this order.', lost_open:'Lost report sent · waiting for the office', k_rider_delay:'I will be late', k_other:'Other problem', pick_problem:'Choose a problem', call_customer:'Call customer',
     shop_word:'Shop', help_word:'Help', chat_support:'Chat with Dera', k_chat_help:'Dera was asked to join a chat', contact:'Contact',
     tab_duty:'Duty', susp_title:'Your rider ID is paused', susp_back:'Active again at {t}', susp_note:'You cannot take deliveries now. Duty time does not count while paused.', susp_left:'left',
     deliver_by:'Deliver by {t}', due_left:'{m} min left', due_late:'Late by {m} min', cust_expects:'Customer expects the order by {t}',
@@ -795,34 +835,66 @@ const I18N = {
     bx_title:'🎁 Bonus levels — extra on top of your pay', bx_each:'+{p} extra each', bx_how:'How your bonus is counted', bx_total:'Bonus so far',
     bx_next:'Your next {k} deliveries get {p} extra each. From delivery number {f}, every delivery gets {q} extra.', bx_top:'You are on the highest bonus level: every delivery gets {p} extra.',
     bx_pre:'Bonus starts at delivery number {f}: every delivery then gets {q} extra. {k} deliveries to go.', bx_note:'This bonus is paid on top of your normal delivery pay.',
-    rider_tools:'Rider tools', trip_preferences:'Trip preferences', trip_preferences_note:'Choose which new work offers you want to see. Active trips always stay visible.', orders_enabled:'Order delivery offers', parcels_enabled:'Parcel offers', night_map:'Night map', auto_navigation:'Auto-open Google Maps after accepting an order', traffic_preference:'Prefer traffic view in Google Maps', live_traffic:'Live-traffic handoff', navigation_note:'Auto-open applies to accepted orders only, never a new-offer popup. Traffic preference affects Google Maps handoff only; the embedded OpenStreetMap route has no live traffic.', radar_title:'Trip Radar', radar_note:'Available orders and parcels · accept or skip each offer', pro_hub:'Rider Pro & quests', pro_note:'Your existing goals, active boosts, company offers and earnings at a glance.', pro_earn:'Delivery earnings this month', speak_offer:'🔊 Read offer aloud', handsfree_offer:'🎧 Auto-read new offers (this device)', offer_thanks:'👍 Got it — offer acknowledged', spoken_order:'New order. Pay {p}. Pickup: {a}. Deliver to: {b}.', spoken_parcel:'New parcel. Pay {p}. Pickup: {a}. Deliver to: {b}.',
-    safety_check_title:'Bike safety check', safety_check_note:'A quick reminder before riding. This is not emergency assistance or a substitute for local emergency services.', safety_helmet:'Helmet secured', safety_brakes:'Brakes working', safety_lights:'Lights and reflectors visible', safety_tires:'Tires look ready', safety_done:'Checklist saved on this device for this rider.', barcode_scan:'Scan parcel code', barcode_scan_note:'Point your camera at a parcel barcode or QR code. Camera access requires a supported browser and secure connection.', barcode_unavailable:'Barcode scanning is unavailable here. Enter the code manually.', barcode_typed:'Enter code manually', barcode_close:'Close scanner', barcode_camera_error:'Camera could not start. Enter the code manually.', barcode_placeholder:'Pickup or delivery code', barcode_submit:'Use code',
-    tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month'
+    rider_tools:'Rider tools', trip_preferences:'Trip preferences', trip_preferences_note:'Choose which new work offers you want to see. Active trips always stay visible.', orders_enabled:'Order delivery offers', parcels_enabled:'Parcel offers', night_map:'Night map', auto_navigation:'Auto-open Google Maps after accepting an order', traffic_preference:'Prefer traffic view in Google Maps', live_traffic:'Live-traffic handoff', navigation_note:'Auto-open applies to accepted orders only, never a new-offer popup. Traffic preference affects Google Maps handoff only; the embedded OpenStreetMap route has no live traffic.', radar_title:'Trip Radar', radar_note:'Available orders and parcels · accept or skip each offer', pro_hub:'Rider Pro & quests', pro_note:'Your existing goals, active boosts, company offers and earnings at a glance.', pro_earn:'Delivery earnings this month', speak_offer:'🔊 Read offer aloud', handsfree_offer:'🎧 Auto-read new offers (this device)', offer_thanks:'👍 Got it — offer acknowledged', blst_status:'Blacklist status', blst_none:'No shop or region has blacklisted you.', blst_shop:'Shop {s} has blacklisted you', blst_region:'Dera has blacklisted you in {r}', blst_note2:'A blacklisted rider is not offered new orders from that shop or region. Orders already with you are not affected.', spoken_order:'New order. Pay {p}. Pickup: {a}. Deliver to: {b}.', spoken_parcel:'New parcel. Pay {p}. Pickup: {a}. Deliver to: {b}.',
+    safety_check_title:'Bike safety check', safety_check_note:'A quick reminder before riding. This is not emergency assistance or a substitute for local emergency services.', safety_helmet:'Helmet secured', safety_brakes:'Brakes working', safety_lights:'Lights and reflectors visible', safety_tires:'Tires look ready', safety_done:'Checklist saved on this device for this rider.', bsc_fuel:'Fuel enough for the first trips', bsc_docs:'Licence + bike papers with me', bsc_confirm:'Confirm today’s check', bsc_done_today:'Today’s bike check is done', bsc_history:'Check history', bsc_report_issue:'Report a bike problem', bsc_report_note:'Unticked items are recorded as problems. You can also send them to rider support.', bsc_phone_only:'Saved on this phone — Dera will see it after the backend update.', bsc_reminder:'Bike check not done today — confirm before riding.', bsc_go_check:'Do bike check', bsc_failed:'Needs attention', bsc_synced:'Saved with Dera', bsc_hist_title:'Bike check history', bsc_hist_empty:'No bike checks yet.', bsc_all_ok:'All items OK', bsc_confirm_saved:'Today’s bike check saved.', barcode_scan:'Scan parcel code', barcode_scan_note:'Point your camera at a parcel barcode or QR code. Camera access requires a supported browser and secure connection.', barcode_unavailable:'Barcode scanning is unavailable here. Enter the code manually.', barcode_typed:'Enter code manually', barcode_close:'Close scanner', barcode_camera_error:'Camera could not start. Enter the code manually.', barcode_placeholder:'Pickup or delivery code', barcode_submit:'Use code',
+    tp_none:'Salary only (no extra)', tg_line:'Finish {g} deliveries {per} → {a} bonus, one time', tg_per_day:'today', tg_per_week:'this week', tg_per_month:'this month',
+
+    tfa_title:'Two-factor authentication', tfa_sub:'An extra code from your authenticator app, asked after your password.',
+    tfa_row_sub:'Extra code at sign-in', tfa_on:'On — a code is asked at every sign-in', tfa_off:'Off',
+    tfa_setup:'Set up two-factor authentication', tfa_manage:'Manage two-factor authentication',
+    tfa_scan:'Scan this QR code in your authenticator app (Google Authenticator, Microsoft Authenticator, or similar), or enter the secret manually below.',
+    tfa_secret:'Secret (manual entry)', tfa_code:'6-digit code from your authenticator app',
+    tfa_verify:'Verify and turn on', tfa_disable:'Turn off',
+    tfa_disable_ask:'To turn it off, enter a current code from your authenticator app.',
+    tfa_enabled:'Two-factor authentication is on', tfa_disabled:'Two-factor authentication is off',
+    tfa_wrong:'Wrong or expired code. Try again with the current code.',
+    tfa_enter_code:'Enter the 6-digit code',
+    tfa_gate_title:'Enter your two-factor code',
+    tfa_gate_sub:'Your account has two-factor authentication. Enter the 6-digit code from your authenticator app to continue.',
+    tfa_continue:'Continue', tfa_signout:'Use another account',
+    tfa_status_err:'Could not check two-factor status. Check your connection and try again.',
+    tfa_retry:'Try again',
+    tfa_unavailable:'Two-factor authentication is not available in this app version. Update the app and try again.',
+    tfa_recovery:'Lost your authenticator? Ask Dera support to remove this factor — then sign in with your password and set it up again. 2FA protects against a stolen password; it does not protect a signed-in device.',
+    tfa_unfinished:'An unfinished setup exists — starting again replaces it.',
+    tfa_cancel:'Cancel',
+    bio_title:'Fingerprint / face sign-in',cmm_title:'Preferred contact method',cmm_sub:'How shops and riders should contact you',cmm_chat:'In-app chat',cmm_call:'Phone call',cmm_wa:'WhatsApp',cmm_none:'No preference',cmm_saved:'Contact preference saved.',cmm_removed:'Contact preference removed.',cmm_prefers:'Prefers {m}',cmm_note:'Shops and riders on your orders will see this preference. Safety contacts (SOS and emergency) always work the same.',cmm_unavailable:'Contact preferences need the backend update, which has not been applied yet.', bio_signin:'Sign in with fingerprint / face',
+    bio_row_sub:'Fingerprint or face instead of your password',
+    bio_sub:'A passkey works only on the phone where you set it up. Your fingerprint or face never leaves this phone — it only unlocks a key that Dera checks.',
+    bio_register:'Add fingerprint / face sign-in', bio_registered:'Fingerprint / face sign-in added on this phone.',
+    bio_deleted:'Passkey removed from this phone.', bio_remove:'Remove',
+    bio_none:'No passkey on this phone yet.',
+    bio_last_used:'Last used',
+    bio_unavailable:'Passkeys are not supported on this phone or browser.',
+    bio_disabled:'Passkeys are not enabled for Dera yet. Password sign-in still works.',
+    bio_exists:'A passkey already exists on this phone.',
+    bio_no_device:'No passkey found on this phone. Sign in with your password, then add one from your Account.',
+    bio_confirm_delete:'Remove this passkey from this phone?',
   },
   ur: {
-    grp_profile:'پروفائل', appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
+    grp_profile:'پروفائل', appearance:'انداز', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', prayer_busy:'پہلے اپنی ڈیلیوری مکمل کریں', rider:'رائیڈر', prayer_started:'نماز کا وقفہ شروع', rcv_for:'آرڈر {n} کو دیں · آرڈر کرنے والا {c}', dphoto:'📷 ڈیلیوری کی تصویر', dphoto_ok:'✅ ڈیلیوری کی تصویر محفوظ ہے', dphoto_need:'پہلے ڈیلیوری کی تصویر لیں (گاہک کے ہاتھ میں یا دروازے پر آرڈر)۔', dlv_contactless:'🚪 بغیر ملے ڈیلیوری — دروازے پر چھوڑیں، کوڈ کی ضرورت نہیں', otp_badge:'وقت پر ڈیلیوری کا وعدہ', otp_promised_by:'وعدہ: {t} تک', dlv_instr_lbl:'دروازے کی ہدایت', dlv_photo_req:'پہلے دروازے پر ڈیلیوری کی تصویر لیں — بغیر ملے ڈیلیوری کے لیے تصویر لازمی ہے۔', dlv_code_skip:'اس آرڈر کے لیے ڈیلیوری کوڈ نہیں چاہیے (بغیر ملے ڈیلیوری)۔', dphoto_saved:'تصویر محفوظ ہو گئی',
     login:'لاگ اِن', signup:'اکاؤنٹ بنائیں', name:'آپ کا نام', phone:'فون نمبر', email:'ای میل', password:'پاس ورڈ', pw_ph:'اپنا پاس ورڈ لکھیں',
     pw_title:'اپنا پاس ورڈ بنائیں', pw_change:'پاس ورڈ بدلیں', pw_temp_note:'دفتر نے آپ کو ایک عارضی پاس ورڈ دیا تھا۔ اب اپنا پاس ورڈ خود بنائیں — اس کے بعد یہ کسی کو نظر نہیں آئے گا، دفتر کو بھی نہیں۔', pw_current:'موجودہ پاس ورڈ', pw_current_ph:'دفتر کی طرف سے دیا گیا عارضی پاس ورڈ', pw_current_wrong:'موجودہ پاس ورڈ غلط ہے', pw_vol_note:'اپنا نیا پاس ورڈ بنائیں — یہ صرف آپ کو معلوم ہوگا، کسی اور کو نظر نہیں آئے گا۔', pw_new:'نیا پاس ورڈ', pw_new_ph:'کم از کم 6 حروف', pw_confirm:'پاس ورڈ دوبارہ لکھیں', pw_mismatch:'دونوں پاس ورڈ ایک جیسے نہیں ہیں', pw_save:'پاس ورڈ محفوظ کریں', pw_changed:'✅ پاس ورڈ بدل گیا',
     forgot_pw:'پاس ورڈ بھول گئے؟', reset_sent:'پاس ورڈ بدلنے کا لنک آپ کی ای میل پر بھیج دیا ہے۔ اسے اسی فون پر کھولیں۔', enter_email_first:'پہلے اوپر اپنی ای میل لکھیں', have_account:'پہلے سے اکاؤنٹ ہے؟ لاگ اِن کریں', no_account:'نئے رائیڈر ہیں؟ اکاؤنٹ بنائیں',
-    rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)',
+    rider_profile:'آپ کی رائیڈر معلومات', vehicle:'سواری', v_bike:'موٹر سائیکل', v_bicycle:'سائیکل', v_car:'کار', cnic:'شناختی کارڈ نمبر (اختیاری)', dsc_title:'میری دستاویزات', dsc_sub:'Dera دفتر کے لیے آن بورڈنگ دستاویزات', dsc_note:'دستاویز کی تصدیق سے رائیڈر کی منظوری نہیں بدلتی — صرف اس دستاویز کی حیثیت بدلتی ہے۔', dsc_pending_note:'دستاویزات ابھی فعال نہیں ہوئیں — دفتر کی بیک اینڈ اپ ڈیٹ ابھی باقی ہے۔ اس وقت تک کچھ محفوظ نہیں ہوگا۔', dsc_t_cnic_front:'شناختی کارڈ سامنے', dsc_t_cnic_back:'شناختی کارڈ پیچھے', dsc_t_licence:'ڈرائیونگ لائسنس', dsc_t_vehicle:'گاڑی کی رجسٹریشن', dsc_t_other:'دیگر دستاویز', dsc_not_submitted:'جمع نہیں', dsc_pending:'زیر التواء', dsc_verified:'تصدیق شدہ', dsc_rejected:'مسترد', dsc_upload:'اپ لوڈ', dsc_take_photo:'تصویر لیں', dsc_replace:'تبدیل کریں', dsc_delete:'حذف کریں', dsc_view:'دیکھیں', dsc_del_q:'یہ دستاویز حذف کریں؟', dsc_deleted:'دستاویز حذف ہو گئی', dsc_saved:'دستاویز محفوظ ہو گئی — دفتر کے جائزے کا انتظار ہے', dsc_reason:'وجہ: ', dsc_file_needed:'پہلے تصویر یا PDF چنیں', dsc_file_type:'صرف تصویر یا PDF قبول ہے', dsc_uploading:'اپ لوڈ ہو رہا ہے…', dsc_view_fail:'دستاویز نہیں کھل سکی', dsc_row_sub:'دفتر کے لیے شناختی کارڈ، لائسنس اور گاڑی کے کاغذات',
     submit:'منظوری کے لیے بھیجیں', pending_title:'منظوری کا انتظار',
     pending_msg:'آپ کا اکاؤنٹ Dera کے ایڈمن کے پاس ہے۔ منظوری کے بعد آپ کو ڈیلیوریاں نظر آئیں گی۔',
     blocked_title:'آپ کا اکاؤنٹ بلاک ہے', blocked_msg:'براہ کرم Dera کے دفتر سے رابطہ کریں۔',
     check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', rules:'اصول', account:'اکاؤنٹ',
     on_duty:'ڈیوٹی پر', off_duty:'ڈیوٹی بند', start_duty:'ڈیوٹی شروع کریں', end_duty:'ڈیوٹی ختم کریں',
     end_duty_q:'ڈیوٹی ابھی ختم کریں؟ نئی ڈیلیوریاں آنا بند ہو جائیں گی۔',
-    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔', go_title:'ڈیلیوری کے لیے تیار ہیں؟', go_note:'ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔ چہرے اور لوکیشن کی معمول کی تصدیق برقرار رہے گی۔', go_swipe:'ڈیوٹی شروع کرنے کے لیے سلائیڈ کریں',
+    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔', go_title:'ڈیلیوری کے لیے تیار ہیں؟', go_note:'ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔ چہرے اور لوکیشن کی معمول کی تصدیق برقرار رہے گی۔', go_swipe:'ڈیوٹی شروع کرنے کے لیے سلائیڈ کریں', gst_hint_jobs:'مشورہ: کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔', gst_hidden:'کام اس فہرست سے چھپا دیا گیا', gst_hidden_offer:'کام چھپا دیا گیا — آپ کی آفر کا وقت اب بھی چل رہا ہے', gst_undo:'واپس لائیں', gst_hide_lbl:'چھپائیں', gst_map_lbl:'نقشے پر', gst_guide_t:'5 · سوائپ', gst_guide_d:'کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔ ٹیب بدلنے کے لیے سائیڈ میں سوائپ کریں۔ سوائپ سے کوئی اہم کام نہیں ہوتا — قبول یا انکار کے لیے اب بھی بٹن دبانا ہوگا۔', gst_acct_t:'👆 سوائپ', gst_acct_d:'کام کے کارڈ پر: چھپانے کے لیے دائیں سوائپ کریں (فہرست کے اوپر واپسی کا بٹن آئے گا)، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔ ٹیب بدلنے کے لیے کہیں بھی سائیڈ میں سوائپ کریں۔ نقشے، سلائیڈر اور بٹن کبھی متاثر نہیں ہوتے۔',
     my_deliveries:'میری ڈیلیوریاں', new_jobs:'دستیاب ڈیلیوریاں', no_jobs:'ابھی کوئی ڈیلیوری نہیں۔ نئی آنے پر یہاں گھنٹی بجے گی۔',
     keep_open:'ڈیوٹی کے دوران ایپ کھلی اور اسکرین آن رکھیں۔',
     accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
     slide_picked:'آرڈر لینے کے بعد سلائیڈ کریں', slide_delivered:'پہنچا کر رقم لینے کے بعد سلائیڈ کریں',
     give_back:'یہ ڈیلیوری واپس کریں', open_maps:'راستہ', call:'کال', nav_shop:'دکان پر جائیں', nav_cust:'گاہک تک پہنچائیں', navigate:'راستہ دیکھیں', nav_noloc:'لوکیشن دستیاب نہیں', you:'آپ',
-    cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', batch_same:'➕ آپ کے آرڈر والی دکان — ایک چکر میں دونوں لے جائیں', batch_near:'➕ آپ کے آرڈر کے ساتھ والی دکان — ایک چکر میں دونوں لے جائیں', hot_t:'🔥 اس وقت مصروف علاقے', hot_n:'{n} آرڈر', hot_s:'زیادہ آرڈر کے لیے ان جگہوں کے قریب رہیں۔', code_q:'گاہک سے 4 ہندسوں کا ڈیلیوری کوڈ پوچھیں (اس کی ایپ میں ہے)', pickup_code_q:'دکان سے 4 ہندسوں کا پک اپ کوڈ پوچھیں (ان کی سکرین پر ہے)', sos:'🆘 SOS — مجھے مدد چاہیے', sos_q:'اپنی لوکیشن کے ساتھ وانہار مارٹ کو ایمرجنسی الرٹ بھیجیں؟', sos_sent:'الرٹ بھیج دیا گیا۔ وانہار مارٹ ابھی آپ کو کال کرے گا۔', code_pick_note:'گاہک کی ایپ میں کوڈ ہے', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
+    cash_collect:'وصول کریں', paid_short:'آن لائن ادا شدہ', batch_same:'➕ آپ کے آرڈر والی دکان — ایک چکر میں دونوں لے جائیں', batch_near:'➕ آپ کے آرڈر کے ساتھ والی دکان — ایک چکر میں دونوں لے جائیں', hot_t:'🔥 اس وقت مصروف علاقے', hot_n:'{n} آرڈر', hot_s:'زیادہ آرڈر کے لیے ان جگہوں کے قریب رہیں۔', code_q:'گاہک سے 4 ہندسوں کا ڈیلیوری کوڈ پوچھیں (اس کی ایپ میں ہے)', pickup_code_q:'دکان سے 4 ہندسوں کا پک اپ کوڈ پوچھیں (ان کی سکرین پر ہے)', sos:'🆘 SOS — مجھے مدد چاہیے', sos_q:'اپنی لوکیشن کے ساتھ ڈیرا کو ایمرجنسی الرٹ بھیجیں؟', sos_sent:'الرٹ بھیج دیا گیا۔ ڈیرا ابھی آپ کو کال کرے گا۔', sfty_share_trip:'📤 سفر شیئر کریں', sfty_share_title:'اپنا سفر شیئر کریں', sfty_share_note:'مقام {t} کا ہے — یہ لائیو ٹریکنگ نہیں ہے۔', sfty_share_msg:'میں {n} ہوں، Dera ڈیلیوری سفر پر، {s} سے۔ میرا موجودہ مقام: {u}', sfty_share_wa:'واٹس ایپ', sfty_share_copy:'پیغام کاپی کریں', sfty_copied:'کاپی ہو گیا', sfty_share_sys:'شیئر کریں…', sfty_share_emerg:'ایمرجنسی رابطے کو واٹس ایپ کریں', sfty_emerg_t:'ایمرجنسی رابطہ', sfty_emerg_note:'اسے صرف آپ بدل سکتے ہیں۔ یہ صرف آپ کی اپنی سفر شیئر کرنے والی شیٹ پر دکھایا جاتا ہے۔', sfty_emerg_name:'رابطہ شخص کا نام', sfty_emerg_phone:'رابطہ فون نمبر', sfty_emerg_save:'رابطہ محفوظ کریں', sfty_emerg_saved:'ایمرجنسی رابطہ محفوظ ہو گیا', sfty_emerg_na:'ایمرجنسی رابطے کے لیے بیک اینڈ اپ ڈیٹ چاہیے — Dera سے لگوائیں، پھر دوبارہ محفوظ کریں۔', sfty_rc_title:'کیا آپ ٹھیک ہیں؟', sfty_rc_note:'آپ کافی دیر سے اس سفر پر ہیں۔ “میں ٹھیک ہوں” دبائیں تاکہ Dera کو معلوم ہو آپ خیریت سے ہیں۔', sfty_rc_ok:'✅ میں ٹھیک ہوں', sfty_rc_sos:'🆘 مجھے مدد چاہیے', sfty_rc_auto:'جواب نہ ملا — Dera کو خودکار SOS الرٹ بھیج دیا گیا۔', sfty_sos_active:'🆘 SOS بھیج دیا گیا — Dera کے پاس آپ کی لوکیشن ہے۔ محفوظ ہونے پر “اب میں ٹھیک ہوں” دبائیں۔', sfty_sos_oknow:'✅ اب میں ٹھیک ہوں — SOS ختم کریں', sfty_sos_resolved:'SOS ختم کر دیا گیا۔', sfty_sos_resolve_na:'ابھی ختم نہیں ہو سکا — Dera اپنی طرف سے ختم کر دے گا۔', sfty_no_trip:'اس وقت کوئی فعال سفر نہیں ہے۔', sfty_no_loc:'لوکیشن ابھی دستیاب نہیں — مقام کی سہولت آن کر کے دوبارہ کوشش کریں۔', sfty_next_check:'اگلا سیفٹی چیک ~{m} منٹ میں', code_pick_note:'گاہک کی ایپ میں کوڈ ہے', slide_delivered_paid:'ڈیلیور ہونے پر سلائیڈ کریں', paid_online:'✅ آن لائن ادائیگی ہو چکی — نقد نہ لیں', qr_check:'⏳ QR ادائیگی چیک ہو رہی ہے — نقد نہ لیں',
     qr_btn:'📲 گاہک QR سے ادائیگی کرنا چاہتا ہے', qr_t:'QR سے ادائیگی', qr_s:'گاہک سے کہیں یہ QR اسکین کر کے {n} ادا کرے۔ پھر اس کے فون سے ٹرانزیکشن آئی ڈی (TID) لکھیں۔', qr_none:'آپ کے علاقے میں QR ادائیگی سیٹ نہیں۔ نقد لیں۔', tid:'ٹرانزیکشن آئی ڈی (TID)', qr_send:'ادائیگی ہو گئی — چیک کے لیے بھیجیں',
-    payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا وانہار مارٹ رائیڈر ہوں۔', your_pay:'آپ کی اجرت', pk_parcel:'پارسل', pk_new:'نئے پارسل', pk_mine:'میرے پارسل', pk_sender:'بھیجنے والا', pk_receiver:'وصول کرنے والا', pk_call:'کال', pk_urgent:'ارجنٹ', pk_w1:'10 کلو تک', pk_w2:'10–15 کلو', pk_w3:'15–25 کلو', pk_pick_first:'پہلے پک اپ', pk_on_way:'راستے میں', pk_pick_btn:'اٹھا لیا — کوڈ', pk_del_btn:'پہنچا دیا — کوڈ', pk_release:'پارسل چھوڑ دیں', pk_map:'نقشہ', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
+    payout_t:'میرا ادائیگی اکاؤنٹ', payout_s:'آپ کی تنخواہ اس اکاؤنٹ میں بھیجی جائے گی۔', payout_none:'ابھی نہیں لگایا', pay_method:'اکاؤنٹ کی قسم', acc_title:'اکاؤنٹ ہولڈر کا نام', acc_number:'اکاؤنٹ نمبر', iban_l:'IBAN (PK…)', bank_name:'بینک کا نام', save_acc:'اکاؤنٹ محفوظ کریں', acc_saved:'اکاؤنٹ محفوظ ہو گیا', edit_w:'تبدیل کریں', wa:'واٹس ایپ', wa_hi:'السلام علیکم، میں آرڈر #{n} کے لیے آپ کا ڈیرا رائیڈر ہوں۔', your_pay:'آپ کی اجرت', pk_parcel:'پارسل', pk_new:'نئے پارسل', pk_mine:'میرے پارسل', pk_sender:'بھیجنے والا', pk_receiver:'وصول کرنے والا', pk_call:'کال', pk_urgent:'ارجنٹ', pk_w1:'10 کلو تک', pk_w2:'10–15 کلو', pk_w3:'15–25 کلو', pk_pick_first:'پہلے پک اپ', pk_on_way:'راستے میں', pk_pick_btn:'اٹھا لیا — کوڈ', pk_del_btn:'پہنچا دیا — کوڈ', pk_release:'پارسل چھوڑ دیں', pk_map:'نقشہ', items:'آئٹمز', cust_note:'گاہک کی ہدایت', order_no:'آرڈر',
     confirm_giveback:'یہ ڈیلیوری واپس کریں؟ کوئی اور رائیڈر لے لے گا۔',
-    today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Dera طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ',
-    wal_title:'میرا والیٹ', wal_tip_note:'گاہک کی ٹپ یہاں آتی ہے۔ کوئی بھی رقم، کسی بھی وقت نکالیں — فیس Dera دے گا۔', wal_withdraw:'نکالیں', wal_acct:'آپ کے پیسے بھیجنے کا اکاؤنٹ نمبر', wal_amt:'رقم (کوئی کم از کم نہیں)', wal_to:'اکاؤنٹ {n} پر', wal_done:'نکالنے کی درخواست ہو گئی۔ 24 گھنٹے میں مل جائے گی۔', wal_noacct:'پہلے اپنا پیسے بھیجنے کا اکاؤنٹ نمبر ڈالیں۔', wal_fee_note:'فیس Dera دے گا۔', wal_refresh:'تازہ کریں', wal_none:'ابھی کوئی نکالنا نہیں۔', wal_st_requested:'درخواست', wal_st_approved:'منظور', wal_st_paid:'ادا شدہ', wal_st_rejected:'مسترد', bg_title:'ڈیوٹی کے دوران لوکیشن', bg_text:'Dera کو ڈیوٹی کے دوران بیک گراؤنڈ میں آپ کی لوکیشن چاہیے، تاکہ گاہک اپنا آرڈر دیکھ سکے چاہے ایپ بند ہو۔ ڈیوٹی ختم ہوتے ہی یہ بند ہو جاتی ہے۔', bg_allow:'بیک گراؤنڈ لوکیشن کی اجازت دیں', bg_fg:'صرف ایپ کھلی ہو تو', nav_steps:'راستے کے مراحل', nav_speak:'بول کر بتائیں', nav_osrm:'مفت راستہ', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
+    today:'آج', big_order:'بڑا آرڈر', heavy_items:'بھاری سامان', incl_extra:'بڑے/بھاری آرڈر کے {r} شامل', incl_tip:'{r} ٹپ شامل', srg_incl:'پیک فیس شامل ہے: {r}', heavy_note:'بھاری یا بڑا سامان۔ اٹھانے سے پہلے دیکھ لیں کہ آپ اسے حفاظت سے لے جا سکتے ہیں۔', only_you:'صرف آپ کے لیے', decline:'انکار', targets:'ٹارگٹ اور بونس', p_day:'آج', p_week:'اس ہفتے', p_month:'اس مہینے', target_done:'ہو گیا! بونس آپ کی اجرت میں شامل۔', target_left:'{g} میں سے {d} ڈیلیوریاں · {k} مزید', bonus_word:'بونس', pay_slip:'پے سلپ', pay_slip_btn:'پے سلپ (PDF)', print_pdf:'پرنٹ یا PDF محفوظ کریں', close_word:'بند کریں', slip_note:'اس مہینے اب تک کی اجرت۔ حتمی رقم مہینے کے آخر میں Dera طے کرے گا۔', name:'نام', phone:'فون', rider_day:'آج کا بہترین رائیڈر', rider_month:'مہینے کا بہترین رائیڈر', prize_word:'انعام', your_rank:'آپ {n} ڈیلیوریوں کے ساتھ نمبر {r} پر ہیں', to_first:'نمبر 1 کے لیے {k} مزید', lb_start:'مقابلے میں آنے کے لیے پہلی ڈیلیوری کریں!', lb_empty:'ابھی کوئی ڈیلیوری نہیں۔ پہلے آپ بنیں!', winner_yday:'کل کا فاتح', winner_lmonth:'پچھلے مہینے کا فاتح', you_word:'آپ', your_timing:'آپ کی ڈیوٹی', break_word:'وقفہ', min_word:'منٹ', on_break:'آپ وقفے پر ہیں', break_left:'وقفے کا باقی وقت۔ اس دوران نئی ڈیلیوری نہیں ملے گی۔', break_over:'وقفے کا وقت ختم۔ براہ کرم وقفہ ختم کریں۔', end_break:'وقفہ ختم، کام پر واپس', start_break:'وقفہ لیں', left_word:'باقی', break_q:'وقفہ شروع کریں؟ وقفہ ختم ہونے تک نئی ڈیلیوری نہیں ملے گی۔', break_ended:'خوش آمدید! اب دوبارہ ڈیلیوریاں ملیں گی۔', late_today:'آج آپ {m} منٹ دیر سے آئے', company_note:'ماہانہ مقررہ تنخواہ {s}۔ ڈیوٹی کے گھنٹوں کے بعد اوور ٹائم {r} فی گھنٹہ۔ گاہک کی ٹپ الگ سے ملتی ہے۔', free_note:'ہر ڈیلیوری کے پیسے اور گاہک کی ٹپ۔ مہینے میں جتنی زیادہ ڈیلیوریاں، اتنی زیادہ اجرت۔', tier_title:'فی ڈیلیوری اجرت', tier_range:'ڈیلیوری {a} {b}', tier_now:'اس مہینے: {n} ڈیلیوریاں۔ اگلی ڈیلیوری پر {p} ملیں گے۔', tier_next:'مزید {k} ڈیلیوریاں اور ہر ایک پر {p}', tips_word:'گاہک کی ٹپ',
+    wal_title:'میرا والیٹ', wal_tip_note:'گاہک کی ٹپ یہاں آتی ہے۔ کوئی بھی رقم، کسی بھی وقت نکالیں — فیس Dera دے گا۔', wal_withdraw:'نکالیں', wal_acct:'آپ کے پیسے بھیجنے کا اکاؤنٹ نمبر', wal_amt:'رقم (کوئی کم از کم نہیں)', wal_to:'اکاؤنٹ {n} پر', wal_done:'نکالنے کی درخواست ہو گئی۔ 24 گھنٹے میں مل جائے گی۔', wal_noacct:'پہلے اپنا پیسے بھیجنے کا اکاؤنٹ نمبر ڈالیں۔', wal_fee_note:'فیس Dera دے گا۔', wal_refresh:'تازہ کریں', wal_none:'ابھی کوئی نکالنا نہیں۔', wal_st_requested:'درخواست', wal_st_approved:'منظور', wal_st_paid:'ادا شدہ', wal_st_rejected:'مسترد', bg_title:'ڈیوٹی کے دوران لوکیشن', bg_text:'Dera کو ڈیوٹی کے دوران بیک گراؤنڈ میں آپ کی لوکیشن چاہیے، تاکہ گاہک اپنا آرڈر دیکھ سکے چاہے ایپ بند ہو۔ ڈیوٹی ختم ہوتے ہی یہ بند ہو جاتی ہے۔', bg_allow:'بیک گراؤنڈ لوکیشن کی اجازت دیں', bg_fg:'صرف ایپ کھلی ہو تو', nav_steps:'راستے کے مراحل', nav_speak:'بول کر بتائیں', nav_osrm:'مفت راستہ',mst_title:'کئی منزلہ راستہ',mst_orders:'{n} فعال آرڈر',mst_rule:'پہلے اٹھانا (قریب ترین پہلے)، پھر پہنچانا (قریب ترین پہلے) — تاکہ آپ کسی منزل پر اسے اٹھائے بغیر نہ جائیں۔',mst_pickup:'اٹھانا',mst_drop:'پہنچانا',mst_pickup_btn:'اٹھانے کی تصدیق کریں',mst_deliver_btn:'پہنچانے کی تصدیق کریں',mst_note:'یہ راستہ آپ کے فون پر آپ کے فعال آرڈرز سے بنتا ہے۔ قبول کرنا، اجرت اور ڈسپیچ ویسے ہی ہیں — ہر منزل پر اپنا ہی کوڈ لگے گا۔', late_days:'اس مہینے دیر والے دن', tip_incl:'گاہک کی ٹپ (آپ کی اجرت میں شامل)', deliveries_n:'ڈیلیوریاں', on_duty_time:'ڈیوٹی کا وقت', contract:'کنٹریکٹ', c_company:'کمپنی کی بائیک + پیٹرول · مقررہ تنخواہ', c_freelance:'اپنی بائیک + پیٹرول · فی ڈیلیوری', per_delivery:'فی ڈیلیوری', duty_today:'آج کی ڈیوٹی', of_hours:'{h} گھنٹوں میں سے', hours_done:'ڈیوٹی کے گھنٹے پورے ✅', overtime:'اوور ٹائم', ot_rate:'روزانہ {h} گھنٹے کے بعد اوور ٹائم {r} فی گھنٹہ', ot_now:'آپ اوور ٹائم میں ہیں', days_worked:'کام کے دن', hours_left:'{t} باقی',
     this_month:'اس مہینے', salary:'ماہانہ تنخواہ', delivery_pay:'ڈیلیوری اجرت', fines:'جرمانے', month_pay:'مہینے کی کل رقم',
     paid:'مل چکا', to_pay:'ابھی ملنا ہے', cash_in_hand:'آپ کے پاس نقد', handover_code:'نقد حوالگی کی تصدیق', handover_t:'ایڈمن جو 4 ہندسوں کا کوڈ دکھائے وہ درج کریں', handover_ph:'کوڈ', handover_ok:'نقد حوالگی کی تصدیق ہو گئی', salary_code_btn:'تنخواہ ملنے کی تصدیق', salary_code_t:'تنخواہ کا تصدیقی کوڈ', salary_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے تنخواہ ملنے کی تصدیق کریں', salary_ok:'تنخواہ کی تصدیق ہو گئی',
     cash_note:'وصول شدہ تمام نقد رقم Dera کے دفتر میں جمع کروانی ہے۔ آپ کی اجرت تنخواہ کے ساتھ ملے گی۔',
@@ -846,7 +918,7 @@ const I18N = {
     face_saved:'چہرہ رجسٹر ہو گیا', cam_denied:'کیمرہ بند ہے۔ براؤزر کی سیٹنگ میں اس سائٹ کے لیے کیمرہ کی اجازت دیں۔',
     face_ok:'چہرہ رجسٹر ہے', face_missing:'چہرہ رجسٹر نہیں', register_face:'چہرہ رجسٹر کریں',
     duty_started:'ڈیوٹی شروع ہو گئی۔ کامیابی ہو!', duty_ended:'ڈیوٹی ختم ہو گئی', getting_loc:'لوکیشن لی جا رہی ہے…',
-    earn_today:'آج کی کمائی', distance:'فاصلہ', pickup_in:'دکان تک', trip:'سفر', ready_since:'تیار', gps_hint:'📍 GPS آن کریں — دکان کا فاصلہ دیکھنے کے لیے آپ کی لوکیشن چاہیے', no_loc:'لوکیشن نہیں', km_today:'آج کے کلومیٹر',
+    earn_today:'آج کی کمائی', rhome_map_t:'آپ کا علاقہ', rhome_loc_off:'مقام بند ہے — نقشے پر خود کو دیکھنے کے لیے مقام آن کریں', rhome_map_note:'پن آپ کے جاری اور دستیاب کام دکھاتے ہیں۔ آپ کا اپنا پن مقام آن ہونے پر نظر آئے گا۔', rhome_nomap:'ابھی نقشہ نہیں — مقام آن کریں یا قریب میں کام کا انتظار کریں۔', rhome_est_t:'اس مہینے کی متوقع ادائیگی', rhome_est_only:'صرف اندازہ', rhome_est_note:'صرف ڈیلیوری کی اجرت۔ تنخواہ، بونس، اوور ٹائم، جرمانے اور کٹوتیاں شامل نہیں ہیں۔ حتمی ادائیگی مہینے کے آخر میں طے ہوتی ہے۔', rhome_est_empty:'اس مہینے ابھی کوئی ڈیلیوری نہیں ہوئی', rhome_est_month:'اس مہینے {n} ڈیلیوریاں', rhome_est_today:'آج: {n} ڈیلیوریاں · {a}', rhome_est_earn:'مکمل حساب کمائی میں دیکھیں', rhome_guide_t:'رائیڈر گائیڈ', rhome_guide_dismiss:'بند کریں', rhome_guide_again:'رائیڈر گائیڈ دوبارہ دکھائیں', rhome_g1_t:'1 · ڈیوٹی آن کریں', rhome_g1_d:'کام کے آفر پانے کے لیے ڈیوٹی آن کریں۔', rhome_g1_btn:'ڈیوٹی آن کریں', rhome_g1_done:'ڈیوٹی آن ہے', rhome_g2_t:'2 · مقام آن کریں', rhome_g2_d:'مقام آن ہونے پر ہی گاہک اور دکانیں آپ کو نقشے پر دیکھ سکتی ہیں۔', rhome_g2_btn:'مقام آن کریں', rhome_g2_done:'مقام آن ہے', rhome_g3_t:'3 · کام کیسے آتے ہیں', rhome_g3_d:'نئے آفر پر قبول کرنے کے لیے 40 سیکنڈ ملتے ہیں۔ پھر دکان سے پک اپ کوڈ اور گاہک سے ڈیلیوری کوڈ پوچھیں۔', rhome_g3_btn:'کام دیکھیں', rhome_g4_t:'4 · SOS اور سفر شیئر کریں', rhome_g4_d:'SOS آپ کے سفر کارڈ اور اکاؤنٹ میں ہے۔ سفر شیئر کرنا جاری سفر کے کارڈ پر ہے۔', rhome_g4_btn:'اکاؤنٹ کھولیں', dest_t:'🎯 منزل کا موڈ', dest_on:'آن', dest_off:'بند', dest_none:'ابھی کوئی منزل مقرر نہیں', dest_set:'نقشے پر مقرر کریں', dest_change:'نقشے پر بدلیں', dest_pick_hint:'منزل کا پن لگانے کے لیے نقشے پر ٹیپ کریں', dest_pick_cancel:'انتخاب منسوخ کریں', dest_pin:'منزل', dest_sheet_t:'اس منزل کا نام (اختیاری)', dest_name_l:'منزل کا نام', dest_name_ph:'مثلاً مکھیال، گھر', dest_save:'منزل محفوظ کریں', dest_saved:'منزل محفوظ ہو گئی — موڈ آن ہے', dest_need:'پہلے منزل مقرر کریں', dest_on_toast:'منزل موڈ آن — صرف آپ کی منزل کی طرف والے آرڈر', dest_off_done:'منزل موڈ بند — عام آرڈر بحال', dest_cleared:'منزل ہٹا دی گئی — موڈ بند', dest_clear:'منزل ہٹائیں', dest_toggle_on:'موڈ آن کریں', dest_toggle_off:'موڈ بند کریں', dest_away:'تقریباً {d} دور', dest_radius_note:'آپ کی منزل کے 5 کلومیٹر کے اندر والے آرڈر (دکان یا ڈراپ پوائنٹ) پیش کیے جائیں گے۔', dest_active_note:'آپ کے فعال آرڈر منزل موڈ سے کبھی متاثر نہیں ہوتے۔', dest_na:'منزل صرف اس فون پر محفوظ ہے — ڈسپیچ فلٹر کے لیے بیک اینڈ اپ ڈیٹ چاہیے۔ Dera سے لگوائیں، پھر خودکار فلٹر ہو جائے گا۔', dest_acct:'🎯 منزل کا موڈ',  distance:'فاصلہ', pickup_in:'دکان تک', etac_to_shop:'دکان تک تقریباً ~{n} منٹ', etac_to_you:'آپ کے پتے تک تقریباً ~{n} منٹ', etac_updating:'رائیڈر کی لوکیشن اپ ڈیٹ ہو رہی ہے…', trip:'سفر', ready_since:'تیار', gps_hint:'📍 GPS آن کریں — دکان کا فاصلہ دیکھنے کے لیے آپ کی لوکیشن چاہیے', no_loc:'لوکیشن نہیں', km_today:'آج کے کلومیٹر',
     arrived_btn:'میں گاہک کے پاس پہنچ گیا', arrived_at:'{t} پر پہنچے', report:'مسئلہ بتائیں', report_title:'کیا مسئلہ ہے؟',
     note_opt:'مزید تفصیل (اختیاری)', send_report:'Dera کو بھیجیں', reported:'Dera اور دکان کو اطلاع دے دی گئی',
     waiting_cust:'گاہک کا انتظار', wait_note:'گاہک کو دوبارہ کال کریں۔ وقت ختم ہونے پر آپ آرڈر دکان واپس لے جا سکتے ہیں۔',
@@ -882,14 +954,45 @@ const I18N = {
     bx_title:'🎁 بونس لیول — معمول کے پیسوں کے علاوہ اضافی', bx_each:'ہر ایک پر +{p} اضافی', bx_how:'آپ کا بونس کیسے بنتا ہے', bx_total:'اب تک کا بونس',
     bx_next:'اگلی {k} ڈیلیوریوں پر ہر ایک کے {p} اضافی ملیں گے۔ ڈیلیوری نمبر {f} سے ہر ڈیلیوری پر {q} اضافی ملے گا۔', bx_top:'آپ سب سے اوپر والے بونس لیول پر ہیں: ہر ڈیلیوری پر {p} اضافی۔',
     bx_pre:'بونس ڈیلیوری نمبر {f} سے شروع ہوگا: پھر ہر ڈیلیوری پر {q} اضافی ملے گا۔ ابھی {k} ڈیلیوریاں باقی ہیں۔', bx_note:'یہ بونس آپ کے معمول کے ڈیلیوری پیسوں کے علاوہ ملتا ہے۔',
-    rider_tools:'رائیڈر کے اوزار', trip_preferences:'کام کی ترجیحات', trip_preferences_note:'چنیں کہ کون سے نئے کام کے آفر دکھائے جائیں۔ جاری سفر ہمیشہ نظر آئیں گے۔', orders_enabled:'آرڈر ڈیلیوری کے آفر', parcels_enabled:'پارسل کے آفر', night_map:'رات کا نقشہ', auto_navigation:'آرڈر قبول کرنے کے بعد Google Maps خود کھولیں', traffic_preference:'Google Maps میں ٹریفک والا نقشہ ترجیح دیں', live_traffic:'لائیو ٹریفک نقشے پر', navigation_note:'خودکار کھولنا صرف آرڈر قبول کرنے کے بعد ہوگا، نئے آفر سے نہیں۔ ٹریفک کی ترجیح صرف Google Maps پر لاگو ہے؛ ایپ کے اندر نقشے میں لائیو ٹریفک دستیاب نہیں۔', radar_title:'ٹرپ ریڈار', radar_note:'دستیاب آرڈر اور پارسل · ہر آفر قبول یا چھوڑیں', pro_hub:'رائیڈر پرو اور کویسٹس', pro_note:'آپ کے موجودہ اہداف، فعال بوسٹ، کمپنی آفر اور کمائی ایک جگہ۔', pro_earn:'اس ماہ ڈیلیوری کی کمائی', speak_offer:'🔊 آفر پڑھ کر سنائیں', handsfree_offer:'🎧 نئے آفر خود پڑھیں (یہی ڈیوائس)', offer_thanks:'👍 سمجھ گیا — آفر دیکھ لیا', spoken_order:'نیا آرڈر۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔', spoken_parcel:'نیا پارسل۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔',
-    safety_check_title:'موٹر سائیکل کی حفاظتی جانچ', safety_check_note:'سواری سے پہلے ایک مختصر یاد دہانی۔ یہ ہنگامی مدد نہیں اور مقامی ہنگامی خدمات کا متبادل نہیں۔', safety_helmet:'ہیلمٹ مضبوطی سے باندھا ہے', safety_brakes:'بریک درست کام کر رہے ہیں', safety_lights:'لائٹس اور ریفلیکٹر نظر آ رہے ہیں', safety_tires:'ٹائر ٹھیک حالت میں ہیں', safety_done:'چیک لسٹ اس ڈیوائس پر اسی رائیڈر کے لیے محفوظ ہے۔', barcode_scan:'پارسل کوڈ اسکین کریں', barcode_scan_note:'پارسل بارکوڈ یا QR کوڈ پر کیمرہ رکھیں۔ کیمرہ کے لیے معاون براؤزر اور محفوظ کنکشن ضروری ہے۔', barcode_unavailable:'یہاں بارکوڈ اسکیننگ دستیاب نہیں۔ کوڈ خود درج کریں۔', barcode_typed:'کوڈ خود درج کریں', barcode_close:'اسکینر بند کریں', barcode_camera_error:'کیمرہ شروع نہیں ہو سکا۔ کوڈ خود درج کریں۔', barcode_placeholder:'پک اپ یا ڈیلیوری کوڈ', barcode_submit:'کوڈ استعمال کریں',
-    tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے'
+    rider_tools:'رائیڈر کے اوزار', trip_preferences:'کام کی ترجیحات', trip_preferences_note:'چنیں کہ کون سے نئے کام کے آفر دکھائے جائیں۔ جاری سفر ہمیشہ نظر آئیں گے۔', orders_enabled:'آرڈر ڈیلیوری کے آفر', parcels_enabled:'پارسل کے آفر', night_map:'رات کا نقشہ', auto_navigation:'آرڈر قبول کرنے کے بعد Google Maps خود کھولیں', traffic_preference:'Google Maps میں ٹریفک والا نقشہ ترجیح دیں', live_traffic:'لائیو ٹریفک نقشے پر', navigation_note:'خودکار کھولنا صرف آرڈر قبول کرنے کے بعد ہوگا، نئے آفر سے نہیں۔ ٹریفک کی ترجیح صرف Google Maps پر لاگو ہے؛ ایپ کے اندر نقشے میں لائیو ٹریفک دستیاب نہیں۔', radar_title:'ٹرپ ریڈار', radar_note:'دستیاب آرڈر اور پارسل · ہر آفر قبول یا چھوڑیں', pro_hub:'رائیڈر پرو اور کویسٹس', pro_note:'آپ کے موجودہ اہداف، فعال بوسٹ، کمپنی آفر اور کمائی ایک جگہ۔', pro_earn:'اس ماہ ڈیلیوری کی کمائی', speak_offer:'🔊 آفر پڑھ کر سنائیں', handsfree_offer:'🎧 نئے آفر خود پڑھیں (یہی ڈیوائس)', offer_thanks:'👍 سمجھ گیا — آفر دیکھ لیا', blst_status:'بلیک لسٹ کی صورتحال', blst_none:'کسی دکان یا علاقے نے آپ کو بلیک لسٹ نہیں کیا ہے۔', blst_shop:'دکان {s} نے آپ کو بلیک لسٹ کیا ہے', blst_region:'ڈیرا نے آپ کو علاقے {r} میں بلیک لسٹ کیا ہے', blst_note2:'بلیک لسٹ شدہ رائیڈر کو اس دکان یا علاقے سے نئے آرڈر نہیں دیے جاتے۔ جو آرڈر پہلے سے آپ کے پاس ہیں ان پر کوئی اثر نہیں ہوتا۔', spoken_order:'نیا آرڈر۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔', spoken_parcel:'نیا پارسل۔ اجرت {p}۔ پک اپ: {a}۔ پہنچائیں: {b}۔',
+    safety_check_title:'موٹر سائیکل کی حفاظتی جانچ', safety_check_note:'سواری سے پہلے ایک مختصر یاد دہانی۔ یہ ہنگامی مدد نہیں اور مقامی ہنگامی خدمات کا متبادل نہیں۔', safety_helmet:'ہیلمٹ مضبوطی سے باندھا ہے', safety_brakes:'بریک درست کام کر رہے ہیں', safety_lights:'لائٹس اور ریفلیکٹر نظر آ رہے ہیں', safety_tires:'ٹائر ٹھیک حالت میں ہیں', safety_done:'چیک لسٹ اس ڈیوائس پر اسی رائیڈر کے لیے محفوظ ہے۔', bsc_fuel:'پہلے سفر کے لیے کافی پیٹرول', bsc_docs:'لائسنس + موٹر سائیکل کے کاغذات ساتھ ہیں', bsc_confirm:'آج کی جانچ کی تصدیق کریں', bsc_done_today:'آج کی موٹر سائیکل جانچ مکمل ہے', bsc_history:'جانچ کی تاریخ', bsc_report_issue:'موٹر سائیکل کا مسئلہ بتائیں', bsc_report_note:'غیر نشان زد چیزوں کو مسائل کے طور پر درج کیا گیا ہے۔ آپ انہیں رائیڈر سپورٹ کو بھی بھیج سکتے ہیں۔', bsc_phone_only:'اس فون پر محفوظ ہے — بیک اینڈ اپ ڈیٹ کے بعد Dera کو نظر آئے گا۔', bsc_reminder:'آج کی موٹر سائیکل جانچ نہیں ہوئی — سواری سے پہلے تصدیق کریں۔', bsc_go_check:'موٹر سائیکل جانچ کریں', bsc_failed:'توجہ چاہیے', bsc_synced:'Dera کے پاس محفوظ ہے', bsc_hist_title:'موٹر سائیکل جانچ کی تاریخ', bsc_hist_empty:'ابھی کوئی موٹر سائیکل جانچ نہیں ہے۔', bsc_all_ok:'سب چیزیں ٹھیک ہیں', bsc_confirm_saved:'آج کی موٹر سائیکل جانچ محفوظ ہو گئی۔', barcode_scan:'پارسل کوڈ اسکین کریں', barcode_scan_note:'پارسل بارکوڈ یا QR کوڈ پر کیمرہ رکھیں۔ کیمرہ کے لیے معاون براؤزر اور محفوظ کنکشن ضروری ہے۔', barcode_unavailable:'یہاں بارکوڈ اسکیننگ دستیاب نہیں۔ کوڈ خود درج کریں۔', barcode_typed:'کوڈ خود درج کریں', barcode_close:'اسکینر بند کریں', barcode_camera_error:'کیمرہ شروع نہیں ہو سکا۔ کوڈ خود درج کریں۔', barcode_placeholder:'پک اپ یا ڈیلیوری کوڈ', barcode_submit:'کوڈ استعمال کریں',
+    tp_none:'صرف تنخواہ (اضافی نہیں)', tg_line:'{per} {g} ڈیلیوریاں پوری کریں ← {a} بونس، ایک بار', tg_per_day:'آج', tg_per_week:'اس ہفتے', tg_per_month:'اس مہینے',
+    tfa_title:'دو مرحلہ تصدیق', tfa_sub:'پاس ورڈ کے بعد آپ کی authenticator ایپ سے ایک اضافی کوڈ مانگا جائے گا۔',
+    tfa_row_sub:'سائن ان پر اضافی کوڈ', tfa_on:'فعال ہے — ہر سائن ان پر کوڈ مانگا جائے گا', tfa_off:'بند ہے',
+    tfa_setup:'دو مرحلہ تصدیق سیٹ کریں', tfa_manage:'دو مرحلہ تصدیق کا انتظام',
+    tfa_scan:'اس QR کوڈ کو اپنی authenticator ایپ (Google Authenticator، Microsoft Authenticator یا اس جیسی) میں اسکین کریں، یا نیچے دیا سیکرٹ خود درج کریں۔',
+    tfa_secret:'سیکرٹ (دستی اندراج)', tfa_code:'authenticator ایپ سے 6 ہندسوں کا کوڈ',
+    tfa_verify:'تصدیق کریں اور فعال کریں', tfa_disable:'بند کریں',
+    tfa_disable_ask:'بند کرنے کے لیے authenticator ایپ سے موجودہ کوڈ درج کریں۔',
+    tfa_enabled:'دو مرحلہ تصدیق فعال ہو گئی', tfa_disabled:'دو مرحلہ تصدیق بند ہو گئی',
+    tfa_wrong:'غلط یا ختم شدہ کوڈ۔ موجودہ کوڈ سے دوبارہ کوشش کریں۔',
+    tfa_enter_code:'6 ہندسوں کا کوڈ درج کریں',
+    tfa_gate_title:'اپنا دو مرحلہ کوڈ درج کریں',
+    tfa_gate_sub:'آپ کے اکاؤنٹ پر دو مرحلہ تصدیق ہے۔ جاری رکھنے کے لیے authenticator ایپ سے 6 ہندسوں کا کوڈ درج کریں۔',
+    tfa_continue:'جاری رکھیں', tfa_signout:'دوسرا اکاؤنٹ استعمال کریں',
+    tfa_status_err:'دو مرحلہ حیثیت معلوم نہ ہو سکی۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔',
+    tfa_retry:'دوبارہ کوشش کریں',
+    tfa_unavailable:'دو مرحلہ تصدیق اس ایپ ورژن میں دستیاب نہیں۔ ایپ اپ ڈیٹ کریں اور دوبارہ کوشش کریں۔',
+    tfa_recovery:'authenticator کھو گیا ہے؟ Dera سپورٹ سے یہ factor ہٹانے کو کہیں — پھر پاس ورڈ سے سائن ان کریں اور دوبارہ سیٹ کریں۔ 2FA چوری شدہ پاس ورڈ سے بچاتا ہے؛ سائن ان شدہ ڈیوائس سے نہیں۔',
+    tfa_unfinished:'ایک ادھوری سیٹ اپ موجود ہے — دوبارہ شروع کرنے سے وہ بدل جائے گی۔',
+    tfa_cancel:'منسوخ کریں',
+    bio_title:'فنگر پرنٹ / چہرے سے سائن ان',cmm_title:'رابطے کا پسندیدہ طریقہ',cmm_sub:'دکان اور رائیڈر آپ سے کیسے رابطہ کریں',cmm_chat:'ایپ میں چیٹ',cmm_call:'فون کال',cmm_wa:'واٹس ایپ',cmm_none:'کوئی ترجیح نہیں',cmm_saved:'رابطے کی ترجیح محفوظ ہو گئی۔',cmm_removed:'رابطے کی ترجیح ختم کر دی گئی۔',cmm_prefers:'ترجیح: {m}',cmm_note:'آپ کے آرڈرز کی دکان اور رائیڈر یہ ترجیح دیکھیں گے۔ حفاظتی رابطے (SOS اور ایمرجنسی) ہمیشہ ویسے ہی کام کریں گے۔',cmm_unavailable:'رابطے کی ترجیحات کے لیے بیک اینڈ اپ ڈیٹ چاہیے، جو ابھی نہیں لگی۔', bio_signin:'فنگر پرنٹ / چہرے سے سائن ان کریں',
+    bio_row_sub:'پاس ورڈ کی جگہ فنگر پرنٹ یا چہرہ',
+    bio_sub:'پاس کی صرف اسی فون پر کام کرتی ہے جس پر آپ نے اسے سیٹ کیا ہو۔ آپ کا فنگر پرنٹ یا چہرہ کبھی اس فون سے باہر نہیں جاتا — وہ صرف ایک چابی کھولتا ہے جسے Dera چیک کرتا ہے۔',
+    bio_register:'فنگر پرنٹ / چہرے سے سائن ان شامل کریں', bio_registered:'اس فون پر فنگر پرنٹ / چہرے سے سائن ان شامل ہو گیا۔',
+    bio_deleted:'اس فون سے پاس کی ہٹا دی گئی۔', bio_remove:'ہٹائیں',
+    bio_none:'اس فون پر ابھی کوئی پاس کی نہیں ہے۔',
+    bio_last_used:'آخری استعمال',
+    bio_unavailable:'اس فون یا براؤزر پر پاس کیز دستیاب نہیں ہیں۔',
+    bio_disabled:'Dera کے لیے پاس کیز ابھی فعال نہیں ہیں۔ پاس ورڈ سے سائن ان جاری رہے گا۔',
+    bio_exists:'اس فون پر پہلے سے ایک پاس کی موجود ہے۔',
+    bio_no_device:'اس فون پر کوئی پاس کی نہیں ملی۔ پاس ورڈ سے سائن ان کریں، پھر اکاؤنٹ سے شامل کریں۔',
+    bio_confirm_delete:'اس فون سے یہ پاس کی ہٹا دیں؟',
   }
 };
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
-  mine:[], issues:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
+  mine:[], issues:{}, dlvConf:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
   sound: ls.get('kh_rd_sound', true), supportTickets:[], supportMessages:[], supportSelected:null, supportOrderId:null, supportContext:null, supportTargetHours:24, tripPrefs:(() => { const p = ls.get('kh_rd_trip_prefs', {}); return { orders:p.orders !== false, parcels:p.parcels !== false, nightMap:p.nightMap === true, autoNavigation:p.autoNavigation === true, traffic:p.traffic === true }; })(), seen:new Set(), seenOffer:new Set(), skipped:new Set(), parcels:[], myParcels:[], seenParcel:new Set(), pos:null
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -929,7 +1032,7 @@ let geoWatch = null, lastSent = 0;
 function startGeo(){
   if (geoWatch !== null || !navigator.geolocation) return;
   geoWatch = navigator.geolocation.watchPosition(pos => {
-    state.pos = { lat:pos.coords.latitude, lng:pos.coords.longitude };
+    state.pos = { lat:pos.coords.latitude, lng:pos.coords.longitude }; state.posAt = Date.now();
     try { navGuideTick(); } catch (e) {}
     const now = Date.now(); const busy = (state.mine || []).some(o => ['rider_assigned','picked_up'].includes(o.status)); if (now - lastSent < (busy ? 10000 : 30000) || !onDuty()) return; lastSent = now;
     sb.from('riders').update({ current_lat:state.pos.lat, current_lng:state.pos.lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
@@ -943,7 +1046,7 @@ function bgCap(){ try { const Cap = window.Capacitor; return Cap && Cap.Plugins 
 function bgChoice(){ try { return localStorage.getItem('dera_bg_loc') || ''; } catch (e) { return ''; } }
 function bgSend(lat, lng){
   try {
-    state.pos = { lat, lng };
+    state.pos = { lat, lng }; state.posAt = Date.now();
     const now = Date.now(); const busy = (state.mine || []).some(o => ['rider_assigned','picked_up'].includes(o.status));
     if (now - lastSent < (busy ? 10000 : 30000) || !onDuty()) return; lastSent = now;
     sb.from('riders').update({ current_lat:lat, current_lng:lng, location_updated_at:new Date().toISOString() }).eq('id', state.rider.id).then(() => {});
@@ -1072,6 +1175,7 @@ function showAuth(msg, ok){
       <div class="err-text" id="authMsg" style="${ok ? 'color:var(--brand)' : ''}">${esc(msg || '')}</div>
     </form>
     ${signup ? Legal.agree(state.lang) : ''}
+    ${bioLoginBtnHtml()}
     ${signup ? '' : `<button class="link" onclick="A.forgotPw()">${t('forgot_pw')}</button><br>`}
     <div class="note" style="margin-top:14px">🆔 ${t('get_id_note')}</div>
     <div class="ver">v${APP_VERSION}</div>
@@ -1097,6 +1201,7 @@ function showPending(){
     <h1 style="font-size:22px;margin-top:14px">${blocked ? t('blocked_title') : t('pending_title')}</h1>
     <p class="muted">${blocked ? t('blocked_msg') : t('pending_msg')}</p>
     <div class="actions"><button class="btn" onclick="A.recheck()">${t('check_again')}</button>
+    <button class="btn ghost" onclick="dscOpen()">📄 ${t('dsc_title')}</button>
     <button class="btn ghost" onclick="A.logout()">${t('logout')}</button></div>
     <div class="ver" style="margin-top:12px">v${APP_VERSION}</div></div>`;
 }
@@ -1151,9 +1256,13 @@ function renderTab(){
   if (state.tab === 'acct') v.innerHTML = viewAcct();
   if (state.tab === 'duty') v.innerHTML = viewDuty();
   if (state.tab === 'earn' && state.earnTab === 'history') initHistoryVirtual();
-  markTab(); bindSliders(); if (state.tab === 'acct') showMyFace();
+  markTab(); bindSliders(); gstBind(); if (state.tab === 'acct') showMyFace();
+  if (state.tab === 'acct') blstLoadStatus();
+  if (state.tab === 'acct') sftyEmergLoadOnce();
   // init navigation maps for active deliveries
   if (state.tab === 'jobs' && state.mine.length) setTimeout(() => { state.mine.forEach(o => initNavMap(o.id)); }, 400);
+  if (state.tab === 'jobs' && (state.mine || []).length >= 2) setTimeout(() => { mstInitMap(); }, 450);
+  if (state.tab === 'jobs') setTimeout(() => { rhomeInitMap(); rhomeLoadEver(); destLoad(); bscProbe(); }, 400);
   document.title = state.available.length && onDuty() ? `(${state.available.length}) Dera Rider` : 'Dera Rider';
 }
 
@@ -1239,6 +1348,11 @@ async function loadMine(){
     const rows = need(await sb.from('order_issues').select('*').in('order_id', ids).order('created_at', { ascending:false }));
     rows.forEach(i => { (state.issues[i.order_id] = state.issues[i.order_id] || []).push(i); });
   }
+  // Feature 4: contactless preferences for my orders (backend-pending => {} => hand-to-me behaviour).
+  state.dlvConf = {};
+  try { const dc = await sb.from('delivery_confirmations').select('order_id,mode,door_instruction').in('order_id', ids); (dc.data || []).forEach(x => { state.dlvConf[x.order_id] = x; }); } catch (e) {}
+  state.otpConf = {};
+  try { const oc = await sb.from('ontime_promises').select('order_id,promised_at').in('order_id', ids); (oc.data || []).forEach(x => { state.otpConf[x.order_id] = x; }); } catch (e) {}
 }
 async function loadAvailable(){
   if (!onDuty() || state.prayerOpen || state.breakOpen){ state.available = []; return; }
@@ -1346,6 +1460,8 @@ function cashBox(o){
   const qr = ((state.settings.pay_accounts || {}).on && (state.settings.pay_accounts || {}).qr_url);
   return `<div class="cash"><span>${t('cash_collect')}</span><b>${money(o.total)}</b></div>${o.status === 'picked_up' && qr ? `<button class="btn ghost small" style="width:100%;margin-top:6px" onclick="A.qrPay('${o.id}')">${t('qr_btn')}</button>` : ''}`;
 }
+// Feature 20 (surge): one line on pay displays when the order carries a peak fee.
+function srgLine(v){ return num(v) ? `<div class="muted" style="font-size:13px">🔥 ${t('srg_incl').replace('{r}', money(v))}</div>` : ''; }
 function payNote(extra, tip){
   const parts = []; if (num(extra)) parts.push(t('incl_extra').replace('{r}', money(extra))); if (num(tip)) parts.push(t('incl_tip').replace('{r}', money(tip)));
   return parts.length ? `<div class="muted" style="font-size:13px">${parts.join(' · ')}</div>` : '';
@@ -1362,6 +1478,7 @@ function showJobPopup(j){
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
     <div class="line" style="align-items:flex-end"><div><div class="muted">${t('your_pay')}</div><div class="big">${money(j.rider_pay)}</div>${payNote(j.extra_pay, j.tip)}</div>
       <div style="text-align:end"><div class="muted">${num(j.total) ? t('cash_collect') : '&nbsp;'}</div><b style="font-size:20px">${cashTxt(j.total)}</b></div></div>
+    ${srgLine(j.surge_fee)}
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}${num(j.items_count) ? `<span><b>${j.items_count}</b> ${t('items')}</span>` : ''}</div>
     <div class="step"><div class="n">1</div><div><div class="muted" style="font-size:13px">${t('pick_from')}</div><b>${esc(j.restaurant_name)}</b><div class="muted">${esc(j.restaurant_address || '')}</div></div></div>
     <div class="step"><div class="n">2</div><div><div class="muted" style="font-size:13px">${t('deliver_to')}</div><b>${esc(j.drop_address || '')}</b></div></div>
@@ -1405,6 +1522,154 @@ function bindSliders(){
   });
 }
 
+
+// ================= FEATURE 29 — BROADER GESTURE SCOPE (rider) =================
+// Pure logic first (harness-tested without a touchscreen); DOM wiring after.
+// NEVER hijacked: maps (.nav-map/.leaflet-container/#rhomeMap), sliders (.slide),
+// buttons/links/inputs, chat scroll strips (.quick/.chatlist/.msgs), sheets.
+// Tab order is the bottom-nav order; swipe never wraps past the edge tabs.
+// Directions mirror in RTL (Urdu mode sets dir=rtl): LTR left=hide/right=map,
+// RTL right=hide/left=map — and the UR strings are written to match.
+const GST_TABS = ['jobs', 'duty', 'earn', 'rules', 'acct'];
+const GST_MIN = 60;
+function gstDir(dx, dy){
+  if (Math.abs(dx) < GST_MIN) return null;
+  if (Math.abs(dx) <= Math.abs(dy) * 1.4) return null;
+  return dx > 0 ? 'right' : 'left';
+}
+function gstIsRtl(){ try { return document.documentElement.dir === 'rtl'; } catch (e) { return false; } }
+function gstTabNext(tab, dir){
+  const i = GST_TABS.indexOf(tab); if (i < 0) return null;
+  const step = (dir === 'left') !== gstIsRtl() ? 1 : -1;
+  const j = i + step; return (j >= 0 && j < GST_TABS.length) ? GST_TABS[j] : null;
+}
+function gstCardAction(dx, dy){
+  const d = gstDir(dx, dy); if (!d) return null;
+  const leftIsHide = !gstIsRtl();
+  if (d === 'left') return leftIsHide ? 'hide' : 'map';
+  return leftIsHide ? 'map' : 'hide';
+}
+function gstShouldIgnore(el){
+  if (!el || !el.closest) return true;
+  if (el.closest('.nav-map, .leaflet-container, #rhomeMap, .slide, input, textarea, select, a, button, .quick, .chatlist, .msgs, .chatrow, .sheet, .over, .panel, [data-gst-no]')) return true;
+  let n = el;
+  while (n && n !== document.body){
+    if (n.scrollWidth != null && n.clientWidth != null && n.scrollWidth > n.clientWidth + 4){
+      let ox = '';
+      try { ox = window.getComputedStyle ? getComputedStyle(n).overflowX : ''; } catch (e) {}
+      if (ox === 'auto' || ox === 'scroll') return true;
+    }
+    n = n.parentElement;
+  }
+  return false;
+}
+let gstTouch = null, gstLongTimer = null, gstLongFired = false, gstLabel = null;
+function gstLabelEl(){
+  if (!gstLabel){ gstLabel = document.createElement('div'); gstLabel.className = 'gst-label'; document.body.appendChild(gstLabel); }
+  return gstLabel;
+}
+function gstShowLabel(text, y){ const el = gstLabelEl(); el.textContent = text; el.style.top = (y - 20) + 'px'; el.classList.add('on'); }
+function gstHideLabel(){ if (gstLabel) gstLabel.classList.remove('on'); }
+function gstClearCardFx(card){ if (!card) return; card.style.transform = ''; card.classList.remove('gst-drag', 'gst-hide', 'gst-map'); }
+function gstHideJob(id){
+  const j = (state.available || []).find(x => x.order_id === id);
+  state.skipped.add(id);
+  state.gstLastHidden = { id, label: j ? (j.restaurant_name || '') : '', offered: !!(j && j.offered_to_me) };
+  gstHideLabel();
+  if (state.tab === 'jobs') renderTab();
+}
+function gstUndoHide(){
+  if (state.gstLastHidden) state.skipped.delete(state.gstLastHidden.id);
+  state.gstLastHidden = null;
+  if (state.tab === 'jobs') renderTab();
+}
+function gstViewOnMap(){
+  const el = document.getElementById('rhomeMap');
+  if (el){
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const card = el.closest('.card');
+    if (card){ card.classList.add('gst-map-pulse'); setTimeout(() => card.classList.remove('gst-map-pulse'), 2100); }
+  }
+}
+function gstHintBar(){ return `<div class="gst-hintbar">${t('gst_hint_jobs')}</div>`; }
+function gstUndoBar(){
+  const h = state.gstLastHidden; if (!h) return '';
+  const msg = h.offered ? t('gst_hidden_offer') : t('gst_hidden');
+  return `<div class="gst-undobar"><span>${esc(msg)}${h.label ? ' · ' + esc(h.label) : ''}</span><button class="btn small" onclick="gstUndoHide()">${t('gst_undo')}</button></div>`;
+}
+function gstBind(){
+  const v = document.getElementById('view'); if (!v || v.dataset.gstBound) return;
+  v.dataset.gstBound = '1';
+  v.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1){ gstTouch = null; return; }
+    const t0 = e.touches[0], tgt = t0.target;
+    if (gstShouldIgnore(tgt)){ gstTouch = null; return; }
+    const card = tgt.closest ? tgt.closest('.gst-job') : null;
+    gstLongFired = false;
+    gstTouch = { x: t0.clientX, y: t0.clientY, card, locked: false, dx: 0, dy: 0 };
+    if (card){
+      clearTimeout(gstLongTimer);
+      gstLongTimer = setTimeout(() => {
+        if (gstTouch && gstTouch.card === card && !gstTouch.locked && Math.abs(gstTouch.dx) < 10 && Math.abs(gstTouch.dy) < 10){
+          gstLongFired = true;
+          try { if (navigator.vibrate) navigator.vibrate(10); } catch (err) {}
+          gstHideJob(card.dataset.gstJob);
+          gstTouch = null;
+        }
+      }, 550);
+    }
+  }, { passive: true });
+  v.addEventListener('touchmove', e => {
+    if (!gstTouch || e.touches.length !== 1) return;
+    const t0 = e.touches[0];
+    gstTouch.dx = t0.clientX - gstTouch.x;
+    gstTouch.dy = t0.clientY - gstTouch.y;
+    if (!gstTouch.locked){
+      if (Math.abs(gstTouch.dy) > 12 && Math.abs(gstTouch.dy) > Math.abs(gstTouch.dx)){ gstTouch = null; clearTimeout(gstLongTimer); return; }
+      if (Math.abs(gstTouch.dx) > 12 && Math.abs(gstTouch.dx) > Math.abs(gstTouch.dy)) gstTouch.locked = true;
+      else return;
+      clearTimeout(gstLongTimer);
+    }
+    e.preventDefault();
+    if (gstTouch.card){
+      const dx = Math.max(-120, Math.min(120, gstTouch.dx));
+      gstTouch.card.style.transform = `translateX(${dx}px)`;
+      gstTouch.card.classList.add('gst-drag');
+      const act = gstCardAction(gstTouch.dx, gstTouch.dy);
+      gstTouch.card.classList.toggle('gst-hide', act === 'hide');
+      gstTouch.card.classList.toggle('gst-map', act === 'map');
+      if (act) gstShowLabel(act === 'hide' ? t('gst_hide_lbl') : t('gst_map_lbl'), t0.clientY);
+      else gstHideLabel();
+    }
+  }, { passive: false });
+  const gstEnd = () => {
+    clearTimeout(gstLongTimer);
+    if (!gstTouch) return;
+    const card = gstTouch.card, dx = gstTouch.dx, dy = gstTouch.dy;
+    gstTouch = null;
+    gstHideLabel();
+    if (card){
+      const act = gstCardAction(dx, dy);
+      gstClearCardFx(card);
+      if (act === 'hide') gstHideJob(card.dataset.gstJob);
+      else if (act === 'map') gstViewOnMap();
+    } else {
+      const d = gstDir(dx, dy);
+      if (d){
+        const next = gstTabNext(state.tab, d);
+        if (next && next !== state.tab) go(next);
+      }
+    }
+  };
+  v.addEventListener('touchend', gstEnd);
+  v.addEventListener('touchcancel', () => {
+    clearTimeout(gstLongTimer);
+    if (gstTouch && gstTouch.card) gstClearCardFx(gstTouch.card);
+    gstTouch = null; gstHideLabel();
+  });
+  v.addEventListener('contextmenu', e => { if (gstLongFired){ e.preventDefault(); gstLongFired = false; } });
+}
+
 // ================= DELIVERIES TAB =================
 function chatRow(o){
   const id = JSON.stringify(o.id);
@@ -1439,6 +1704,7 @@ setInterval(() => {
     if (left <= 0 && !el.classList.contains('done')){ el.classList.add('done'); beep(); if (state.tab === 'jobs' && !document.querySelector('.slide.dragging')) renderTab(); }
   });
 }, 1000);
+setInterval(() => { try { sftyRcTick(); } catch(e){} }, 60000);
 function activeCard(o){
   if (o.return_status === 'returning') return returnCard(o);
   const r = o.restaurant || {}, c0 = o.customer || {};
@@ -1457,6 +1723,7 @@ function activeCard(o){
   const custBlock = `<div class="step ${picked ? '' : 'todo'}"><div class="n">2</div><div style="flex:1">
       <div class="muted" style="font-size:13px">${t('deliver_to')}${picked && dCust != null ? ' · ' + fmtKm(dCust) : ''}</div><b>${esc(c.full_name || t('customer'))}</b>
       ${o.receiver_name ? `<div class="note" style="margin:4px 0">👤 ${esc(t('rcv_for', { n:o.receiver_name, c:c0.full_name || '' }))}</div>` : ''}
+      ${(() => { const dc = state.dlvConf[o.id]; if (!dc || dc.mode !== 'contactless') return ''; return `<div class="note" style="background:rgba(26,79,176,.12);border:1px solid #1A4FB0"><b>${t('dlv_contactless')}</b>${dc.door_instruction ? `<div style="margin-top:4px"><b>${t('dlv_instr_lbl')}:</b> ${esc(dc.door_instruction)}</div>` : ''}<div class="muted" style="font-size:13px;margin-top:4px">${t('dlv_code_skip')}</div></div>`; })()}${(() => { const oc = state.otpConf[o.id]; if (!oc) return ''; return `<div class="note"><b>⏱ ${t('otp_badge')}: ${t('otp_promised_by', { t:new Date(oc.promised_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</b></div>`; })()}
       <div class="muted">${esc(o.address_text || '')}</div>
       ${o.customer_note ? `<div class="note"><b>${t('cust_note')}:</b> ${esc(o.customer_note)}</div>` : ''}
       ${picked ? `<div class="two" style="margin-top:8px">${c.phone ? `<a class="btn ghost small" href="tel:${esc(c.phone)}">${t('call')}</a>` : `<span class="muted">${t('no_phone')}</span>`}
@@ -1464,7 +1731,7 @@ function activeCard(o){
       ${waNum(c.phone) ? `<a class="btn small wabtn" target="_blank" rel="noopener" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent(t('wa_hi', { n:o.id.slice(-4).toUpperCase() }))}">${t('wa')}</a>` : ''}` : ''}</div></div>`;
   const arrived = picked ? (o.arrived_at ? `<div class="note" style="background:rgba(31,111,74,.12)">✓ ${t('arrived_at', { t:new Date(o.arrived_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) })}</div>`
     : `<button class="btn gold small" style="width:100%;margin-top:10px" onclick="A.arrived('${o.id}')">${t('arrived_btn')}</button>`) : '';
-  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn ghost small" style="width:100%;margin-top:7px" onclick="openSupportCenter('${o.id}')">🛟 Help about this delivery</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>`;
+  const report = `<button class="btn warn small" style="width:100%" onclick="A.reportForm('${o.id}')">${t('report')}</button><button class="btn ghost small" style="width:100%;margin-top:7px" onclick="openSupportCenter('${o.id}')">🛟 Help about this delivery</button><button class="btn small sosbtn" style="width:100%" onclick="A.sos()">${t('sos')}</button>` + sftyCardRow(o);
   // navigation map (2-phase: shop then customer)
   const navHtml = `<div class="card" style="margin-top:10px"><div class="navphase">
       <div class="ph ${picked ? 'done' : 'on'}">1. 🏪 ${t('nav_shop')}</div>
@@ -1479,9 +1746,9 @@ function activeCard(o){
     ? arrived + issueBlock(o) + ((state.issues[o.id] || []).some(i => i.kind === 'order_lost' && i.status === 'open') ? `<div class="issuebox"><b>${t('lost_open')}</b></div>` : `<label class="btn ghost small" style="width:100%;margin:8px 0;display:block;text-align:center;cursor:pointer">${o.delivery_photo ? t('dphoto_ok') : t('dphoto')}<input type="file" accept="image/*" capture="environment" style="display:none" onchange="A.deliveryPhoto('${o.id}', this)"></label>` + slider(o.payment_method !== 'cod' ? t('slide_delivered_paid') : t('slide_delivered'), `A.markDelivered('${o.id}')`) + `<div class="actions">${report}</div>`)
     : issueBlock(o) + slider(t('slide_picked'), `A.markPicked('${o.id}')`, true) + `<div class="actions"><button class="btn warn small" style="width:100%" onclick="A.giveBack('${o.id}')">${t('give_back')}</button>${report}</div>`;
   return `<div class="card live"><div class="ch"><span class="oid">#${esc(o.id.slice(-4).toUpperCase())}</span>
-    <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${bigHtml}${restBlock}${custBlock}
+    <span class="pill">${t('st_' + o.status)}</span></div>${dueLine(o)}${etacRiderEtaInner(o) ? `<div style="font-weight:700;margin-top:6px">${etacRiderEtaInner(o)}</div>` : ''}${bigHtml}${restBlock}${custBlock}
     ${cashBox(o)}
-    <div class="line muted"><span>${t('your_pay')}${num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee) ? `<div style="font-size:13px">${t('incl_extra').replace('{r}', money(Math.round((num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee)) * Math.min(100, Math.max(0, num(state.settings.rider_extra_share ?? 100))) / 100)))}</div>` : ''}</span><b>${money(o.rider_pay)}</b></div>${num(o.tip) ? `<div class="line" style="color:var(--brand);font-weight:700"><span>💚 ${t('tip_incl')}</span><b>${money(o.tip)}</b></div>` : ''}${action}${navHtml}${chatRow(o)}</div>`;
+    <div class="line muted"><span>${t('your_pay')}${num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee) ? `<div style="font-size:13px">${t('incl_extra').replace('{r}', money(Math.round((num(o.bulk_fee) + num(o.heavy_fee) + num(o.weight_fee)) * Math.min(100, Math.max(0, num(state.settings.rider_extra_share ?? 100))) / 100)))}</div>` : ''}</span><b>${money(o.rider_pay)}</b></div>${num(o.tip) ? `<div class="line" style="color:var(--brand);font-weight:700"><span>💚 ${t('tip_incl')}</span><b>${money(o.tip)}</b></div>` : ''}${srgLine(o.surge_fee)}${action}${navHtml}${chatRow(o)}</div>`;
 }
 
 // ---- rider navigation map (Leaflet + OSRM, free) ----
@@ -1492,6 +1759,7 @@ function navGmapsUrl(o, r, picked){
 }
 function navTrafficUrl(o, r, picked){ return navGmapsUrl(o, r, picked).replace(/&layer=traffic/g, '') + '&layer=traffic'; }
 const navMaps = new Map();
+let rhomeMap = null, rhomeRun = 0;
 const navGuides = new Map();
 let leafletPromise = null;
 function activeNavOrderId(){ const mine = state.mine || []; return (mine.find(o => o.status === 'picked_up') || mine[0] || {}).id || null; }
@@ -1503,7 +1771,7 @@ function loadLeafletR(){
   }
   return leafletPromise;
 }
-function disposeNavMaps(){ navMaps.forEach(m => { try { m.remove(); } catch (e) {} }); navMaps.clear(); navGuides.clear(); }
+function disposeNavMaps(){ navMaps.forEach(m => { try { m.remove(); } catch (e) {} }); navMaps.clear(); navGuides.clear(); if (mstMapObj){ try { mstMapObj.remove(); } catch (e) {} mstMapObj = null; } mstGuide = null; if (rhomeMap){ try { rhomeMap.remove(); } catch (e) {} rhomeMap = null; } }
 // ---- OSM turn steps + voice guidance (free; OSRM public API) ----
 function navSpeak(text){ try { if (!('speechSynthesis' in window)) return; speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = state.lang === 'ur' ? 'ur-PK' : 'en-US'; speechSynthesis.speak(u); } catch (e) {} }
 function navSpeakCur(orderId){ try { const guide = navGuides.get(orderId), s = guide && guide.steps[guide.idx]; if (s){ s.spoken = true; navSpeak(s.text); } } catch (e) {} }
@@ -1515,6 +1783,7 @@ function renderNavSteps(orderId){
 }
 function navGuideTick(){
   try {
+    try { mstGuideTick(); } catch (e) {}
     const orderId = activeNavOrderId(), guide = orderId && navGuides.get(orderId); if (!guide || !state.pos) return;
     const s = guide.steps[guide.idx]; if (!s || s.lat == null) return;
     if (km(state.pos.lat, state.pos.lng, s.lat, s.lng) < 0.15){ if (!s.spoken){ s.spoken = true; navSpeak(s.text); } guide.idx++; renderNavSteps(orderId); }
@@ -1561,14 +1830,107 @@ async function initNavMap(orderId){
     } catch(e){ if (navMaps.get(orderId) === map && el.isConnected) map.fitBounds([from, to]); }
   } catch(e){}
 }
+
+// ---- Feature 24: multi-stop route (client-side only; dispatch/accept/pay untouched) ----
+// No server multi-stop concept exists: this plans one OSRM route over the rider's
+// existing active orders (state.mine). Order rule, stated in the UI: all remaining
+// pickups first (nearest-first from the rider), then all drops (nearest-first from
+// the last pickup). A picked_up order has no pickup stop. Per-stop buttons call the
+// existing per-order A.markPicked / A.markDelivered flows (own code prompts, own
+// RPCs) — completing one stop never touches the others. Single active order: no
+// card is rendered and the existing per-order trip view is untouched.
+let mstMapObj = null, mstGuide = null;
+function mstStops(){
+  const mine = state.mine || [];
+  const pos = state.pos;
+  const dist = (a, b) => (a && b && a[0] != null && b[0] != null) ? km(a[0], a[1], b[0], b[1]) : null;
+  const byDist = (from) => (x, y) => { const dx = dist(from, x.p), dy = dist(from, y.p); if (dx == null && dy == null) return 0; if (dx == null) return 1; if (dy == null) return -1; return dx - dy; };
+  const pickups = [], drops = [];
+  mine.forEach(o => {
+    const r = o.restaurant || {};
+    if (o.status !== 'picked_up' && r.lat != null && r.lng != null) pickups.push({ kind:'pickup', order:o, p:[Number(r.lat), Number(r.lng)], name:r.name || t('nav_shop') });
+    if (o.status !== 'picked_up' && (r.lat == null || r.lng == null)) pickups.push({ kind:'pickup', order:o, p:null, name:r.name || t('nav_shop') });
+    if (o.address_lat != null && o.address_lng != null) drops.push({ kind:'drop', order:o, p:[Number(o.address_lat), Number(o.address_lng)], name:(o.customer && o.customer.full_name) ? o.customer.full_name : t('customer') });
+    if (o.address_lat == null || o.address_lng == null) drops.push({ kind:'drop', order:o, p:null, name:(o.customer && o.customer.full_name) ? o.customer.full_name : t('customer') });
+  });
+  const origin = pos ? [pos.lat, pos.lng] : null;
+  pickups.sort(byDist(origin));
+  const from = pickups.length && pickups[pickups.length - 1].p ? pickups[pickups.length - 1].p : origin;
+  drops.sort(byDist(from));
+  return pickups.concat(drops);
+}
+function mstRouteCard(){
+  const mine = state.mine || [];
+  if (mine.length < 2) return '';
+  const stops = mstStops();
+  const rows = stops.map((s, i) => {
+    const o = s.order, short = o.id.slice(-4).toUpperCase();
+    const act = s.kind === 'pickup'
+      ? `<button class="btn small" onclick="A.markPicked('${o.id}')">${t('mst_pickup_btn')}</button>`
+      : `<button class="btn small" onclick="A.markDelivered('${o.id}')">${t('mst_deliver_btn')}</button>`;
+    return `<div class="line"><span><b>${i + 1}. ${s.kind === 'pickup' ? '🏪' : '🏠'} ${esc(s.name)}</b> <span class="muted">#${short} · ${t(s.kind === 'pickup' ? 'mst_pickup' : 'mst_drop')}</span>${s.p ? '' : ` <span class="muted">${t('nav_noloc')}</span>`}</span>${act}</div>`;
+  }).join('');
+  const night = state.tripPrefs && state.tripPrefs.nightMap ? 'nav-map-night' : '';
+  return `<div class="card live" style="border:2px solid var(--brand)"><div class="ch"><b>🗺️ ${t('mst_title')}</b><span class="pill">${t('mst_orders', { n:mine.length })}</span></div>
+    <div class="muted" style="font-size:13px">${t('mst_rule')}</div>
+    <div id="mstMap" class="nav-map ${night}" style="margin-top:10px"></div><div id="mstSteps"></div>
+    <div style="margin-top:10px">${rows}</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">${t('mst_note')}</div></div>`;
+}
+function mstRouteUrl(wps){ return 'https://router.project-osrm.org/route/v1/driving/' + wps.map(p => p[1] + ',' + p[0]).join(';') + '?overview=full&geometries=geojson&steps=true'; }
+async function mstInitMap(){
+  const el = document.getElementById('mstMap'); if (!el) return;
+  if (mstMapObj){ try { mstMapObj.remove(); } catch (e) {} mstMapObj = null; }
+  mstGuide = null; const stepsEl = document.getElementById('mstSteps'); if (stepsEl) stepsEl.innerHTML = '';
+  const stops = mstStops();
+  const pts = stops.filter(s => s.p);
+  if (!pts.length){ el.innerHTML = `<div class="muted" style="padding:20px;text-align:center">${t('nav_noloc')}</div>`; return; }
+  const L = await loadLeafletR(); if (!el.isConnected) return;
+  const origin = state.pos ? [state.pos.lat, state.pos.lng] : null;
+  const first = origin || pts[0].p;
+  const map = L.map(el, { zoomControl:false }).setView(first, 14); mstMapObj = map;
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(map);
+  if (origin) L.marker(origin, { icon:L.divIcon({ html:'🛵', className:'', iconSize:[28,28], iconAnchor:[14,14] }) }).addTo(map).bindPopup(t('you'));
+  stops.forEach((s, i) => { if (!s.p) return; const icon = L.divIcon({ html:`<b style="background:#1a73e8;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">${i + 1}</b>`, className:'', iconSize:[28,28], iconAnchor:[14,14] }); L.marker(s.p, { icon }).addTo(map).bindPopup(esc(s.name)); });
+  const wps = (origin ? [origin] : []).concat(pts.map(s => s.p));
+  if (wps.length < 2){ map.fitBounds(wps.length ? wps : [first]); return; }
+  try {
+    const url = mstRouteUrl(wps);
+    const res = await fetch(url); const j = await res.json();
+    if (mstMapObj !== map || !el.isConnected) return;
+    if (j.routes && j.routes[0]){
+      const coords = j.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      L.polyline(coords, { color:'#1a73e8', weight:5 }).addTo(map);
+      const d = j.routes[0].distance / 1000, mins = Math.round(j.routes[0].duration / 60);
+      L.popup().setLatLng(coords[Math.floor(coords.length / 2)]).setContent(`<b>${d.toFixed(1)} km · ~${mins} min</b>`).openOn(map);
+      map.fitBounds(L.polyline(coords).getBounds().pad(0.2));
+      try { const steps = []; (j.routes[0].legs || []).forEach(l => (l.steps || []).forEach(st => { const m = st.maneuver || {}; if (m.instruction) steps.push({ text:m.instruction, lat:m.location ? m.location[1] : null, lng:m.location ? m.location[0] : null, dist:(st.distance || 0) / 1000, spoken:false }); })); mstGuide = { steps, idx:0 }; mstRenderSteps(); if (steps[0]){ steps[0].spoken = true; navSpeak(steps[0].text); } } catch (e) {}
+    }
+  } catch (e) { if (mstMapObj === map && el.isConnected) map.fitBounds(wps); }
+}
+function mstRenderSteps(){
+  try {
+    const el = document.getElementById('mstSteps'); if (!el || !mstGuide) return;
+    el.innerHTML = `<div class="card" style="margin-top:10px"><b>🧭 ${t('nav_steps')}</b><div class="muted" style="font-size:12px">${t('nav_osrm')}</div>${mstGuide.steps.map((s, i) => `<div class="line" style="${i === mstGuide.idx ? 'font-weight:700' : ''}"><span>${i + 1}. ${esc(s.text)}</span><span class="muted">${s.dist != null ? fmtKm(s.dist) : ''}</span></div>`).join('')}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" style="flex:1" onclick="mstSpeakCur()">🔊 ${t('nav_speak')}</button></div></div>`;
+  } catch (e) {}
+}
+function mstSpeakCur(){ try { const s = mstGuide && mstGuide.steps[mstGuide.idx]; if (s){ s.spoken = true; navSpeak(s.text); } } catch (e) {} }
+function mstGuideTick(){
+  try {
+    if (!mstGuide || !state.pos) return;
+    const s = mstGuide.steps[mstGuide.idx]; if (!s || s.lat == null) return;
+    if (km(state.pos.lat, state.pos.lng, s.lat, s.lng) < 0.15){ if (!s.spoken){ s.spoken = true; navSpeak(s.text); } mstGuide.idx++; mstRenderSteps(); }
+  } catch (e) {}
+}
+
 function jobCard(j){
   const d = jobDistances(j);
-  return `<div class="card ${j.offered_to_me ? 'offer' : ''}" ${!j.offered_to_me && j.batch ? 'style="border:2px solid var(--brand)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
+  return `<div class="card ${j.offered_to_me ? 'offer' : ''} gst-job" data-gst-job="${esc(j.order_id)}" ${!j.offered_to_me && j.batch ? 'style="border:2px solid var(--brand)"' : ''}>${j.offered_to_me ? `<div class="pill y" style="margin-bottom:6px">⭐ ${t('only_you')}</div>` : ''}${j.batch ? `<div class="batchtag">${t(j.batch === 'same_shop' ? 'batch_same' : 'batch_near')}</div>` : ''}<div class="ch"><b>${esc(j.restaurant_name)}</b><span class="muted">${t('ready_since')} ${timeAgo(j.status_since || j.created_at)}</span></div>
     <div class="muted">${esc(j.restaurant_address || '')}</div>
     <div style="margin-top:6px"><span class="muted">${t('deliver_to')}:</span> ${esc(j.drop_address || '')}</div>
     <div class="meta">${d.toShop != null ? `<span><b>${fmtKm(d.toShop)}</b> ${t('pickup_in')}</span>` : ''}${d.trip != null ? `<span><b>${fmtKm(d.trip)}</b> ${t('trip')}</span>` : ''}${d.toShop == null && d.trip == null ? `<span class="muted">📍 ${t('no_loc')}</span>` : ''}<span>${num(j.total) ? t('cash_collect') + ' ' : ''}<b>${cashTxt(j.total)}</b></span></div>
     ${bigBadges(j.big_order, j.heavy, j.items_count, j.weight_kg)}
-    <div class="cash"><span>${t('your_pay')}${payNote(j.extra_pay, j.tip)}</span><b>${money(j.rider_pay)}</b></div>
+    <div class="cash"><span>${t('your_pay')}${payNote(j.extra_pay, j.tip)}</span><b>${money(j.rider_pay)}</b></div>${srgLine(j.surge_fee)}
     ${j.offered_to_me ? `<div class="two" style="margin-top:12px"><button class="btn ghost" onclick="A.skipJob('${j.order_id}', true)">${t('decline')}</button><button class="btn" style="min-height:56px;font-size:18px" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button></div>` : `<button class="btn" style="min-height:54px" onclick="A.acceptJob('${j.order_id}')">${t('accept')}</button>`}</div>`;
 }
 function cashWarning(){
@@ -1950,16 +2312,54 @@ function showParcelPopup(p){
   }, 1000);
 }
 
+// ================= BIKE SAFETY CHECKLIST (Feature 27) =================
+// The pre-existing card (4 ticks, device-local, ticks never expired) is
+// EXTENDED, not rewritten: 2 items added (fuel, documents), a daily
+// confirmation + history, a fault-report path to rider support, and a
+// pre-duty reminder on the GO card. Duty is NEVER gated by this checklist:
+// the ticks are self-reported and unverified, face + location checks
+// already gate duty start, and a rider with a real fault needs the report
+// path, not a silent block. Server sync is best-effort: when the
+// rider_bike_checks table is absent, everything still works on-device and
+// the card says so honestly.
+const bscITEMS = [['helmet','safety_helmet'],['brakes','safety_brakes'],['lights','safety_lights'],['tires','safety_tires'],['fuel','bsc_fuel'],['docs','bsc_docs']];
+function bscToday(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function bscDraftKey(){ return state.rider ? 'kh_rd_bike_check_' + state.rider.id : null; }
+function bscHistKey(){ return state.rider ? 'kh_rd_bike_hist_' + state.rider.id : null; }
+function bscDraft(){
+  const k = bscDraftKey(); let d = {};
+  try { d = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+  if (d.date !== bscToday()) d = { date: bscToday() };
+  return d;
+}
+function bscSaveDraft(d){ const k = bscDraftKey(); if (!k) return; try { localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} }
+function bscHist(){ const k = bscHistKey(); try { return JSON.parse(localStorage.getItem(k) || '[]') || []; } catch (e) { return []; } }
+function bscSaveHist(list){ const k = bscHistKey(); if (!k) return; try { localStorage.setItem(k, JSON.stringify((list || []).slice(0, 30))); } catch (e) {} }
+function bscTodayRec(){ return (bscHist() || []).find(h => h.date === bscToday()) || null; }
+function bscTodayDone(){ return !!bscTodayRec(); }
+function bscFailedOf(draft){ return bscITEMS.filter(([id]) => !draft[id]).map(([id]) => id); }
+function bscLabel(id){ const f = bscITEMS.find(x => x[0] === id); return f ? t(f[1]) : id; }
+async function bscProbe(){
+  if (state.bscServer !== undefined || !state.rider) return;
+  try { const r = await sb.from('rider_bike_checks').select('id').eq('rider_id', state.rider.id).limit(1); state.bscServer = !r.error; }
+  catch (e) { state.bscServer = false; }
+}
 function safetyChecklistCard(){
   const riderId = state.rider && state.rider.id;
   if (!riderId) return '';
-  const key = 'kh_rd_bike_check_' + riderId;
-  let checked = {};
-  try { checked = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) {}
-  const items = [['helmet','safety_helmet'],['brakes','safety_brakes'],['lights','safety_lights'],['tires','safety_tires']];
-  return `<div class="card"><b>🛡️ ${t('safety_check_title')}</b><div class="muted" style="font-size:13px;margin:4px 0 8px">${t('safety_check_note')}</div>
-    ${items.map(([id,label]) => `<label class="row" style="align-items:center;cursor:pointer"><span>${t(label)}</span><input type="checkbox" ${checked[id] ? 'checked' : ''} onchange="A.saveSafetyCheck('${id}',this.checked)" aria-label="${t(label)}"></label>`).join('')}
-    <div class="muted" style="font-size:12px;margin-top:8px">${t('safety_done')}</div></div>`;
+  const draft = bscDraft();
+  const rec = bscTodayRec();
+  const failed = rec ? (rec.failed || []) : bscFailedOf(draft);
+  const failedLabels = failed.map(bscLabel).join(', ');
+  const phoneNote = state.bscServer === false ? `<div class="muted" style="font-size:12px;margin-top:8px">📱 ${t('bsc_phone_only')}</div>` : '';
+  const status = rec
+    ? `<div style="font-size:13px;margin-top:8px">✅ ${t('bsc_done_today')}${failed.length ? ` · <span style="color:var(--danger)">⚠️ ${t('bsc_failed')}: ${esc(failedLabels)}</span>` : ` · ${t('bsc_all_ok')}`}${rec.synced ? ` · ${t('bsc_synced')}` : ''}</div>`
+    : `<div style="margin-top:10px"><button class="btn small" onclick="A.bscConfirm()">${t('bsc_confirm')}</button>${failed.length ? ` <button class="btn ghost small" onclick="A.bscReport()">${t('bsc_report_issue')}</button>` : ''}<div class="muted" style="font-size:12px;margin-top:6px">${t('bsc_report_note')}</div></div>`;
+  return `<div class="card" id="bscCard"><b>🛡️ ${t('safety_check_title')}</b><div class="muted" style="font-size:13px;margin:4px 0 8px">${t('safety_check_note')}</div>
+    ${bscITEMS.map(([id, label]) => { const val = rec ? !!(rec.items && rec.items[id]) : !!draft[id]; return `<label class="row" style="align-items:center;cursor:pointer"><span>${t(label)}</span><input type="checkbox" ${val ? 'checked' : ''} ${rec ? 'disabled' : ''} onchange="A.saveSafetyCheck('${id}',this.checked)" aria-label="${t(label)}"></label>`; }).join('')}
+    ${status}
+    <div style="margin-top:8px"><button class="btn ghost small" onclick="A.bscHistory()">${t('bsc_history')}</button></div>
+    ${phoneNote}</div>`;
 }
 function openParcelScanner(id, action){
   const detectorAvailable = typeof window.BarcodeDetector === 'function';
@@ -1993,11 +2393,96 @@ async function startParcelBarcodeDetection(overlay, id, action){
 }
 function stopParcelScanner(){ if (parcelScanFrame) cancelAnimationFrame(parcelScanFrame); parcelScanFrame=null; if(parcelScanStream){ parcelScanStream.getTracks().forEach(x=>x.stop()); parcelScanStream=null; } }
 function dutyGoCard(){
+  const bscNote = (state.rider && !bscTodayDone()) ? `<div class="note" style="margin:10px 0 0">⚠️ ${t('bsc_reminder')} <button class="btn ghost small" style="margin-left:6px" onclick="A.bscGoToCheck()">${t('bsc_go_check')}</button></div>` : '';
   return `<section class="card duty-go-card" aria-labelledby="dutyGoTitle"><div class="duty-go-head"><span class="duty-go-mark" aria-hidden="true">GO</span><div><h2 class="duty-go-title" id="dutyGoTitle">${t('go_title')}</h2><div class="muted duty-go-note">${t('go_note')}</div></div></div>
+    ${bscNote}
     <button class="btn duty-go-button" type="button" onclick="A.toggleDuty()"><b>GO</b><span>${t('start_duty')}</span></button>
     ${slider(t('go_swipe'), 'A.toggleDuty()', true)}</section>`;
 }
+// ================= RIDER HOME: MAP-FIRST + PAYOUT ESTIMATE + GUIDE (Feature 12) =================
+// Display-only: this block never writes to orders, payroll or rider_pay. The
+// estimate sums stored rider_pay from state.done (delivered orders this month,
+// orders table only — parcels live in a separate table and are NOT counted,
+// exactly like the Earn payslip). Salary, bonuses, overtime, fines and
+// deductions are NOT included; the card says so.
+function rhomeEst(){ const done = state.done || []; const t0 = new Date(); t0.setHours(0, 0, 0, 0); const td = done.filter(o => new Date(o.delivered_at) >= t0); return { month:done.reduce((n, o) => n + num(o.rider_pay), 0), n:done.length, todayN:td.length, todayA:td.reduce((n, o) => n + num(o.rider_pay), 0) }; }
+function rhomeEstHtml(){ const e = rhomeEst(); return `<div class="card"><div class="line"><b>💰 ${t('rhome_est_t')}</b><span class="pill y">${t('rhome_est_only')}</span></div><div style="font-size:26px;font-weight:800;margin-top:4px">${money(e.month)}</div><div class="muted" style="font-size:13px">${e.n ? t('rhome_est_month', { n:e.n }) : t('rhome_est_empty')}</div><div class="muted" style="font-size:13px">${t('rhome_est_today', { n:e.todayN, a:money(e.todayA) })}</div><div class="muted" style="font-size:12px;margin-top:6px">${t('rhome_est_note')}</div><button class="btn ghost small" style="margin-top:8px" onclick="go('earn')">${t('rhome_est_earn')} ›</button></div>`; }
+function rhomeGuideKey(){ return state.rider ? 'kh_rd_guide_' + state.rider.id : null; }
+function rhomeGuideDismissed(){ const k = rhomeGuideKey(); return k ? ls.get(k, 0) === 1 : true; }
+function rhomeGuideVisible(){ if (rhomeGuideDismissed()) return false; if (state.rhomeEver === true) return false; if (state.rhomeEver === false) return true; return (state.doneAll || []).length === 0; }
+async function rhomeLoadEver(){ if (state.rhomeEver !== undefined || rhomeGuideDismissed() || !state.rider) return; const before = rhomeGuideVisible(); try { const { data } = await sb.from('orders').select('id').eq('rider_id', state.rider.id).eq('status', 'delivered').limit(1); state.rhomeEver = !!(data && data.length); } catch (e) { state.rhomeEver = null; } if (state.tab === 'jobs' && rhomeGuideVisible() !== before) renderTab(); }
+function rhomeDismissGuide(){ const k = rhomeGuideKey(); if (k) ls.set(k, 1); renderTab(); }
+function rhomeShowGuide(){ const k = rhomeGuideKey(); if (k) ls.set(k, 0); go('jobs'); }
+function rhomeLoc(){ if (!navigator.geolocation) { toast(t('sfty_no_loc')); return; } navigator.geolocation.getCurrentPosition(p => { state.pos = { lat:p.coords.latitude, lng:p.coords.longitude }; renderTab(); }, () => toast(t('sfty_no_loc')), { enableHighAccuracy:true, timeout:8000 }); }
+function rhomeJobs(){ const el = document.getElementById('rhomeJobsList'); if (el) el.scrollIntoView(); else window.scrollTo(0, 0); }
+function rhomeGuideHtml(){ if (!rhomeGuideVisible()) return ''; const d = onDuty(), loc = !!state.pos; const step = (title, desc, btn) => `<div style="margin-top:10px"><b>${title}</b><div class="muted" style="font-size:13px">${desc}</div>${btn}</div>`; const done = txt => `<span style="color:var(--brand);font-weight:700;font-size:13px">${txt}</span>`; return `<div class="card"><div class="line"><b>🧭 ${t('rhome_guide_t')}</b><button class="chip" onclick="rhomeDismissGuide()">${t('rhome_guide_dismiss')}</button></div>${step(t('rhome_g1_t'), t('rhome_g1_d'), d ? done(t('rhome_g1_done')) : `<button class="btn small" style="margin-top:6px" onclick="A.toggleDuty()">${t('rhome_g1_btn')}</button>`)}${step(t('rhome_g2_t'), t('rhome_g2_d'), loc ? done(t('rhome_g2_done')) : `<button class="btn small" style="margin-top:6px" onclick="rhomeLoc()">${t('rhome_g2_btn')}</button>`)}${step(t('rhome_g3_t'), t('rhome_g3_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="rhomeJobs()">${t('rhome_g3_btn')}</button>`)}${step(t('rhome_g4_t'), t('rhome_g4_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="go('acct')">${t('rhome_g4_btn')}</button>`)}${step(t('gst_guide_t'), t('gst_guide_d'), '')}</div>`; }
+// ---- Destination Mode (Feature 13): opt-in, rider's own setting. Dispatch
+// filtering is server-side (prepared-only SQL); the app never hides jobs
+// itself. Destination is stored device-local AND synced to rider_destinations
+// when the table exists; mode_on=false or no row = normal dispatch.
+const destRADIUS_KM = 5;
+function destKey(){ return state.rider ? 'kh_rd_dest_' + state.rider.id : null; }
+function destMatch(d, shopLat, shopLng, dropLat, dropLng){
+  if (!d || d.lat == null || d.lng == null || d.mode_on === false) return true;
+  const d1 = (shopLat != null && shopLng != null) ? km(d.lat, d.lng, shopLat, shopLng) : null;
+  const d2 = (dropLat != null && dropLng != null) ? km(d.lat, d.lng, dropLat, dropLng) : null;
+  return (d1 != null && d1 <= destRADIUS_KM) || (d2 != null && d2 <= destRADIUS_KM);
+}
+async function destLoad(){
+  if (state.destLoaded || !state.rider) return; state.destLoaded = true;
+  const before = JSON.stringify(state.dest || null) + '|' + state.destServer;
+  let local = null; const k = destKey(); try { local = ls.get(k, null); } catch (e) {}
+  try {
+    const { data } = await sb.from('rider_destinations').select('*').eq('rider_id', state.rider.id).maybeSingle();
+    if (data){ state.dest = { lat:+data.lat, lng:+data.lng, name:data.name || '', mode_on:!!data.mode_on }; state.destServer = true; try { ls.set(k, state.dest); } catch (e) {} }
+    else { state.dest = local; state.destServer = true; if (local){ try { await sb.from('rider_destinations').upsert({ rider_id: state.rider.id, lat:local.lat, lng:local.lng, name:local.name || null, mode_on:!!local.mode_on }, { onConflict:'rider_id' }); } catch (e) {} } }
+  } catch (e){ state.dest = local; state.destServer = false; }
+  if (state.tab === 'jobs' && (JSON.stringify(state.dest || null) + '|' + state.destServer) !== before) renderTab();
+}
+function destHtml(){
+  const d = state.dest; const picking = !!state.destPicking; let inner = '';
+  if (!d){
+    inner = `<div class="muted" style="font-size:13px">${t('dest_none')}</div><div class="muted" style="font-size:13px">${t('dest_radius_note')}</div>`;
+  } else {
+    const dist = state.pos ? km(state.pos.lat, state.pos.lng, d.lat, d.lng) : null;
+    inner = `<div class="line"><b>${d.mode_on ? '🎯 ' : '⚪ '}${esc(d.name || t('dest_pin'))}</b><span class="pill ${d.mode_on ? 'y' : ''}">${d.mode_on ? t('dest_on') : t('dest_off')}</span></div><div class="muted" style="font-size:13px">${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}${dist != null ? ' · ' + t('dest_away', { d: fmtKm(dist) }) : ''}</div><div class="muted" style="font-size:13px">${t('dest_radius_note')}</div><div class="muted" style="font-size:12px">${t('dest_active_note')}</div>`;
+  }
+  if (state.destServer === false) inner += `<div class="muted" style="font-size:13px">${t('dest_na')}</div>`;
+  let btns = picking ? `<button class="btn ghost small" style="margin-top:8px" onclick="destPickToggle()">${t('dest_pick_cancel')}</button>` : `<button class="btn small" style="margin-top:8px" onclick="destPickToggle()">${d ? t('dest_change') : t('dest_set')}</button>`;
+  if (d) btns += `<button class="btn ${d.mode_on ? 'ghost' : ''} small" style="margin-top:8px;margin-left:6px" onclick="destToggle()">${d.mode_on ? t('dest_toggle_off') : t('dest_toggle_on')}</button><button class="btn ghost small" style="margin-top:8px;margin-left:6px" onclick="destClear()">${t('dest_clear')}</button>`;
+  return `<div class="card"><div class="line"><b>🎯 ${t('dest_t')}</b></div>${inner}<div>${btns}</div></div>`;
+}
+function destPickToggle(){ state.destPicking = !state.destPicking; renderTab(); }
+function destPinDropped(lat, lng){
+  openSheet(t('dest_sheet_t'), `<div class="muted" style="font-size:13px">${(+lat).toFixed(5)}, ${(+lng).toFixed(5)}</div><label style="font-size:13px" for="destName">${t('dest_name_l')}</label><input id="destName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" placeholder="${esc(t('dest_name_ph'))}"><div style="display:flex;gap:8px;margin-top:10px"><button class="btn" style="flex:1" onclick="destSave(${+lat}, ${+lng}, document.getElementById('destName').value)">${t('dest_save')}</button><button class="btn ghost" style="flex:1" onclick="closeSheet()">${t('cancel')}</button></div>`);
+}
+async function destSave(lat, lng, name){
+  if (!state.rider) return;
+  const d = { lat:+lat, lng:+lng, name:(name || '').trim(), mode_on:true };
+  state.dest = d; state.destPicking = false; const k = destKey(); try { ls.set(k, d); } catch (e) {}
+  closeSheet();
+  try { need(await sb.from('rider_destinations').upsert({ rider_id: state.rider.id, lat:d.lat, lng:d.lng, name:d.name || null, mode_on:true }, { onConflict:'rider_id' }).select().single()); state.destServer = true; } catch (e){ state.destServer = false; }
+  toast(t('dest_saved')); renderTab();
+}
+async function destToggle(){
+  if (!state.rider) return;
+  if (!state.dest){ toast(t('dest_need'), true); return; }
+  const on = !state.dest.mode_on; state.dest.mode_on = on; const k = destKey(); try { ls.set(k, state.dest); } catch (e) {}
+  try { need(await sb.from('rider_destinations').upsert({ rider_id: state.rider.id, lat:state.dest.lat, lng:state.dest.lng, name:state.dest.name || null, mode_on:on }, { onConflict:'rider_id' }).select().single()); state.destServer = true; } catch (e){ state.destServer = false; }
+  toast(on ? t('dest_on_toast') : t('dest_off_done')); renderTab();
+}
+async function destClear(){
+  if (!state.rider) return;
+  state.dest = null; state.destPicking = false; const k = destKey(); try { if (k) localStorage.removeItem(k); } catch (e) {}
+  try { need(await sb.from('rider_destinations').delete().eq('rider_id', state.rider.id)); state.destServer = true; } catch (e){ state.destServer = false; }
+  toast(t('dest_cleared')); renderTab();
+}
+function rhomeTopHtml(){ return `<div class="card" style="padding:8px"><div id="rhomeMap" class="nav-map ${state.tripPrefs.nightMap ? 'nav-map-night' : ''}"></div><div class="muted" style="font-size:13px;margin:6px 4px 2px">${state.destPicking ? t('dest_pick_hint') : (state.pos ? t('rhome_map_note') : t('rhome_loc_off'))}</div></div>${destHtml()}${rhomeEstHtml()}${rhomeGuideHtml()}`; }
+function rhomePins(){ const pts = []; const add = (lat, lng, icon, label) => { if (lat != null && lng != null && isFinite(+lat) && isFinite(+lng)) pts.push({ p:[+lat, +lng], icon, label }); }; if (state.pos) add(state.pos.lat, state.pos.lng, '🛵', t('you')); if (state.dest && state.dest.mode_on) add(state.dest.lat, state.dest.lng, '🎯', (state.dest.name || t('dest_pin'))); (state.mine || []).forEach(o => { const r = o.restaurant || {}; add(r.lat, r.lng, '🏪', r.name || t('nav_shop')); add(o.address_lat, o.address_lng, '🏠', t('nav_cust')); }); if (onDuty()) (state.available || []).filter(j => !state.skipped.has(j.order_id)).slice(0, 20).forEach(j => add(j.restaurant_lat, j.restaurant_lng, '🏪', j.restaurant_name || t('nav_shop'))); (state.myParcels || []).forEach(p => add(p.drop_lat, p.drop_lng, '🏠', t('pk_parcel'))); return pts; }
+async function rhomeInitMap(){ const el = document.getElementById('rhomeMap'); if (!el || state.tab !== 'jobs') return; const run = ++rhomeRun; if (rhomeMap){ try { rhomeMap.remove(); } catch (e) {} rhomeMap = null; } const pts = rhomePins(); let centre = state.pos ? [state.pos.lat, state.pos.lng] : null; if (!centre && !pts.length){ if (state.rhomeCenter === undefined){ try { const { data } = await sb.from('regions').select('center_lat,center_lng').eq('id', state.rider.region_id).maybeSingle(); state.rhomeCenter = (data && data.center_lat != null) ? [Number(data.center_lat), Number(data.center_lng)] : null; } catch (e) { state.rhomeCenter = null; } } if (run !== rhomeRun || !el.isConnected || state.tab !== 'jobs') return; centre = state.rhomeCenter; if (!centre){ el.innerHTML = `<div class="muted" style="padding:20px;text-align:center">${t('rhome_nomap')}</div>`; return; } } try { const L = await loadLeafletR(); if (run !== rhomeRun || !el.isConnected || state.tab !== 'jobs') return; const map = L.map(el, { zoomControl:false }); rhomeMap = map; L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(map); pts.forEach(pt => { const ic = L.divIcon({ html:pt.icon, className:'', iconSize:[28,28], iconAnchor:[14,14] }); L.marker(pt.p, { icon:ic }).addTo(map).bindPopup(esc(pt.label)); }); if (state.destPicking) map.on('click', e => destPinDropped(e.latlng.lat, e.latlng.lng)); if (pts.length > 1) map.fitBounds(pts.map(x => x.p), { padding:[20, 20] }); else if (pts.length === 1) map.setView(pts[0].p, 14); else map.setView(centre, 13); } catch (e) {} }
+
 function viewJobs(){
+
   const sound = (!audioReady() && state.sound && onDuty()) ? `<button class="soundbar" onclick="A.enableSound()">${t('enable_sound')}</button>` : '';
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const today = state.done.filter(o => new Date(o.delivered_at) >= todayStart);
@@ -2006,27 +2491,29 @@ function viewJobs(){
     <div class="tile"><b>${today.length}</b><span>${t('deliveries_n')} · ${t('today')}</span></div>
     <div class="tile"><b>${money(today.reduce((n, o) => n + num(o.rider_pay), 0))}</b><span>${t('earn_today')}</span></div>
     <div class="tile"><b>🛣️ ${todayKm.toFixed(1)} km</b><span>${t('km_today')}</span></div></div>`;
+  const top = rhomeTopHtml();
   const boost = boostBanner();
   const safety = safetyChecklistCard();
-  if (suspended() && !state.mine.length) return safety + suspBanner() + boost + stats;
+  if (suspended() && !state.mine.length) return top + safety + suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return `${safety}${boost}${goalCard()}${stats}${cashWarning()}${dutyGoCard()}`;
+    return top + `${safety}${boost}${goalCard()}${stats}${cashWarning()}${dutyGoCard()}`;
   }
-  const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${state.mine.map(activeCard).join('')}` : '';
+  const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${mstRouteCard()}${state.mine.map(activeCard).join('')}` : '';
   const myP = (state.myParcels || []).length ? `<h2>📦 ${t('pk_mine')} <span class="count">${state.myParcels.length}</span></h2>${state.myParcels.map(parcelActiveCard).join('')}` : '';
   const plist = (state.parcels || []);
   const pjobs = onDuty() && plist.length ? `<h2>📦 ${t('pk_new')} <span class="count">${plist.length}</span></h2>${plist.map(parcelCard).join('')}` : '';
+  if (state.gstLastHidden && !(state.available || []).some(j => j.order_id === state.gstLastHidden.id)) state.gstLastHidden = null;
   const list = state.available.filter(j => !state.skipped.has(j.order_id));
-  const jobs = onDuty() ? (list.length ? `<h2>${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
+  const jobs = onDuty() ? (list.length ? `${gstUndoBar()}${list.length ? gstHintBar() : ''}<h2 id="rhomeJobsList">${t('new_jobs')} <span class="count">${list.length}</span></h2>${list.map(jobCard).join('')}`
     : (state.mine.length ? '' : `<div class="empty">${t('no_jobs')}<br><br><span style="font-size:14px">${t('keep_open')}</span></div>`)) : '';
-  if (onDuty() && state.breakOpen) return sound + breakCard() + dutyCard();
-  if (onDuty() && state.prayerOpen) return sound + prayerBreakCard() + dutyCard();
+  if (onDuty() && state.breakOpen) return top + sound + breakCard() + dutyCard();
+  if (onDuty() && state.prayerOpen) return top + sound + prayerBreakCard() + dutyCard();
   const meT = state.lb && state.lb.today.find(x => x.is_me);
   const rankChip = meT ? `<button class="note" style="width:100%;text-align:start;border:0;cursor:pointer;margin-bottom:10px" onclick="go('earn')">🏆 ${t('your_rank').replace('{r}', meT.rank).replace('{n}', meT.deliveries)} ›</button>` : '';
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
   const gpsHint = onDuty() && !state.pos ? `<div class="note" style="border-color:#E2A400;margin-bottom:10px">${t('gps_hint')}</div>` : '';
   const radar = onDuty() ? `<div class="card" style="border:1px solid var(--brand);margin:8px 0"><b>📡 ${t('radar_title')}</b><div class="muted" style="font-size:13px">${t('radar_note')}</div></div>` : '';
-  return safety + sound + suspBanner() + boost + cashWarning() + rankChip + radar + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
+  return top + safety + sound + suspBanner() + boost + cashWarning() + rankChip + radar + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -2470,6 +2957,7 @@ function viewRules(){
 }
 
 // ================= ACCOUNT TAB =================
+async function blstLoadStatus(){ if (state.blstLoaded) return; state.blstLoaded = true; try { const { data, error } = await sb.rpc('my_blacklist_status'); if (error) throw error; state.blstStatus = data || []; } catch (e) { state.blstStatus = null; } if (state.tab === 'acct') renderTab(); }
 function viewAcct(){
   const p = state.profile || {}, r = state.rider; const reg = !!r.face_descriptor;
   return `<div class="acct"><h1>${t('account')}</h1>
@@ -2481,6 +2969,7 @@ function viewAcct(){
       <div style="margin-top:4px"><span class="pill ${reg ? '' : 'y'}">${reg ? t('face_ok') : t('face_missing')}</span></div></div>
     </div>
     ${reg ? '' : `<button class="btn gold" style="margin-bottom:12px" onclick="openCamera('register')">${t('register_face')}</button>`}
+    ${state.blstStatus ? `<div class="card"><b>⛔ ${t('blst_status')}</b>${state.blstStatus.length ? state.blstStatus.map(b => `<div class="muted" style="font-size:14px;margin-top:6px">${b.scope === 'shop' ? t('blst_shop', { s:b.shop_name || '' }) : t('blst_region', { r:b.region_name || '' })} · ${new Date(b.created_at).toLocaleDateString('en-GB')}</div>`).join('') : `<div class="muted" style="font-size:14px;margin-top:6px">${t('blst_none')}</div>`}<div class="muted" style="font-size:13px;margin-top:6px">${t('blst_note2')}</div></div>` : ''}
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="min-width:0"><b>💰 ${t('payout_t')}</b><div class="muted" style="font-size:14px;overflow-wrap:anywhere">${(state.rider && state.rider.payout && state.rider.payout.number) ? esc(({ jazzcash:'JazzCash', easypaisa:'Easypaisa', bank:state.rider.payout.bank || 'Bank' })[state.rider.payout.method] + ' · ' + state.rider.payout.number + ' · ' + (state.rider.payout.title || '')) : t('payout_none')}</div></div>
       <button class="btn ghost small" style="width:auto;flex:none" onclick="A.payoutForm()">${t('edit_w')}</button></div>
     </div>
@@ -2505,13 +2994,15 @@ function viewAcct(){
       <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
       ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
       ${Legal.links(state.lang)}
-    </div></div>
+    </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="go('jobs')">🎯 ${t('dest_acct')}</button></div><div class="card"><button class="btn ghost small" style="width:100%" onclick="rhomeShowGuide()">🧭 ${t('rhome_guide_again')}</button></div><div class="card"><b>👆 ${t('gst_acct_t')}</b><div class="muted" style="font-size:13px;margin-top:4px">${t('gst_acct_d')}</div></div><div class="card" style="margin-top:8px"><b>🛟 ${t('sfty_emerg_t')}</b><div class="muted" style="font-size:13px;margin:4px 0">${t('sfty_emerg_note')}</div><label style="font-size:13px" for="sftyEcName">${t('sfty_emerg_name')}</label><input id="sftyEcName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.name) || '')}"><label style="font-size:13px" for="sftyEcPhone">${t('sfty_emerg_phone')}</label><input id="sftyEcPhone" inputmode="tel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.phone) || '')}"><button class="btn small" style="margin-top:8px" onclick="A.sftyEmergSave()">${t('sfty_emerg_save')}</button></div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
     <div class="card">
+      <button class="row" style="width:100%;border:none;background:none" onclick="tfaSheet()"><div class="row-main"><div class="row-title">🔐 ${t('tfa_title')}</div><div class="row-sub">${t('tfa_row_sub')}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="bioSheet()"><div class="row-main"><div class="row-title">👆 ${t('bio_title')}</div><div class="row-sub">${t('bio_row_sub')}</div></div><span class="muted">›</span></button><button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="cmmSheet()"><div class="row-main"><div class="row-title">💬 ${t('cmm_title')}</div><div class="row-sub">${t('cmm_sub')}</div></div><span class="muted">›</span></button><button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="dscOpen()"><div class="row-main"><div class="row-title">📄 ${t('dsc_title')}</div><div class="row-sub">${t('dsc_row_sub')}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
-    <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p></div>`;
+    <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p>${pfmLine()}</div>`;
 }
 async function showMyFace(){
   if (!state.rider || !state.rider.face_photo_path) return;
@@ -2519,7 +3010,157 @@ async function showMyFace(){
   const el = $('myFace'); if (el && data && data.signedUrl) el.innerHTML = `<img src="${data.signedUrl}" alt="">`;
 }
 
+
+// ================= DOCUMENT-SCAN ONBOARDING (Feature 23) =================
+// Rider uploads onboarding documents (photo or PDF). Status is per
+// document type; verification never changes rider approval itself.
+// Pure helpers (harness-tested): dscTypeLabel, dscStatusMeta,
+// dscSafeName, dscExt, dscPath, dscCanDelete, dscIsMissingTable.
+const DSC_TYPES = ['cnic_front', 'cnic_back', 'licence', 'vehicle', 'other'];
+const DSC_BUCKET = 'rider-docs';
+function dscTypeLabel(k){ return t('dsc_t_' + k); }
+function dscStatusMeta(s){
+  if (s === 'verified') return { cls:'approved', label:t('dsc_verified') };
+  if (s === 'rejected') return { cls:'rejected', label:t('dsc_rejected') };
+  return { cls:'pending', label:t('dsc_pending') };
+}
+function dscSafeName(n){ return String(n || 'doc').replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 60) || 'doc'; }
+function dscExt(name, mime){
+  if ((mime || '').startsWith('image/')) return 'jpg';
+  if (mime === 'application/pdf' || /\.pdf$/i.test(name || '')) return 'pdf';
+  return '';
+}
+function dscPath(type, ext){ return state.user.id + '/doc-' + type + '-' + Date.now() + '.' + ext; }
+function dscCanDelete(d){ return !!d && (d.status === 'pending' || d.status === 'rejected'); }
+function dscIsMissingTable(e){
+  const m = String((e && (e.message || e)) || '');
+  return (e && e.code === '42P01') || m.indexOf('PGRST205') !== -1 || (m.indexOf('rider_documents') !== -1 && m.indexOf('does not exist') !== -1);
+}
+function dscImageBlob(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => {
+      try {
+        const s = Math.min(1, 1280 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        toBlob(c).then(res, rej);
+      } catch (e) { URL.revokeObjectURL(url); rej(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+function dscListHtml(rows){
+  const by = {}; (rows || []).forEach(d => { by[d.doc_type] = d; });
+  const cards = DSC_TYPES.map(ty => {
+    const d = by[ty] || null;
+    const pill = d ? (() => { const m = dscStatusMeta(d.status); return `<span class="st ${m.cls}">${m.label}</span>`; })() : `<span class="muted">${t('dsc_not_submitted')}</span>`;
+    const meta = d ? `<div class="muted" style="font-size:13px">${esc(d.file_name || '')} · ${new Date(d.created_at).toLocaleDateString('en-GB')}${d.status === 'rejected' && d.admin_note ? ` · ${t('dsc_reason')}${esc(d.admin_note)}` : ''}</div>` : '';
+    return `<div class="card"><div class="row"><div class="row-main"><div class="row-title">📄 ${dscTypeLabel(ty)}</div>${meta}</div>${pill}</div>
+      <input type="file" id="dscF-${ty}" accept="image/*,application/pdf" style="display:none" onchange="dscOnFile('${ty}',this)">
+      <input type="file" id="dscC-${ty}" accept="image/*" capture="environment" style="display:none" onchange="dscOnFile('${ty}',this)">
+      <div class="bar" style="margin-top:8px">${d ? `<button class="btn ghost small" onclick="dscView('${esc(d.storage_path)}')">${t('dsc_view')}</button>` : ''}
+      <button class="btn small" onclick="$('dscF-${ty}').click()">${d ? t('dsc_replace') : t('dsc_upload')}</button>
+      <button class="btn ghost small" onclick="$('dscC-${ty}').click()">📷 ${t('dsc_take_photo')}</button>
+      ${dscCanDelete(d) ? `<button class="btn ghost small" onclick="dscDelete('${d.id}')">🗑️ ${t('dsc_delete')}</button>` : ''}</div></div>`;
+  }).join('');
+  return `<div class="note">${t('dsc_note')}</div>${cards}`;
+}
+async function dscOpen(){
+  openSheet('📄 ' + t('dsc_title'), `<div class="muted" style="font-size:14px">${t('dsc_sub')}</div><div id="dscBody" style="margin-top:10px"><div class="empty">${t('loading')}</div></div>`);
+  await dscLoad();
+}
+async function dscLoad(){
+  const box = $('dscBody'); if (!box) return;
+  try {
+    const { data, error } = await sb.from('rider_documents').select('*').eq('rider_id', state.rider.id).order('doc_type');
+    if (error) throw error;
+    state.dscRows = data || [];
+    box.innerHTML = dscListHtml(data || []);
+  } catch (e) {
+    box.innerHTML = dscIsMissingTable(e) ? `<div class="note">${t('dsc_pending_note')}</div>` : `<div class="empty">${esc(String((e && e.message) || e))}</div>`;
+  }
+}
+async function dscOnFile(type, input){
+  try {
+    const f = input && input.files && input.files[0]; input.value = '';
+    if (!f) return toast(t('dsc_file_needed'), true);
+    const ext = dscExt(f.name, f.type);
+    if (!ext) return toast(t('dsc_file_type'), true);
+    toast(t('dsc_uploading'));
+    const blob = ext === 'jpg' ? await dscImageBlob(f) : f;
+    const path = dscPath(type, ext);
+    const { error: uerr } = await sb.storage.from(DSC_BUCKET).upload(path, blob, { contentType: ext === 'jpg' ? 'image/jpeg' : 'application/pdf', upsert:false });
+    if (uerr) throw uerr;
+    const old = (state.dscRows || []).find(d => d.doc_type === type) || null;
+    const row = { rider_id: state.rider.id, doc_type: type, storage_path: path, file_name: dscSafeName(f.name), status: 'pending', admin_note: null, reviewed_by: null, reviewed_at: null, updated_at: new Date().toISOString() };
+    let werr = null;
+    if (old) { const r = await sb.from('rider_documents').update(row).eq('id', old.id); werr = r.error; }
+    else { const r = await sb.from('rider_documents').insert(row); werr = r.error; }
+    if (werr) { try { await sb.storage.from(DSC_BUCKET).remove([path]); } catch (e) {} throw werr; }
+    if (old && old.storage_path && old.storage_path !== path) { try { await sb.storage.from(DSC_BUCKET).remove([old.storage_path]); } catch (e) {} }
+    toast(t('dsc_saved')); closeSheet(); await dscOpen();
+  } catch (e) { toast(String((e && e.message) || e), true); }
+}
+async function dscView(path){
+  try {
+    const { data, error } = await sb.storage.from(DSC_BUCKET).createSignedUrl(path, 600);
+    if (error || !data || !data.signedUrl) throw (error || new Error('sign failed'));
+    window.open(data.signedUrl, '_blank', 'noopener');
+  } catch (e) { toast(t('dsc_view_fail'), true); }
+}
+async function dscDelete(id){
+  try {
+    if (!await uiConfirm(t('dsc_del_q'))) return;
+    const { data } = await sb.from('rider_documents').select('storage_path,status').eq('id', id).maybeSingle();
+    if (!data) throw new Error('not found');
+    if (!dscCanDelete(data)) throw new Error('verified cannot be deleted');
+    try { await sb.storage.from(DSC_BUCKET).remove([data.storage_path]); } catch (e) {}
+    const { error } = await sb.from('rider_documents').delete().eq('id', id);
+    if (error) throw error;
+    toast(t('dsc_deleted')); await dscLoad();
+  } catch (e) { toast(String((e && e.message) || e), true); }
+}
+
+// ================= SAFETY TOOLKIT (Feature 11) =================
+// SOS already exists (rider_sos RPC + sos_alerts + admin list). This block
+// COMPLETES it: rider-side resolve, Share Trip, RideCheck, emergency contact.
+// Pure, harness-tested: sftyNext(now, trip, st), sftyShareText(...).
+const SFTY_CHECK_MS = 30 * 60 * 1000, SFTY_GRACE_MS = 10 * 60 * 1000;
+function sftyState(){ if (!state.sfty){ const saved = ls.get('sfty_sos', null); state.sfty = { orderId:null, anchor:0, nextDue:0, promptAt:0, escAt:0, promptOpen:false, sosAt:(saved && saved.at) || 0, sosOrder:(saved && saved.order) || null }; } return state.sfty; }
+function sftyActiveTrip(){ return (state.mine || []).find(o => ['rider_assigned','picked_up'].includes(o.status)) || null; }
+function sftyNext(now, trip, st){
+  if (!trip) return { action:'reset' };
+  if (st.orderId !== trip.id) return { action:'arm' };
+  if (st.promptAt && st.escAt !== st.promptAt && now >= st.promptAt + SFTY_GRACE_MS) return { action:'escalate', nextDue: now + SFTY_CHECK_MS };
+  if (!st.promptAt && now >= st.nextDue) return { action:'prompt', at: now };
+  return { action:'none' };
+}
+function sftyShareText(name, shop, url, timeStr){ return t('sfty_share_msg', { n:name, s:shop, u:url }) + '\n' + t('sfty_share_note', { t:timeStr }); }
+function sftyCardRow(o){
+  const st = sftyState(); const sosOn = !!(st.sosAt && st.sosOrder === o.id);
+  const nxt = (st.orderId === o.id && st.nextDue > Date.now()) ? Math.max(1, Math.round((st.nextDue - Date.now()) / 60000)) : null;
+  return `<button class="btn ghost small" style="width:100%;margin-top:7px" onclick="A.sftyShareTrip('${o.id}')">📤 ${t('sfty_share_trip')}</button>${sosOn ? `<div class="note" style="background:rgba(180,22,27,.12);margin-top:8px">${t('sfty_sos_active')}</div><button class="btn gold small" style="width:100%;margin-top:7px" onclick="A.sftySosResolve()">${t('sfty_sos_oknow')}</button>` : ''}${nxt ? `<div class="muted" style="font-size:13px;margin-top:6px">🛟 ${t('sfty_next_check', { m:nxt })}</div>` : ''}`;
+}
+function sftyShowPrompt(trip){
+  const st = sftyState(); st.promptOpen = true;
+  openSheet(t('sfty_rc_title'), `<div class="note">${t('sfty_rc_note')}</div><div style="margin-top:12px"><button class="btn" style="width:100%" onclick="A.sftyRcOk()">${t('sfty_rc_ok')}</button><button class="btn sosbtn" style="width:100%;margin-top:8px" onclick="closeSheet();A.sftySos('${trip.id}', false)">${t('sfty_rc_sos')}</button></div>`);
+}
+function sftyRcTick(){
+  try {
+    const st = sftyState(); const trip = sftyActiveTrip();
+    const r = sftyNext(Date.now(), trip, st);
+    if (r.action === 'reset'){ if (st.promptOpen) closeSheet(); if (st.orderId){ try { localStorage.removeItem('sfty_anchor_' + st.orderId); } catch(e){} } st.orderId = null; st.promptAt = 0; st.escAt = 0; st.promptOpen = false; return; }
+    if (r.action === 'arm'){ st.orderId = trip.id; const saved = ls.get('sfty_anchor_' + trip.id, 0); st.anchor = (saved && saved <= Date.now()) ? saved : Date.now(); if (!saved) ls.set('sfty_anchor_' + trip.id, st.anchor); st.nextDue = st.anchor + SFTY_CHECK_MS; st.promptAt = 0; st.escAt = 0; return; }
+    if (r.action === 'prompt'){ st.promptAt = r.at; sftyShowPrompt(trip); return; }
+    if (r.action === 'escalate'){ st.escAt = st.promptAt; st.promptAt = 0; st.promptOpen = false; st.nextDue = r.nextDue; closeSheet(); A.sftySos(trip.id, true); return; }
+  } catch(e){}
+}
+function sftyEmergLoadOnce(){ if (!state.rider || state.sftyContact !== undefined || state.sftyContactLoading) return; state.sftyContactLoading = true; A.sftyEmergLoad().then(() => { state.sftyContactLoading = false; if (state.tab === 'acct') renderTab(); }); }
+
 // ================= ACTIONS =================
+
 let pollTimer = null, channel = null;
 // ================= RIDER HELP CENTER =================
 function supportClose(){ document.getElementById('riderSupportModal')?.remove(); state.supportSelected=null; state.supportOrderId=null; state.supportContext=null; state.supportAttachments=[]; }
@@ -2656,11 +3297,55 @@ async function supportEscalate(id){ try{need(await sb.rpc('support_escalate_tick
 
 const A = {
   saveSafetyCheck(item, value){
-    if (!['helmet','brakes','lights','tires'].includes(item) || !state.rider) return;
-    const key='kh_rd_bike_check_'+state.rider.id; let data={};
-    try { data=JSON.parse(localStorage.getItem(key)||'{}')||{}; } catch(e) {}
-    data[item]=!!value; data.updated_at=new Date().toISOString();
-    try { localStorage.setItem(key,JSON.stringify(data)); } catch(e) { toast(t('error'),true); }
+    if (!['helmet','brakes','lights','tires','fuel','docs'].includes(item) || !state.rider) return;
+    const data = bscDraft();
+    data[item] = !!value; data.updated_at = new Date().toISOString();
+    bscSaveDraft(data);
+  },
+  bscConfirm(){
+    if (!state.rider) return;
+    const draft = bscDraft();
+    const failed = bscFailedOf(draft);
+    const items = {}; bscITEMS.forEach(([id]) => { items[id] = !!draft[id]; });
+    const rec = { date: bscToday(), items, failed, reported: false, synced: false };
+    bscSaveHist([rec, ...(bscHist() || []).filter(h => h.date !== rec.date)]);
+    toast(t('bsc_confirm_saved'));
+    (async () => {
+      try {
+        const r = await sb.from('rider_bike_checks').upsert({ rider_id: state.rider.id, check_date: rec.date, items, failed, reported: false }, { onConflict: 'rider_id,check_date' });
+        if (r.error) throw r.error;
+        state.bscServer = true; rec.synced = true;
+        bscSaveHist([rec, ...(bscHist() || []).filter(h => h.date !== rec.date)]);
+      } catch (e) { state.bscServer = false; }
+      renderTab();
+    })();
+    renderTab();
+  },
+  bscHistory(){
+    const rows = bscHist() || [];
+    const body = rows.length ? rows.map(h => {
+      const failed = (h.failed || []).map(bscLabel).join(', ');
+      return `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(h.date)}${h.failed && h.failed.length ? ' · <span style="color:var(--danger)">⚠️ ' + esc(failed) + '</span>' : ' · ✅ ' + t('bsc_all_ok')}</div><div class="row-sub">${h.synced ? t('bsc_synced') : '📱 ' + t('bsc_phone_only')}</div></div></div>`;
+    }).join('') : `<div class="empty">${t('bsc_hist_empty')}</div>`;
+    openSheet('🛡️ ' + t('bsc_hist_title'), body);
+  },
+  async bscReport(){
+    if (!state.rider) return;
+    const failed = bscFailedOf(bscDraft());
+    if (!failed.length) { toast(t('bsc_all_ok')); return; }
+    const labels = failed.map(bscLabel).join(', ');
+    state.bscPrefill = { subject: 'Bike safety issue', message: 'Bike safety check ' + bscToday() + ' — needs attention: ' + labels + '. Please advise.' };
+    await openSupportCenter(null);
+    const subj = document.getElementById('supportSubject'), cat = document.getElementById('supportCategory'), msg = document.getElementById('supportMessage');
+    if (subj && !subj.value) subj.value = state.bscPrefill.subject;
+    if (cat) cat.value = 'safety';
+    if (msg && !msg.value) msg.value = state.bscPrefill.message;
+    const rec = bscTodayRec();
+    if (rec && !rec.reported) { rec.reported = true; bscSaveHist([rec, ...(bscHist() || []).filter(h => h.date !== rec.date)]); }
+  },
+  bscGoToCheck(){
+    const el = document.getElementById('bscCard');
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const old = el.style.boxShadow; el.style.boxShadow = '0 0 0 3px rgba(232,114,42,.55)'; setTimeout(() => { el.style.boxShadow = old; }, 1600); }
   },
   openParcelScanner(id, action){ if (!['pickup','deliver'].includes(action)) return; openParcelScanner(id,action); },
   closeParcelScanner(){ stopParcelScanner(); $('parcelScanner')?.remove(); },
@@ -2741,12 +3426,22 @@ const A = {
       closeSheet(); toast(t('salary_ok') + ': ' + money(amt)); await loadMoney(); renderTab();
     });
   },
-  contactSheet(orderId){
-    const row = (icon, label, onclick) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b></span><span class="muted">›</span></button>`;
-    openSheet(t('contact'),
-      row('💬', t('customer'), `closeSheet();Chat.open('${orderId}','cr',null)`)
-      + row('💬', t('shop_word'), `closeSheet();Chat.open('${orderId}','rs',null)`)
-      + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}','sup_r',null)`));
+  async contactSheet(orderId){
+  const row = (icon, label, onclick, sub) => `<button class="menu-row" style="width:100%;text-align:left" onclick="${onclick}"><span style="font-size:20px">${icon}</span><span><b>${label}</b>${sub ? `<br><small class="muted">${sub}</small>` : ''}</span><span class="muted">›</span></button>`;
+  let custMode = null, shopMode = null;
+  try{
+    const r = await sb.from('orders').select('customer_id,restaurant_id').eq('id', orderId).maybeSingle();
+    if(!r.error && r.data){
+      custMode = await cmmModeForUser(r.data.customer_id);
+      shopMode = await cmmModeForShop(r.data.restaurant_id);
+    }
+  }catch(e){}
+  const custSub = custMode ? t('cmm_prefers', { m: cmmLabel(custMode) }) : '';
+  const shopSub = shopMode ? t('cmm_prefers', { m: cmmLabel(shopMode) }) : '';
+  openSheet(t('contact'),
+    row('💬', t('customer'), `closeSheet();Chat.open('${orderId}','cr',null)`, custSub)
+    + row('💬', t('shop_word'), `closeSheet();Chat.open('${orderId}','rs',null)`, shopSub)
+    + row('🛟', t('help_word'), `closeSheet();Chat.open('${orderId}','sup_r',null)`, ''));
   },
   async confirmHandover(){
     const code = ($('hcCode')?.value || '').trim();
@@ -3171,9 +3866,11 @@ const A = {
   },
   async markDelivered(id){
     const od = (state.mine || []).find(x => x.id === id);
+    const dc = state.dlvConf[id] || null; const contactless = !!(dc && dc.mode === 'contactless');
+    if (contactless && od && !od.delivery_photo){ toast(t('dlv_photo_req'), true); renderTab(); return; }
     if (state.settings.delivery_photo === true && od && !od.delivery_photo){ toast(t('dphoto_need'), true); renderTab(); return; }
     let code = '';
-    if (state.settings.delivery_code !== false){ code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' }); if (code === null){ renderTab(); return; } }
+    if (!contactless && state.settings.delivery_code !== false){ code = await uiPrompt(t('code_q'), '', { type:'number', icon:'🔐' }); if (code === null){ renderTab(); return; } }
     await run(async () => { need(await sb.rpc('rider_deliver', { p_order:id, p_code:String(code).trim() })); await Promise.all([loadJobs(), loadMoney()]); renderTab(); toast(t('saved')); });
     renderTab();
   },
@@ -3189,11 +3886,62 @@ const A = {
       renderTab(); toast(t('dphoto_saved'));
     });
   },
-  async sos(){
-    if (!await uiConfirm(t('sos_q'), { danger:true, icon:'🆘' })) return;
+  async sos(){ return A.sftySos(null, false); },
+  async sftySos(orderId, auto){
+    const o = orderId ? (state.mine || []).find(x => x.id === orderId) : sftyActiveTrip();
+    if (!auto && !await uiConfirm(t('sos_q'), { danger:true, icon:'🆘' })) return;
     const p = state.pos || await new Promise(res => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition(x => res({ lat:x.coords.latitude, lng:x.coords.longitude }), () => res(null), { enableHighAccuracy:true, timeout:6000 }); });
-    await run(async () => { need(await sb.rpc('rider_sos', { p_lat:p ? p.lat : null, p_lng:p ? p.lng : null, p_note:null })); toast(t('sos_sent'));
-      if (state.settings.support_phone) setTimeout(() => { location.href = 'tel:' + state.settings.support_phone; }, 800); });
+    const short = o ? o.id.slice(-4).toUpperCase() : null;
+    const note = (auto ? 'AUTO RideCheck' : 'SOS') + (short ? ' · Order #' + short : '');
+    await run(async () => {
+      need(await sb.rpc('rider_sos', { p_lat:p ? p.lat : null, p_lng:p ? p.lng : null, p_note:note }));
+      try { if (o) await sb.rpc('rider_sos_tag', { p_order_id:o.id, p_source: auto ? 'auto' : 'manual' }); } catch(e){}
+      const st = sftyState(); st.sosAt = Date.now(); st.sosOrder = o ? o.id : null;
+      try { localStorage.setItem('sfty_sos', JSON.stringify({ at:st.sosAt, order:st.sosOrder })); } catch(e){}
+      toast(auto ? t('sfty_rc_auto') : t('sos_sent'));
+      if (!auto && state.settings.support_phone) setTimeout(() => { location.href = 'tel:' + state.settings.support_phone; }, 800);
+      renderTab();
+    });
+  },
+  async sftySosResolve(){
+    await run(async () => {
+      try { need(await sb.rpc('rider_sos_resolve', {})); }
+      catch(e){ toast(t('sfty_sos_resolve_na'), true); return; }
+      const st = sftyState(); st.sosAt = 0; st.sosOrder = null;
+      try { localStorage.removeItem('sfty_sos'); } catch(e){}
+      toast(t('sfty_sos_resolved')); renderTab();
+    });
+  },
+  async sftyShareTrip(orderId){
+    const o = (state.mine || []).find(x => x.id === orderId) || sftyActiveTrip();
+    if (!o){ toast(t('sfty_no_trip'), true); return; }
+    const p = state.pos || await new Promise(res => { if (!navigator.geolocation) return res(null); navigator.geolocation.getCurrentPosition(x => res({ lat:x.coords.latitude, lng:x.coords.longitude }), () => res(null), { enableHighAccuracy:true, timeout:6000 }); });
+    if (!p){ toast(t('sfty_no_loc'), true); return; }
+    if (state.sftyContact === undefined) await A.sftyEmergLoad();
+    const url = 'https://www.openstreetmap.org/?mlat=' + p.lat + '&mlon=' + p.lng + '&zoom=16';
+    const name = (state.profile && state.profile.full_name) || t('rider');
+    const shop = (o.restaurant && o.restaurant.name) || '';
+    const timeStr = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+    const msg = sftyShareText(name, shop, url, timeStr);
+    state.sftyShareMsg = msg;
+    const waGeneric = 'https://wa.me/?text=' + encodeURIComponent(msg);
+    const ec = state.sftyContact;
+    const waEmerg = (ec && waNum(ec.phone)) ? 'https://wa.me/' + waNum(ec.phone) + '?text=' + encodeURIComponent(msg) : null;
+    const sysBtn = navigator.share ? `<button class="btn" style="width:100%;margin-top:8px" onclick="A.sftySysShare()">${t('sfty_share_sys')}</button>` : '';
+    openSheet(t('sfty_share_title'), `<div class="note" style="white-space:pre-wrap">${esc(msg)}</div><div style="margin-top:10px"><a class="btn" style="display:block;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="${waGeneric}">💬 ${t('sfty_share_wa')}</a>${waEmerg ? `<a class="btn gold" style="display:block;text-align:center;text-decoration:none;margin-top:8px" target="_blank" rel="noopener" href="${waEmerg}">💬 ${t('sfty_share_emerg')}</a>` : ''}<button class="btn ghost" style="width:100%;margin-top:8px" onclick="A.sftyCopyMsg()">${t('sfty_share_copy')}</button>${sysBtn}</div><div class="muted" style="font-size:13px;margin-top:8px">${t('sfty_share_note', { t:timeStr })}</div>`);
+  },
+  sftyCopyMsg(){ const msg = state.sftyShareMsg || ''; if (navigator.clipboard) navigator.clipboard.writeText(msg).then(() => toast(t('sfty_copied'))).catch(() => toast(t('error'), true)); else toast(t('error'), true); },
+  async sftySysShare(){ try { await navigator.share({ title:'Dera trip', text: state.sftyShareMsg || '' }); } catch(e){} },
+  sftyRcOk(){ const st = sftyState(); st.promptAt = 0; st.promptOpen = false; st.nextDue = Date.now() + SFTY_CHECK_MS; closeSheet(); },
+  async sftyEmergLoad(){ if (!state.rider) return; try { const { data } = await sb.from('rider_emergency_contacts').select('*').eq('rider_id', state.rider.id).maybeSingle(); state.sftyContact = data || null; } catch(e){ state.sftyContact = null; } },
+  async sftyEmergSave(){
+    const name = ($('sftyEcName').value || '').trim(); const phone = ($('sftyEcPhone').value || '').trim();
+    if (!name || !waNum(phone)){ toast(t('bad_phone'), true); return; }
+    await run(async () => {
+      try { need(await sb.from('rider_emergency_contacts').upsert({ rider_id: state.rider.id, name, phone: waNum(phone) }, { onConflict:'rider_id' }).select().single()); }
+      catch(e){ if (/42P01|PGRST205|does not exist/i.test(String((e && (e.message || e)) || ''))){ toast(t('sfty_emerg_na'), true); return; } throw e; }
+      state.sftyContact = { name, phone: waNum(phone) }; toast(t('sfty_emerg_saved')); renderTab();
+    });
   },
   async giveBack(id){
     if (!await uiConfirm(t('confirm_giveback'))) return;
@@ -3247,7 +3995,7 @@ function faceGate(){
 function passGate(){ if (state.user) ls.set('kh_facegate_' + state.user.id, null); }
 // ================= FCM PUSH (Capacitor only; web par no-op) =================
 // App khulne par login user ka FCM token device_tokens mein save hota hai,
-// taake Admin app se push bheja ja sake. Koi error login ko kabhi nahi rokti.
+// So the Admin app can send a push. No error ever blocks login.
 function handleCallPush(d){
   try {
     if (!d || d.type !== 'call') return false;
@@ -3304,7 +4052,325 @@ const FCM = {
     } catch (e) {}
   }
 };
-async function afterLogin(user){ FCM.register(user && user.id); state.user = user; await loadRider(); await pwGate(); await route(); }
+async function afterLogin(user){ if (!(await tfaGate())) return; FCM.register(user && user.id); state.user = user; await loadRider(); await pwGate(); await route(); }
+
+// ================= 2FA (Feature 14: native Supabase Auth TOTP) =================
+// Factors live in Supabase Auth, never in app tables. Only a VERIFIED factor
+// gates logins; an enrolled-but-unverified factor never does. 2FA is
+// account-level (all devices), not device-level. It protects against a
+// stolen password only — never claim more than that.
+function tfaL(k){ return t(k); }
+function tfaHasApi(){ try { return !!(sb.auth && sb.auth.mfa && typeof sb.auth.mfa.listFactors === 'function' && typeof sb.auth.mfa.getAuthenticatorAssuranceLevel === 'function'); } catch(e){ return false; } }
+/* ---- Communication mode (cmm): preferred contact method ---- */
+const CMM_MODES = ['chat','call','whatsapp'];
+function cmmValid(m){ return CMM_MODES.indexOf(m) >= 0 ? m : null; }
+function cmmLabel(m){ if(m==='chat') return t('cmm_chat'); if(m==='call') return t('cmm_call'); if(m==='whatsapp') return t('cmm_wa'); return ''; }
+function cmmOrder(items, mode){
+  const pref = cmmValid(mode);
+  if(!pref) return items.slice();
+  const first = [], rest = [];
+  for(const it of items){ (it.ch === pref ? first : rest).push(it); }
+  return first.concat(rest);
+}
+async function cmmModeForUser(uid){
+  try{
+    if(!uid) return null;
+    const r = await sb.from('contact_preferences').select('mode').eq('user_id', uid).maybeSingle();
+    if(r.error || !r.data) return null;
+    return cmmValid(r.data.mode);
+  }catch(e){ return null; }
+}
+async function cmmModeForRider(riderRowId){
+  try{
+    if(!riderRowId) return null;
+    const r = await sb.from('riders').select('profile_id').eq('id', riderRowId).maybeSingle();
+    if(r.error || !r.data || !r.data.profile_id) return null;
+    return await cmmModeForUser(r.data.profile_id);
+  }catch(e){ return null; }
+}
+async function cmmModeForShop(restaurantId){
+  try{
+    if(!restaurantId) return null;
+    const r = await sb.from('restaurants').select('owner_id').eq('id', restaurantId).maybeSingle();
+    if(r.error || !r.data || !r.data.owner_id) return null;
+    return await cmmModeForUser(r.data.owner_id);
+  }catch(e){ return null; }
+}
+async function cmmMyMode(){
+  try{ const uid = state.user && state.user.id; return await cmmModeForUser(uid); }catch(e){ return null; }
+}
+async function cmmTableOk(){
+  try{
+    const uid = state.user && state.user.id; if(!uid) return false;
+    const r = await sb.from('contact_preferences').select('mode').eq('user_id', uid).maybeSingle();
+    if(r.error){
+      const msg = String((r.error && (r.error.message || r.error.code)) || '');
+      if(/does not exist|PGRST205|relation/i.test(msg)) return false;
+      return true;
+    }
+    return true;
+  }catch(e){ return false; }
+}
+async function cmmSheet(){
+  const uid = state.user && state.user.id;
+  if(!uid){ openSheet(t('cmm_title'), `<p class="muted">${t('cmm_unavailable')}</p>`); return; }
+  const cur = await cmmMyMode();
+  const ok = await cmmTableOk();
+  const opt = (m, icon, label) => `<button class="menu-row" style="width:100%;text-align:left" onclick="cmmSave('${m}')"><span style="font-size:20px">${icon}</span><span><b>${label}</b>${cur===m?' <small class="muted">\u2713</small>':''}</span><span class="muted">\u203a</span></button>`;
+  let h = `<p class="muted" style="font-size:13px;margin:5px 0">${t('cmm_note')}</p>`;
+  if(!ok) h += `<p class="muted" style="font-size:13px;margin:5px 0">\u26a0\ufe0f ${t('cmm_unavailable')}</p>`;
+  h += opt('chat','\uD83D\uDCAC', t('cmm_chat')) + opt('call','\uD83D\uDCDE', t('cmm_call')) + opt('whatsapp','\uD83D\uDFE2', t('cmm_wa'));
+  h += `<button class="menu-row" style="width:100%;text-align:left" onclick="cmmSave('')"><span style="font-size:20px">\u2715</span><span><b>${t('cmm_none')}</b>${!cur?' <small class="muted">\u2713</small>':''}</span><span class="muted">\u203a</span></button>`;
+  openSheet(t('cmm_title'), h);
+}
+async function cmmSave(mode){
+  try{
+    const uid = state.user && state.user.id; if(!uid) return;
+    const m = cmmValid(mode);
+    if(!m){
+      const r = await sb.from('contact_preferences').delete().eq('user_id', uid);
+      if(r.error) throw r.error;
+      toast(t('cmm_removed'));
+    } else {
+      const r = await sb.from('contact_preferences').upsert({ user_id: uid, mode: m });
+      if(r.error) throw r.error;
+      toast(t('cmm_saved'));
+    }
+    closeSheet();
+  }catch(e){ toast(t('cmm_unavailable')); }
+}
+
+async function tfaStatus(){
+  if (!tfaHasApi()) return { api:false, verified:[], unverified:[], error:null };
+  try {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw error;
+    const totp = (data && data.totp) || [];
+    return { api:true, verified: totp.filter(f => f.status === 'verified'), unverified: totp.filter(f => f.status !== 'verified'), error:null };
+  } catch(e){ return { api:true, verified:[], unverified:[], error:e }; }
+}
+function tfaOverlay(html){
+  const old = document.getElementById('tfaGateWrap'); if (old) old.remove();
+  const d = document.createElement('div'); d.id = 'tfaGateWrap';
+  d.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#fff;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto';
+  d.innerHTML = html; document.body.appendChild(d);
+  try { if (typeof hideSplash === 'function') hideSplash(); } catch(e){}
+  return d;
+}
+function tfaCloseOverlay(){ const el = document.getElementById('tfaGateWrap'); if (el) el.remove(); }
+function tfaGateBox(title, sub, bodyHtml){
+  return `<div style="width:100%;max-width:380px"><h2 style="margin:0 0 8px">${title}</h2><p class="muted" style="font-size:14px;margin:0 0 14px">${sub}</p>${bodyHtml}</div>`;
+}
+function tfaPrompt(factorId){
+  return new Promise(resolve => {
+    tfaOverlay(tfaGateBox(tfaL('tfa_gate_title'), tfaL('tfa_gate_sub'),
+      `<input id="tfaGateCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center"><div id="tfaGateMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button id="tfaGateBtn" class="btn" style="width:100%;margin-top:10px">${tfaL('tfa_continue')}</button><button id="tfaGateOut" class="btn ghost" style="width:100%;margin-top:8px">${tfaL('tfa_signout')}</button>`));
+    const btn = document.getElementById('tfaGateBtn'), msg = document.getElementById('tfaGateMsg');
+    const inp = document.getElementById('tfaGateCode'); if (inp) setTimeout(() => inp.focus(), 60);
+    btn.onclick = async () => {
+      const code = (inp.value || '').trim();
+      if (!/^\d{6}$/.test(code)){ msg.textContent = tfaL('tfa_enter_code'); return; }
+      btn.disabled = true; msg.textContent = '';
+      try {
+        const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId });
+        if (chErr) throw chErr;
+        const { error } = await sb.auth.mfa.verify({ factorId, challengeId: ch.id, code });
+        if (error) throw error;
+        tfaCloseOverlay(); resolve(true);
+      } catch(e){ msg.textContent = tfaL('tfa_wrong'); btn.disabled = false; }
+    };
+    document.getElementById('tfaGateOut').onclick = async () => {
+      tfaCloseOverlay(); try { await sb.auth.signOut(); } catch(e){}
+      try { showAuth(); } catch(e){}
+      resolve(false);
+    };
+  });
+}
+function tfaStatusErrorGate(){
+  return new Promise(resolve => {
+    tfaOverlay(tfaGateBox(tfaL('tfa_title'), tfaL('tfa_status_err'),
+      `<button id="tfaGateRetry" class="btn" style="width:100%">${tfaL('tfa_retry')}</button><button id="tfaGateOut2" class="btn ghost" style="width:100%;margin-top:8px">${tfaL('tfa_signout')}</button>`));
+    document.getElementById('tfaGateRetry').onclick = async () => { tfaCloseOverlay(); resolve(await tfaGate()); };
+    document.getElementById('tfaGateOut2').onclick = async () => {
+      tfaCloseOverlay(); try { await sb.auth.signOut(); } catch(e){}
+      try { showAuth(); } catch(e){}
+      resolve(false);
+    };
+  });
+}
+async function tfaGate(){
+  if (!tfaHasApi()) return true;
+  let st; try { st = await tfaStatus(); } catch(e){ st = { error:e }; }
+  if (st.error) return await tfaStatusErrorGate();
+  if (!st.verified || !st.verified.length) return true;
+  let aal = null;
+  try { const r = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (r.error) throw r.error; aal = r.data; } catch(e){ return await tfaStatusErrorGate(); }
+  if (aal && aal.currentLevel === 'aal2') return true;
+  return await tfaPrompt(st.verified[0].id);
+}
+async function tfaSheet(){
+  const st = await tfaStatus();
+  if (!st.api){ openSheet(tfaL('tfa_title'), `<p class="muted">${tfaL('tfa_unavailable')}</p>`); return; }
+  if (st.error){ openSheet(tfaL('tfa_title'), `<p class="muted">${tfaL('tfa_status_err')}</p><button class="btn" style="width:100%" onclick="tfaSheet()">${tfaL('tfa_retry')}</button>`); return; }
+  if (st.verified.length){
+    openSheet(tfaL('tfa_title'), `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_on')}</p><button class="btn warn" style="width:100%" onclick="tfaDisableAsk()">${tfaL('tfa_disable')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`);
+    return;
+  }
+  openSheet(tfaL('tfa_title'), `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_sub')}</p>${st.unverified.length ? `<p class="muted" style="font-size:13px">${tfaL('tfa_unfinished')}</p>` : ''}<button class="btn" style="width:100%" onclick="tfaEnrollStart()">${tfaL('tfa_setup')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`);
+}
+async function tfaEnrollStart(){
+  try {
+    const st = await tfaStatus();
+    if (st.verified.length) return tfaSheet();
+    for (const f of (st.unverified || [])){ try { await sb.auth.mfa.unenroll({ factorId: f.id }); } catch(e){} }
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
+    if (error) throw error;
+    state.tfaPending = { id: data.id, secret: (data.totp && data.totp.secret) || '', qr: (data.totp && data.totp.qr_code) || '' };
+    tfaEnrollSheet();
+  } catch(e){ toast((e && e.message) || tfaL('tfa_status_err'), true); }
+}
+function tfaEnrollSheet(){
+  const p = state.tfaPending; if (!p) return tfaSheet();
+  openSheet(tfaL('tfa_title'), `<div class="box"><p class="muted" style="font-size:13px;margin:0 0 10px">${tfaL('tfa_scan')}</p><div id="tfaQr" style="text-align:center"></div><p class="muted" style="font-size:13px;margin:10px 0 4px">${tfaL('tfa_secret')}</p><div style="word-break:break-all;font-family:monospace">${p.secret || '—'}</div><input id="tfaEnrollCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center;margin-top:12px"><div id="tfaMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button class="btn" style="width:100%;margin-top:8px" onclick="tfaVerifyEnroll()">${tfaL('tfa_verify')}</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="tfaCancelEnroll()">${tfaL('tfa_cancel')}</button></div>`);
+  const q = document.getElementById('tfaQr'); if (q && p.qr) q.innerHTML = p.qr;
+}
+async function tfaCancelEnroll(){
+  const p = state.tfaPending; state.tfaPending = null;
+  if (p){ try { await sb.auth.mfa.unenroll({ factorId: p.id }); } catch(e){} }
+  tfaSheet();
+}
+async function tfaVerifyEnroll(){
+  const p = state.tfaPending; if (!p) return tfaSheet();
+  const inp = document.getElementById('tfaEnrollCode'), msg = document.getElementById('tfaMsg');
+  const code = (inp && inp.value || '').trim();
+  if (!/^\d{6}$/.test(code)){ if (msg) msg.textContent = tfaL('tfa_enter_code'); return; }
+  try {
+    const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId: p.id });
+    if (chErr) throw chErr;
+    const { error } = await sb.auth.mfa.verify({ factorId: p.id, challengeId: ch.id, code });
+    if (error) throw error;
+    state.tfaPending = null; toast(tfaL('tfa_enabled')); tfaSheet();
+  } catch(e){ if (msg) msg.textContent = tfaL('tfa_wrong'); }
+}
+function tfaDisableAsk(){
+  openSheet(tfaL('tfa_title'), `<div class="box"><p class="muted" style="font-size:13px;margin:0 0 10px">${tfaL('tfa_disable_ask')}</p><input id="tfaDisCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center"><div id="tfaDisMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button class="btn warn" style="width:100%;margin-top:8px" onclick="tfaDisableVerify()">${tfaL('tfa_disable')}</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="tfaSheet()">${tfaL('tfa_cancel')}</button></div>`);
+}
+async function tfaDisableVerify(){
+  const inp = document.getElementById('tfaDisCode'), msg = document.getElementById('tfaDisMsg');
+  const code = (inp && inp.value || '').trim();
+  if (!/^\d{6}$/.test(code)){ if (msg) msg.textContent = tfaL('tfa_enter_code'); return; }
+  try {
+    const st = await tfaStatus(); const f = st.verified[0];
+    if (!f) return tfaSheet();
+    const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId: f.id });
+    if (chErr) throw chErr;
+    const { error } = await sb.auth.mfa.verify({ factorId: f.id, challengeId: ch.id, code });
+    if (error) throw error;
+    await sb.auth.mfa.unenroll({ factorId: f.id });
+    toast(tfaL('tfa_disabled')); tfaSheet();
+  } catch(e){ if (msg) msg.textContent = tfaL('tfa_wrong'); }
+}
+function tfaSecHtml(st){
+  if (!st || !st.api) return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_unavailable')}</p></div>`;
+  if (st.error) return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_status_err')}</p><button class="btn ghost" onclick="tfaSheet()">${tfaL('tfa_manage')}</button></div>`;
+  const on = st.verified.length > 0;
+  return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${on ? tfaL('tfa_on') : tfaL('tfa_sub')}</p><button class="btn ghost" onclick="tfaSheet()">${tfaL('tfa_manage')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`;
+}
+
+
+// ================= BIOMETRICS LOGIN (Feature 15: native Supabase passkeys, rider) =================
+// Mirrors Feature 6 customer passkeys (secHasPasskeyApi / secRegisterPasskey /
+// secDeletePasskey / secPasskeySignIn): the device's own biometric unlock
+// (fingerprint / face / device PIN) protects a Supabase-verified WebAuthn
+// passkey. No fingerprint image or biometric data ever leaves this phone;
+// nothing biometric is sent to Dera or Supabase. Passkeys live in Supabase
+// Auth, not in app tables (zero migration). Sign-in flows through the
+// existing afterLogin(), whose first statement is tfaGate(), so a rider
+// with 2FA enabled still gets the code prompt after a passkey sign-in.
+function bioHasApi(authObj){ return !!(authObj && typeof authObj.signInWithPasskey === 'function' && typeof authObj.registerPasskey === 'function'); }
+function bioErrKind(err){
+  const code = String((err && err.code) || '');
+  const msg = String((err && err.message) || '');
+  if (code === 'passkey_disabled') return 'disabled';
+  if (code === 'webauthn_credential_exists') return 'exists';
+  if (/credential_not_found|not found|no passkey/i.test(msg)) return 'notfound';
+  return '';
+}
+function bioErrText(e){
+  const kind = bioErrKind(e);
+  if (kind === 'disabled') return t('bio_disabled');
+  if (kind === 'exists') return t('bio_exists');
+  if (kind === 'notfound') return t('bio_no_device');
+  return String((e && e.message) || '') || t('error');
+}
+// Device-local hint: the login screen has no session, so passkey.list()
+// cannot run there. Registration sets this flag; deleting the last passkey
+// clears it. The server is source of truth on use: a stale flag only yields
+// the honest "no passkey on this phone" message, which clears the flag.
+function bioFlag(){ try { return ls.get('kh_rd_bio', 0) === 1; } catch (e) { return false; } }
+function bioSetFlag(v){ try { ls.set('kh_rd_bio', v ? 1 : 0); } catch (e) {} }
+function bioLoginBtnHtml(){
+  if (state.authMode === 'signup') return '';
+  if (!bioHasApi(sb.auth) || !bioFlag()) return '';
+  return `<button class="btn ghost" style="width:100%;margin-top:10px" onclick="bioSignIn()">👆 ${t('bio_signin')}</button><div class="err-text" id="bioMsg"></div>`;
+}
+async function bioSignIn(){
+  const msg = $('bioMsg');
+  if (!bioHasApi(sb.auth)){ if (msg) msg.textContent = t('bio_unavailable'); return; }
+  if (msg) msg.textContent = '';
+  try {
+    const { data, error } = await sb.auth.signInWithPasskey();
+    if (error) throw error;
+    if (!data || !data.user) throw new Error('no session');
+    await afterLogin(data.user);
+  } catch (e) {
+    logErr(e);
+    if (bioErrKind(e) === 'notfound') bioSetFlag(0);
+    const text = bioErrText(e);
+    if (msg) msg.textContent = text; else toast(text, true);
+  }
+}
+function bioWhen(s){ try { return new Date(s).toLocaleString(); } catch (e) { return String(s); } }
+async function bioSheet(){
+  if (!bioHasApi(sb.auth)){ openSheet(t('bio_title'), `<p class="muted">${t('bio_unavailable')}</p>`); return; }
+  let passkeys = null, pkErr = null;
+  try {
+    const { data, error } = await sb.auth.passkey.list();
+    if (error) throw error;
+    passkeys = Array.isArray(data) ? data : ((data && data.passkeys) || []);
+  } catch (e) { pkErr = e; }
+  const rows = passkeys === null ? '' : (passkeys.length ? passkeys.map(p => {
+    const name = p.friendly_name || p.friendlyName || 'Passkey';
+    const last = p.last_used_at || p.lastUsedAt;
+    return `<div class="menu-row"><span>👆 <b>${esc(String(name))}</b><small class="muted" style="display:block;font-size:12px">${last ? t('bio_last_used') + ': ' + esc(bioWhen(last)) : ''}</small></span><button class="btn ghost small" onclick="bioDelete('${esc(String(p.id))}')">${t('bio_remove')}</button></div>`;
+  }).join('') : `<div class="empty">${t('bio_none')}</div>`);
+  openSheet(t('bio_title'), `<div class="box"><b>👆 ${t('bio_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${t('bio_sub')}</p>${pkErr ? `<p class="muted" style="font-size:13px">${esc(bioErrText(pkErr))}</p>` : rows}<div style="margin-top:10px"><button class="btn" style="width:100%" onclick="bioRegister()">${t('bio_register')}</button></div></div>`);
+}
+async function bioRegister(){
+  if (!bioHasApi(sb.auth)) return toast(t('bio_unavailable'), true);
+  try {
+    const { error } = await sb.auth.registerPasskey();
+    if (error) throw error;
+    bioSetFlag(1);
+    toast(t('bio_registered')); closeSheet(); await bioSheet();
+  } catch (e) { logErr(e); toast(bioErrText(e), true); }
+}
+async function bioDelete(id){
+  if (!window.confirm(t('bio_confirm_delete'))) return;
+  try {
+    if (!sb.auth.passkey || typeof sb.auth.passkey.delete !== 'function') return toast(t('bio_unavailable'), true);
+    const { error } = await sb.auth.passkey.delete({ passkeyId: id });
+    if (error) throw error;
+    toast(t('bio_deleted'));
+    try {
+      const { data } = await sb.auth.passkey.list();
+      const left = Array.isArray(data) ? data : ((data && data.passkeys) || []);
+      if (!left.length) bioSetFlag(0);
+    } catch (e) { /* flag stays; server is source of truth on next sign-in */ }
+    closeSheet(); await bioSheet();
+  } catch (e) { logErr(e); toast(bioErrText(e), true); }
+}
+
 // ================= CHAT (same code in all four apps) =================
 const Chat = (() => {
   const L = {
@@ -4204,13 +5270,14 @@ const Receipt = (() => {
   return { row, list, open, method, M };
 })();
 function hideSplash(){
+  pfmMark('ready');
   const sp = document.getElementById('splash');
   if (!sp || sp.dataset.done) return;
   sp.dataset.done = '1';
   const t0 = window.__splashT || Date.now();
-  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 1900 - (Date.now() - t0)));
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 900 - (Date.now() - t0)));
 }
-(async function boot(){
+(async function boot(){ pfmMark('boot');
   applyLang();
   try {
     const { data:{ session } } = await sb.auth.getSession();
