@@ -664,7 +664,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.49';
+const APP_VERSION = '5.50';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1182,17 +1182,27 @@ async function loadRider(){
 async function loadShift(){
   if (!state.rider || !state.rider.is_approved) return;
   const since = new Date(); since.setHours(0, 0, 0, 0);
-  const rows = need(await sb.from('rider_shifts').select('id,started_at,ended_at').eq('rider_id', state.rider.id).or(`ended_at.is.null,ended_at.gte.${since.toISOString()}`).order('started_at', { ascending:false }).limit(20));
+  const [shiftResult, breakResult, lateResult, prayerResult, regionResult] = await Promise.allSettled([
+    sb.from('rider_shifts').select('id,started_at,ended_at').eq('rider_id', state.rider.id).or(`ended_at.is.null,ended_at.gte.${since.toISOString()}`).order('started_at', { ascending:false }).limit(20),
+    sb.from('rider_breaks').select('started_at,ended_at').eq('rider_id', state.rider.id).gte('started_at', since.toISOString()).order('started_at'),
+    sb.from('rider_shifts').select('late_minutes').eq('rider_id', state.rider.id).gte('started_at', since.toISOString()).not('late_minutes', 'is', null).limit(1),
+    sb.from('rider_prayer_breaks').select('*').eq('rider_id', state.rider.id).is('ended_at', null).order('started_at', { ascending:false }).limit(1),
+    state.rider.region_id ? sb.from('regions').select('center_lat,center_lng').eq('id', state.rider.region_id).maybeSingle() : Promise.resolve({ data:null })
+  ]);
+  if (shiftResult.status === 'rejected') throw shiftResult.reason;
+  const rows = need(shiftResult.value);
   state.shift = rows.find(r => !r.ended_at) || null;
   try {
-    const br = need(await sb.from('rider_breaks').select('started_at,ended_at').eq('rider_id', state.rider.id).gte('started_at', since.toISOString()).order('started_at'));
+    if (breakResult.status === 'rejected') throw breakResult.reason;
+    const br = need(breakResult.value);
     state.breakOpen = br.find(b => !b.ended_at) || null;
     state.breakDone = br.filter(b => b.ended_at).reduce((n, b) => n + (new Date(b.ended_at) - new Date(b.started_at)) / 60000, 0);
   } catch (e) { state.breakOpen = null; state.breakDone = 0; }
-  try { const lt = await sb.from('rider_shifts').select('late_minutes').eq('rider_id', state.rider.id).gte('started_at', since.toISOString()).not('late_minutes', 'is', null).limit(1); state.lateToday = lt.data && lt.data[0] ? lt.data[0].late_minutes : 0; } catch (e) { state.lateToday = 0; }
+  try { if (lateResult.status === 'rejected') throw lateResult.reason; const lt = lateResult.value; state.lateToday = lt.data && lt.data[0] ? lt.data[0].late_minutes : 0; } catch (e) { state.lateToday = 0; }
   // Prayer break state
   try {
-    const pb = await sb.from('rider_prayer_breaks').select('*').eq('rider_id', state.rider.id).is('ended_at', null).order('started_at', { ascending:false }).limit(1);
+    if (prayerResult.status === 'rejected') throw prayerResult.reason;
+    const pb = prayerResult.value;
     const open = pb.data && pb.data[0];
     if (open){
       const mins = open.duration_min || 15;
@@ -1213,7 +1223,8 @@ async function loadShift(){
   try {
     let lat = 32.7758, lng = 72.6996; // Kallar Kahar
     if (state.rider.region_id){
-      const rg = await sb.from('regions').select('center_lat,center_lng').eq('id', state.rider.region_id).maybeSingle();
+      if (regionResult.status === 'rejected') throw regionResult.reason;
+      const rg = regionResult.value;
       if (rg.data && rg.data.center_lat){ lat = rg.data.center_lat; lng = rg.data.center_lng; }
     }
     Prayer.fetchTimes(lat, lng);
@@ -1279,23 +1290,19 @@ async function loadMoney(){
   ]);
   state.done = need(done); state.doneAll = need(doneAll); state.cash = need(unsettled).reduce((n, o) => n + num(o.total), 0);
   state.fines = need(fines); state.payouts = need(pays); state.handovers = need(hand);
-  await loadGoals();
-  try { const r = state.rider; const { data } = await sb.from('rider_boosts').select('*').eq('is_active', true).gt('ends_at', new Date().toISOString()).order('starts_at');
-    state.boosts = (data || []).filter(b => (!b.contract || b.contract === (r.contract_type || 'freelance')) && (!b.vehicle || b.vehicle === (r.vehicle || 'motorbike'))); } catch (e) { state.boosts = []; }
-  try { state.mCharges = need(await sb.rpc('charges_for_month', { p_rider:state.rider.id, p_month:ymd(m) })) || []; } catch (e) { state.mCharges = []; }
-  try {
-    const ot = need(await sb.rpc('rider_overtime', { p_rider_id:state.rider.id, p_from:m.toISOString(), p_to:new Date().toISOString() }));
-    state.ot = (Array.isArray(ot) ? ot[0] : ot) || null;
-  } catch (e) { state.ot = null; }
-  try {
-    const res = await Promise.all(['today','month','yesterday','last_month'].map(k => sb.rpc('rider_leaderboard', { p_period:k })));
-    state.lb = { today:res[0].data || [], month:res[1].data || [], yesterday:res[2].data || [], last_month:res[3].data || [] };
-  } catch (e) { state.lb = null; }
-  try { state.targets = need(await sb.rpc('my_targets')) || []; } catch (e) { state.targets = []; }
-  try { const bb = need(await sb.from('rider_bonuses').select('amount,title,created_at').eq('rider_id', state.rider.id).gte('period_start', ymd(m)).order('created_at', { ascending:false })); state.bonuses = bb; } catch (e) { state.bonuses = []; }
-  try { const tr = need(await sb.rpc('my_pay_tier')); state.tier = (Array.isArray(tr) ? tr[0] : tr) || null; } catch (e) { state.tier = null; }
-  try { const b = await sb.rpc('my_wallet'); state.walletBal = num(b.data); } catch (e) { state.walletBal = 0; }
-  try { const w = await sb.from('wallet_withdrawals').select('*').eq('user_id', state.user.id).order('requested_at', { ascending:false }).limit(10); state.wdRows = w.data || []; } catch (e) { state.wdRows = []; }
+  await Promise.allSettled([
+    loadGoals(),
+    (async () => { try { const r = state.rider; const { data } = await sb.from('rider_boosts').select('*').eq('is_active', true).gt('ends_at', new Date().toISOString()).order('starts_at');
+      state.boosts = (data || []).filter(b => (!b.contract || b.contract === (r.contract_type || 'freelance')) && (!b.vehicle || b.vehicle === (r.vehicle || 'motorbike'))); } catch (e) { state.boosts = []; } })(),
+    (async () => { try { state.mCharges = need(await sb.rpc('charges_for_month', { p_rider:state.rider.id, p_month:ymd(m) })) || []; } catch (e) { state.mCharges = []; } })(),
+    (async () => { try { const ot = need(await sb.rpc('rider_overtime', { p_rider_id:state.rider.id, p_from:m.toISOString(), p_to:new Date().toISOString() })); state.ot = (Array.isArray(ot) ? ot[0] : ot) || null; } catch (e) { state.ot = null; } })(),
+    (async () => { try { const res = await Promise.all(['today','month','yesterday','last_month'].map(k => sb.rpc('rider_leaderboard', { p_period:k }))); state.lb = { today:res[0].data || [], month:res[1].data || [], yesterday:res[2].data || [], last_month:res[3].data || [] }; } catch (e) { state.lb = null; } })(),
+    (async () => { try { state.targets = need(await sb.rpc('my_targets')) || []; } catch (e) { state.targets = []; } })(),
+    (async () => { try { const bb = need(await sb.from('rider_bonuses').select('amount,title,created_at').eq('rider_id', state.rider.id).gte('period_start', ymd(m)).order('created_at', { ascending:false })); state.bonuses = bb; } catch (e) { state.bonuses = []; } })(),
+    (async () => { try { const tr = need(await sb.rpc('my_pay_tier')); state.tier = (Array.isArray(tr) ? tr[0] : tr) || null; } catch (e) { state.tier = null; } })(),
+    (async () => { try { const b = await sb.rpc('my_wallet'); state.walletBal = num(b.data); } catch (e) { state.walletBal = 0; } })(),
+    (async () => { try { const w = await sb.from('wallet_withdrawals').select('*').eq('user_id', state.user.id).order('requested_at', { ascending:false }).limit(10); state.wdRows = w.data || []; } catch (e) { state.wdRows = []; } })()
+  ]);
   await loadShift();
 }
 async function loadRules(){
