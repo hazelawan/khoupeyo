@@ -126,6 +126,9 @@ label.f{display:block;margin:14px 0 5px;font-weight:600;font-size:14px}
 .bar i.overlim{background:var(--danger)!important}
 .row{display:flex;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid var(--line)}
 .row .r{text-align:end;white-space:nowrap}
+.history-virtual{position:relative;overflow-anchor:none}
+.history-measure{position:absolute;top:0;left:0;width:100%;visibility:hidden;pointer-events:none;contain:layout}
+.history-v-spacer{display:block;width:1px;overflow:hidden;pointer-events:none}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 16px;border-radius:12px;z-index:60;max-width:90%;font-weight:600;text-align:center}
 .toast.err{background:var(--danger);color:#fff}
 .auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
@@ -655,7 +658,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.46';
+const APP_VERSION = '5.47';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1135,12 +1138,14 @@ async function go(tab){
 }
 function renderTab(){
   const v = $('view'); if (!v) return;
+  disposeHistoryVirtual();
   if (state.tab === 'jobs') v.innerHTML = viewJobs();
   if (state.tab === 'earn') v.innerHTML = viewEarn();
   if ((state.tab === 'jobs' || state.tab === 'earn') && state.goals) setTimeout(goalParty, 400);
   if (state.tab === 'rules') v.innerHTML = viewRules();
   if (state.tab === 'acct') v.innerHTML = viewAcct();
   if (state.tab === 'duty') v.innerHTML = viewDuty();
+  if (state.tab === 'earn' && state.earnTab === 'history') initHistoryVirtual();
   markTab(); bindSliders(); if (state.tab === 'acct') showMyFace();
   // init navigation maps for active deliveries
   if (state.tab === 'jobs' && state.mine.length) setTimeout(() => { state.mine.forEach(o => initNavMap(o.id)); }, 400);
@@ -2295,6 +2300,103 @@ function viewEarn(){
 }
 
 // ---- delivery history with day/week/month filter ----
+let historyVirtual = null, historyVirtualResize = null, historyVirtualRaf = 0, historyVirtualEventsBound = false, historyFontsBound = false;
+function disposeHistoryVirtual(){
+  if (historyVirtualResize){ historyVirtualResize.disconnect(); historyVirtualResize = null; }
+  if (historyVirtualRaf){ cancelAnimationFrame(historyVirtualRaf); historyVirtualRaf = 0; }
+  historyVirtual = null;
+}
+function renderHistoryVirtualWindow(){
+  const h = historyVirtual;
+  if (!h || !h.shell.isConnected || !h.prefix || h.fallback) return;
+  const count = h.items.length; if (!count) return;
+  const vh = Math.max(1, window.innerHeight || 700);
+  const shellTop = h.shell.getBoundingClientRect().top + window.scrollY;
+  const relativeTop = window.scrollY - shellTop;
+  const low = Math.max(0, relativeTop - vh);
+  const high = Math.max(0, relativeTop + vh * 2);
+  let start = 0;
+  while (start < count && h.prefix[start + 1] <= low) start++;
+  let end = start;
+  while (end < count && h.prefix[end] < high) end++;
+  if (start >= count) start = count - 1;
+  if (end <= start) end = Math.min(count, start + 1);
+  const rangeKey = `${start}:${end}`;
+  if (h.rendered !== rangeKey){ h.rows.innerHTML = h.items.slice(start, end).join(''); h.rendered = rangeKey; }
+  h.top.style.height = `${h.prefix[start]}px`;
+  h.bottom.style.height = `${Math.max(0, h.prefix[count] - h.prefix[end])}px`;
+}
+function scheduleHistoryVirtualWindow(){
+  if (historyVirtualRaf) return;
+  historyVirtualRaf = requestAnimationFrame(() => { historyVirtualRaf = 0; renderHistoryVirtualWindow(); });
+}
+function remeasureHistoryVirtual(preserveAnchor = true){
+  const h = historyVirtual;
+  if (!h || !h.shell.isConnected || h.fallback) return;
+  let anchor = null;
+  if (preserveAnchor){
+    const visible = [...h.rows.querySelectorAll('.history-v-row')].find(el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < (window.innerHeight || 700); });
+    if (visible) anchor = { key:visible.dataset.historyRow, docTop:window.scrollY + visible.getBoundingClientRect().top };
+  }
+  const measured = new Array(h.items.length);
+  h.measure.querySelectorAll('.history-v-row').forEach(el => {
+    const i = Number(el.dataset.historyIndex), px = el.getBoundingClientRect().height;
+    if (Number.isInteger(i) && i >= 0 && i < measured.length && Number.isFinite(px) && px > 0) measured[i] = px;
+  });
+  if (measured.some(px => !Number.isFinite(px) || px <= 0)){
+    h.fallback = true; h.measure.remove(); h.top.style.height = '0px'; h.bottom.style.height = '0px'; h.rows.innerHTML = h.items.join(''); return;
+  }
+  h.prefix = [0]; measured.forEach(px => h.prefix.push(h.prefix[h.prefix.length - 1] + px));
+  h.rendered = null; h.width = h.shell.clientWidth;
+  renderHistoryVirtualWindow();
+  if (anchor){
+    const index = h.keys.indexOf(anchor.key);
+    if (index >= 0){
+      const nextDocTop = h.shell.getBoundingClientRect().top + h.prefix[index];
+      const delta = nextDocTop - anchor.docTop;
+      if (Math.abs(delta) > 0.5) window.scrollBy(0, delta);
+    }
+  }
+}
+function initHistoryVirtual(){
+  const shell = document.getElementById('historyVirtual'); if (!shell) return;
+  const measure = shell.querySelector('.history-measure'), rows = shell.querySelector('.history-rows');
+  const top = shell.querySelector('.history-top-spacer'), bottom = shell.querySelector('.history-bottom-spacer');
+  if (!measure || !rows || !top || !bottom) return;
+  const nodes = [...measure.querySelectorAll('.history-v-row')];
+  historyVirtual = {
+    shell, measure, rows, top, bottom,
+    items:nodes.map(el => el.outerHTML),
+    keys:nodes.map(el => el.dataset.historyRow),
+    prefix:null, rendered:null, fallback:false, width:shell.clientWidth
+  };
+  if (!historyVirtualEventsBound){
+    window.addEventListener('scroll', scheduleHistoryVirtualWindow, { passive:true });
+    window.addEventListener('resize', () => remeasureHistoryVirtual(true), { passive:true });
+    window.addEventListener('orientationchange', () => remeasureHistoryVirtual(true), { passive:true });
+    historyVirtualEventsBound = true;
+  }
+  if (!historyFontsBound && document.fonts){
+    historyFontsBound = true;
+    document.fonts.ready.then(() => remeasureHistoryVirtual(true)).catch(() => {});
+    document.fonts.addEventListener?.('loadingdone', () => remeasureHistoryVirtual(true));
+  }
+  if (typeof ResizeObserver === 'function'){
+    historyVirtualResize = new ResizeObserver(() => {
+      if (historyVirtual && Math.abs(historyVirtual.shell.clientWidth - historyVirtual.width) > 0.5) remeasureHistoryVirtual(true);
+    });
+    historyVirtualResize.observe(shell);
+  }
+  remeasureHistoryVirtual(false);
+}
+function historyRowHtml(o, i, count){
+  const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null;
+  const dm = o.picked_up_at && o.delivered_at ? Math.round((new Date(o.delivered_at) - new Date(o.picked_up_at)) / 60000) : null;
+  const key = esc(String(o.id == null ? i : o.id));
+  return `<div class="row history-v-row" data-history-index="${i}" data-history-row="${key}" role="listitem" aria-posinset="${i + 1}" aria-setsize="${count}"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b>
+      <div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}${dm != null && dm >= 0 ? ` · ⏱ ${dm} min` : ''}</div></div>
+      <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)}</div></div></div>`;
+}
 function historyHtml(){
   const f = state.histFilter || 'week';
   const ftab = (key, label) => `<button class="chip ${f === key ? 'on' : ''}" onclick="state.histFilter='${key}';renderTab()">${label}</button>`;
@@ -2307,20 +2409,15 @@ function historyHtml(){
     .sort((a,b) => new Date(b.delivered_at) - new Date(a.delivered_at));
   const totalPay = list.reduce((n,o) => n + num(o.rider_pay), 0);
   const totalKm = list.reduce((n,o) => { const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : 0; return n + num(dk); }, 0);
-  const rows = list.map(o => {
-    const dk = o.restaurant && o.restaurant.lat != null && o.address_lat != null ? km(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng) : null;
-    const dm = o.picked_up_at && o.delivered_at ? Math.round((new Date(o.delivered_at) - new Date(o.picked_up_at)) / 60000) : null;
-    return `<div class="row"><div><b>${esc(o.restaurant ? o.restaurant.name : '')}</b>
-      <div class="muted" style="font-size:13px">${when(o.delivered_at)}${dk != null ? ` · 📍 ${fmtKm(dk)}` : ''}${dm != null && dm >= 0 ? ` · ⏱ ${dm} min` : ''}</div></div>
-      <div class="r"><b>${money(o.rider_pay)}</b><div class="muted" style="font-size:13px">${money(o.total)}</div></div></div>`;
-  }).join('');
+  const items = list.map((o, i) => historyRowHtml(o, i, list.length));
+  const rows = items.join('');
   return `<div class="chips" style="margin-bottom:10px">${ftab('day', t('hist_day'))}${ftab('week', t('hist_week'))}${ftab('month', t('hist_month'))}</div>
     <div class="tiles">
       <div class="tile hi"><b>${list.length}</b><span>${t('deliveries_n')}</span></div>
       <div class="tile hi"><b>${money(totalPay)}</b><span>${t('earned')}</span></div>
       <div class="tile"><b>${totalKm.toFixed(1)} km</b><span>${t('distance')}</span></div>
     </div>
-    <div class="card">${rows || `<div class="empty">${t('no_recent')}</div>`}</div>`;
+    ${items.length ? `<div class="card"><div id="historyVirtual" class="history-virtual"><div class="history-measure" aria-hidden="true" inert>${rows}</div><div class="history-top-spacer history-v-spacer" aria-hidden="true"></div><div class="history-rows" role="list" aria-label="${esc(t('earn_t_history'))}"></div><div class="history-bottom-spacer history-v-spacer" aria-hidden="true"></div></div></div>` : `<div class="card"><div class="empty">${t('no_recent')}</div></div>`}`;
 }
 
 // ================= RULES TAB =================
