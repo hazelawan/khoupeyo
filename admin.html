@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.71';
+const APP_VERSION = '7.72';
 const APP_DATE = '27 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -2730,7 +2730,7 @@ function payAccCard(){
     <div class="actions"><button class="btn ghost block" onclick="A.savePayAcc()">Save payment accounts</button></div>
   </div>`;
 }
-const PRULES_DEF = { on:false, advance_threshold:10000, advance_pct:50, free_delivery_threshold:20000, commission_big_threshold:20000, commission_small_pct:1, commission_big_pct:1, free_months:3, fees_on:'customer', instant_fee_pct:1.5, card_fee_pct:2.9, card_fee_fixed:30 };
+const PRULES_DEF = { on:false, advance_threshold:10000, advance_pct:50, free_delivery_threshold:20000, commission_big_threshold:20000, commission_small_pct:1, commission_big_pct:1, free_months:3, fees_on:'customer', instant_fee_pct:1.5, card_fee_pct:2.9, card_fee_fixed:30, bnpl_enabled:false };
 function payRulesCard(){
   const rid = payRegion();
   if (!rid) return '';
@@ -2750,6 +2750,9 @@ function payRulesCard(){
       <div><label class="f" for="pr_com_big">Big orders, Rs ${num(r.commission_big_threshold)}+ (%)</label><input id="pr_com_big" type="number" min="0" step="0.1" value="${num(r.commission_big_pct)}"></div></div>
     <label class="f" for="pr_free_months">New shop pays 0% for (months)</label><input id="pr_free_months" type="number" min="0" max="24" value="${num(r.free_months)}">
     <div class="muted" style="font-size:13px">The free months are only for small orders. Big orders pay the big-order commission from the first day.</div>
+    <h3 style="margin:12px 0 4px">🛒 Buy now, pay later (BNPL)</h3>
+    <label class="check"><input id="pr_bnpl" type="checkbox" ${r.bnpl_enabled ? 'checked' : ''}> Include BNPL in this region when available</label>
+    <div class="muted" style="font-size:13px">This saves your preference only. BNPL will stay unavailable in customer checkout until a BNPL provider, approval flow, repayment terms and backend integration are connected.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.savePayRules()">Save payment rules</button></div>
   </div>`;
 }
@@ -3159,7 +3162,8 @@ const A = {
       free_delivery_threshold:Math.max(0, Math.round(num($('pr_free_thr').value))),
       commission_small_pct:Math.max(0, num($('pr_com_small').value)),
       commission_big_pct:Math.max(0, num($('pr_com_big').value)),
-      free_months:Math.max(0, Math.round(num($('pr_free_months').value))) });
+      free_months:Math.max(0, Math.round(num($('pr_free_months').value))),
+      bnpl_enabled:$('pr_bnpl').checked });
     await run(async () => {
       need(await sb.from('region_settings').upsert([{ region_id:rid, key:'payment_rules', value:v, updated_at:new Date().toISOString() }]));
       await loadSettings(); renderTab(); toast('Saved');

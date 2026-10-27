@@ -1064,7 +1064,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '5.79';
+const APP_VERSION = '5.80';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -2925,19 +2925,21 @@ const payOn = () => payAccList((state.rset || {}).pay_accounts).length > 0 || !!
 function drawCheckout(){
   const v = $('view'); if (!v) return;
   const gw = state.gateway || null, gwLive = !!(gw && gw.live);
-  if (state.payM === 'wallet' && !payOn()) state.payM = 'cod';
-  if ((state.payM === 'instant' || state.payM === 'card') && !gwLive) state.payM = 'cod';
   const r = cartRestaurant() || {};
   if (r.allow_pickup === false) state.otype = 'delivery';
+  const pickupOnly = state.otype === 'pickup';
+  if (pickupOnly){ state.payM = 'cod'; state.useWallet = false; state.usePoints = false; state.ptsUse = 0; state.payPlan = 'full'; }
+  if (state.payM === 'wallet' && !payOn()) state.payM = 'cod';
+  if ((state.payM === 'instant' || state.payM === 'card') && !gwLive) state.payM = 'cod';
   const dine = state.otype === 'dinein';
-  const pick = state.otype === 'pickup' || dine;
+  const pick = pickupOnly || dine;
   if (dine && r.dinein_pay === 'advance' && state.payM === 'cod' && payOn()) state.payM = 'wallet';
   if (state.user && plusSet() && state.plus === undefined){ state.plus = {}; loadPlus().then(() => { if (currentRoute === 'checkout') drawCheckout(); }); }
   if (state.user && state.walletBal === undefined){ state.walletBal = 0; sb.rpc('my_wallet').then(({ data }) => { state.walletBal = num(data); if (currentRoute === 'checkout') drawCheckout(); }, () => {}); sb.rpc('my_points').then(({ data }) => { state.pointsBal = num(data); if (currentRoute === 'checkout') drawCheckout(); }, () => {}); }
   const qKey = quoteKey();
   const q = pick ? null : (state.quote && state.quote.key === qKey ? state.quote : null);
   if (!pick && state.selAddr && !q) setTimeout(loadQuote, 0);
-  if (state.cart.rid && (!state.shopPay || state.shopPay.rid !== state.cart.rid)) setTimeout(loadShopPay, 0);
+  if (!pickupOnly && state.cart.rid && (!state.shopPay || state.shopPay.rid !== state.cart.rid)) setTimeout(loadShopPay, 0);
   const sub = cartSubtotal();
   const prules = (state.rset || {}).payment_rules || {};
   const onlineM = state.payM === 'wallet' || state.payM === 'instant' || state.payM === 'card';
@@ -2981,6 +2983,18 @@ function drawCheckout(){
   const dineHtml = dine ? `<div class="box"><b>🍽️ ${t('o_dinein')} — ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${t('dn_time_note')}</div><label class="f">${t('dn_guests')}</label><div class="tipchips">${[1, 2, 3, 4, 6, 8].map(g => `<button class="chip2 ${(state.guests || 2) === g ? 'on' : ''}" onclick="A.setGuests(${g})">${g}</button>`).join('')}</div><div class="muted" style="font-size:13.5px;margin-top:6px">${r.dinein_pay === 'advance' ? t('dn_rule_adv') : r.dinein_pay === 'choice' ? t('dn_rule_choice') : t('dn_rule_spot')}</div></div>` : '';
   const tipHtml = pick ? '' : `<h2>${t('tip_t')}</h2><div class="muted" style="font-size:14px">${t('tip_s')}</div>
     <div class="tipchips">${TIPS.map(x => `<button class="chip2 ${tip === x ? 'on' : ''}" onclick="A.setTip(${x})">${x ? money(x) : t('tip_none')}</button>`).join('')}<button class="chip2 ${tip && !TIPS.includes(tip) ? 'on' : ''}" onclick="A.otherTip()">${tip && !TIPS.includes(tip) ? money(tip) : t('tip_other')}</button></div>`;
+  const paymentHtml = pickupOnly ? '' : `<h2>${t('payment')}</h2>
+    ${num(state.walletBal) > 0 ? `<label class="walletrow"><input type="checkbox" ${state.useWallet ? 'checked' : ''} onchange="A.setWallet(this.checked)"> <span>💰 ${t('use_wallet')} <b>${money(state.walletBal)}</b></span></label>` : ''}
+    ${num(state.pointsBal) > 0 ? `<label class="walletrow"><input type="checkbox" ${state.usePoints ? 'checked' : ''} onchange="A.setPoints(this.checked)"> <span>⭐ ${t('use_pts')} <b>${num(state.pointsBal)} pts</b> <span class="muted">(${t('pts_max', { m:ptsMax })})</span></span></label>` : ''}
+    ${total <= 0 ? '' : (payOn() || gwLive) ? `<div class="paychoice">
+      <button type="button" class="${state.payM === 'cod' ? 'on' : ''}" onclick="A.setPay('cod')"><span class="pi">💵</span><span><b>${t('cod')}</b><small>${pick ? t('pay_note_pick') : t('pay_note')}</small></span></button>
+      ${payOn() ? `<button type="button" class="${state.payM === 'wallet' ? 'on' : ''}" onclick="A.setPay('wallet')"><span class="pi">📲</span><span><b>${t('pay_online')}</b><small>${t('pay_online_s')}</small></span></button>` : ''}
+      ${gwLive ? `<button type="button" class="${state.payM === 'instant' ? 'on' : ''}" onclick="A.setPay('instant')"><span class="pi">⚡</span><span><b>${t('gw_instant')}</b><small>${t('gw_instant_s', { f:gw.instant_fee_pct != null ? num(gw.instant_fee_pct) : 1.5 })}</small></span></button>
+      <button type="button" class="${state.payM === 'card' ? 'on' : ''}" onclick="A.setPay('card')"><span class="pi">💳</span><span><b>${t('gw_card')}</b><small>${t('gw_card_s', { f:gw.card_fee_pct != null ? num(gw.card_fee_pct) : 2.9, x:money(gw.card_fee_fixed != null ? num(gw.card_fee_fixed) : 30) })}</small></span></button>` : ''}</div>`
+    : `<div class="box"><b>${t('cod')}</b><div class="muted">${pick ? t('pay_note_pick') : t('pay_note')}</div></div>`}
+    ${showPlan ? `<div style="margin-top:12px"><b>${t('plan_t')}</b><div class="paychoice" style="margin-top:8px">
+      <button type="button" class="${state.payPlan !== 'advance' ? 'on' : ''}" onclick="A.setPayPlan('full')"><span class="pi">💳</span><span><b>${t('plan_full')}</b><small>${t('plan_full_s', { n:money(total) })}</small></span></button>
+      <button type="button" class="${state.payPlan === 'advance' ? 'on' : ''}" onclick="A.setPayPlan('advance')"><span class="pi">½</span><span><b>${t('plan_adv', { p:advPct })}</b><small>${t('plan_adv_s', { n:money(advAmt), b:money(advBal) })}</small></span></button></div></div>` : ''}`;
   const list = state.addresses.map(a => addressRow(a, true)).join('');
   const pr = state.profile || {};
   const needsDetails = !pr.full_name || !normalizePhone(pr.phone);
@@ -2994,7 +3008,7 @@ function drawCheckout(){
       ${state.forOther ? `<div class="muted" style="font-size:13px">${t('for_other_s')}</div>
         <label class="f" for="r_name">${t('rcv_name')}</label><input type="text" id="r_name" value="${esc(state.rcvName || '')}" oninput="state.rcvName=this.value" maxlength="60">
         <label class="f" for="r_phone">${t('rcv_phone')}</label><input id="r_phone" type="tel" inputmode="tel" placeholder="03001234567" value="${esc(state.rcvPhone || '')}" oninput="state.rcvPhone=this.value">` : ''}` : ''}</div>
-    ${dine ? dineHtml : pick ? `<div class="box"><b>🛍️ ${t('pick_from')}: ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${esc(r.address || '')}</div><div class="muted" style="font-size:13px;margin-top:6px">${t('pick_note')}</div>
+    ${dine ? dineHtml : pick ? `<div class="box"><b>🛍️ ${t('pick_from')}: ${esc(r.name || '')}</b><div class="muted" style="font-size:14px">${esc(r.address || '')}</div><div class="muted" style="font-size:13px;margin-top:6px">${t('pick_note')}</div>${pickupOnly ? `<div class="muted" style="font-size:13px;margin-top:4px">${t('pay_note_pick')}</div>` : ''}
       ${r.lat != null ? `<a class="link" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${r.lat},${r.lng}">${t('pick_dir')}</a>` : ''}</div>`
     : `<h2 style="margin-top:8px">${t('address')}</h2>
     <div id="addrList">${list || `<div class="muted" style="padding:6px 0">${t('pick_address')}</div>`}</div>
@@ -3003,18 +3017,7 @@ function drawCheckout(){
     ${isPharma(r) ? `<h2>${t('rx_t')}</h2><label class="filebtn">${state.rxPath ? t('rx_ok') : t('rx_btn')}<input type="file" accept="image/*" hidden onchange="A.rxPick(this)"></label>` : ''}
     ${whenHtml}
     ${tipHtml}
-    <h2>${t('payment')}</h2>
-    ${num(state.walletBal) > 0 ? `<label class="walletrow"><input type="checkbox" ${state.useWallet ? 'checked' : ''} onchange="A.setWallet(this.checked)"> <span>💰 ${t('use_wallet')} <b>${money(state.walletBal)}</b></span></label>` : ''}
-    ${num(state.pointsBal) > 0 ? `<label class="walletrow"><input type="checkbox" ${state.usePoints ? 'checked' : ''} onchange="A.setPoints(this.checked)"> <span>⭐ ${t('use_pts')} <b>${num(state.pointsBal)} pts</b> <span class="muted">(${t('pts_max', { m:ptsMax })})</span></span></label>` : ''}
-    ${total <= 0 ? '' : (payOn() || gwLive) ? `<div class="paychoice">
-      <button type="button" class="${state.payM === 'cod' ? 'on' : ''}" onclick="A.setPay('cod')"><span class="pi">💵</span><span><b>${t('cod')}</b><small>${pick ? t('pay_note_pick') : t('pay_note')}</small></span></button>
-      ${payOn() ? `<button type="button" class="${state.payM === 'wallet' ? 'on' : ''}" onclick="A.setPay('wallet')"><span class="pi">📲</span><span><b>${t('pay_online')}</b><small>${t('pay_online_s')}</small></span></button>` : ''}
-      ${gwLive ? `<button type="button" class="${state.payM === 'instant' ? 'on' : ''}" onclick="A.setPay('instant')"><span class="pi">⚡</span><span><b>${t('gw_instant')}</b><small>${t('gw_instant_s', { f:gw.instant_fee_pct != null ? num(gw.instant_fee_pct) : 1.5 })}</small></span></button>
-      <button type="button" class="${state.payM === 'card' ? 'on' : ''}" onclick="A.setPay('card')"><span class="pi">💳</span><span><b>${t('gw_card')}</b><small>${t('gw_card_s', { f:gw.card_fee_pct != null ? num(gw.card_fee_pct) : 2.9, x:money(gw.card_fee_fixed != null ? num(gw.card_fee_fixed) : 30) })}</small></span></button>` : ''}</div>`
-    : `<div class="box"><b>${t('cod')}</b><div class="muted">${pick ? t('pay_note_pick') : t('pay_note')}</div></div>`}
-    ${showPlan ? `<div style="margin-top:12px"><b>${t('plan_t')}</b><div class="paychoice" style="margin-top:8px">
-      <button type="button" class="${state.payPlan !== 'advance' ? 'on' : ''}" onclick="A.setPayPlan('full')"><span class="pi">💳</span><span><b>${t('plan_full')}</b><small>${t('plan_full_s', { n:money(total) })}</small></span></button>
-      <button type="button" class="${state.payPlan === 'advance' ? 'on' : ''}" onclick="A.setPayPlan('advance')"><span class="pi">½</span><span><b>${t('plan_adv', { p:advPct })}</b><small>${t('plan_adv_s', { n:money(advAmt), b:money(advBal) })}</small></span></button></div></div>` : ''}
+    ${paymentHtml}
     <div class="box">
       <div class="line"><span>${t('subtotal')}</span><span>${money(sub)}</span></div>
       ${pick ? '' : `<div class="line"><span>${t('delivery_fee')}${q && q.ok && q.km != null ? ` <span class="muted" style="font-size:13px">(${q.km.toFixed(1)} km)</span>` : ''}</span><span>${q && q.loading ? '…' : freeDel ? `<s class="muted">${money(feeQ)}</s> <b style="color:#1a9e54">${t('fee_free')}</b>` : money(fee)}</span></div>
@@ -3921,8 +3924,8 @@ const A = {
   },
   // ---- Tip and schedule ----
   setTip(x){ state.tip = x; drawCheckout(); },
-  setPay(m){ state.payM = m; drawCheckout(); },
-  setPayPlan(p){ state.payPlan = p; drawCheckout(); },
+  setPay(m){ if (state.otype === 'pickup') return; state.payM = m; drawCheckout(); },
+  setPayPlan(p){ if (state.otype === 'pickup') return; state.payPlan = p; drawCheckout(); },
   setOtype(k){ state.otype = k; if (k === 'dinein') state.when = 'later'; drawCheckout(); },
   setGuests(g){ state.guests = g; drawCheckout(); },
   async plusWallet(){ const p = plusSet(); if (!p || !await uiConfirm(t('plus_wallet', { b:money(p.price) }) + '?')) return;
@@ -3930,8 +3933,8 @@ const A = {
   async plusOnline(){ const ref = ($('plTid').value || '').trim(); if (ref.length < 4) return toast(t('tid'), true);
     await run(async () => { state.plus = need(await sb.rpc('plus_join', { p_method:'online', p_label:'Online', p_ref:ref })); toast('✓'); await showPlus(); }); },
   setSub(k){ state.subPref = k; drawCheckout(); },
-  setWallet(v){ state.useWallet = v; drawCheckout(); },
-  setPoints(v){ state.usePoints = v; drawCheckout(); },
+  setWallet(v){ if (state.otype === 'pickup') return; state.useWallet = v; drawCheckout(); },
+  setPoints(v){ if (state.otype === 'pickup') return; state.usePoints = v; drawCheckout(); },
   async withdrawReq(){
     const minW = num(state.wallet_min_withdrawal || 500);
     const phone = (state.profile && state.profile.phone) || '';
@@ -4049,9 +4052,11 @@ const A = {
     });
   },
   async placeOrder(){
+    if (!state.user){ state.pending = location.hash; return showAuth(); }
     if (!navigator.onLine || state.feedStale){ toast(state.lang === 'ur' ? 'آپ آف لائن کیٹلاگ دیکھ رہے ہیں۔ آرڈر دینے کے لیے انٹرنیٹ سے دوبارہ منسلک ہوں؛ آپ کی ٹوکری محفوظ ہے۔' : 'You are viewing a saved catalog. Reconnect to place an order; your cart is preserved.', true); return; }
+    const pickupOnly = state.otype === 'pickup';
     const dine = state.otype === 'dinein';
-    const pick = state.otype === 'pickup' || dine;
+    const pick = pickupOnly || dine;
     if (!pick && !state.selAddr) return toast(t('pick_address'), true);
     const newName = $('d_name').value.trim(), newPhone = normalizePhone($('d_phone').value);
     if (state.forOther && ((state.rcvName || '').trim().length < 2 || !normalizePhone(state.rcvPhone || ''))) return toast(t('rcv_name') + ' / ' + t('rcv_phone'), true);
@@ -4064,15 +4069,15 @@ const A = {
         need(await sb.from('profiles').update({ full_name:newName, phone:newPhone }).eq('id', state.user.id));
         state.profile = Object.assign({}, pr, { full_name:newName, phone:newPhone });
       }
-      let pm = (state.payM === 'instant' || state.payM === 'card') && state.gateway && state.gateway.live ? state.payM : (state.payM === 'wallet' && payOn() ? 'wallet' : 'cod');
-      if (dine && (cartRestaurant() || {}).dinein_pay === 'advance' && pm === 'cod' && payOn()) pm = 'wallet';
+      let pm = pickupOnly ? 'cod' : (state.payM === 'instant' || state.payM === 'card') && state.gateway && state.gateway.live ? state.payM : (state.payM === 'wallet' && payOn() ? 'wallet' : 'cod');
+      if (!pickupOnly && dine && (cartRestaurant() || {}).dinein_pay === 'advance' && pm === 'cod' && payOn()) pm = 'wallet';
       const shops = A.cartShops();
       const data = need(await sb.rpc('place_multi_order_v2', {
         p_groups:shops.map(s => ({ restaurant_id:s.rid, items:s.items.map(i => ({ menu_item_id:i.id, quantity:i.qty, options:i.opts || [] })) })),
         p_address_id:pick ? null : state.selAddr, p_payment_method:pm,
         p_promo:(shops.length === 1 && state.promoRes && state.promoRes.ok ? state.promo.trim() : null) || null, p_note:dine ? ('🍽️ Dine-in · ' + (state.guests || 2) + ' people' + ((state.cart.note || '').trim() ? ' · ' + (state.cart.note || '').trim() : '')) : ((state.cart.note || '').trim() || null),
         p_tip:pick ? 0 : num(state.tip), p_scheduled_for:state.when === 'later' ? state.schedAt : null,
-        p_extra:{ type:dine ? 'dinein' : pick ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:!!state.useWallet, pay_plan:(pm === 'wallet' || pm === 'instant' || pm === 'card') ? (state.payPlan || 'full') : null }, p_points_use:num(state.ptsUse || 0)
+        p_extra:{ type:dine ? 'dinein' : pickupOnly ? 'pickup' : 'delivery', sub_pref:isMart(cartRestaurant()) ? state.subPref || null : null, rx_path:state.rxPath || null, use_wallet:pickupOnly ? false : !!state.useWallet, pay_plan:pickupOnly ? 'full' : (pm === 'wallet' || pm === 'instant' || pm === 'card') ? (state.payPlan || 'full') : null }, p_points_use:pickupOnly ? 0 : num(state.ptsUse || 0)
       }));
       const orderIds = (data.orders || []).map(o => o.order_id);
       for (const oid of orderIds){
