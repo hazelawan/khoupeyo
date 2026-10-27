@@ -697,7 +697,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.68';
+const APP_VERSION = '6.69';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -812,7 +812,7 @@ const I18N = {
     no_orders:'No orders right now. New orders will ring here.', keep_open:'Keep this app open and the screen on to hear new orders.',
     accept:'Accept order', reject:'Reject', start_prep:'Start preparing', mark_ready:'Order is ready',
     prep_q:'Ready in how many minutes?', min:'min', reject_q:'Why are you rejecting this order?',
-    delay_15:'Add 15 min · {n}/2', delay_limit:'Delay limit reached', delay_confirm:'Add 15 minutes and notify the customer? The price will not change.', delay_sent:'Customer notified. Prep time is now {m} minutes.',
+    delay_pending:'Delay rule pending',
     r1:'Item not available', r2:'Too busy right now', r3:'Closing soon', r4:'Other reason',
     cx_order:'Cancel order', cx_item:'Cancel', cx_howmany:'How many to cancel?', cx_of:'of', cx_reason_q:'Why are you cancelling?', cx_done_item:'Item cancelled', cx_done_order:'Order cancelled',
     c1:'Customer asked to cancel', c2:'Item out of stock', c3:'Shop problem (busy / closing)', c4:'Other reason',
@@ -897,7 +897,7 @@ const I18N = {
     no_orders:'ابھی کوئی آرڈر نہیں۔ نیا آرڈر آنے پر یہاں گھنٹی بجے گی۔', keep_open:'نئے آرڈرز کی آواز سننے کے لیے ایپ کھلی اور اسکرین آن رکھیں۔',
     accept:'آرڈر قبول کریں', reject:'مسترد کریں', start_prep:'تیاری شروع کریں', mark_ready:'آرڈر تیار ہے',
     prep_q:'کتنے منٹ میں تیار ہوگا؟', min:'منٹ', reject_q:'آرڈر مسترد کرنے کی وجہ کیا ہے؟',
-    delay_15:'15 منٹ بڑھائیں · {n}/2', delay_limit:'دیر کی حد مکمل', delay_confirm:'تیاری میں 15 منٹ بڑھا کر گاہک کو اطلاع دیں؟ قیمت تبدیل نہیں ہوگی۔', delay_sent:'گاہک کو اطلاع دے دی۔ تیاری کا وقت اب {m} منٹ ہے۔',
+    delay_pending:'دیر کا اصول طے ہونا باقی ہے',
     r1:'آئٹم دستیاب نہیں', r2:'ابھی بہت رش ہے', r3:'دکان بند ہونے والی ہے', r4:'کوئی اور وجہ',
     cx_order:'آرڈر منسوخ کریں', cx_item:'منسوخ', cx_howmany:'کتنے منسوخ کرنے ہیں؟', cx_of:'میں سے', cx_reason_q:'منسوخ کرنے کی وجہ؟', cx_done_item:'آئٹم منسوخ ہو گیا', cx_done_order:'آرڈر منسوخ ہو گیا',
     c1:'گاہک نے منسوخ کہا', c2:'آئٹم ختم ہو گیا', c3:'دکان کا مسئلہ (رش / بند)', c4:'کوئی اور وجہ',
@@ -1401,7 +1401,7 @@ function orderCard(o){
   let actions = '';
   if (o.status === 'placed') actions = `<div class="two"><button class="btn warn" onclick="A.openReject('${o.id}')">${t('reject')}</button><button class="btn" onclick="A.openAccept('${o.id}')">${t('accept')}</button></div>`;
   else if (o.status === 'accepted') actions = `<div class="two"><button class="btn ghost" onclick="A.setStatus('${o.id}','preparing')">${t('start_prep')}</button><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button></div>`;
-  else if (o.status === 'preparing') actions = `<div class="two"><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button><button class="btn ghost" ${num(o.prep_delay_count) >= 2 ? 'disabled' : ''} onclick="A.delayOrder('${o.id}')">${num(o.prep_delay_count) >= 2 ? t('delay_limit') : t('delay_15', { n:num(o.prep_delay_count) })}</button></div>`;
+  else if (o.status === 'preparing') actions = `<div class="two"><button class="btn" onclick="A.setStatus('${o.id}','ready')">${t('mark_ready')}</button><button class="btn ghost" disabled>${t('delay_pending')}</button></div>`;
   else if (o.status === 'ready' && (o.order_type === 'pickup' || o.order_type === 'dinein')) actions = `<div class="muted" style="margin-top:8px">${t('wait_collect')}</div><button class="btn" style="margin-top:8px" onclick="A.collected('${o.id}')">${t('collected_b')}</button>`;
   else if (o.status === 'ready') actions = `<div class="muted" style="margin-top:8px">${t('waiting_rider')}</div>`;
   else if (o.status === 'rider_assigned') actions = `<div class="muted" style="margin-top:8px">${t('rider_coming')}</div>${riderLine}`;
@@ -3079,14 +3079,6 @@ const A = {
   },
   async setStatus(id, status){
     await run(async () => { need(await sb.rpc('update_order_status', { p_order_id:id, p_status:status })); await loadOrders(); renderTab(); toast(t('saved')); });
-  },
-
-  async delayOrder(id){
-    if (!await uiConfirm(t('delay_confirm'))) return;
-    await run(async () => {
-      const result = need(await sb.rpc('shop_extend_prep_time', { p_order_id:id }));
-      await loadOrders(); renderTab(); toast(t('delay_sent', { m:result.prep_minutes }));
-    });
   },
 
   async receivedBack(id){
