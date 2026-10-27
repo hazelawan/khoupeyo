@@ -696,8 +696,8 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 })();
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
-// ---- Version: change this every time the file is updated ----
-const APP_VERSION = '6.69';
+// ---- Version: change this number every time the file is updated ----
+const APP_VERSION = '6.70';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -829,7 +829,7 @@ const I18N = {
     commission:'Dera commission', your_earning:'Your earning', to_receive:'To receive from Dera', req_payout:'Request payment from office', req_sent:'Request sent to office', req_note:'Note (optional)', req_title:'Request your payment', req_already:'You already have a pending request', payout_code_btn:'Confirm payout receipt', payout_code_t:'Payout confirmation code', payout_code_s:'Enter the 4-digit code the admin gave you to confirm you received your payout', payout_ok:'Payout confirmed', code_ph:'Code',
     to_receive_note:'Your earning from delivered orders that Dera has not paid yet.',
     payments:'Payments received', no_payments:'No payments yet.', top_items:'Best selling products', no_sales:'No sales in this period.',
-    reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating',
+    reviews:'Customer reviews', no_reviews:'No reviews yet.', rating:'Rating', reply_review:'Reply to review', edit_reply:'Edit reply', shop_reply_label:'Shop reply', reply_hint:'The customer who left this review will see your reply in their order details (500 characters max).', reply_send:'Post reply', reply_empty:'Write a reply first.', reply_saved:'Shop reply saved.',
     sec_count:'{n} products', cancel:'Cancel', del_section:'Delete section', del_sec_empty_q:'Delete the section “{s}”?', del_sec_items:'This section has {n} products. What should happen to them?', del_sec_move:'Move them to', del_sec_kill:'Delete the products too', del_sec_go:'Delete section', del_sec_kill_q:'Delete “{s}” and its {n} products? This can not be undone.', sec_deleted:'Section deleted',
     sec_switch:'Whole section on or off', sec_all_on:'All in stock', sec_all_off:'Section is off', sec_some_on:'{a} of {b} in stock', sec_empty:'No products', sec_off_q:'Turn off the whole section “{s}”? Customers will not see its {n} products until you turn it on.', sec_on_done:'Section is on', sec_off_done:'Section is off',
     add_product:'Add product', add_section:'Add section', edit_section:'Edit section', section:'Section', section_name:'Section name',
@@ -914,7 +914,7 @@ const I18N = {
     commission:'Dera کمیشن', your_earning:'آپ کی کمائی', to_receive:'Dera سے ملنا ہے', req_payout:'آفس سے ادائیگی کی درخواست', req_sent:'آفس کو درخواست بھیج دی', req_note:'نوٹ (اختیاری)', req_title:'اپنی ادائیگی کی درخواست', req_already:'آپ کی پہلے سے ایک درخواست زیر التواء ہے', payout_code_btn:'ادائیگی ملنے کی تصدیق', payout_code_t:'ادائیگی کا تصدیقی کوڈ', payout_code_s:'ایڈمن نے جو 4 ہندسوں کا کوڈ دیا وہ درج کر کے ادائیگی ملنے کی تصدیق کریں', payout_ok:'ادائیگی کی تصدیق ہو گئی', code_ph:'کوڈ',
     to_receive_note:'پہنچائے گئے آرڈرز کی آپ کی کمائی جو Dera نے ابھی ادا نہیں کی۔',
     payments:'موصول شدہ ادائیگیاں', no_payments:'ابھی کوئی ادائیگی نہیں۔', top_items:'سب سے زیادہ بکنے والی چیزیں', no_sales:'اس عرصے میں کوئی فروخت نہیں۔',
-    reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ',
+    reviews:'گاہکوں کی رائے', no_reviews:'ابھی کوئی رائے نہیں۔', rating:'ریٹنگ', reply_review:'ریویو کا جواب', edit_reply:'جواب میں ترمیم', shop_reply_label:'دکان کا جواب', reply_hint:'یہ جواب اسی گاہک کو آرڈر کی تفصیل میں نظر آئے گا جس نے ریویو دیا (زیادہ سے زیادہ 500 حروف)۔', reply_send:'جواب پوسٹ کریں', reply_empty:'پہلے جواب لکھیں۔', reply_saved:'دکان کا جواب محفوظ ہو گیا۔',
     sec_count:'{n} پروڈکٹس', cancel:'واپس', del_section:'سیکشن ختم کریں', del_sec_empty_q:'سیکشن “{s}” ختم کریں؟', del_sec_items:'اس سیکشن میں {n} پروڈکٹس ہیں۔ ان کا کیا کریں؟', del_sec_move:'انہیں منتقل کریں', del_sec_kill:'پروڈکٹس بھی ختم کر دیں', del_sec_go:'سیکشن ختم کریں', del_sec_kill_q:'“{s}” اور اس کی {n} پروڈکٹس ختم کریں؟ یہ واپس نہیں ہو سکتا۔', sec_deleted:'سیکشن ختم ہو گیا',
     sec_switch:'پورا سیکشن آن یا آف', sec_all_on:'سب دستیاب', sec_all_off:'سیکشن بند ہے', sec_some_on:'{b} میں سے {a} دستیاب', sec_empty:'کوئی پروڈکٹ نہیں', sec_off_q:'پورا سیکشن “{s}” بند کریں؟ جب تک آپ دوبارہ نہ کھولیں، گاہک اس کی {n} پروڈکٹس نہیں دیکھیں گے۔', sec_on_done:'سیکشن کھل گیا', sec_off_done:'سیکشن بند ہو گیا',
     add_product:'پروڈکٹ شامل کریں', add_section:'سیکشن شامل کریں', edit_section:'سیکشن تبدیل کریں', section:'سیکشن', section_name:'سیکشن کا نام',
@@ -2124,7 +2124,7 @@ function orderFileHtml(f){
 
 // ================= SHOP =================
 async function loadReviews(){
-  state.reviews = need(await sb.from('reviews').select('restaurant_rating,comment,created_at,shop_tags').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
+  state.reviews = need(await sb.from('reviews').select('id,restaurant_rating,comment,created_at,shop_tags,shop_reply,shop_replied_at').eq('restaurant_id', state.restaurant.id).order('created_at', { ascending:false }).limit(50));
 }
 async function loadPromoRequests(){
   state.promoRequests = need(await sb.rpc('shop_my_promo_requests')) || [];
@@ -2140,7 +2140,10 @@ function viewShop(){
     ${p.banner_id ? `<div class="muted" style="font-size:13px">${state.lang === 'ur' ? 'بینر شائع ہو گیا' : 'Banner published'}</div>` : ''}
   </div>`).join('');
   const avg = rv.length ? (rv.reduce((n, x) => n + num(x.restaurant_rating), 0) / rv.length).toFixed(1) : null;
-  const revs = rv.slice(0, 15).map(x => `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${(x.shop_tags || []).length ? `<div class="muted" style="font-size:13px">${esc(x.shop_tags.join(' · '))}</div>` : ''}${x.comment ? `<div>${esc(x.comment)}</div>` : ''}</div>`).join('');
+  const revs = rv.slice(0, 15).map(x => {
+    const reply = x.shop_reply ? `<div class="note" style="margin-top:8px"><b>${t('shop_reply_label')}</b><div style="white-space:pre-wrap;margin-top:4px">${esc(x.shop_reply)}</div><small class="muted">${esc(x.shop_replied_at ? when(x.shop_replied_at) : '')}</small></div>` : '';
+    return `<div class="review"><span class="stars">${'★'.repeat(num(x.restaurant_rating))}${'☆'.repeat(5 - num(x.restaurant_rating))}</span> <span class="muted" style="font-size:13px">${when(x.created_at)}</span>${(x.shop_tags || []).length ? `<div class="muted" style="font-size:13px">${esc(x.shop_tags.join(' · '))}</div>` : ''}${x.comment ? `<div>${esc(x.comment)}</div>` : ''}${reply}<button type="button" class="btn ghost small" style="width:auto;margin-top:8px" onclick="A.replyReview('${esc(x.id)}')">${x.shop_reply ? t('edit_reply') : t('reply_review')}</button></div>`;
+  }).join('');
   return `<h1>${t('shop')}</h1>
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div><b>${r.is_open ? t('open_now') : t('closed_now')}</b><div class="muted" style="font-size:14px">${r.is_open ? (withinHours(r) ? t('is_open_msg') : esc(hoursText(r))) : t('is_closed_msg')}</div></div>
@@ -2373,6 +2376,22 @@ function payAccSub(a){
 const A = {
   async refreshPromoRequests(){
     await run(async () => { await loadPromoRequests(); if (state.tab === 'shop') renderTab(); });
+  },
+  replyReview(id){
+    const review = (state.reviews || []).find(x => x.id === id); if (!review) return;
+    openSheet(review.shop_reply ? t('edit_reply') : t('reply_review'), `<label class="f" for="shopReplyText">${t('reply_review')}</label><textarea id="shopReplyText" maxlength="500" rows="4" style="width:100%;min-height:110px;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit;resize:vertical">${esc(review.shop_reply || '')}</textarea><div class="muted" style="font-size:13px;margin:8px 0">${t('reply_hint')}</div><button class="btn" id="shopReplySubmit" onclick="A.saveShopReply('${esc(review.id)}')">${t('reply_send')}</button>`);
+    setTimeout(() => { const input = $('shopReplyText'); if (input) input.focus(); }, 0);
+  },
+  async saveShopReply(id){
+    const input = $('shopReplyText'), button = $('shopReplySubmit'); if (!input || !button) return;
+    const reply = input.value.trim(); if (!reply) return toast(t('reply_empty'), true);
+    button.disabled = true;
+    try {
+      await run(async () => {
+        need(await sb.rpc('shop_reply_to_review', { p_review_id:id, p_reply:reply }));
+        await loadReviews(); closeSheet(); renderTab(); toast(t('reply_saved'));
+      });
+    } finally { const current = $('shopReplySubmit'); if (current) current.disabled = false; }
   },
   async submitPromoRequest(){
     const titleEl = $('promoTitle'), subtitleEl = $('promoSubtitle'), imageEl = $('promoImage'), startsEl = $('promoStarts'), endsEl = $('promoEnds'), errorEl = $('promoError'), button = $('promoSubmit');
