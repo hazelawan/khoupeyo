@@ -680,7 +680,11 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.72';
+const APP_VERSION = '7.94';
+  // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
+  const pfmMarks = { script: Math.round(performance.now()) };
+  function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
+  function pfmLine(){ try { const m = pfmMarks; const f = function(v){ return (typeof v === 'number' ? v + ' ms' : '—'); }; return '<div class="ver" style="margin-top:6px">⏱ Startup: script ' + f(m.script) + ' · boot ' + f(m.boot) + ' · first screen ' + f(m.ready) + '</div>'; } catch(e){ return ''; } }
 const APP_DATE = '27 Oct 2026';
 
 // ---- Connection (these two values are safe to be public) ----
@@ -693,10 +697,11 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support','approvals'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support','approvals','groups','donations'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
-const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks'];
-const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', support:'orders', approvals:'owner' };
+const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks','fleet'];
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', campaign:'settings', perks:'riders', fleet:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', groups:'orders', vouchers:'settings', families:'orders', ontime:'orders',
+  dinein:'orders', support:'orders', approvals:'owner' };
 
 // ---- Small helpers ----
 const $ = id => document.getElementById(id);
@@ -764,7 +769,7 @@ const state = {
   zones:[], restaurants:[], riders:[],
   riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
   menuRestaurant:'all', productFilter:'all', productQ:'', productPage:0, productHasMore:false, categories:[], items:[], formCats:[],
-  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportAttachments:[], supportAttachmentsLoading:false, supportAttachmentsError:'', supportAttachmentRequest:0, supportTargetHours:24, approvals:{refunds:[],shifts:[],promos:[]}
+  customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportAttachments:[], supportAttachmentsLoading:false, supportAttachmentsError:'', supportAttachmentRequest:0, supportTargetHours:24, approvals:{refunds:[],shifts:[],promos:[]}, bnrFilter:'all', bnrRegionMap:null, approvalsErrors:{}
 };
 
 // ---- Payment form (pay a shop, pay a rider, receive cash from a rider) ----
@@ -863,6 +868,7 @@ function showLogin(msg){
 async function afterLogin(user){
   const { data, error } = await sb.from('profiles').select('role,region_id,view_region').eq('id', user.id).single();
   if (error || !data || data.role !== 'admin'){ await sb.auth.signOut(); showLogin('This account is not an admin.'); return; }
+  if (!(await tfaGate())) return;
   state.userId = user.id;
   try { const { data:pm } = await sb.rpc('my_perms'); state.perms = pm || []; } catch (e) { state.perms = ['owner']; }
   state.myRegion = data.region_id || null; state.viewRegion = data.view_region || null;
@@ -883,7 +889,8 @@ async function loadBadges(){
   try {
     const regs = [...new Set((state.restaurants || []).map(r => r.region_id).filter(Boolean))];
     const set = new Set();
-    for (const rid of regs){ const { data } = await sb.rpc('shop_badges', { p_region:rid }); (data || []).forEach(id => set.add(id)); }
+    const results = await Promise.all(regs.map(rid => sb.rpc('shop_badges', { p_region:rid })));
+    results.forEach(({ data }) => (data || []).forEach(id => set.add(id)));
     state.badgeShops = set;
   } catch (e) { state.badgeShops = new Set(); }
 }
@@ -898,6 +905,7 @@ async function loadSettings(){
   if (scope()){ const rr = need(await sb.from('region_settings').select('key,value').eq('region_id', scope())) || []; rr.forEach(r => { state.settings[r.key] = r.value; state.regionSet[r.key] = true; }); }
   else if ((state.regions || []).length === 1){ const rr = await sb.from('region_settings').select('key,value').eq('region_id', state.regions[0].id).in('key', ['pay_accounts', 'pay_wait_minutes', 'plus', 'payment_rules']); (rr.data || []).forEach(r => { state.settings[r.key] = r.value; }); }
   state.tierEdit = null; state.wtEdit = null; state.ladEdit = null; state.vehOn = null;
+  try { const pr = await sb.from('orders').select('surge_fee').limit(1); state.surgeLive = !pr.error; } catch (e) { state.surgeLive = false; }
 }
 let channel;
 function subscribeOrders(){
@@ -973,6 +981,7 @@ async function go(tab){
   m.innerHTML = '<div class="empty">Loading…</div>';
   await run(async () => {
     if (tab === 'home'){ await loadDash(); try { const { data } = await sb.from('sos_alerts').select('*, rider:riders(profile:profiles(full_name,phone))').is('resolved_at', null).order('created_at', { ascending:false }).limit(10); state.sos = data || []; } catch (e) { state.sos = []; } }
+    if (tab === 'home'){ try { const { data:sd } = await sb.from('sos_alerts').select('*, rider:riders(profile:profiles(full_name,phone))').not('resolved_at', 'is', null).order('resolved_at', { ascending:false }).limit(10); state.sosDoneList = sd || []; } catch (e) { state.sosDoneList = []; } }
     if (tab === 'misses'){ const { data } = await sb.rpc('admin_search_misses', { p_days:state.missDays || 30 }); state.misses = data || []; }
     if (tab === 'payoutreq'){ const { data } = await sb.from('payout_requests').select('*, shop:restaurants(name)').order('created_at', { ascending:false }).limit(100); state.payoutReqs = data || []; }
     if (tab === 'plus'){ const { data } = await sb.from('plus_subs').select('*, user:profiles!user_id(full_name,phone)').order('created_at', { ascending:false }).limit(200); state.plusSubs = data || []; await loadSettings(); }
@@ -984,15 +993,22 @@ async function go(tab){
     if (tab === 'restaurants') await Promise.all([loadRestaurants(), loadShopReport(), loadShopRequests()]);
     if (tab === 'menu') await loadProducts();
     if (tab === 'riders') await loadRiderMonth();
+    if (tab === 'fleet') await loadFleet();
     if (tab === 'attendance') await Promise.all([loadAttendance(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'leaves') await Promise.all([loadLeaves(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'complaints') await Promise.all([loadComplaints(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'shifts') await Promise.all([loadShiftsPage(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'perks') await Promise.all([loadPerks(), state.riderRows.length ? null : loadRiderMonth()]);
     if (tab === 'customers') await loadCustomers();
-    if (tab === 'promos') await loadPromos();
+    if (tab === 'promos'){ await loadPromos(); await loadCmpReqs(); }
+  if (tab === 'donations'){ await donAdminLoad(); }
     if (tab === 'banners') await Promise.all([loadBanners(), state.restaurants.length ? null : loadRestaurants()]);
     if (tab === 'parcels') await Promise.all([loadParcelsAdmin(), loadSettings(), state.riderRows.length ? null : loadRiderMonth()]);
+    if (tab === 'groups') await groupAdminLoad();
+    if (tab === 'vouchers') await voucherAdminLoad();
+    if (tab === 'families') await familyAdminLoad();
+    if (tab === 'ontime') await ontimeAdminLoad();
+    if (tab === 'dinein') await dndealAdminLoad();
     if (tab === 'zones') await loadZones();
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
@@ -1063,10 +1079,51 @@ function viewSupport(){
   return `<h2>Support queue</h2><p class="muted">First-response target is a configurable app default, not a guarantee. SLA state is calculated from the stored due time.</p><div class="bar"><label>Target (hours) <input id="supportTarget" type="number" min="1" max="720" value="${esc(state.supportTargetHours)}" style="width:90px"></label><button class="btn ghost" onclick="A.supportSaveTarget()">Save target</button></div><div class="bar"><input type="search" maxlength="80" value="${esc(state.supportQ)}" placeholder="Search subject or ticket UUID" oninput="A.supportSearch(this.value)"><select onchange="A.supportFilter(this.value)">${options}</select></div>${rows}<div class="bar" style="justify-content:space-between"><button class="btn ghost" ${state.supportPage<=0?'disabled':''} onclick="A.supportPage(-1)">← Previous</button><span class="muted">Page ${state.supportPage+1}</span><button class="btn ghost" ${state.supportHasMore?'':'disabled'} onclick="A.supportPage(1)">Next →</button></div>${detail}`;
 }
 async function loadApprovals(){
-  const [refunds, shifts, promos] = await Promise.all([
-    sb.rpc('admin_refund_queue'), sb.rpc('admin_shift_request_queue'), sb.rpc('admin_promo_queue')
+  const q = await Promise.all([
+    (async () => { try { return { rows: need(await sb.rpc('admin_refund_queue')) || [] }; } catch (e) { return { err: e }; } })(),
+    (async () => { try { return { rows: need(await sb.rpc('admin_shift_request_queue')) || [] }; } catch (e) { return { err: e }; } })(),
+    (async () => { try { return { rows: need(await sb.rpc('admin_promo_queue')) || [] }; } catch (e) { return { err: e }; } })(),
   ]);
-  state.approvals = { refunds:need(refunds) || [], shifts:need(shifts) || [], promos:need(promos) || [] };
+  state.approvals = { refunds: q[0].rows || [], shifts: q[1].rows || [], promos: q[2].rows || [] };
+  state.approvalsErrors = { refunds: q[0].err || null, shifts: q[1].err || null, promos: q[2].err || null };
+  if (scope()){
+    try {
+      const res = await sb.from('restaurants').select('id,region_id');
+      const m = {}; (need(res) || []).forEach(r => { if (r.id && r.region_id) m[r.id] = r.region_id; });
+      state.bnrRegionMap = m;
+    } catch (e) { state.bnrRegionMap = null; }
+  } else state.bnrRegionMap = null;
+}
+function bnrShopName(r){ return r.name || r.restaurant_name || 'Unknown shop'; }
+function bnrImageOk(u){ return !!u && /^https:\/\//i.test(String(u)); }
+function bnrRegionOf(r){
+  const m = state.bnrRegionMap;
+  if (!scope() || !m) return null;
+  return Object.prototype.hasOwnProperty.call(m, r.restaurant_id) ? m[r.restaurant_id] : undefined;
+}
+function bnrPromoFiltered(){
+  const rows = (state.approvals && state.approvals.promos) || [];
+  const sc = scope();
+  let out = rows, unmapped = 0;
+  if (sc && state.bnrRegionMap){
+    out = rows.filter(r => { const reg = bnrRegionOf(r); if (reg === undefined) { unmapped++; return true; } return reg === sc; });
+  }
+  const f = state.bnrFilter || 'all';
+  const counts = { all: out.length, requested: 0, approved: 0, rejected: 0 };
+  out.forEach(r => { if (r.status === 'requested') counts.requested++; else if (r.status === 'approved') counts.approved++; else if (r.status === 'rejected') counts.rejected++; });
+  const filtered = f === 'all' ? out : out.filter(r => r.status === f);
+  return { rows: filtered, counts, unmapped, scoped: !!(sc && state.bnrRegionMap), mapFailed: !!(sc && !state.bnrRegionMap) };
+}
+function bnrPromoSection(){
+  const d = bnrPromoFiltered();
+  const err = state.approvalsErrors && state.approvalsErrors.promos;
+  const chips = [['all','All'],['requested','Requested'],['approved','Approved'],['rejected','Rejected']].map(([k,l]) => `<button class="chip ${state.bnrFilter === k ? 'on' : ''}" onclick="A.bnrSetFilter('${k}')">${l} (${d.counts[k]})</button>`).join('');
+  const notes = [];
+  if (err) notes.push(`<div class="note">Promotion queue failed to load. The other queues still work — reload to retry.</div>`);
+  if (d.scoped) notes.push(`<div class="note">Showing this region's requests only.</div>`);
+  if (d.mapFailed) notes.push(`<div class="note">Region filter unavailable — showing all regions.</div>`);
+  if (d.unmapped) notes.push(`<div class="note">${d.unmapped} request(s) could not be matched to a region and are shown.</div>`);
+  return `<h3>Promotion requests (${d.rows.length})</h3><div class="bar">${chips}</div>${notes.join('')}${d.rows.length ? d.rows.map(r=>approvalCard('promo',r)).join('') : '<div class="empty">No requests in this queue.</div>'}`;
 }
 function approvalDate(v){ return v ? esc(new Date(v).toLocaleString('en-GB')) : '—'; }
 function approvalCard(kind, r){
@@ -1075,25 +1132,26 @@ function approvalCard(kind, r){
   ] : kind === 'shift' ? [
     ['Request',r.id],['Rider ID',r.rider_id],['Rider',r.rider_name],['Rider code',r.rider_code],['Shift ID',r.shift_id],['Shift',r.shift_name],['Start',r.start_time],['End',r.end_time],['Requested date',r.requested_date],['Status',r.status],['Admin note',r.admin_note],['Created',approvalDate(r.created_at)]
   ] : [
-    ['Request',r.id],['Restaurant ID',r.restaurant_id],['Restaurant',r.restaurant_name],['Title',r.title],['Subtitle',r.subtitle],['Image URL',r.image_url],['Starts',approvalDate(r.starts_at)],['Ends',approvalDate(r.ends_at)],['Status',r.status],['Admin note',r.admin_note],['Created',approvalDate(r.created_at)]
+    ['Request',r.id],['Restaurant ID',r.restaurant_id],['Restaurant',bnrShopName(r)],['Title',r.title],['Subtitle',r.subtitle],['Image URL',r.image_url],['Starts',approvalDate(r.starts_at)],['Ends',approvalDate(r.ends_at)],['Status',r.status],['Admin note',r.admin_note],['Created',approvalDate(r.created_at)]
   ];
   const detail = fields.filter(([,v]) => v !== null && v !== undefined && v !== '').map(([k,v]) => `<div class="kv"><span class="muted">${esc(k)}</span><span style="text-align:right;overflow-wrap:anywhere">${esc(v)}</span></div>`).join('');
   const actions = kind === 'refund'
     ? (r.status === 'approved' ? ['refunded','escalate'] : r.status === 'reviewing' ? ['approve','reject','escalate'] : ['requested','escalated'].includes(r.status) ? ['review','approve','reject','escalate'] : [])
     : kind === 'shift' ? (r.status === 'pending' ? ['approve','reject'] : []) : (r.status === 'requested' ? ['approve','reject'] : []);
-  return `<article class="card"><div class="row-title">${esc(kind === 'refund' ? 'Refund' : kind === 'shift' ? 'Shift request' : 'Promotion request')} <span class="pill">${esc(r.status || 'pending')}</span></div>${detail}${actions.length ? `<div class="bar" style="margin:12px 0 0">${actions.map(a=>`<button class="btn ${a==='reject'?'warn':'ghost'} small" onclick="A.approvalAction('${kind}','${encodeURIComponent(String(r.id ?? ''))}','${a}')">${esc(a[0].toUpperCase()+a.slice(1))}</button>`).join('')}</div>` : ''}</article>`;
+  const promoExtra = kind === 'promo' ? `${bnrImageOk(r.image_url) ? `<a href="${esc(r.image_url)}" target="_blank" rel="noopener noreferrer"><img src="${esc(r.image_url)}" loading="lazy" alt="Banner image" style="display:block;max-width:260px;max-height:160px;object-fit:cover;border-radius:8px;margin-top:8px"></a>` : ''}${r.status === 'approved' ? `<div class="muted" style="font-size:13px;margin-top:6px">Banner created on approval.</div>` : ''}` : '';
+  return `<article class="card"><div class="row-title">${esc(kind === 'refund' ? 'Refund' : kind === 'shift' ? 'Shift request' : 'Promotion request')} <span class="pill">${esc(r.status || 'pending')}</span></div>${detail}${promoExtra}${actions.length ? `<div class="bar" style="margin:12px 0 0">${actions.map(a=>`<button class="btn ${a==='reject'?'warn':'ghost'} small" onclick="A.approvalAction('${kind}','${encodeURIComponent(String(r.id ?? ''))}','${a}')">${esc(a[0].toUpperCase()+a.slice(1))}</button>`).join('')}</div>` : ''}</article>`;
 }
 function approvalSection(title, kind, rows){ return `<h3>${esc(title)} (${rows.length})</h3>${rows.length ? rows.map(r=>approvalCard(kind,r)).join('') : '<div class="empty">No requests in this queue.</div>'}`; }
 function viewApprovals(){
   if (!can('owner')) return `${backLink()}<div class="empty">You do not have permission to view approvals.</div>`;
   const q = state.approvals || {refunds:[],shifts:[],promos:[]};
-  return `${backLink()}<h2>✅ Approvals</h2><p class="muted">Review incoming requests. Mark a refund as refunded only after actual funds have been handled outside this page.</p><div class="bar"><button class="btn ghost" onclick="go('approvals')">↻ Reload queues</button></div>${approvalSection('Refund requests','refund',q.refunds || [])}${approvalSection('Rider shift requests','shift',q.shifts || [])}${approvalSection('Promotion requests','promo',q.promos || [])}`;
+  return `${backLink()}<h2>✅ Approvals</h2><p class="muted">Review incoming requests. Mark a refund as refunded only after actual funds have been handled outside this page.</p><div class="bar"><button class="btn ghost" onclick="go('approvals')">↻ Reload queues</button></div>${approvalSection('Refund requests','refund',q.refunds || [])}${approvalSection('Rider shift requests','shift',q.shifts || [])}${bnrPromoSection()}`;
 }
 function openApprovalAction(kind, id, action){
   const title = `${action[0].toUpperCase()+action.slice(1)} ${kind === 'refund' ? 'refund' : kind === 'shift' ? 'shift request' : 'promotion request'}`;
   const isRefunded = kind === 'refund' && action === 'refunded';
   const noteRequired = isRefunded || action === 'reject';
-  openSheet(title, `<div class="note">${isRefunded ? '<b>Confirm only after the actual funds have been handled outside this page.</b>' : 'This action will update the request status.'}</div><label class="f">${noteRequired ? 'Required note / reason' : 'Admin note (optional)'}</label><textarea id="approvalNote" maxlength="${kind === 'refund' ? 2000 : 1000}" ${noteRequired ? 'required' : ''} placeholder="Add context for the record"></textarea>${isRefunded ? '<label class="f">External payment/refund reference (required)</label><input id="approvalRef" type="text" maxlength="200" required placeholder="Payment provider transaction/refund ID">' : kind === 'refund' ? '<label class="f">External reference (optional)</label><input id="approvalRef" type="text" maxlength="200" placeholder="Payment or case reference">' : ''}<button class="btn block" style="margin-top:14px" id="approvalSubmit">${esc(title)}</button>`);
+  openSheet(title, `<div class="note">${isRefunded ? '<b>Confirm only after the actual funds have been handled outside this page.</b>' : (kind === 'promo' && action === 'approve' ? 'Approving publishes the banner immediately.' : 'This action will update the request status.')}</div><label class="f">${noteRequired ? 'Required note / reason' : 'Admin note (optional)'}</label><textarea id="approvalNote" maxlength="${kind === 'refund' ? 2000 : 1000}" ${noteRequired ? 'required' : ''} placeholder="Add context for the record"></textarea>${isRefunded ? '<label class="f">External payment/refund reference (required)</label><input id="approvalRef" type="text" maxlength="200" required placeholder="Payment provider transaction/refund ID">' : kind === 'refund' ? '<label class="f">External reference (optional)</label><input id="approvalRef" type="text" maxlength="200" placeholder="Payment or case reference">' : ''}<button class="btn block" style="margin-top:14px" id="approvalSubmit">${esc(title)}</button>`);
   $('approvalSubmit').onclick = async () => {
     const note = $('approvalNote').value.trim(); const ref = $('approvalRef') ? $('approvalRef').value.trim() : '';
     if (noteRequired && !note) return toast('Add a note or reason before continuing.', true);
@@ -1111,7 +1169,8 @@ function openApprovalAction(kind, id, action){
 function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
-              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, banners:viewBanners, parcels:viewParcels, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, support:viewSupport, approvals:viewApprovals }[state.tab];
+              customers:viewCustomers, campaign:viewCampaign, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, donations:viewDonations, banners:viewBanners, parcels:viewParcels, groups:viewGroupAdmin, vouchers:viewVoucherAdmin, families:viewFamilyAdmin, ontime:viewOntimeAdmin,
+  dinein:viewDineinAdmin, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, fleet:viewFleet, support:viewSupport, approvals:viewApprovals }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -1133,7 +1192,15 @@ async function loadDash(){
   (p.data || []).forEach(o => (o.order_items || []).forEach(i => { const x = by[i.name] || (by[i.name] = { qty:0, rev:0 }); x.qty += i.quantity; x.rev += num(i.price) * i.quantity; }));
   state.topProducts = Object.entries(by).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.qty - a.qty).slice(0, 8);
 }
+function sosHomeHtml(){
+  const badge = x => x.source === 'auto' ? `<span class="pill r">🤖 ${state.lang === 'ur' ? 'خودکار چیک ان' : 'Auto check-in'}</span>` : '';
+  const ord = x => x.order_id ? `<span class="muted"> · Order #${esc(String(x.order_id).slice(-4).toUpperCase())}</span>` : '';
+  const act = (state.sos || []).map(x => `<div class="card sos"><div class="row-title">🆘 SOS · ${esc(x.rider?.profile?.full_name || 'Rider')} <span class="muted" style="font-weight:600">${timeAgo(x.created_at)}</span> ${badge(x)}${ord(x)}</div>${x.note ? `<div>${esc(x.note)}</div>` : ''}<div class="bar" style="margin-top:8px">${x.rider?.profile?.phone ? `<a class="btn small" href="tel:${esc(x.rider.profile.phone)}">📞 Call</a>` : ''}${x.lat != null ? `<a class="btn ghost small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}">📍 Map</a>` : ''}<button class="btn ghost small" onclick="A.sosDone('${x.id}')">✓ Solved</button></div></div>`).join('');
+  const done = (state.sosDoneList || []).length ? `<h3>${state.lang === 'ur' ? 'حل شدہ SOS' : 'Resolved SOS'}</h3>` + state.sosDoneList.map(x => `<div class="card"><div class="row-title">🆘 SOS · ${esc(x.rider?.profile?.full_name || 'Rider')} <span class="muted">${timeAgo(x.resolved_at)}</span> ${badge(x)}${ord(x)}</div>${x.note ? `<div>${esc(x.note)}</div>` : ''}${x.resolved_note ? `<div class="muted">Note: ${esc(x.resolved_note)}</div>` : ''}</div>`).join('') : '';
+  return act + done;
+}
 function viewHome(){
+
   const d = state.dash || {}; const n = k => num(d[k]);
   const platform = n('commission') + n('delivery_fees') - n('rider_pay') - n('discounts');
   const aov = n('delivered') ? n('gmv') / n('delivered') : 0;
@@ -1150,8 +1217,7 @@ function viewHome(){
       <div class="kpicard"><span class="kpiic" style="background:rgba(122,61,184,.13)">🛵</span><div><b>${n('riders_online')}</b><span>Riders online</span></div></div>
       <div class="kpicard"><span class="kpiic" style="background:rgba(232,114,42,.15)">🏪</span><div><b>${n('shops_open')}/${n('shops_total')}</b><span>Shops open</span></div></div>
     </div>
-    ${(state.sos || []).map(x => `<div class="card sos"><div class="row-title">🆘 SOS · ${esc(x.rider?.profile?.full_name || 'Rider')} <span class="muted" style="font-weight:600">${timeAgo(x.created_at)}</span></div>
-      ${x.note ? `<div>${esc(x.note)}</div>` : ''}<div class="bar" style="margin-top:8px">${x.rider?.profile?.phone ? `<a class="btn small" href="tel:${esc(x.rider.profile.phone)}">📞 Call</a>` : ''}${x.lat != null ? `<a class="btn ghost small" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${x.lat},${x.lng}">📍 Map</a>` : ''}<button class="btn ghost small" onclick="A.sosDone('${x.id}')">✓ Solved</button></div></div>`).join('')}
+    ${sosHomeHtml()}
     ${periodChips()}
     <div class="tiles">
       ${tile(money(n('gmv')), 'Total sales (collected)', true)}
@@ -1247,6 +1313,258 @@ function issueCard(i){
       <button class="linkbtn" onclick="A.openOrder('${o.id}')">Open order</button>
     </div></div>`;
 }
+// ================= GROUP ORDERS (Feature 1, admin view — read-only) =================
+function groupFeeSplit(fee, n){
+  const total = Math.round(num(fee) || 0);
+  if (!n || n < 1) return [];
+  const base = Math.floor(total / n);
+  const rem = total - base * n;
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(base + (i === 0 ? rem : 0));
+  return out;
+}
+function groupMemberTotals(items, feeShares, memberIds){
+  const out = {};
+  memberIds.forEach((id, i) => { out[id] = { items:0, fee:num(feeShares[i] || 0), total:0 }; });
+  (items || []).forEach(it => { if (out[it.member_id]) out[it.member_id].items += num(it.price) * num(it.quantity); });
+  memberIds.forEach(id => { out[id].total = out[id].items + out[id].fee; });
+  return out;
+}
+function groupPayBadge(paid, cod, checking, total){
+  if (num(paid) >= num(total) && num(total) > 0) return 'paid';
+  if (num(paid) > 0 && num(cod) > 0 && num(paid) + num(cod) >= num(total)) return 'walletcod';
+  if (num(cod) >= num(total) && num(total) > 0) return 'cod';
+  if (num(checking) > 0) return 'checking';
+  return 'pending';
+}
+function groupPayBadgeLabel(badge){
+  return { paid:'Paid', cod:'COD — pay on delivery', walletcod:'Wallet + COD', checking:'Checking', pending:'Pending' }[badge] || badge;
+}
+function groupIsBackendError(e){
+  const m = String((e && (e.message || e.error_description)) || e || '').toLowerCase();
+  return /42p01|pgrst205|does not exist|relation .* does not exist|schema cache|table .* not found/i.test(m) || (e && (e.code === '42P01' || e.code === 'PGRST205'));
+}
+function groupMemberPaySums(payments, memberId){
+  let paid = 0, cod = 0, checking = 0;
+  (payments || []).filter(p => p.member_id === memberId).forEach(p => {
+    if (p.status === 'paid') paid += num(p.amount);
+    else if (p.status === 'cod') cod += num(p.amount);
+    else if (p.status === 'checking') checking += num(p.amount);
+  });
+  return { paid, cod, checking };
+}
+async function groupAdminLoad(){
+  try {
+    const gr = await sb.from('group_orders').select('*').order('created_at', { ascending:false }).limit(100);
+    if (gr.error) throw gr.error;
+    const groups = gr.data || [];
+    const shopMap = {};
+    if (groups.length){
+      const sids = [...new Set(groups.map(g => g.shop_id))];
+      const sr = await sb.from('restaurants').select('id,name').in('id', sids);
+      if (!sr.error) (sr.data || []).forEach(r => { shopMap[r.id] = r.name; });
+    }
+    const out = [];
+    for (const g of groups){
+      const [mRes, iRes, pRes] = await Promise.all([
+        sb.from('group_order_members').select('*').eq('group_id', g.id).order('joined_at'),
+        sb.from('group_order_items').select('*').eq('group_id', g.id).order('created_at'),
+        sb.from('group_order_payments').select('*').eq('group_id', g.id).order('created_at')
+      ]);
+      if (mRes.error) throw mRes.error;
+      if (iRes.error) throw iRes.error;
+      if (pRes.error) throw pRes.error;
+      const members = mRes.data || [];
+      let profMap = {};
+      const ids = [...new Set(members.map(m => m.user_id))];
+      if (ids.length){ const pr = await sb.from('profiles').select('id,full_name').in('id', ids); if (!pr.error) (pr.data || []).forEach(p => { profMap[p.id] = p.full_name; }); }
+      out.push({ g, members, items:iRes.data || [], payments:pRes.data || [], profMap, shopName:shopMap[g.shop_id] || g.shop_id });
+    }
+    state.groupAdmin = { groups:out };
+  } catch (e) {
+    if (groupIsBackendError(e)){ state.groupAdmin = { pending:true }; return; }
+    throw e;
+  }
+}
+// ================= GIFT CARDS / VOUCHERS — ADMIN (Feature 2) =================
+// Read-only for customer balances except creation/deactivation. No admin
+// action here changes a user's wallet balance directly.
+function voucherCodeGen(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 8; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+function voucherIsExpired(expiresAt, nowMs){
+  if (!expiresAt) return false;
+  return new Date(expiresAt).getTime() <= (nowMs || Date.now());
+}
+function voucherIsBackendError(e){
+  const m = String((e && (e.message || e.error_description)) || e || '').toLowerCase();
+  return /42p01|pgrst205|does not exist|relation .* does not exist|schema cache|table .* not found/i.test(m) || (e && (e.code === '42P01' || e.code === 'PGRST205'));
+}
+async function voucherAdminLoad(){
+  try {
+    const r = await sb.from('gift_vouchers').select('*').order('created_at', { ascending:false }).limit(200);
+    if (r.error) throw r.error;
+    const codes = r.data || [];
+    const counts = {};
+    if (codes.length){
+      const er = await sb.from('voucher_wallet_entries').select('voucher_id').in('voucher_id', codes.map(c => c.id));
+      if (!er.error) (er.data || []).forEach(x => { counts[x.voucher_id] = (counts[x.voucher_id] || 0) + 1; });
+    }
+    state.voucherAdmin = { codes, counts };
+  } catch (e) {
+    if (voucherIsBackendError(e)){ state.voucherAdmin = { pending:true }; return; }
+    throw e;
+  }
+}
+
+// ================= FAMILY ACCOUNTS — ADMIN (Feature 3, read-only) =================
+function familyIsBackendError(e){
+  const m = String((e && (e.message || e.error_description)) || e || '').toLowerCase();
+  return /42p01|pgrst205|does not exist|relation .* does not exist|schema cache|table .* not found/i.test(m) || (e && (e.code === '42P01' || e.code === 'PGRST205'));
+}
+async function familyAdminLoad(){
+  try {
+    const r = await sb.from('families').select('*').order('created_at', { ascending:false }).limit(200);
+    if (r.error) throw r.error;
+    const fams = r.data || [];
+    const out = [];
+    for (const f of fams){
+      const mRes = await sb.from('family_members').select('*').eq('family_id', f.id).order('joined_at');
+      if (mRes.error) throw mRes.error;
+      const members = mRes.data || [];
+      let profMap = {};
+      const ids = [...new Set(members.map(m => m.user_id))];
+      if (ids.length){ const pr = await sb.from('profiles').select('id,full_name').in('id', ids); if (!pr.error) (pr.data || []).forEach(p => { profMap[p.id] = p.full_name; }); }
+      out.push({ f, members, profMap });
+    }
+    state.familyAdmin = { families:out };
+  } catch (e) {
+    if (familyIsBackendError(e)){ state.familyAdmin = { pending:true }; return; }
+    throw e;
+  }
+}
+function viewFamilyAdmin(){
+  if (!state.familyAdmin) return '<div class="empty">Loading…</div>';
+  if (state.familyAdmin.pending) return '<div class="empty">Family accounts are not switched on yet — the family backend update has not been applied.</div>';
+  const rows = (state.familyAdmin.families || []).map(x => `<div class="card"><b>${esc(x.f.name)}</b> · Code: <b style="letter-spacing:1px">${esc(x.f.code)}</b><br><span class="muted" style="font-size:13px">Owner: ${esc(x.profMap[x.f.owner_id] || '')} · Members: ${x.members.length} · Created: ${new Date(x.f.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</span><div class="muted" style="font-size:13px;margin-top:4px">${x.members.map(m => esc(x.profMap[m.user_id] || '') + (m.role === 'owner' ? ' (owner)' : '')).join(', ')}</div></div>`).join('');
+  return `${backLink()}<h2>👨‍👩‍👧‍👦 Family accounts</h2><div class="note">Read-only. Families, owners and member counts. No admin action here changes membership or money.</div><div class="list">${rows || '<div class="empty">No families yet.</div>'}</div>`;
+}
+
+async function ontimeAdminLoad(){
+  try {
+    const pr = await sb.from('ontime_promises').select('order_id,promised_at,points_awarded,status,created_at').order('created_at', { ascending:false }).limit(200);
+    if (pr.error) throw pr.error;
+    const ids = (pr.data || []).map(x => x.order_id);
+    let ordMap = {};
+    if (ids.length){
+      const od = await sb.from('orders').select('id,delivered_at,status,order_type').in('id', ids);
+      (od.data || []).forEach(o => { ordMap[o.id] = o; });
+    }
+    state.ontimeAdmin = { rows:(pr.data || []).map(x => Object.assign({}, x, { order:ordMap[x.order_id] || null })), pending:false };
+  } catch (e) {
+    const msg = String((e && e.message) || e || '');
+    state.ontimeAdmin = { rows:[], pending: /42P01|PGRST205|does not exist/i.test(msg) };
+    if (!state.ontimeAdmin.pending) logErr(e);
+  }
+}
+function viewOntimeAdmin(){
+  if (!state.ontimeAdmin) return '<div class="empty">Loading…</div>';
+  if (state.ontimeAdmin.pending) return '<div class="empty">On-time Promise is not switched on yet — the promise backend update has not been applied.</div>';
+  const rows = state.ontimeAdmin.rows || [];
+  const late = rows.filter(x => x.order && x.order.delivered_at && new Date(x.order.delivered_at).getTime() > new Date(x.promised_at).getTime());
+  const list = rows.map(x => {
+    const o = x.order || {};
+    const res = !o.delivered_at ? (o.status === 'cancelled' ? 'Cancelled' : 'In progress') : (new Date(o.delivered_at).getTime() > new Date(x.promised_at).getTime() ? 'Late' : 'On time');
+    return `<div class="card"><b>Order #${esc(String(x.order_id).slice(-4).toUpperCase())}</b> · ${esc(res)}<br><span class="muted" style="font-size:13px">Promised: ${new Date(x.promised_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })} · Delivered: ${o.delivered_at ? new Date(o.delivered_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—'} · Bonus: ${x.points_awarded > 0 ? x.points_awarded + ' pts' : '—'}</span></div>`;
+  }).join('');
+  return `${backLink()}<h2>⏱ On-time Promises</h2><div class="note">Read-only. Late orders (delivered after the promised time): <b>${late.length}</b> of ${rows.length} listed. No admin action here changes money — bonuses are awarded by the promise system.</div><div class="list">${list || '<div class="empty">No promises yet.</div>'}</div>`;
+}
+
+async function dndealAdminLoad(){
+  try {
+    const d = await sb.from('dinein_deals').select('*').eq('active', true).order('created_at', { ascending:false }).limit(200);
+    if (d.error) throw d.error;
+    const rids = [...new Set((d.data || []).map(x => x.restaurant_id))];
+    let rmap = {};
+    if (rids.length){ const r = await sb.from('restaurants').select('id,name').in('id', rids); (r.data || []).forEach(x => { rmap[x.id] = x.name; }); }
+    state.dndealAdmin = { rows:(d.data || []).map(x => Object.assign({}, x, { shop:rmap[x.restaurant_id] || '' })), pending:false };
+  } catch (e) {
+    const msg = String((e && e.message) || e || '');
+    state.dndealAdmin = { rows:[], pending: /42P01|PGRST205|does not exist/i.test(msg) };
+    if (!state.dndealAdmin.pending) logErr(e);
+  }
+}
+function viewDineinAdmin(){
+  if (!state.dndealAdmin) return '<div class="empty">Loading…</div>';
+  if (state.dndealAdmin.pending) return '<div class="empty">Dine-in deals are not switched on yet — the deals backend update has not been applied.</div>';
+  const rows = state.dndealAdmin.rows || [];
+  const list = rows.map(x => `<div class="card"><b>${esc(x.title)}</b> · ${esc(x.shop)}<br><span class="muted" style="font-size:13px">${x.discount_type === 'percent' ? num(x.discount_value) + '% off' : 'Rs ' + num(x.discount_value) + ' off'}${num(x.min_order) > 0 ? ' · Min order Rs ' + num(x.min_order) : ''}</span></div>`).join('');
+  return `${backLink()}<h2>🍽️ Dine-in deals</h2><div class="note">Read-only. Active dine-in deals per shop. Deals apply only to dine-in orders paid cash at the restaurant.</div><div class="list">${list || '<div class="empty">No active deals yet.</div>'}</div>`;
+}
+
+function viewVoucherAdmin(){
+  if (!state.voucherAdmin) return '<div class="empty">Loading…</div>';
+  if (state.voucherAdmin.pending) return '<div class="empty">Gift cards are not switched on yet — the voucher backend update has not been applied.</div>';
+  const rows = (state.voucherAdmin.codes || []).map(c => {
+    const used = state.voucherAdmin.counts[c.id] || 0;
+    const left = c.max_uses == null ? '∞' : Math.max(0, num(c.max_uses) - used);
+    const exp = voucherIsExpired(c.expires_at, Date.now()) ? 'Expired' : c.status;
+    return `<div class="card"><b>${esc(c.code)}</b> · ${money(c.amount)} · ${c.scope === 'shop' ? 'One shop' : 'All shops'} · ${exp}<br><span class="muted" style="font-size:13px">${c.expires_at ? 'Expires: ' + new Date(c.expires_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) + ' · ' : ''}Uses left: ${left} · Issuer: ${esc(c.issuer_type || '')}</span>${c.status === 'active' ? `<div style="margin-top:8px"><button class="btn ghost" onclick="voucherAdminDeactivate('${c.id}')">Deactivate</button></div>` : ''}</div>`;
+  }).join('');
+  return `${backLink()}<h2>🎁 Gift cards & vouchers</h2><p class="muted" style="font-size:13px">Create system-wide codes here. Customer voucher balances are never edited directly from this screen.</p>
+    <div class="card"><h3 style="margin-top:0">Create system-wide voucher</h3>
+      <label class="f" for="vch_amt">Amount (Rs)</label><input id="vch_amt" type="number" min="100" value="1000">
+      <label class="f" for="vch_exp">Expiry date</label><input id="vch_exp" type="date">
+      <label class="f" for="vch_uses">Max uses</label><input id="vch_uses" type="number" min="1" value="1">
+      <div style="margin-top:10px"><button class="btn" onclick="voucherAdminCreate()">Create voucher</button></div>
+    </div>
+    ${rows || '<div class="empty">No vouchers yet.</div>'}`;
+}
+async function voucherAdminCreate(){
+  const amt = num($('vch_amt').value);
+  if (!amt || amt < 100) return toast('Choose an amount of at least Rs 100', true);
+  const exp = $('vch_exp').value ? new Date($('vch_exp').value + 'T23:59:59').toISOString() : new Date(Date.now() + 180 * 864e5).toISOString();
+  const uses = num($('vch_uses').value) || 1;
+  await run(async () => {
+    const ins = await sb.from('gift_vouchers').insert({ code:voucherCodeGen(), amount:amt, remaining_amount:amt, issuer_type:'admin', issuer_id:state.user.id, shop_id:null, scope:'all', max_uses:uses, status:'active', expires_at:exp }).select('id');
+    if (ins.error) throw ins.error;
+    toast('Voucher created'); await voucherAdminLoad(); renderNav(); const m = $('main'); if (m) m.innerHTML = viewVoucherAdmin();
+  });
+}
+async function voucherAdminDeactivate(id){
+  await run(async () => {
+    const upd = await sb.from('gift_vouchers').update({ status:'inactive' }).eq('id', id);
+    if (upd.error) throw upd.error;
+    toast('Deactivated'); await voucherAdminLoad(); const m = $('main'); if (m) m.innerHTML = viewVoucherAdmin();
+  });
+}
+
+
+function viewGroupAdmin(){
+  if (!state.groupAdmin) return '<div class="empty">Loading…</div>';
+  if (state.groupAdmin.pending) return '<div class="empty">Group orders are not switched on yet — the group backend update has not been applied.</div>';
+  const groups = state.groupAdmin.groups || [];
+  if (!groups.length) return '<h2>👥 Group orders</h2><div class="empty">No groups yet.</div>';
+  return '<h2>👥 Group orders</h2><p class="muted" style="font-size:13px">Read-only. No admin action here changes money.</p>' + groups.map(d => {
+    const g = d.g;
+    const payers = []; d.items.forEach(it => { if (it.member_id && !payers.includes(it.member_id)) payers.push(it.member_id); });
+    const feeShares = groupFeeSplit(g.delivery_fee, payers.length);
+    const totals = groupMemberTotals(d.items, feeShares, payers);
+    const grand = payers.reduce((n, id) => n + totals[id].total, 0);
+    const rows = d.members.map(m => {
+      const tot = totals[m.user_id] || { items:0, fee:0, total:0 };
+      const s = groupMemberPaySums(d.payments, m.user_id);
+      const b = groupPayBadge(s.paid, s.cod, s.checking, tot.total);
+      const its = d.items.filter(x => x.member_id === m.user_id);
+      return `<div style="margin-top:8px"><b>${esc(d.profMap[m.user_id] || m.user_id)}${m.user_id === g.creator_id ? ' 👑' : ''}</b> · ${groupPayBadgeLabel(b)}<br><span class="muted" style="font-size:13px">Items: ${money(tot.items)} · Fee share: ${money(tot.fee)} · <b>Total: ${money(tot.total)}</b></span><br>${its.map(it => `<span class="muted" style="font-size:13px">${esc(it.name)} × ${num(it.quantity)}</span>`).join(' · ')}</div>`;
+    }).join('');
+    return `<div class="card"><b>${esc(g.name)}</b> · Code: ${esc(g.code)} · Shop: ${esc(d.shopName)} · ${g.status}<div class="muted" style="font-size:13px">Delivery: ${esc(g.delivery_address_text || '')} · Grand total: <b>${money(grand)}</b></div>${rows}</div>`;
+  }).join('');
+}
+
 function viewOrders(){
   if (state.orderFilter === 'problems'){
     const chips0 = ORDER_FILTERS.map(([k, l]) => `<button class="chip" onclick="A.orderFilter('${k}')">${l}</button>`).join('');
@@ -1328,7 +1646,7 @@ function orderFileHtml(f){
     ${num(f.pay_required_online) ? `<div class="kv"><span class="muted">Online required</span><span>${money(f.pay_required_online)}</span></div>` : ''}
     ${num(f.pay_online_amount) ? `<div class="kv"><span class="muted">Paid online</span><span>${money(f.pay_online_amount)}</span></div>` : ''}
     ${num(f.pay_balance_due) ? `<div class="kv"><span class="muted">Balance (cash on delivery)</span><span>${money(f.pay_balance_due)}</span></div>` : ''}` : ''}
-    <h3 style="margin-top:14px">💰 Hisaab</h3>
+    <h3 style="margin-top:14px">💰 Money split</h3>
     <div class="kv"><span class="muted">Commission${f.commission_rule ? ' (' + esc(f.commission_rule) + ')' : ''}</span><span>${money(f.commission)}${num(f.commission_rate) ? ' · ' + num(f.commission_rate) + '%' : ''}</span></div>
     <div class="kv"><span class="muted">Shop gets</span><span>${money(f.earning)}</span></div>
     ${r.name || num(r.pay) ? `<div class="kv"><span class="muted">Rider</span><span>${esc(r.name || '')}${r.phone ? ' · ' + esc(r.phone) : ''} · pay ${money(r.pay)}</span></div>` : ''}
@@ -1386,7 +1704,7 @@ function viewShops(){
     return `<div class="row" style="cursor:default">
       <div class="thumb">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}</div>
       <button class="row-main" onclick="A.openShop('${r.id}')">
-        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? '<span class="pill g">✔️ Bharosa</span>' : ''}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
+        <div class="row-title">${esc(r.name)}${r.is_active ? '' : '<span class="pill">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? '<span class="pill g">✔️ Trusted</span>' : ''}${num(s.unpaid) ? `<span class="pill y">Unpaid ${money(s.unpaid)}</span>` : ''}</div>
         <div class="row-sub">${num(s.delivered)} delivered · ${money(s.food_sales)} sales · ${s.rating ? '★ ' + s.rating : 'No rating'}</div>${cxLine}
       </button>
       <div class="side-sw"><label class="switch"><input type="checkbox" ${r.is_open ? 'checked' : ''} onchange="A.toggleOpen('${r.id}', this.checked)" aria-label="Open or closed"><span></span></label><small>${r.is_open ? 'Open' : 'Closed'}</small></div>
@@ -1415,7 +1733,7 @@ function viewShops(){
       <div class="tile"><b>${state.restaurants.filter(r => r.is_open && r.is_active).length} / ${state.restaurants.length}</b><span>Open now</span></div>
     </div>
     ${shopReqBlock()}${staffReqBlock()}
-    <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button></div>
+    <div class="bar"><button class="btn" onclick="A.editRestaurant()">Add shop</button><button class="btn ghost" onclick="txdPending()">📄 ${txdT('Pending tax docs', 'زیر التواء ٹیکس دستاویزات')}</button></div>
     ${rows}`;
 }
 const SHOP_CATS = [{k:'food',i:'🍛',en:'Restaurant / food',ur:'ریسٹورنٹ / کھانا'},{k:'fastfood',i:'🍔',en:'Fast food',ur:'فاسٹ فوڈ'},{k:'bakery',i:'🧁',en:'Bakery and sweets',ur:'بیکری اور مٹھائی'},{k:'grocery',i:'🛒',en:'Grocery / kiryana',ur:'کریانہ / گروسری'},{k:'fruit_veg',i:'🥬',en:'Fruits and vegetables',ur:'پھل اور سبزی'},{k:'meat',i:'🍗',en:'Meat and chicken',ur:'گوشت اور چکن'},{k:'dairy',i:'🥛',en:'Milk and dairy',ur:'دودھ اور دہی'},{k:'pharmacy',i:'💊',en:'Pharmacy / medicine',ur:'میڈیکل اسٹور'},{k:'salon',i:'💈',en:'Barber & salon',ur:'حجام / سیلون'},{k:'clothes_men',i:'👔',en:'Gents clothes',ur:'مردانہ کپڑے'},{k:'clothes_women',i:'👗',en:'Ladies clothes',ur:'زنانہ کپڑے'},{k:'kids',i:'🧸',en:'Kids wear and toys',ur:'بچوں کے کپڑے اور کھلونے'},{k:'shoes',i:'👟',en:'Shoes',ur:'جوتے'},{k:'bags_belts',i:'👜',en:'Bags, belts and wallets',ur:'بیگ، بیلٹ اور بٹوے'},{k:'cosmetics',i:'💄',en:'Cosmetics and beauty',ur:'کاسمیٹکس اور بیوٹی'},{k:'jewellery',i:'💍',en:'Jewellery',ur:'زیورات'},{k:'mobile',i:'📱',en:'Mobiles and accessories',ur:'موبائل اور ایکسیسریز'},{k:'electronics',i:'📺',en:'Electronics',ur:'الیکٹرانکس'},{k:'hardware',i:'🔧',en:'Electric and hardware',ur:'الیکٹرک اور ہارڈ ویئر'},{k:'stationery',i:'📚',en:'Stationery and books',ur:'اسٹیشنری اور کتابیں'},{k:'gifts',i:'🎁',en:'Gifts',ur:'تحفے'},{k:'home_kitchen',i:'🍳',en:'Home and kitchen',ur:'گھر اور کچن'},{k:'furniture',i:'🛋️',en:'Furniture',ur:'فرنیچر'},{k:'tailor',i:'🧵',en:'Tailor and cloth',ur:'درزی اور کپڑا'},{k:'flowers',i:'💐',en:'Flowers',ur:'پھول'},{k:'pets_feed',i:'🐄',en:'Animal feed and pets',ur:'جانوروں کی خوراک'},{k:'agri',i:'🌾',en:'Seeds and farming',ur:'بیج اور زراعت'},{k:'general',i:'🏪',en:'General store',ur:'جنرل اسٹور'},{k:'other',i:'➕',en:'Other',ur:'دیگر'}];
@@ -1508,7 +1826,7 @@ function itemRow(i){
     <div class="side-sw"><label class="switch"><input type="checkbox" ${i.is_available ? 'checked' : ''} onchange="A.toggleItem('${i.id}', this.checked)" aria-label="In stock"><span></span></label><small>${i.is_available ? 'In stock' : 'Out'}</small></div>
   </div>`;
 }
-const SEC_TYPES = { shirts:'👕 Shirts / T-Shirts', kurta:'👔 Kurta', shalwar:'👘 Shalwar Kameez', wascot:'🦺 Wascot', coat:'🧥 Coat / Jacket', burka:'🧕 Burka / Abaya (Girls)', pants:'👖 Pants', belt:'🎗️ Belt', socks:'🧦 Socks', shoes:'👟 Shoes / Chappal', kids:'🧒 Bachon ke Kapre', shawl:'🧣 Shawl / Dupatta', cap:'🧢 Cap / Topi', glasses:'🕶️ Glasses', watches:'⌚ Watches', bags:'👜 Bags', jewellery:'💍 Jewellery', toys:'🧸 Toys', fastfood:'🍔 Fast Food', desi:'🍛 Desi Khana', wazan:'⚖️ Weighable Items', dairy:'🥛 Dairy', drinks:'🥤 Cold Drinks', icecream:'🍦 Ice Cream', cake:'🎂 Cake', sweets:'🍬 Sweets / Mithai', packaged:'📦 Packaged', perfume:'🌸 Perfume / Attar', mobile:'📱 Mobile / Electronics', medical:'💊 Medical', pampers:'👶 Pampers / Diapers', machines:'🔌 Machines / Appliances', crockery:'🍽️ Crockery / Bartan', furniture:'🛋️ Furniture', undergarments:'🩲 Undergarments', books:'📚 Books / Stationery', services:'✂️ Services', general:'🗂️ Simple / Aam' };
+const SEC_TYPES = { shirts:'👕 Shirts / T-Shirts', kurta:'👔 Kurta', shalwar:'👘 Shalwar Kameez', wascot:'🦺 Waistcoat', coat:'🧥 Coat / Jacket', burka:'🧕 Burka / Abaya (Girls)', pants:'👖 Pants', belt:'🎗️ Belt', socks:'🧦 Socks', shoes:'👟 Shoes', kids:'🧒 Clothes for kids', shawl:'🧣 Shawl', cap:'🧢 Cap', glasses:'🕶️ Glasses', watches:'⌚ Watches', bags:'👜 Bags', jewellery:'💍 Jewellery', toys:'🧸 Toys', fastfood:'🍔 Fast Food', desi:'🍛 Desi food', wazan:'⚖️ Weighable Items', dairy:'🥛 Dairy', drinks:'🥤 Cold Drinks', icecream:'🍦 Ice Cream', cake:'🎂 Cake', sweets:'🍬 Sweets', packaged:'📦 Packaged', perfume:'🌸 Perfume', mobile:'📱 Mobile / Electronics', medical:'💊 Medical', pampers:'👶 Pampers / Diapers', machines:'🔌 Machines / Appliances', crockery:'🍽️ Crockery', furniture:'🛋️ Furniture', undergarments:'🩲 Undergarments', books:'📚 Books / Stationery', services:'✂️ Services', general:'🗂️ General' };
 const secTypeName = k => SEC_TYPES[k] || SEC_TYPES.general;
 function viewProducts(){
   if (!state.restaurants.length) return '<h2>Products</h2><div class="empty">Add a shop first, then its products here.</div>';
@@ -1550,8 +1868,8 @@ function itemForm(i){
   return `
     <label class="f" for="i_name">Product name</label><input id="i_name" type="text" value="${esc(i.name)}">
     <label class="f" for="i_desc">Description</label><textarea id="i_desc">${esc(i.description)}</textarea>
-    <label class="f" for="i_kw">Search words (keywords)</label><input type="text" id="i_kw" maxlength="300" value="${esc(i.keywords || '')}" placeholder="doodh, milk, دودھ">
-    <div class="muted" style="font-size:13px">Other names customers search, with commas. Example: doodh, milk, دودھ</div>
+    <label class="f" for="i_kw">Search words (keywords)</label><input type="text" id="i_kw" maxlength="300" value="${esc(i.keywords || '')}" placeholder="milk, دودھ">
+    <div class="muted" style="font-size:13px">Other names customers search, with commas. Example: milk, دودھ</div>
     <div class="two">
       <div><label class="f" for="i_price">Selling price (Rs)</label><input id="i_price" type="number" inputmode="decimal" min="0" value="${i.price ?? ''}"></div>
       <div><label class="f" for="i_cmp">Price before discount</label><input id="i_cmp" type="number" inputmode="decimal" min="0" value="${i.compare_price ?? ''}" placeholder="Optional"></div>
@@ -1586,6 +1904,7 @@ function itemForm(i){
 async function loadRiderMonth(){
   const [rows, a, b, c] = await Promise.all([sb.rpc('admin_rider_month', { p_month:state.riderMonth }), sb.rpc('rider_leaderboard', { p_period:'today' }), sb.rpc('rider_leaderboard', { p_period:'month' }), sb.rpc('rider_leaderboard', { p_period:'last_month' }), state.settings && state.settings.rider_contracts ? null : loadSettings()]);
   state.riderRows = need(rows) || [];
+  try { const bl = await sb.from('rider_blacklists').select('*').eq('active', true).order('created_at', { ascending:false }); state.blstAll = bl.data || []; } catch (e) { state.blstAll = []; }
   state.lb = { today:a.data || [], month:b.data || [], last_month:c.data || [] };
   try {
     const [sp, lv, cp, ids, mc, rq] = await Promise.all([
@@ -1699,7 +2018,8 @@ function viewRiders(){
   const hub = (tab, ic, title, n) => `<button class="hubbtn" onclick="go('${tab}')"><span>${ic}</span><b>${title}</b>${n ? `<i>${n}</i>` : ''}</button>`;
   return `<h2>Riders</h2>
     ${can('riders') ? `<button class="btn block" style="margin-bottom:12px" onclick="A.riderIdForm()">🆔 + Create Rider ID</button>` : ''}
-    <div class="hub">${hub('attendance', '📋', 'Attendance', 0)}${hub('leaves', '📅', 'Leave requests', state.pendLeaves)}${hub('complaints', '📣', 'Complaints', state.pendComplaints)}${hub('shifts', '🕘', 'Shifts and duty time', 0)}${hub('perks', '🎁', 'Offers, charges and requests', state.pendReq)}</div>
+    ${can('riders') ? `<button class="btn ghost block" style="margin-bottom:12px" onclick="dscPending()">📄 ${dscT('Pending rider docs', 'زیر التواء رائیڈر دستاویزات')}</button>` : ''}
+    <div class="hub">${hub('attendance', '📋', 'Attendance', 0)}${hub('leaves', '📅', 'Leave requests', state.pendLeaves)}${hub('complaints', '📣', 'Complaints', state.pendComplaints)}${hub('shifts', '🕘', 'Shifts and duty time', 0)}${hub('perks', '🎁', 'Offers, charges and requests', state.pendReq)}${hub('fleet', '🗺️', 'Fleet map', 0)}</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">${podium(lb.today, 'Rider of the day', aw.day_prize)}${podium(lb.month, 'Rider of the month', aw.month_prize)}</div>
     ${lb.last_month[0] ? `<div class="muted" style="font-size:14px;margin-bottom:10px">👑 Last month's winner: <b>${esc(lb.last_month[0].name)}</b> (${lb.last_month[0].deliveries} deliveries)</div>` : ''}
     <select onchange="A.pickMonth(this.value)" aria-label="Month" style="margin-bottom:12px">${months}</select>
@@ -1712,7 +2032,7 @@ function viewRiders(){
     ${pending.length ? `<h3>New requests (${pending.length})</h3>${pRows}` : ''}
     <div class="chips">${chips}</div>
     ${riderList}
-    ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}`;
+    ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}${blstAdminSection()}`;
 }
 
 
@@ -2093,7 +2413,7 @@ function riderIdBlock(id, rider, r){
   return `<div class="idbox"><div class="muted" style="font-size:13px">Rider ID</div><div class="code">🆔 ${esc(rider.rider_code || '—')}</div>
     ${cur ? `<div style="margin-top:4px">👤 Used by <b>${esc(cur.name)}</b>${cur.phone ? ` · <a href="tel:${esc(cur.phone)}">${esc(cur.phone)}</a>` : ''}${cur.cnic ? ' · CNIC ' + esc(cur.cnic) : ''}</div>
       <div class="muted" style="font-size:13px">Since ${esc(dayName(cur.started_at))} · ${cur.deliveries} deliveries · ${money(cur.earned)} earned with this ID</div>` : ''}
-    ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> · Password: set hai ✔</span></div>` : ''}
+    ${cred ? `<div class="kv" style="margin-top:8px"><span class="muted">Login</span><span><b>${esc(cred.login_id || rider.rider_code || '')}</b> · Password: set ✔</span></div>` : ''}
     ${state.riderMustChange ? `<div class="note" style="margin-top:8px;font-size:13px">${state.lang === 'ur' ? '⚠️ عارضی پاس ورڈ — رائیڈر نے ابھی اپنا پاس ورڈ تبدیل نہیں کیا' : '⚠️ Temporary password — the rider has not changed their password yet'}</div>` : ''}
     ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>
       <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.holderForm('${id}')">✏️ Name, phone, CNIC</button>${/^[A-Z0-9]+-\d{1,3}$/.test(rider.rider_code || '') ? `<button class="btn warn small" onclick="A.renewIdForm('${id}')">🔒 Make ID stronger</button>` : '<span></span>'}</div>` : ''}
@@ -2123,9 +2443,15 @@ function viewMore(){
   const marketing = it('promos', '🎟️ Promo codes', 'Discounts, first order offer, free delivery')
     + it('banners', '🖼️ Home banners', 'Big pictures at the top of the customer app')
     + it('campaign', '📣 Send notification', 'Message on the phones of all customers, riders or shops in your area')
-    + it('plus', '⭐ Dera Plus', 'Monthly membership with free delivery: price, members, payments to check');
+    + it('plus', '⭐ Dera Plus', 'Monthly membership with free delivery: price, members, payments to check')
+    + it('donations', '❤️ Donations', 'Recipients, cause requests and donations to verify');
   const places = it('zones', '📍 Delivery zones', 'Delivery fee, minimum order, rider pay per delivery')
-    + it('parcels', '📦 Parcels (Samaan Bhejo)', 'Parcel bookings, rates and riders')
+    + it('parcels', '📦 Parcels', 'Parcel bookings, rates and riders')
+    + it('groups', '👥 Group orders', 'Group orders, members and per-member payment status (read-only)')
+    + it('vouchers', '🎁 Gift cards & vouchers', 'System-wide voucher codes, uses and expiry (read-only for balances)')
+    + it('families', '👨‍👩‍👧‍👦 Family accounts', 'Families, owners and member counts (read-only)')
+    + it('ontime', '⏱ On-time Promises', 'Promised times, late orders and bonuses (read-only)')
+  + it('dinein', '🍽️ Dine-in deals', 'Active dine-in deals per shop (read-only)')
     + it('omap', '🗺️ Order map', 'Where orders come from — put riders and new shops there');
   const people = it('customers', '👥 Customers', 'See every customer, their orders, block or unblock')
     + it('support', '🎧 Support queue', 'Customer and partner support tickets, replies and SLA tracking')
@@ -2145,8 +2471,9 @@ function viewMore(){
     ${grp('👥', 'People', people)}
     ${grp('⚙️', 'System', system)}
     ${grp('👤', 'Account', `<a class="row" href="legal.html" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="row-main"><div class="row-title">📄 Privacy Policy and Terms</div><div class="row-sub">The public page linked from all apps</div></div><span class="muted">›</span></a>
+    <button class="row" onclick="tfaSheet()"><div class="row-main"><div class="row-title">🔐 ${tfaL('tfa_title')}</div><div class="row-sub">${tfaL('tfa_row_sub')}</div></div><span class="muted">›</span></button>
     <button class="row" onclick="A.logout()"><div class="row-main"><div class="row-title red">🚪 Sign out</div></div></button>`)}
-  <p class="ver" style="margin-top:14px">Dera Admin v${APP_VERSION} (${APP_DATE})</p>`;
+  <p class="ver" style="margin-top:14px">Dera Admin v${APP_VERSION} (${APP_DATE})</p>${pfmLine()}`;
 }
 
 // ---- Searched but not found ----
@@ -2305,11 +2632,244 @@ async function drawOmap(){
     if (L.circleMarker){
       pts.forEach(o => L.circleMarker([o.address_lat, o.address_lng], { radius:9, stroke:false, fillColor:'#D23B2E', fillOpacity:.18 }).addTo(m));
       shops.forEach(r => L.circleMarker([r.lat, r.lng], { radius:7, color:'#fff', weight:2, fillColor:'#0B7D4F', fillOpacity:1 }).addTo(m).bindTooltip(r.name));
+      try {
+        const rb = await sb.from('riders').select('id,current_lat,current_lng,profile:profiles(full_name)').eq('is_online', true).not('current_lat', 'is', null);
+        let blIds = new Set();
+        try { const blq = await sb.from('rider_blacklists').select('rider_id').eq('active', true); blIds = new Set((blq.data || []).map(x => x.rider_id)); } catch (e) {}
+        (rb.data || []).forEach(x => { if (x.current_lat == null || x.current_lng == null) return; const isBl = blIds.has(x.id); const nm = (x.profile && x.profile.full_name) || ''; L.circleMarker([x.current_lat, x.current_lng], { radius:isBl ? 9 : 6, color:'#fff', weight:2, fillColor:isBl ? '#111' : '#1F6FFB', fillOpacity:1 }).addTo(m).bindTooltip((isBl ? '⛔ Blacklisted: ' : '') + nm); });
+      } catch (e) {}
       const all = pts.map(o => [o.address_lat, o.address_lng]).concat(shops.map(r => [r.lat, r.lng]));
       if (all.length > 1 && m.fitBounds) m.fitBounds(all, { padding:[20, 20], maxZoom:15 });
     }
   } catch (e) { el.innerHTML = `<div class="empty">${esc(e.message || 'Map could not load')}</div>`; }
 }
+
+// ---- Fleet view (Feature 16, DISPLAY ONLY) ----
+const FLT_STALE_MS = 120000; // 4x the 30s idle location cadence (same rule as Feature 8 ETA staleness)
+const fltT = (en, ur) => state.lang === 'ur' ? ur : en;
+
+// ---- Feature 19: shop tax documents review (verify/reject only; never changes shop approval) ----
+const txdT = (en, ur) => state.lang === 'ur' ? ur : en;
+const TXD_ADMIN_TYPES = { ntn:'NTN certificate', registration:'Business registration', bank:'Bank document', other:'Other document' };
+const TXD_ADMIN_TYPES_UR = { ntn:'این ٹی این سرٹیفکیٹ', registration:'کاروباری رجسٹریشن', bank:'بینک دستاویز', other:'دیگر دستاویز' };
+function txdAdminTypeLabel(k){ return state.lang === 'ur' ? (TXD_ADMIN_TYPES_UR[k] || k) : (TXD_ADMIN_TYPES[k] || k); }
+function txdAdminStatusMeta(s){
+  return s === 'verified' ? { en:'Verified', ur:'تصدیق شدہ', pill:'g' }
+    : s === 'rejected' ? { en:'Rejected', ur:'مسترد', pill:'r' }
+    : { en:'Pending', ur:'زیر التواء', pill:'y' };
+}
+function txdInScope(regionId, scopeVal){ return !scopeVal || regionId === scopeVal; }
+function txdRejectValid(note){ return !!(note && note.trim()); }
+function txdShopDocsHtml(shopId, docs, r){
+  const byType = {}; (docs || []).forEach(d => { byType[d.doc_type] = d; });
+  const rows = ['ntn', 'registration', 'bank', 'other'].map(k => {
+    const d = byType[k];
+    if (!d) return `<div class="card"><div class="row-title">📄 ${esc(txdAdminTypeLabel(k))} <span class="pill">${txdT('Not submitted', 'جمع نہیں')}</span></div></div>`;
+    const m = txdAdminStatusMeta(d.status);
+    return `<div class="card"><div class="row-title">📄 ${esc(txdAdminTypeLabel(k))} <span class="pill ${m.pill}">${txdT(m.en, m.ur)}</span></div>
+      <div class="row-sub">${esc(d.file_name || '')} · ${when(d.created_at)}${d.status === 'rejected' && d.admin_note ? ` · ${txdT('Reason', 'وجہ')}: ${esc(d.admin_note)}` : ''}</div>
+      <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.seeFile('${esc(d.storage_path)}')">${txdT('View', 'دیکھیں')}</button>${d.status !== 'verified' ? `<button class="btn small" onclick="txdVerify('${d.id}','${shopId}')">${txdT('Verify', 'تصدیق کریں')}</button>` : ''}${d.status !== 'rejected' ? `<button class="btn ghost small" onclick="txdReject('${d.id}','${shopId}')">⛔ ${txdT('Reject', 'مسترد کریں')}</button>` : ''}</div></div>`;
+  }).join('');
+  return `<div class="note">${txdT('Document verification does not approve or reject the shop itself — it only marks this document.', 'دستاویز کی تصدیق سے دکان کی منظوری نہیں بدلتی — صرف اس دستاویز کی حیثیت بدلتی ہے۔')}</div>${rows}`;
+}
+async function txdVerify(id, shopId){
+  await run(async () => {
+    const { error } = await sb.from('shop_tax_documents').update({ status:'verified', admin_note:null, reviewed_by:state.user.id, reviewed_at:new Date().toISOString(), updated_at:new Date().toISOString() }).eq('id', id);
+    if (error) throw error; toast(txdT('Document verified', 'دستاویز کی تصدیق ہو گئی')); await A.openShop(shopId);
+  });
+}
+async function txdReject(id, shopId){
+  const note = await uiPrompt(txdT('Reason for the shop (required)', 'دکان کے لیے وجہ (ضروری)'), '');
+  if (note === null) return;
+  if (!txdRejectValid(note)) return toast(txdT('A reason is required to reject.', 'مسترد کرنے کے لیے وجہ ضروری ہے۔'), true);
+  await run(async () => {
+    const { error } = await sb.from('shop_tax_documents').update({ status:'rejected', admin_note:note.trim(), reviewed_by:state.user.id, reviewed_at:new Date().toISOString(), updated_at:new Date().toISOString() }).eq('id', id);
+    if (error) throw error; toast(txdT('Document rejected', 'دستاویز مسترد ہو گئی')); await A.openShop(shopId);
+  });
+}
+async function txdPending(){
+  openSheet(txdT('📄 Pending tax docs', '📄 زیر التواء ٹیکس دستاویزات'), '<div class="empty">Loading…</div>');
+  await run(async () => {
+    const { data, error } = await sb.from('shop_tax_documents').select('*, shop:restaurants(name, region_id)').eq('status', 'pending').order('created_at');
+    if (error) throw error;
+    const rows = (data || []).filter(d => txdInScope(d.shop ? d.shop.region_id : null, scope()));
+    const body = $('sheetBody'); if (!body) return;
+    body.innerHTML = rows.length ? `<div class="list">${rows.map(d => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">📄 ${esc(txdAdminTypeLabel(d.doc_type))} · ${esc(d.shop ? d.shop.name : '')}</div><div class="row-sub">${esc(d.file_name || '')} · ${when(d.created_at)}</div></div><button class="btn ghost small" onclick="state.shopTab='docs';closeSheet();A.openShop('${d.restaurant_id}')">Review</button></div>`).join('')}</div>` : `<div class="empty">${txdT('No pending tax documents.', 'کوئی زیر التواء ٹیکس دستاویز نہیں۔')}</div>`;
+  });
+}
+
+
+// ================= RIDER DOCUMENT-SCAN REVIEW (Feature 23) =================
+// Mirrors the tax-docs (txd) admin pattern. Verification never changes
+// rider approval itself — it only marks this document.
+const dscT = (en, ur) => state.lang === 'ur' ? ur : en;
+const bscT = (en, ur) => state.lang === 'ur' ? ur : en;
+function bscAdminBlock(rows, err){
+  const title = '🛡️ ' + bscT('Bike safety checks', 'موٹر سائیکل حفاظتی جانچ');
+  if (err) return `<div class="card"><b>${title}</b><div class="muted" style="font-size:13px;margin-top:4px">${bscT('Bike checks need the backend update — ask Dera to apply it, then they will show here.', 'موٹر سائیکل جانچ کے لیے بیک اینڈ اپ ڈیٹ چاہیے — Dera سے لگوائیں، پھر یہ یہاں نظر آئیں گی۔')}</div></div>`;
+  if (!rows || !rows.length) return `<div class="card"><b>${title}</b><div class="muted" style="font-size:13px;margin-top:4px">${bscT('No bike checks yet.', 'ابھی کوئی موٹر سائیکل جانچ نہیں ہے۔')}</div></div>`;
+  const itemLabel = { helmet: 'Helmet', brakes: 'Brakes', lights: 'Lights', tires: 'Tires', fuel: 'Fuel', docs: 'Documents' };
+  const rowsHtml = rows.map(h => {
+    const failed = h.failed || [];
+    return `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(h.check_date)}${failed.length ? ' · <span style="color:var(--danger)">⚠️ ' + failed.map(f => esc(itemLabel[f] || f)).join(', ') + '</span>' : ' · ✅ All OK'}${h.reported ? ' · 📣 Reported' : ''}</div><div class="row-sub">${h.created_at ? esc(when(h.created_at)) : ''}</div></div></div>`;
+  }).join('');
+  return `<div class="card"><b>${title}</b><div class="list" style="margin-top:8px">${rowsHtml}</div></div>`;
+}
+const DSC_ADMIN_TYPES = { cnic_front:['CNIC front','شناختی کارڈ سامنے'], cnic_back:['CNIC back','شناختی کارڈ پیچھے'], licence:['Driving licence','ڈرائیونگ لائسنس'], vehicle:['Vehicle registration','گاڑی کی رجسٹریشن'], other:['Other document','دیگر دستاویز'] };
+function dscAdminTypeLabel(k){ const v = DSC_ADMIN_TYPES[k]; return v ? (state.lang === 'ur' ? v[1] : v[0]) : k; }
+function dscAdminStatusMeta(s){
+  if (s === 'verified') return { pill:'g', en:'Verified', ur:'تصدیق شدہ' };
+  if (s === 'rejected') return { pill:'r', en:'Rejected', ur:'مسترد' };
+  return { pill:'y', en:'Pending', ur:'زیر التواء' };
+}
+function dscRejectValid(note){ return !!(note && note.trim()); }
+function dscIsMissingTable(e){
+  const m = String((e && (e.message || e)) || '');
+  return (e && e.code === '42P01') || m.indexOf('PGRST205') !== -1 || (m.indexOf('rider_documents') !== -1 && m.indexOf('does not exist') !== -1);
+}
+async function dscSeeFile(path){ await run(async () => { const { data, error } = await sb.storage.from('rider-docs').createSignedUrl(path, 600); if (error) throw error; window.open(data.signedUrl, '_blank', 'noopener'); }); }
+function dscAdminDocsHtml(riderId, docs){
+  const by = {}; (docs || []).forEach(d => { by[d.doc_type] = d; });
+  const rows = Object.keys(DSC_ADMIN_TYPES).map(k => {
+    const d = by[k];
+    if (!d) return `<div class="card"><div class="row-title">📄 ${esc(dscAdminTypeLabel(k))} <span class="pill">${dscT('Not submitted', 'جمع نہیں')}</span></div></div>`;
+    const m = dscAdminStatusMeta(d.status);
+    return `<div class="card"><div class="row-title">📄 ${esc(dscAdminTypeLabel(k))} <span class="pill ${m.pill}">${dscT(m.en, m.ur)}</span></div>
+      <div class="row-sub">${esc(d.file_name || '')} · ${when(d.created_at)}${d.status === 'rejected' && d.admin_note ? ` · ${dscT('Reason', 'وجہ')}: ${esc(d.admin_note)}` : ''}</div>
+      <div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="dscSeeFile('${esc(d.storage_path)}')">${dscT('View', 'دیکھیں')}</button>${d.status !== 'verified' ? `<button class="btn small" onclick="dscVerify('${d.id}','${riderId}')">${dscT('Verify', 'تصدیق کریں')}</button>` : ''}${d.status !== 'rejected' ? `<button class="btn ghost small" onclick="dscReject('${d.id}','${riderId}')">⛔ ${dscT('Reject', 'مسترد کریں')}</button>` : ''}</div></div>`;
+  }).join('');
+  return `<div class="note">${dscT('Document verification does not approve or reject the rider itself — it only marks this document.', 'دستاویز کی تصدیق سے رائیڈر کی منظوری نہیں بدلتی — صرف اس دستاویز کی حیثیت بدلتی ہے۔')}</div>${rows}`;
+}
+async function dscAdminLoadDocs(riderId){
+  const box = $('dscAdminDocs'); if (!box) return;
+  try {
+    const { data, error } = await sb.from('rider_documents').select('*').eq('rider_id', riderId).order('doc_type');
+    if (error) throw error;
+    box.innerHTML = dscAdminDocsHtml(riderId, data || []);
+  } catch (e) {
+    box.innerHTML = dscIsMissingTable(e) ? `<div class="note">${dscT('Rider documents are not switched on yet — the backend update is still pending.', 'رائیڈر دستاویزات ابھی فعال نہیں ہوئیں — بیک اینڈ اپ ڈیٹ ابھی باقی ہے۔')}</div>` : `<div class="empty">${esc(String((e && e.message) || e))}</div>`;
+  }
+}
+async function dscVerify(id, riderId){
+  await run(async () => {
+    const { error } = await sb.from('rider_documents').update({ status:'verified', admin_note:null, reviewed_by:state.user.id, reviewed_at:new Date().toISOString(), updated_at:new Date().toISOString() }).eq('id', id);
+    if (error) throw error; toast(dscT('Document verified', 'دستاویز کی تصدیق ہو گئی')); await A.openRider(riderId);
+  });
+}
+async function dscReject(id, riderId){
+  const note = await uiPrompt(dscT('Reason for the rider (required)', 'رائیڈر کے لیے وجہ (ضروری)'), '');
+  if (note === null) return;
+  if (!dscRejectValid(note)) return toast(dscT('A reason is required to reject.', 'مسترد کرنے کے لیے وجہ ضروری ہے۔'), true);
+  await run(async () => {
+    const { error } = await sb.from('rider_documents').update({ status:'rejected', admin_note:note.trim(), reviewed_by:state.user.id, reviewed_at:new Date().toISOString(), updated_at:new Date().toISOString() }).eq('id', id);
+    if (error) throw error; toast(dscT('Document rejected', 'دستاویز مسترد ہو گئی')); await A.openRider(riderId);
+  });
+}
+async function dscPending(){
+  openSheet(dscT('📄 Pending rider docs', '📄 زیر التواء رائیڈر دستاویزات'), '<div class="empty">Loading…</div>');
+  await run(async () => {
+    const { data, error } = await sb.from('rider_documents').select('*, rider:riders(region_id)').eq('status', 'pending').order('created_at');
+    if (error) throw error;
+    const rows = (data || []).filter(d => txdInScope(d.rider ? d.rider.region_id : null, scope()));
+    const body = $('sheetBody'); if (!body) return;
+    body.innerHTML = rows.length ? `<div class="list">${rows.map(d => { const rr = (state.riderRows || []).find(x => x.rider_id === d.rider_id); return `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">📄 ${esc(dscAdminTypeLabel(d.doc_type))} · ${esc(rr ? (rr.full_name || 'Rider') : 'Rider')}</div><div class="row-sub">${esc(d.file_name || '')} · ${when(d.created_at)}</div></div><button class="btn ghost small" onclick="state.riderTab='docs';closeSheet();A.openRider('${d.rider_id}')">Review</button></div>`; }).join('')}</div>` : `<div class="empty">${dscT('No pending rider documents.', 'کوئی زیر التواء رائیڈر دستاویز نہیں۔')}</div>`;
+  });
+}
+
+function fltActiveOrders(r){ return (state.fltActive && state.fltActive[r.id]) || []; }
+function fltSuspended(r){ return !!(r.suspended_until && new Date(r.suspended_until) > new Date()); }
+function fltStatus(r){
+  if (fltActiveOrders(r).length > 0) return 'delivery';
+  if (r.on_break || fltSuspended(r)) return 'break';
+  if (r.is_online && r.is_approved && !r.blocked) return 'available';
+  return 'offline';
+}
+function fltStale(r){ return !r.location_updated_at || (Date.now() - new Date(r.location_updated_at).getTime() > FLT_STALE_MS); }
+function fltHasPin(r){ return r.current_lat != null && r.current_lng != null && isFinite(r.current_lat) && isFinite(r.current_lng); }
+function fltPin(r){
+  if ((state.fltBl || new Set()).has(r.id)) return { color:'#111', radius:9 };
+  if (fltStale(r)) return { color:'#888', radius:7 };
+  return { color:({ available:'#0B7D4F', delivery:'#1F6FFB', break:'#B45309', offline:'#888' })[fltStatus(r)] || '#888', radius:7 };
+}
+function fltStatusLabel(s){ return ({ available:fltT('Available', 'دستیاب'), delivery:fltT('On delivery', 'ڈیلیوری پر'), break:fltT('On break', 'وقفے پر'), offline:fltT('Offline', 'آف لائن') })[s] || s; }
+function fltLastSeenText(r){
+  if (!r.current_lat && !r.current_lng) return fltT('No location yet', 'لوکیشن ابھی نہیں');
+  if (!r.location_updated_at) return fltT('Last seen unknown', 'آخری بار نامعلوم');
+  return fltT('Last seen ', 'آخری بار ') + timeAgo(r.location_updated_at) + (fltStale(r) ? ' · ' + fltT('stale', 'پرانی') : '');
+}
+async function loadFleet(){
+  const rows = need(await sb.from('riders').select('id,region_id,is_approved,is_online,on_break,blocked,suspended_until,current_lat,current_lng,location_updated_at,profile:profiles(full_name,phone)').order('is_online', { ascending:false }));
+  let list = rows || [];
+  if (scope()) list = list.filter(r => r.region_id === scope());
+  state.fltRiders = list;
+  const ids = list.map(r => r.id);
+  state.fltActive = {};
+  if (ids.length){
+    const ord = need(await sb.from('orders').select('id,code,rider_id,status').in('rider_id', ids).in('status', ['rider_assigned', 'picked_up']));
+    (ord || []).forEach(o => { (state.fltActive[o.rider_id] = state.fltActive[o.rider_id] || []).push(o); });
+  }
+  try { const blq = await sb.from('rider_blacklists').select('rider_id').eq('active', true); state.fltBl = new Set((blq.data || []).map(x => x.rider_id)); } catch (e) { state.fltBl = new Set(); }
+  if (!state.fltFilter) state.fltFilter = 'all';
+}
+function fltFiltered(){
+  const f = state.fltFilter || 'all';
+  return (state.fltRiders || []).filter(r => f === 'all' || fltStatus(r) === f);
+}
+function fltRowHtml(r){
+  const st = fltStatus(r), nm = (r.profile && r.profile.full_name) || 'Rider', bl = (state.fltBl || new Set()).has(r.id);
+  const act = fltActiveOrders(r);
+  return `<div class="card click" onclick="fltDetail('${r.id}')"><div class="row-title">${esc(nm)} <span class="pill ${st === 'available' ? 'g' : st === 'delivery' ? 'b' : ''}">${fltStatusLabel(st)}</span>${bl ? '<span class="pill r">⛔ Blacklisted</span>' : ''}${r.blocked ? '<span class="pill r">Blocked</span>' : ''}${fltSuspended(r) ? `<span class="pill r">⛔ till ${esc(tAt(r.suspended_until))}</span>` : ''}</div><div class="row-sub">${act.length ? fltT('Active orders: ', 'فعال آرڈرز: ') + act.map(o => '#' + esc(o.code || String(o.id).slice(-4))).join(', ') + ' · ' : ''}${fltLastSeenText(r)}${!scope() && r.region_id ? ' · 📍 ' + esc(regionName(r.region_id)) : ''}</div></div>`;
+}
+function viewFleet(){
+  const list = fltFiltered(), all = state.fltRiders || [];
+  const cnt = k => k === 'all' ? all.length : all.filter(r => fltStatus(r) === k).length;
+  const chips = [['all', fltT('All', 'سب')], ['available', fltT('Available', 'دستیاب')], ['delivery', fltT('On delivery', 'ڈیلیوری پر')], ['break', fltT('On break', 'وقفے پر')], ['offline', fltT('Offline', 'آف لائن')]].map(([k, l]) => `<button class="chip ${(state.fltFilter || 'all') === k ? 'on' : ''}" onclick="A.fltFilter('${k}')">${l} (${cnt(k)})</button>`).join('');
+  setTimeout(drawFleetMap, 50);
+  return `${backBtn()}<h2>🗺️ ${fltT('Fleet map', 'فلیٹ نقشہ')}</h2>
+    ${scope() ? `<div class="muted" style="font-size:14px;margin-bottom:8px">📍 ${esc(regionName(scope()))}</div>` : ''}
+    <div class="note" style="font-size:13px">${fltT('Live positions of riders in scope. Grey pins are stale (no location for over 2 minutes). Black pins are blacklisted. This screen only watches — it cannot assign orders or change a rider.', 'دائرے کے رائیڈرز کی لائیو پوزیشن۔ سرمئی پن پرانی لوکیشن ہے (2 منٹ سے زیادہ پرانی)۔ کالے پن بلیک لسٹ ہیں۔ یہ اسکرین صرف دیکھتی ہے — آرڈر نہیں لگاتی، رائیڈر نہیں بدلتی۔')}</div>
+    <div id="fleetmap" style="height:420px;border-radius:16px;overflow:hidden;border:1px solid var(--line);margin-bottom:12px"></div>
+    <div class="chips">${chips}</div>
+    <div class="list">${list.map(fltRowHtml).join('') || `<div class="empty">${fltT('No riders here', 'یہاں کوئی رائیڈر نہیں')}</div>`}</div>`;
+}
+async function drawFleetMap(){
+  const el = $('fleetmap'); if (!el) return;
+  try {
+    const L = await loadLeafletA();
+    const pinned = (state.fltRiders || []).filter(fltHasPin);
+    const c = pinned[0] ? [pinned[0].current_lat, pinned[0].current_lng] : [32.78, 72.7];
+    const m = L.map(el).setView(c, 13);
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(m);
+    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics' });
+    L.control.layers({ '🗺️ Map':osm, '🛰️ Satellite':sat }, null, { position:'topright', collapsed:false }).addTo(m);
+    if (L.circleMarker){
+      pinned.forEach(r => {
+        const pin = fltPin(r), nm = (r.profile && r.profile.full_name) || 'Rider', bl = (state.fltBl || new Set()).has(r.id);
+        L.circleMarker([r.current_lat, r.current_lng], { radius:pin.radius, color:'#fff', weight:2, fillColor:pin.color, fillOpacity:1 }).addTo(m)
+          .bindTooltip((bl ? '⛔ Blacklisted: ' : '') + nm + ' · ' + fltStatusLabel(fltStatus(r)))
+          .on('click', () => fltDetail(r.id));
+      });
+      const pts = pinned.map(r => [r.current_lat, r.current_lng]);
+      if (pts.length > 1 && m.fitBounds) m.fitBounds(pts, { padding:[20, 20], maxZoom:15 });
+    }
+  } catch (e) { el.innerHTML = `<div class="empty">${esc(e.message || 'Map could not load')}</div>`; }
+}
+function fltDetail(id){
+  const r = (state.fltRiders || []).find(x => x.id === id); if (!r) return;
+  const nm = (r.profile && r.profile.full_name) || 'Rider', ph = r.profile && r.profile.phone, bl = (state.fltBl || new Set()).has(r.id);
+  const act = fltActiveOrders(r);
+  const orders = act.length ? act.map(o => `<button class="row" onclick="closeSheet();A.openOrder('${o.id}')"><div class="row-main"><div class="row-title">#${esc(o.code || String(o.id).slice(-4))} · ${esc(o.status)}</div></div><span class="muted">›</span></button>`).join('') : `<div class="empty">${fltT('No active orders', 'کوئی فعال آرڈر نہیں')}</div>`;
+  openSheet('🗺️ ' + esc(nm), `<div class="box"><div class="row-title">${esc(nm)} <span class="pill">${fltStatusLabel(fltStatus(r))}</span>${bl ? '<span class="pill r">⛔ Blacklisted</span>' : ''}${r.blocked ? '<span class="pill r">Blocked</span>' : ''}${fltSuspended(r) ? `<span class="pill r">⛔ till ${esc(tAt(r.suspended_until))}</span>` : ''}</div><div class="muted" style="font-size:13px;margin:6px 0">${fltLastSeenText(r)}${r.current_lat != null ? ` · <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${r.current_lat},${r.current_lng}">📍 Map</a>` : ''}</div><h3>${fltT('Active orders', 'فعال آرڈرز')}</h3><div class="list">${orders}</div><div class="bar" style="margin-top:12px">${ph ? `<a class="btn small" href="tel:${esc(ph)}">📞 Call</a>` : ''}<button class="btn ghost small" onclick="closeSheet();A.openRider('${id}')">Details</button></div></div>`);
+}
+
+function blstAdminShopName(id){ return ((state.restaurants || []).find(x => x.id === id) || {}).name || ''; }
+function blstAdminRowHtml(x){ const where = x.scope === 'shop' ? blstAdminShopName(x.restaurant_id) : regionName(x.region_id); return `<div class="card"><div class="row-title">${esc(x.rider_name || '')} <span class="pill r">⛔ Blacklisted</span></div><div class="row-sub">${x.scope === 'shop' ? 'Shop: ' + esc(where) : 'Region: ' + esc(where)}${x.reason ? ' · ' + esc(x.reason) : ''} · ${when(x.created_at)}</div><div class="bar" style="margin-top:8px"><button class="btn ghost small" onclick="A.openRider('${x.rider_id}')">Details</button><button class="btn small" onclick="blstAdminUn('${x.id}')">Remove from blacklist</button></div></div>`; }
+function blstAdminSection(){ const rows = state.blstAll || []; if (!rows.length) return ''; return `<h3>Blacklisted (${rows.length})</h3>${rows.map(blstAdminRowHtml).join('')}`; }
+function blstAdminBlock(riderId, rows, r){ const list = (rows || []).map(x => `<div class="card"><div class="row-title">${x.scope === 'shop' ? 'Shop: ' + esc(blstAdminShopName(x.restaurant_id)) : 'Region: ' + esc(regionName(x.region_id))} <span class="pill r">⛔ Blacklisted</span></div><div class="row-sub">${x.reason ? esc(x.reason) + ' · ' : ''}${when(x.created_at)}</div><div class="bar" style="margin-top:8px"><button class="btn small" onclick="blstAdminUnSheet('${x.id}', '${riderId}')">Remove from blacklist</button></div></div>`).join(''); return `<div class="card" style="margin-top:12px"><b>⛔ Blacklist (keeps the rider ID — only blocks future offers)</b><div class="muted" style="font-size:13px;margin:6px 0">Different from Block rider above, which turns the ID off completely. A blacklisted rider keeps their ID, pay and history, but is never offered this region's future orders. An order already with them is not affected.</div>${list || '<div class="empty">Not blacklisted.</div>'}<div style="margin-top:8px"><button class="btn warn small" onclick="blstAdminForm('${riderId}')">Blacklist in this region</button></div></div>`; }
+async function blstAdminForm(riderId){ let name = '', regionId = null; try { const rd = await sb.from('riders').select('region_id,profile:profiles(full_name)').eq('id', riderId).single(); regionId = rd.data && rd.data.region_id; name = (rd.data && rd.data.profile && rd.data.profile.full_name) || ''; } catch (e) {} openSheet('⛔ Blacklist rider', `<div class="box"><div style="font-weight:700">${esc(name)}</div><div class="muted" style="font-size:13px;margin:6px 0">Region-wide: no shop in this region will be offered this rider. The rider ID stays on.</div><label style="display:block;margin-top:8px">Reason (optional)<input id="blst_reason" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border,#ddd);margin-top:4px"></label><button class="btn warn" style="margin-top:12px" onclick="blstAdminSave('${riderId}', '${regionId || ''}')">Blacklist in this region</button></div>`); }
+async function blstAdminSave(riderId, regionId){ const reason = ($('blst_reason').value || '').trim(); if (!regionId){ toast('Rider region is missing — choose the region first.', true); return; } await run(async () => { let riderName = ''; try { const rd = await sb.from('riders').select('profile:profiles(full_name)').eq('id', riderId).single(); riderName = (rd.data && rd.data.profile && rd.data.profile.full_name) || ''; } catch (e) {} const ins = await sb.from('rider_blacklists').insert({ rider_id:riderId, rider_name:riderName, scope:'region', restaurant_id:null, region_id:regionId, listed_by:state.user.id, listed_by_role:'admin', reason:reason || null }); if (ins.error){ if (String(ins.error.message || '').includes('rider_blacklists_one_region_idx')){ toast('This rider is already blacklisted in this region.', true); return; } throw ins.error; } toast('Rider blacklisted in this region.'); closeSheet(); await A.refreshRider(riderId); }); }
+async function blstAdminUn(id){ await run(async () => { const up = await sb.from('rider_blacklists').update({ active:false }).eq('id', id); if (up.error) throw up.error; toast('Rider removed from blacklist.'); await loadRiderMonth(); renderTab(); }); }
+async function blstAdminUnSheet(id, riderId){ await run(async () => { const up = await sb.from('rider_blacklists').update({ active:false }).eq('id', id); if (up.error) throw up.error; toast('Rider removed from blacklist.'); closeSheet(); await A.refreshRider(riderId); }); }
 // ---- Push campaigns ----
 function viewCampaign(){
   const rows = (state.campaigns || []).map(c => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(c.title)}</div><div class="row-sub">${esc(c.body || '')}<br>${{ customers:'👥 Customers', riders:'🛵 Riders', shops:'🏪 Shops' }[c.target] || c.target} · ${c.sent_count} phones · ${when(c.created_at)}</div></div></div>`).join('');
@@ -2349,8 +2909,59 @@ function viewCustomers(){
     ${rows}`;
 }
 
+
+// ================= DONATIONS (F35) =================
+function donReqSort(rows){ return (rows || []).slice().sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.created_at) - new Date(a.created_at)); }
+function donRecSort(rows){ return (rows || []).slice().sort((a, b) => (a.status === 'checking' ? 0 : a.status === 'confirmed' ? 1 : 2) - (b.status === 'checking' ? 0 : b.status === 'confirmed' ? 1 : 2) || new Date(b.created_at) - new Date(a.created_at)); }
+function donAcctLabelA(type){ return type === 'easypaisa' ? 'Easypaisa' : 'JazzCash'; }
+function donApplyScope(rows, sc){ return sc ? (rows || []).filter(x => x.region_id === sc) : (rows || []); }
+async function donAdminLoad(){
+  state.donNoTable = false; state.donNoReq = false; state.donNoRec = false;
+  try { const r = await sb.from('donation_recipients').select('*').order('created_at'); if (r.error) throw r.error; state.donRecips = r.data || []; }
+  catch (e) { state.donRecips = []; state.donNoTable = true; }
+  try { const r = await sb.from('donation_requests').select('*').order('created_at', { ascending:false }).limit(100); if (r.error) throw r.error; state.donReqs = donReqSort(r.data || []); }
+  catch (e) { state.donReqs = []; state.donNoReq = true; }
+  try { const r = await sb.from('donation_records').select('*, recipient:donation_recipients(name)').order('created_at', { ascending:false }).limit(100); if (r.error) throw r.error; state.donRecs = donRecSort(donApplyScope(r.data || [], scope())); }
+  catch (e) { state.donRecs = []; state.donNoRec = true; }
+  renderTab();
+}
+function donRecipsHtml(){
+  if (state.donNoTable) return `<div class="note">Donations are not available yet — the backend update is still pending.</div>`;
+  const rows = (state.donRecips || []).map(r => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(r.name)} ${r.is_active ? '<span class="pill g">Active</span>' : '<span class="pill">Hidden</span>'}</div><div class="row-sub">${esc(r.cause || '')}<br>${donAcctLabelA(r.account_type)} · ${esc(r.number)}${r.title ? ` · ${esc(r.title)}` : ''}</div></div><div class="row-side" style="display:flex;gap:6px"><button class="btn ghost small" onclick="A.donRecipEdit('${r.id}')">Edit</button><button class="btn ghost small" onclick="A.donRecipToggle('${r.id}', ${r.is_active ? 'false' : 'true'})">${r.is_active ? 'Hide' : 'Show'}</button></div></div>`).join('');
+  return `<h3 style="margin:16px 0 8px">❤️ Recipients</h3><div class="muted" style="margin:-4px 0 8px;font-size:14px">Only admins add recipients here. A shop can never add itself — shops request a cause below, and only approval here makes it appear.</div><div class="bar"><button class="btn" onclick="A.donRecipEdit()">Add recipient</button></div><div class="list">${rows || '<div class="empty">No recipients yet.</div>'}</div>`;
+}
+function donReqsHtml(){
+  if (state.donNoReq) return `<div class="note">Cause requests are not available yet — the backend update is still pending.</div>`;
+  const rows = (state.donReqs || []).map(r => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(r.name)} <span class="pill ${r.status === 'approved' ? 'g' : r.status === 'rejected' ? 'r' : 'y'}">${esc(r.status)}</span></div><div class="row-sub">${esc(r.shop_name || 'Shop')} · ${esc(r.cause || '')}<br>${donAcctLabelA(r.account_type)} · ${esc(r.number)}${r.title ? ` · ${esc(r.title)}` : ''}${r.admin_note ? `<br>Admin note: ${esc(r.admin_note)}` : ''}</div></div><div class="row-side" style="display:flex;gap:6px">${r.status === 'pending' ? `<button class="btn small" onclick="A.donReqApprove('${r.id}')">Approve</button><button class="btn ghost small warn" onclick="A.donReqReject('${r.id}')">Reject</button>` : ''}</div></div>`).join('');
+  return `<h3 style="margin:16px 0 8px">🏪 Shop cause requests</h3><div class="muted" style="margin:-4px 0 8px;font-size:14px">Approval creates a recipient from the request. Rejection needs a reason.</div><div class="list">${rows || '<div class="empty">No cause requests yet.</div>'}</div>`;
+}
+function donRecsHtml(){
+  if (state.donNoRec) return `<div class="note">Donation records are not available yet — the backend update is still pending.</div>`;
+  const rows = (state.donRecs || []).map(d => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc((d.recipient && d.recipient.name) || '')} <span class="pill ${d.status === 'confirmed' ? 'g' : d.status === 'rejected' ? 'r' : 'y'}">${esc(d.status)}</span></div><div class="row-sub">${money(num(d.amount))} · TID ${esc(d.tid || '')} · ${when(d.created_at)}${d.admin_note ? `<br>Admin note: ${esc(d.admin_note)}` : ''}</div></div><div class="row-side" style="display:flex;gap:6px">${d.proof_path ? `<button class="btn ghost small" onclick="A.donSeeProof('${esc(d.proof_path)}')">Proof</button>` : ''}${d.status === 'checking' ? `<button class="btn small" onclick="A.donVerConfirm('${d.id}')">Confirm</button><button class="btn ghost small warn" onclick="A.donVerReject('${d.id}')">Reject</button>` : ''}</div></div>`).join('');
+  return `<h3 style="margin:16px 0 8px">✅ Donations to verify</h3><div class="muted" style="margin:-4px 0 8px;font-size:14px">Checking first. Confirming only marks the record verified — it never moves money, because the customer already paid the recipient directly.</div><div class="list">${rows || '<div class="empty">No donations yet.</div>'}</div>`;
+}
+function viewDonations(){
+  return `${backLink()}<h2>❤️ Donations</h2><div class="note">Dera never holds donation money — customers pay recipients directly. Confirming a donation only marks the record verified.</div>${donRecipsHtml()}${donReqsHtml()}${donRecsHtml()}`;
+}
+
 // ---- Promo codes ----
 async function loadPromos(){ state.promos = need(await sb.from('promo_codes').select('*, owner:profiles!customer_id(full_name)').order('created_at', { ascending:false })); }
+async function loadCmpReqs(){
+  try {
+    const { data, error } = await sb.from('shop_promo_code_requests').select('*, restaurant:restaurants(name)').order('created_at', { ascending:false }).limit(100);
+    if (error) throw error;
+    state.cmpReqs = (data || []).sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || new Date(b.created_at) - new Date(a.created_at));
+    state.cmpNoTable = false;
+  } catch (e) { state.cmpReqs = []; state.cmpNoTable = true; }
+}
+function cmpQueueHtml(){
+  if (state.cmpNoTable) return `<div class="note">Promo code requests are not available yet — the backend update is still pending.</div>`;
+  const rows = (state.cmpReqs || []).map(r => `<div class="row" style="cursor:default"><div class="row-main">
+      <div class="row-title">${esc(r.code)} <span class="pill ${r.status === 'approved' ? 'g' : r.status === 'rejected' ? 'r' : 'y'}">${esc(r.status)}</span></div>
+      <div class="row-sub">${esc(r.restaurant?.name || '')} · ${promoValue({ type:r.type, value:r.value, max_discount:r.max_discount })}${num(r.min_order) ? ` · min ${money(r.min_order)}` : ''}${r.expires_at ? ` · until ${dayName(r.expires_at)}` : ''}${r.note ? ` · note: ${esc(r.note)}` : ''}${r.admin_note ? `<br>Admin note: ${esc(r.admin_note)}` : ''}</div></div>
+      <div class="row-side" style="display:flex;gap:6px">${r.status === 'pending' ? `<button class="btn small" onclick="A.cmpApprove('${r.id}')">Approve</button><button class="btn ghost small warn" onclick="A.cmpReject('${r.id}')">Reject</button>` : r.status === 'approved' ? `<button class="btn ghost small" onclick="A.cmpBanner('${r.id}')">📣 Create banner</button>` : ''}</div></div>`).join('');
+  return `<h3 style="margin:16px 0 8px">${state.lang === 'ur' ? '🏪 دکانوں کی پرومو کوڈ درخواستیں' : '🏪 Shop promo code requests'}</h3><div class="muted" style="margin:-4px 0 8px;font-size:14px">${state.lang === 'ur' ? 'منظوری سے کوڈ صرف اسی دکان کے آرڈرز پر چلے گا۔ بینر الگ سے بنانا ہوگا — منظوری خود بینر نہیں بناتی۔' : 'Approval makes the code work only on that shop\'s orders. The banner is a separate step — approval does not create a banner.'}</div><div class="list">${rows || '<div class="empty">No shop code requests yet.</div>'}</div>`;
+}
 const promoValue = p => p.type === 'free_delivery' ? 'Free delivery' : p.type === 'percent' ? num(p.value) + '% off' + (p.max_discount ? ' (max ' + money(p.max_discount) + ')' : '') : money(p.value) + ' off';
 function viewPromos(){
   const pub = state.promos.filter(p => !p.customer_id), personal = state.promos.filter(p => p.customer_id);
@@ -2363,7 +2974,7 @@ function viewPromos(){
   }).join('');
   const prow = personal.slice(0, 100).map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.code)} ${p.used_count ? '<span class="pill g">Used</span>' : ''}</div>
       <div class="row-sub">${esc(p.owner?.full_name || 'Customer')} · ${promoValue(p)} · ${esc(p.title || '')}</div></div></div>`).join('');
-  return `${backLink()}<h2>Promo codes</h2>
+  return `${backLink()}<h2>Promo codes</h2>${cmpQueueHtml()}
     <div class="muted" style="margin:-6px 0 10px;font-size:14px">Tip: tick "Show in the customer app" so customers see the offer in Offers. Invite-a-friend settings are in Settings.</div>
     <div class="bar"><button class="btn" onclick="A.editPromo()">Add promo code</button><button class="btn ghost" onclick="A.editPromo(null, 'first')">First order offer</button><button class="btn ghost" onclick="A.editPromo(null, 'free')">Free delivery</button></div>
     <div class="list">${rows || '<div class="empty">No promo codes yet.</div>'}</div>
@@ -2494,7 +3105,7 @@ function viewParcels(){
     <div class="kv"><span>Sender phone</span><span>${esc(r.sender_phone || '')}</span></div>
     <div class="kv"><span>Rider</span><span>${r.rider_id ? esc(riderName(r.rider_id)) : '—'}</span></div>
     ${['placed', 'rider_assigned'].includes(r.status) ? `<div class="actions"><button class="btn ghost small" onclick="A.adminCancelParcel('${r.id}')">Cancel parcel</button></div>` : ''}</div>`;
-  return `${backLink()}<h2>📦 Parcels (Samaan Bhejo)</h2>
+  return `${backLink()}<h2>📦 Parcels</h2>
   <div class="card">
     <div class="kv"><span>Today bookings</span><b>${trows.length}</b></div>
     <div class="kv"><span>Active now</span><b>${active.length}</b></div>
@@ -2502,9 +3113,9 @@ function viewParcels(){
     <div class="kv"><span>Fees today</span><b>${money(trows.filter(r => r.status !== 'cancelled').reduce((n, r) => n + num(r.total_fee), 0))}</b></div>
   </div>
   <div class="card"><div class="row-title">⚙️ Parcel rates</div>
-    <div class="muted" style="font-size:13.5px;margin-bottom:8px">Base rate zone chart se ata hai (120/170/220, rider pay 90/130/170). Yahan sirf wazan ka extra aur urgent % hai.</div>
+    <div class="muted" style="font-size:13.5px;margin-bottom:8px">Base rate comes from the zone chart (120/170/220, rider pay 90/130/170). Only the weight extra and urgent % are set here.</div>
     <div class="two"><div><label class="f">10–15 kg — customer extra (Rs)</label><input id="pc_wf2" type="number" value="${num(wf[1])}"></div><div><label class="f">15–25 kg — customer extra (Rs)</label><input id="pc_wf3" type="number" value="${num(wf[2])}"></div></div>
-    <div class="two"><div><label class="f">10–15 kg — rider ko extra (Rs)</label><input id="pc_wp2" type="number" value="${num(wp[1])}"></div><div><label class="f">15–25 kg — rider ko extra (Rs)</label><input id="pc_wp3" type="number" value="${num(wp[2])}"></div></div>
+    <div class="two"><div><label class="f">10–15 kg — extra for rider (Rs)</label><input id="pc_wp2" type="number" value="${num(wp[1])}"></div><div><label class="f">15–25 kg — extra for rider (Rs)</label><input id="pc_wp3" type="number" value="${num(wp[2])}"></div></div>
     <label class="f">Urgent extra (%)</label><input id="pc_up" type="number" value="${num(up)}">
     <div class="actions"><button class="btn" onclick="A.saveParcelCfg()">Save rates</button></div></div>
   ${rows.length ? rows.map(card).join('') : '<div class="card">No parcels yet.</div>'}`;
@@ -2771,6 +3382,101 @@ function gatewayCard(){
       : `<button class="btn block" onclick="A.saveGatewayLive(true)">▶️ Make Live</button>`}</div>
   </div>`;
 }
+function insAdminCard(){
+  const s = state.settings || {};
+  const v = Object.assign({ on:false, pct:0, terms:'' }, s.insurance || {});
+  const orders = state.insAdminOrders || [];
+  const claims = state.insAdminClaims || [];
+  const loading = !state.insAdminLoaded;
+  if (loading){ state.insAdminLoaded = true; setTimeout(() => A.insAdminLoad(), 0); }
+  return `<div class="card">
+    <b>🛟 Order insurance (delivery orders)</b>
+    <div class="muted" style="font-size:14px">Customers see the insurance opt-in at checkout ONLY when this is on and a premium rate is set. No provider is configured here \u2014 this only records the customer choice and premium. Claims are review requests, never a payout promise. Parcel opt-in is a separate follow-up (parcels use their own table).</div>
+    <label class="check"><input id="ins_on" type="checkbox" ${v.on ? 'checked' : ''}> Insurance opt-in enabled</label>
+    <label class="f" for="ins_pct">Premium (% of order subtotal)</label><input id="ins_pct" type="number" min="0" max="100" step="0.1" value="${num(v.pct)}">
+    <label class="f" for="ins_terms">Coverage terms (shown at checkout)</label><textarea id="ins_terms" maxlength="500" placeholder="Covers loss or damage during delivery. Claims are reviewed by Dera.">${esc(v.terms || '')}</textarea>
+    <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('insurance', { on:$('ins_on').checked, pct:Math.min(100, Math.max(0, num($('ins_pct').value))), terms:$('ins_terms').value.trim() })">Save insurance settings</button></div>
+  </div>
+  <div class="card"><b>Insured orders</b> <button class="btn ghost" onclick="A.insAdminLoad()">Refresh</button>
+    ${loading ? `<div class="muted" style="font-size:14px;margin-top:6px">Loading…</div>` : state.insNoTable ? `<div class="muted" style="font-size:14px;margin-top:6px">The insurance backend update has not been applied yet \u2014 no insured orders to show.</div>`
+    : orders.length ? orders.map(o => `<div class="line" style="font-size:14px"><span>#${esc(String(o.id).slice(-4).toUpperCase())} \u00b7 ${esc(o.status)} \u00b7 ${new Date(o.created_at).toLocaleDateString('en-GB')}</span><span>🛟 ${money(o.insurance_premium)}</span></div>`).join('')
+    : `<div class="muted" style="font-size:14px;margin-top:6px">No insured orders yet.</div>`}</div>
+  <div class="card"><b>Insurance claims</b>
+    ${loading ? `<div class="muted" style="font-size:14px;margin-top:6px">Loading…</div>` : state.insNoClaims ? `<div class="muted" style="font-size:14px;margin-top:6px">The claims table has not been applied yet \u2014 claims currently arrive as support tickets.</div>`
+    : claims.length ? claims.map(c => `<div class="line" style="font-size:14px"><span>#${esc(String(c.order_id).slice(-4).toUpperCase())} \u00b7 ${esc(c.status)} \u00b7 ${new Date(c.created_at).toLocaleDateString('en-GB')}</span><span>${money(c.premium)}</span></div>`).join('')
+    : `<div class="muted" style="font-size:14px;margin-top:6px">No claims yet.</div>`}</div>`;
+}
+
+// ---- Payout frequency: daily target, payouts still sent by admin by hand ----
+function pfrFreq(){
+  const v = (state.settings || {}).payout_frequency;
+  return (v === 'weekly' || v === 'monthly') ? v : 'daily';
+}
+function pfrDayStr(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function pfrAddFreq(d, freq){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (freq === 'weekly'){ x.setDate(x.getDate() + 7); return x; }
+  if (freq === 'monthly'){
+    const day = x.getDate(), m = x.getMonth(), y = x.getFullYear();
+    const last = new Date(y, m + 2, 0).getDate();
+    return new Date(y, m + 1, Math.min(day, last));
+  }
+  x.setDate(x.getDate() + 1); return x;
+}
+function pfrNextDue(lastISO, freq){
+  if (!lastISO) return null;
+  const d = new Date(lastISO); if (isNaN(d.getTime())) return null;
+  return pfrDayStr(pfrAddFreq(d, freq));
+}
+function pfrLastPaid(rows){
+  if (!rows || !rows.length) return null;
+  const paid = rows.find(r => r.status === 'paid');
+  return (paid || rows[0]).created_at || null;
+}
+function pfrShopRows(shops, report, lastMap, freq, todayStr){
+  const rep = {}; (report || []).forEach(r => { rep[r.restaurant_id] = r; });
+  const rows = [];
+  (shops || []).forEach(s => {
+    const unpaid = num((rep[s.id] || {}).unpaid);
+    if (!(unpaid > 0)) return;
+    const last = lastMap[s.id] || null;
+    const next = pfrNextDue(last, freq);
+    const due = !next || next <= todayStr;
+    rows.push({ id:s.id, name:s.name || 'Shop', unpaid, last, next, status: due ? 'due' : 'upcoming' });
+  });
+  rows.sort((a, b) => (a.status === b.status) ? (a.next || '').localeCompare(b.next || '') : (a.status === 'due' ? -1 : 1));
+  return rows;
+}
+function pfrRowHtml(r){
+  const lastTxt = r.last ? 'Last payout ' + new Date(r.last).toLocaleDateString('en-GB') : 'No payout yet';
+  const nextTxt = r.next ? ' · Next due ' + new Date(r.next + 'T00:00:00').toLocaleDateString('en-GB') : '';
+  const side = r.status === 'due' ? '<button class="btn sm" onclick="A.payShop(\'' + r.id + '\')">Pay</button>' : '<span class="pill">Upcoming</span>';
+  return '<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">' + esc(r.name) + '</div><div class="row-sub">Unpaid ' + money(r.unpaid) + ' · ' + lastTxt + nextTxt + '</div></div><div class="row-side">' + side + '</div></div>';
+}
+function pfrAdminCard(){
+  const freq = pfrFreq();
+  const loading = !state.pfrAdminLoaded;
+  if (loading){ state.pfrAdminLoaded = true; setTimeout(() => A.pfrAdminLoad(), 0); }
+  const rows = state.pfrRows || [];
+  const due = rows.filter(r => r.status === 'due');
+  const up = rows.filter(r => r.status === 'upcoming');
+  const freqNote = { daily:'Daily (target — payouts are attempted daily; actual payment is sent by admin)', weekly:'Weekly (target — payouts are attempted every week; actual payment is sent by admin)', monthly:'Monthly (target — payouts are attempted every month; actual payment is sent by admin)' }[freq];
+  const opts = [['daily','Daily (target)'],['weekly','Weekly (target)'],['monthly','Monthly (target)']].map(o => '<option value="' + o[0] + '"' + (freq === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('');
+  return `<div class="card">
+    <b>🗓️ Payout frequency</b>
+    <div class="muted" style="font-size:14px">How often payouts are attempted. Daily is a target, not a guarantee — payouts are still sent by admin by hand, and a shop is paid only when its earnings are unpaid. Changing this only changes the due dates shown below; it never moves money by itself.</div>
+    <label class="f" for="pfr_freq">Payout frequency</label><select id="pfr_freq">${opts}</select>
+    <div class="muted" style="font-size:14px">${freqNote}</div>
+    <div class="actions"><button class="btn ghost block" onclick="A.saveSetting('payout_frequency', $('pfr_freq').value)">Save payout frequency</button></div>
+  </div>
+  <div class="card"><b>Payouts due</b> <button class="btn ghost" onclick="A.pfrAdminLoad()">Refresh</button>
+    ${loading ? `<div class="muted" style="font-size:14px;margin-top:6px">Loading…</div>` : state.pfrLoadError ? `<div class="muted" style="font-size:14px;margin-top:6px">Could not load payout data — check connection and try Refresh.</div>`
+    : due.length ? due.map(pfrRowHtml).join('') : `<div class="muted" style="font-size:14px;margin-top:6px">No payouts due right now.</div>`}</div>
+  <div class="card"><b>Upcoming payouts</b>
+    ${loading ? `<div class="muted" style="font-size:14px;margin-top:6px">Loading…</div>` : state.pfrLoadError ? `<div class="muted" style="font-size:14px;margin-top:6px">Could not load payout data — check connection and try Refresh.</div>`
+    : up.length ? up.map(pfrRowHtml).join('') : `<div class="muted" style="font-size:14px;margin-top:6px">No upcoming payouts.</div>`}</div>`;
+}
+
 function viewSettings(){
   const s = state.settings;
   const sc = scope();
@@ -2794,7 +3500,11 @@ function viewSettings(){
     ${menuRow('rewards', '🎁', 'Rewards, Referral & Loyalty', 'Invite codes, loyalty points, rider prizes')}
     <div class="setgroup-h">General</div>
     ${menuRow('booking', '📅', 'Bookings & Support Info', 'Booking commission, support phone/email')}
-    ${menuRow('push', '📣', 'Push Notifications', 'Announcement ya alert sab apps ko bhejo')}
+    ${menuRow('push', '📣', 'Push Notifications', 'Send an announcement or alert to all apps')}
+    ${menuRow('shopmsgs', '📬', 'Shop messages', 'Announcement to shops, with read status')}
+    ${menuRow('insurance', '🛟', 'Order Insurance', 'Opt-in cover, premium rate, claims')}
+    ${menuRow('payoutfreq', '🗓️', 'Payout frequency', 'Daily target, next payout due per shop')}
+    ${menuRow('minver', '📱', 'Minimum app version', 'Shops below this version see an update notice')}
   </div>`;
   const wrap = (title, inner) => `${backLink()}<h2>${title}</h2>${note}${back}<div style="margin-top:10px">${inner}</div>`;
   if (sub === 'pay') return wrap('💳 Online Payment Accounts', payAccCard() + payRulesCard() + gatewayCard());
@@ -2808,6 +3518,10 @@ function viewSettings(){
   if (sub === 'rewards') return wrap('🎁 Rewards, Referral & Loyalty', setReferralCard(s) + setLoyaltyCard(s) + setAwardsCard(s) + setPointsCard(s));
   if (sub === 'booking') return wrap('📅 Bookings & Support Info', setBookingCard(s) + setSupportCard(s));
   if (sub === 'push') return wrap('📣 Push Notifications', pushCard());
+  if (sub === 'shopmsgs') return wrap('📬 Shop messages', tmcAdminCard());
+  if (sub === 'insurance') return wrap('🛟 Order Insurance', insAdminCard());
+  if (sub === 'payoutfreq') return wrap('🗓️ Payout frequency', pfrAdminCard());
+  if (sub === 'minver') return wrap('📱 Minimum app version', tmcMinVerCard());
   return wrap('Settings', '');
 }
 function withdrawCard(){
@@ -2817,14 +3531,43 @@ function withdrawCard(){
     <div id="wdAdminList" style="margin-top:10px"><div class="muted">Loading…</div></div>
     <div class="actions"><button class="btn ghost block" onclick="A.loadWithdrawals()">Refresh</button></div></div>`;
 }
+
+// ---- TMC (Feature 26): shop messages + minimum app version ----
+function tmcAdminCard(){
+  if (state.tmcAdminMsgs === undefined){ setTimeout(() => A.tmcMsgsLoad(), 0); return '<div class="muted">Loading…</div>'; }
+  const shops = state.tmcAdminShops || [];
+  const reads = state.tmcAdminReads || [];
+  const rows = (state.tmcAdminMsgs || []).map(m => {
+    const rc = reads.filter(r => r.message_id === m.id).length;
+    const target = m.restaurant_id ? (esc((shops.find(s => s.id === m.restaurant_id) || {}).name || 'One shop')) : (m.region_id ? ('All shops · ' + esc(regionName(m.region_id))) : 'All shops (all regions)');
+    return `<div class="card"><div class="row-title">${esc(m.title || '')} <span class="pill">${rc} read</span></div><div class="row-sub">${target} · ${esc(when(m.created_at))}</div><div style="white-space:pre-wrap;margin-top:6px">${esc(m.body || '')}</div><div class="bar" style="margin-top:8px"><button class="btn warn small" onclick="A.tmcMsgDel('${m.id}')">Delete</button></div></div>`;
+  }).join('') || '<div class="muted">No messages yet.</div>';
+  const opts = shops.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  return `<div class="card"><b>📬 New message to shops</b>
+    <label class="f" for="tmc_target">Send to</label><select id="tmc_target"><option value="all">All shops in my area</option>${opts}</select>
+    <label class="f" for="tmc_title">Title</label><input id="tmc_title" type="text" maxlength="120">
+    <label class="f" for="tmc_body">Message</label><textarea id="tmc_body" rows="4" maxlength="2000"></textarea>
+    <div class="actions"><button class="btn block" onclick="A.tmcMsgSend()">Send message</button></div></div>
+    ${state.tmcNoTable ? `<div class="note">⚠️ The messages backend update is not applied yet — messages cannot be saved. Apply the Feature 26 SQL first.</div>` : ''}
+    <div style="margin-top:10px"><button class="btn ghost" onclick="A.tmcMsgsLoad()">Refresh</button></div>
+    ${rows}`;
+}
+function tmcMinVerCard(){
+  const cur = (state.settings && state.settings.shop_min_version != null) ? String(state.settings.shop_min_version) : '';
+  return `<div class="card"><b>📱 Minimum shop app version</b>
+    <div class="muted" style="font-size:14px">Shops running an older shop app version see an update notice (they are not blocked — blocking could strand a shop mid-day). Leave empty for no minimum. The shop notice tells them to refresh the website page or ask the owner for the new APK — there is no in-app self-update.</div>
+    <label class="f" for="tmc_minver">Minimum version (e.g. 6.85)</label><input id="tmc_minver" type="text" value="${esc(cur)}" placeholder="e.g. 6.85">
+    <div class="actions"><button class="btn block" onclick="A.tmcMinVerSave()">Save minimum version</button></div></div>`;
+}
+
 function pushCard(){
   return `<div class="card">
-    <b>📣 Push notification bhejo</b>
-    <div class="muted" style="font-size:14px">Ye notification chune hue app ke un users ko jayegi jinhon ne notifications on ki hui hain. Sirf active admin ise bhej sakta hai.</div>
-    <label class="f" for="push_title">Title</label><input id="push_title" maxlength="80" placeholder="Misal: Nayi offer!">
-    <label class="f" for="push_body">Message</label><textarea id="push_body" maxlength="300" rows="3" placeholder="Misal: Aaj raat 8 baje tak free delivery"></textarea>
-    <label class="f" for="push_app">Kis app ko</label><select id="push_app"><option value="all">Sab apps</option><option value="customer">Customer app</option><option value="shop">Shop app</option><option value="rider">Rider app</option></select>
-    <div class="actions"><button class="btn" onclick="sendPushMsg()">Bhejo</button></div>
+    <b>📣 Send push notification</b>
+    <div class="muted" style="font-size:14px">This notification goes to users of the selected app who have notifications turned on. Only an active admin can send it.</div>
+    <label class="f" for="push_title">Title</label><input id="push_title" maxlength="80" placeholder="Example: New offer!">
+    <label class="f" for="push_body">Message</label><textarea id="push_body" maxlength="300" rows="3" placeholder="Example: Free delivery until 8 PM tonight"></textarea>
+    <label class="f" for="push_app">Which app</label><select id="push_app"><option value="all">All apps</option><option value="customer">Customer app</option><option value="shop">Shop app</option><option value="rider">Rider app</option></select>
+    <div class="actions"><button class="btn" onclick="sendPushMsg()">Send</button></div>
     <div id="push_result" class="muted" style="font-size:13px;margin-top:10px"></div>
   </div>`;
 }
@@ -2834,14 +3577,14 @@ async function sendPushMsg(){
     const b = (document.getElementById('push_body') || {}).value || '';
     const ap = (document.getElementById('push_app') || {}).value || 'all';
     const r = document.getElementById('push_result');
-    if (!t.trim() || !b.trim()){ if (r) r.textContent = 'Title aur message dono likhna zaroori hai.'; return; }
-    if (r) r.textContent = 'Bheja ja raha hai...';
+    if (!t.trim() || !b.trim()){ if (r) r.textContent = 'Both title and message are required.'; return; }
+    if (r) r.textContent = 'Sending...';
     const { data:{ session } } = await sb.auth.getSession();
-    if (!session){ if (r) r.textContent = 'Session khatam ho gayi hai. Dobara login karo.'; return; }
+    if (!session){ if (r) r.textContent = 'Session expired. Please log in again.'; return; }
     const res = await fetch(SUPABASE_URL + '/functions/v1/admin-send-push', { method:'POST', headers:{ 'Content-Type':'application/json', 'apikey': SUPABASE_KEY, 'Authorization':'Bearer ' + session.access_token }, body: JSON.stringify({ app: ap, title: t.trim(), body: b.trim() }) });
     const j = await res.json().catch(() => ({}));
-    if (!res.ok){ if (r) r.textContent = 'Nahi bheja ja saka: ' + (j.error || ('HTTP ' + res.status)) + '.'; return; }
-    if (r) r.textContent = 'Ho gaya — ' + (j.sent || 0) + ' devices ko bheja gaya' + (j.failed ? ', ' + j.failed + ' fail hue' : '') + '.';
+    if (!res.ok){ if (r) r.textContent = 'Could not send: ' + (j.error || ('HTTP ' + res.status)) + '.'; return; }
+    if (r) r.textContent = 'Done — sent to ' + (j.sent || 0) + ' devices' + (j.failed ? ', ' + j.failed + ' failed' : '') + '.';
   } catch (e) { const r = document.getElementById('push_result'); if (r) r.textContent = 'Error: ' + (e && e.message ? e.message : e); }
 }
 function setDispatchCard(s){
@@ -3013,8 +3756,13 @@ function setLoyaltyCard(s){
     <label class="f" for="s_lp_red" style="margin-top:8px">Min points to redeem</label><input id="s_lp_red" type="number" min="1" value="${num(s.loyalty_redeem_min ?? 100)}">
     <label class="f" for="s_lp_online" style="margin-top:8px">Online payment bonus — Rs per 1 bonus point</label><input id="s_lp_online" type="number" min="0" value="${num(s.loyalty_online_per ?? 100)}">
     <label class="f" for="s_wd_min" style="margin-top:8px">Minimum withdrawal (Rs) — changeable here</label><input id="s_wd_min" type="number" min="0" value="${num(s.wallet_min_withdrawal ?? 500)}">
-    <div class="muted" style="font-size:13px;margin-top:4px">Customer jitni rakam online pay karega, delivered order par us ke alag bonus points milenge. 0 = bonus band.</div>
-    <div class="muted" style="font-size:13px;margin-top:8px">✔️ Bharosa badge: in the last ${num(br.days ?? 90)} days at least ${num(br.min_delivered ?? 10)} delivered orders, shop cancels below ${num(br.max_cancel_pct ?? 5)}%, at least ${num(br.min_verified ?? 3)} verified online payments, and average payment-confirm time under ${num(br.max_confirm_hours ?? 6)} hours. The badge shows next to the shop name in the customer app.<br>These criteria can currently only be changed from the database (SQL) — there is no setting for them in the app.</div>
+    <label class="f" style="margin-top:8px"><input type="checkbox" id="s_otp_on" ${s.ontime_promise_on !== false ? 'checked' : ''}> On-time Promise on — delivery orders get a promised time; late orders earn Dera Points</label>
+    <label class="f" for="s_otp_pts" style="margin-top:8px">Late bonus (Dera Points per late order)</label><input id="s_otp_pts" type="number" min="0" value="${num(s.ontime_late_points ?? 20)}">
+    <label class="f" style="margin-top:8px"><input type="checkbox" id="s_srg_on" ${s.surge_on ? 'checked' : ''}> ${state.lang === 'ur' ? 'پیک فیس آن (صرف مینی)' : 'Peak fee on (Maini only)'}</label>
+    <div class="muted" style="font-size:13px;margin-top:4px">${state.lang === 'ur' ? 'پیک فیس: مینی میں ڈیلیوری آرڈرز پر شام 6 سے 9 بجے تک 30 روپے اضافی۔ مکمل رقم رائیڈر کو جاتی ہے۔ یہ وقت عارضی ہے — لانچ کے بعد اصل آرڈر ڈیٹا سے درست کریں۔' : 'Peak fee: +Rs 30 on delivery orders in Maini, 6–9 PM only. 100% goes to the rider. The 6–9 PM window is provisional — tune it from real order data after launch.'}</div>
+    ${state.surgeLive ? '' : `<div class="muted" style="font-size:13px;margin-top:4px">⚠️ ${state.lang === 'ur' ? 'سرج بیک اینڈ اپ ڈیٹ ابھی نہیں لگی — ٹوگل محفوظ ہو جاتا ہے، لیکن پیک فیس تب تک نہیں لگے گی۔' : 'Surge backend update not applied yet — the toggle saves, but no peak fee is charged until the surge update is applied.'}</div>`}
+    <div class="muted" style="font-size:13px;margin-top:4px">For each delivered order the customer pays online, they earn separate bonus points. 0 = bonus off.</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">✔️ Trusted badge: in the last ${num(br.days ?? 90)} days at least ${num(br.min_delivered ?? 10)} delivered orders, shop cancels below ${num(br.max_cancel_pct ?? 5)}%, at least ${num(br.min_verified ?? 3)} verified online payments, and average payment-confirm time under ${num(br.max_confirm_hours ?? 6)} hours. The badge shows next to the shop name in the customer app.<br>These criteria can currently only be changed from the database (SQL) — there is no setting for them in the app.</div>
     <div class="actions"><button class="btn ghost block" onclick="A.saveLoyalty()">Save</button></div>
   </div>`;
 }
@@ -3050,7 +3798,9 @@ function setSupportCard(s){
 
 // ================= ACTIONS =================
 const A = {
+  fltFilter(k){ state.fltFilter = k; renderTab(); },
   approvalAction(kind,id,action){ if (!can('owner')) return toast('You do not have permission to do this.', true); try { id = decodeURIComponent(id); } catch (_) { return toast('Invalid request ID.', true); } openApprovalAction(kind,id,action); },
+  bnrSetFilter(f){ state.bnrFilter = f; renderTab(); },
   async forgotPw(){
     const email = $('em').value.trim(); const el = $('loginErr');
     if (!email){ el.textContent = 'Write your email above first'; $('em').focus(); return; }
@@ -3073,6 +3823,10 @@ const A = {
   orderSearch(v){ state.orderQ = v; const el = $('orderList'); renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
   async openOrder(id){
     const o = state.orders.find(x => x.id === id); if (!o) return;
+    let dlvConf = null;
+    try { const dq = await sb.from('delivery_confirmations').select('mode,door_instruction,signature_data').eq('order_id', id).maybeSingle(); if (!dq.error) dlvConf = dq.data || null; } catch (e) {}
+  let otpRow = null;
+  try { const oq = await sb.from('ontime_promises').select('promised_at,points_awarded,status').eq('order_id', id).maybeSingle(); if (!oq.error) otpRow = oq.data || null; } catch (e) {}
     const items = (o.order_items || []).map(i => `<div class="kv"><span>${i.quantity} × ${esc(i.name)}</span><span>${money(i.price * i.quantity)}</span></div>`).join('');
     openSheet(`#${o.id.slice(-4).toUpperCase()} ${o.restaurant?.name || 'Order'}`, `
       <div style="margin-bottom:8px"><span class="pill" style="background:var(--s-${o.status})">${LABEL[o.status]}</span> <span class="muted">${when(o.created_at)}</span></div>
@@ -3081,6 +3835,8 @@ const A = {
         <div class="muted" style="margin-top:4px">${esc(o.address_text || 'No address')}</div>
         ${o.receiver_name ? `<div style="margin-top:4px">👤 Receiver: <b>${esc(o.receiver_name)}</b> · <a href="tel:${esc(o.receiver_phone || '')}">${esc(o.receiver_phone || '')}</a></div>` : ''}
         ${o.delivery_photo ? `<button class="btn ghost small" style="margin-top:6px" onclick='A.lostPhoto(${JSON.stringify(o.delivery_photo)})'>📷 Delivery photo</button>` : ''}
+        ${dlvConf ? `<div class="note" style="margin-top:6px"><b>${dlvConf.mode === 'contactless' ? '🚪 Contactless delivery' : '🤝 Hand-to-me delivery'}</b>${dlvConf.mode === 'contactless' && dlvConf.door_instruction ? `<div style="margin-top:4px"><b>Door instruction:</b> ${esc(dlvConf.door_instruction)}</div>` : ''}<div class="muted" style="font-size:13px;margin-top:4px">Signature: ${dlvConf.signature_data ? '✅ saved' : '— not signed yet'}</div></div>` : ''}
+        ${otpRow ? `<div class="note" style="margin-top:6px"><b>⏱ On-time Promise: ${new Date(otpRow.promised_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}</b><div class="muted" style="font-size:13px;margin-top:4px">Bonus awarded: ${otpRow.points_awarded > 0 ? otpRow.points_awarded + ' Dera Points' : '— none yet'}</div></div>` : ''}
         ${o.address_lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${o.address_lat},${o.address_lng}" target="_blank" rel="noopener">Open location in Maps</a>` : ''}
         ${!['pickup','dinein'].includes(o.order_type) && o.address_lat && o.restaurant && o.restaurant.lat != null ? `<div class="muted" style="margin-top:4px">📍 Shop → customer: <b>${fmtKmA(distKmA(o.restaurant.lat, o.restaurant.lng, o.address_lat, o.address_lng))}</b></div>` : ''}</div>
       ${o.restaurant?.phone ? `<div style="margin-bottom:8px"><b>Shop:</b> <a href="tel:${esc(o.restaurant.phone)}">${esc(o.restaurant.phone)}</a></div>` : ''}
@@ -3201,7 +3957,7 @@ const A = {
     await run(async () => { const n = need(await sb.rpc('admin_send_campaign', { p_title:title, p_body:body, p_target:target })); toast(`Sent to ${n} phones`); await go('campaign'); });
     const b2 = $('cpSend'); if (b2) b2.disabled = false;
   },
-  async sosDone(id){ await run(async () => { need(await sb.rpc('admin_sos_resolve', { p_id:id })); state.sos = (state.sos || []).filter(x => x.id !== id); renderTab(); toast('Marked solved'); }); },
+  async sosDone(id){ const note = (await uiPrompt(state.lang === 'ur' ? 'حل کا نوٹ (اختیاری)' : 'Resolution note (optional)', '')) || ''; await run(async () => { try { need(await sb.rpc('admin_sos_resolve', { p_id:id, p_note:note || null })); } catch(e){ need(await sb.rpc('admin_sos_resolve', { p_id:id })); } state.sos = (state.sos || []).filter(x => x.id !== id); renderTab(); toast('Marked solved'); }); },
   async codOff(id, v){ await run(async () => { need(await sb.rpc('admin_customer_flags', { p_user:id, p_blocked:null, p_cod_off:v })); toast(v ? 'Cash is off for this customer' : 'Cash allowed'); await A.openCustomer(id); }); },
   async walletCredit(id){
     const v = await uiPrompt('How much to add to the wallet? (Rs) Use minus to take back, e.g. -100', '', { type:'number' }); if (v === null) return;
@@ -3338,10 +4094,10 @@ const A = {
     const stab = (key, label) => `<button class="chip ${st === key ? 'on' : ''}" onclick="state.shopTab='${key}';A.openShop('${id}')">${label}</button>`;
     openSheet(r.name, `
       <div class="card-head" style="margin-bottom:10px"><div class="thumb" style="width:64px;height:64px">${r.logo_url ? `<img src="${esc(imageThumb(r.logo_url,160))}" alt="" loading="lazy" decoding="async">` : noImg(r.name)}</div>
-        <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? ' <span class="pill g">✔️ Bharosa</span>' : ''}</div>
+        <div><div>${r.is_open ? '<span class="pill g">Open</span>' : '<span class="pill">Closed</span>'} ${r.is_active ? '' : '<span class="pill r">Hidden</span>'}${(state.badgeShops && state.badgeShops.has(r.id)) ? ' <span class="pill g">✔️ Trusted</span>' : ''}</div>
         <div class="muted" style="font-size:14px">${esc(r.address || '')}</div>${r.phone ? `<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a>` : ''}</div></div>
       <div class="muted" style="font-size:14px">${esc(zone ? zone.name : '')} · Commission ${num(r.commission_percent)}% · ${s.rating ? '★ ' + s.rating + ' (' + s.reviews + ' reviews)' : 'No reviews'}</div>
-      <div class="chips" style="margin:10px 0">${stab('sales', '💰 Sales & Payout')}${stab('fee', '🧾 Fee & Ads')}${stab('edit', '✏️ Edit Info')}${stab('products', '📦 Products')}</div>
+      <div class="chips" style="margin:10px 0">${stab('sales', '💰 Sales & Payout')}${stab('fee', '🧾 Fee & Ads')}${stab('edit', '✏️ Edit Info')}${stab('products', '📦 Products')}${stab('docs', '📄 Tax docs')}</div>
       <div id="st-sales" style="display:${st === 'sales' ? 'block' : 'none'}">
       <h3 style="margin-top:14px">${esc(label)}</h3>
       <div class="kv"><span class="muted">Orders</span><span>${num(s.orders)}</span></div>
@@ -3358,7 +4114,7 @@ const A = {
       ${s.last_paid ? `<div class="muted" style="font-size:13px">Last paid ${when(s.last_paid)}</div>` : ''}
       <div class="actions" id="shopActs">
         ${num(s.unpaid) && can('money') ? `<button class="btn block" id="payShopBtn" onclick="A.payShop('${id}', ${num(s.unpaid)})">Pay shop ${money(s.unpaid)}</button>` : ''}
-        <button class="btn ghost block" style="margin-bottom:8px" onclick="A.openMonthStatement('${id}')">📊 Monthly statement (3 hisaab)</button>
+        <button class="btn ghost block" style="margin-bottom:8px" onclick="A.openMonthStatement('${id}')">📊 Monthly statement (3 accounts)</button>
         <div class="two"><button class="btn ghost" onclick="A.shopStatement('${id}','pdf')">🧾 Statement PDF</button><button class="btn ghost" onclick="A.shopStatement('${id}','xlsx')">⬇️ Excel</button></div>
       </div>
       <h3>Payment history</h3><div id="payHist"><div class="empty">Loading…</div></div>
@@ -3375,10 +4131,14 @@ const A = {
       </div>
       <div id="st-products" style="display:${st === 'products' ? 'block' : 'none'}">
         <div class="actions"><button class="btn ghost block" onclick="A.shopProducts('${id}')">📦 Manage products</button></div>
+      </div>
+      <div id="st-docs" style="display:${st === 'docs' ? 'block' : 'none'}">
+        <div id="txdBox"><div class="empty">Loading…</div></div>
       </div>`);
-    const [{ data }, fz, cxp] = await Promise.all([sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20),
+    const [{ data }, fz, cxp, dx] = await Promise.all([sb.from('payouts').select('*').eq('party_type', 'restaurant').eq('party_id', id).order('created_at', { ascending:false }).limit(20),
       sb.from('shop_fees').select('*').eq('restaurant_id', id).order('month', { ascending:false }).limit(12),
-      sb.rpc('admin_shop_cancels', { p_shop:id, p_limit:30 })]);
+      sb.rpc('admin_shop_cancels', { p_shop:id, p_limit:30 }),
+      sb.from('shop_tax_documents').select('*').eq('restaurant_id', id).order('doc_type')]);
     const el = $('payHist'); if (el) el.innerHTML = Receipt.list(data, { kind:'payout', to:r.name }, 'No payments yet.');
     const cxl = $('cxList'); if (cxl) cxl.innerHTML = (cxp.data && cxp.data.length) ? `<div class="list">${cxp.data.map(cxRowHtml).join('')}</div>` : '<div class="empty">No cancellations.</div>';
     const fees = fz.data || []; const due = fees.filter(f => f.status === 'due').reduce((a, f) => a + num(f.amount), 0);
@@ -3388,6 +4148,12 @@ const A = {
         <div class="row-sub">${f.paid_at ? when(f.paid_at) : ''}${f.note ? ' · ' + esc(f.note) : ''}</div></div>
         <div class="row-side">${money(f.amount)}${f.status === 'due' && can('money') ? `<small><button class="linkbtn" style="font-size:12px" onclick="A.waiveFee('${f.id}','${id}')">Waive</button></small>` : ''}</div></div>`).join('')}</div>
       ${due && can('money') ? `<button class="btn ghost block" style="margin-top:8px" onclick="A.receiveFee('${id}', ${due})">Receive ${money(due)} fee (cash / JazzCash)</button>` : ''}`;
+    const txb = $('txdBox');
+    if (txb){
+      if (dx.error) txb.innerHTML = `<div class="warnbox">${txdT('The backend update is not applied yet — tax documents cannot load.', 'بیک اینڈ اپ ڈیٹ ابھی نہیں لگی — ٹیکس دستاویزات نہیں کھلیں گی۔')}</div>`;
+      else if (scope() && r.region_id !== scope()) txb.innerHTML = `<div class="empty">${txdT('This shop is in another region.', 'یہ دکان کسی اور علاقے میں ہے۔')}</div>`;
+      else txb.innerHTML = txdShopDocsHtml(id, (dx.data || []), r);
+    }
     const pb = $('payShopBtn'); if (pb && due){ const net = num(s.unpaid) - due; pb.textContent = net >= 0 ? `Pay shop ${money(net)} (${money(s.unpaid)} − ${money(due)} fee)` : `Fee due is more than the earning`; if (net < 0) pb.disabled = true; pb.setAttribute('onclick', `A.payShop('${id}', ${Math.max(0, net)})`); }
   },
   payShop(id, amt){
@@ -3659,8 +4425,8 @@ const A = {
     openSheet(r.full_name || 'Rider', '<div class="empty">Loading…</div>');
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
-      const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr] = await Promise.all([
-        sb.from('riders').select('profile_id,face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since').eq('id', id).single(),
+      const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr, bl] = await Promise.all([
+        sb.from('riders').select('profile_id,face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since,region_id').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
         sb.from('cash_handovers').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(10),
@@ -3668,9 +4434,12 @@ const A = {
         sb.rpc('rider_holder_stats', { p_rider:id }),
         sb.from('rider_credentials').select('login_id,updated_at').eq('rider_id', id).maybeSingle(),
         sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(60),
-        sb.from('rider_prayer_breaks').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(100)
+        sb.from('rider_prayer_breaks').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(100),
+        sb.from('rider_blacklists').select('*').eq('rider_id', id).eq('active', true).order('created_at', { ascending:false })
       ]);
       state.riderChargeList = (ch && ch.data) || [];
+      let bscRows = null, bscErr = false;
+      try { const bq = await sb.from('rider_bike_checks').select('check_date,items,failed,reported,created_at').eq('rider_id', id).order('check_date', { ascending: false }).limit(14); if (bq.error) throw bq.error; bscRows = bq.data || []; } catch (e) { bscErr = true; }
       state.holders = hs.data || []; state.riderCred = cr.data || null;
       state.riderMustChange = false;
       try { const profId = (rd && rd.data || {}).profile_id; if (profId){ const asx = await sb.from('account_security').select('must_change_password').eq('user_id', profId).maybeSingle(); state.riderMustChange = !!(asx.data && asx.data.must_change_password); } } catch (e) {}
@@ -3709,7 +4478,7 @@ const A = {
           <div class="muted" style="font-size:13px">${r.cnic ? 'CNIC ' + esc(r.cnic) + ' · ' : ''}Joined ${dayName(r.created_at)}${r.rating ? ' · ★ ' + r.rating : ''}</div>
           ${rider.current_lat ? `<a style="font-size:14px" href="https://www.google.com/maps/search/?api=1&query=${rider.current_lat},${rider.current_lng}" target="_blank" rel="noopener">Last location${r.location_updated_at ? ' (' + timeAgo(r.location_updated_at) + ')' : ''}</a>` : ''}
         </div></div>
-        <div class="chips" style="margin:10px 0">${rtab('overview', '👤 Overview')}${rtab('pay', '💰 Salary & Cash')}${rtab('fines', '⚖️ Fines & Charges')}${rtab('duty', '📸 Duty & Selfies')}${rtab('settings', '⚙️ Settings')}</div>
+        <div class="chips" style="margin:10px 0">${rtab('overview', '👤 Overview')}${rtab('pay', '💰 Salary & Cash')}${rtab('fines', '⚖️ Fines & Charges')}${rtab('duty', '📸 Duty & Selfies')}${rtab('settings', '⚙️ Settings')}${rtab('docs', '📄 Documents')}</div>
 
         <div id="rt-overview" style="display:${rt === 'overview' ? 'block' : 'none'}">
         ${riderIdBlock(id, rider, r)}
@@ -3717,7 +4486,9 @@ const A = {
         <div class="kv" style="margin-top:8px"><span class="muted">🕘 Duty time</span><span>${esc(timingText(r))}</span></div>
         ${prayerBreaks.length ? `<div class="kv"><span class="muted">🕌 Prayer breaks (${monthLabel(state.riderMonth)})</span><span>${prayerBreaks.length} breaks · ${prayerTotal} min</span></div>
         <div class="list" style="margin-top:6px">${prayerRows}</div>` : ''}
+        ${bscAdminBlock(bscRows, bscErr)}
         <div class="bar" style="margin:8px 0 0"><button class="btn ghost small" onclick="A.planForm(['${id}'])">Change duty time</button><button class="btn ghost small" onclick="A.riderAttendance('${id}')">📋 Attendance</button></div>
+        ${blstAdminBlock(id, (bl && bl.data) || [], rider)}
         <div class="actions" style="margin-top:22px">
           ${r.face_registered ? `<button class="btn ghost block" onclick="A.resetFace('${id}')">Reset face (rider registers again)</button>` : ''}
           ${r.blocked ? `<button class="btn block" onclick="A.unblockRider('${id}')">Unblock rider</button>` : `<button class="btn warn block" onclick="A.blockRider('${id}')">Block rider</button>`}
@@ -3794,7 +4565,13 @@ const A = {
         </div>
         <div class="muted" style="font-size:13px">Tip: use <b>Change duty time</b> above to put the rider on a shift for a week, a month or from a date. A shift plan replaces these times. Leave duty times empty for no fixed timing. Starting duty more than ${num(state.settings.late_grace_minutes ?? 10)} minutes late is marked late.</div>
         <div class="actions"><button class="btn ghost block" onclick="A.saveRiderSettings('${id}')">Save settings</button></div>
+        </div>
+
+        <div id="rt-docs" style="display:${rt === 'docs' ? 'block' : 'none'}">
+        <h3>📄 ${dscT('Rider documents', 'رائیڈر دستاویزات')}</h3>
+        <div id="dscAdminDocs"><div class="empty" style="padding:14px">Loading…</div></div>
         </div>`;
+    if (rt === 'docs') dscAdminLoadDocs('${id}');
     });
   },
   async refreshRider(id){ await loadRiderMonth(); if (state.tab === 'riders') renderTab(); await A.openRider(id); },
@@ -3966,6 +4743,28 @@ const A = {
       need(await (id ? sb.from('promo_codes').update(row).eq('id', id) : sb.from('promo_codes').insert(row)));
       await loadPromos(); closeSheet(); renderTab(); toast('Promo saved');
     });
+  },
+  async cmpApprove(id){
+    await run(async () => {
+      const r = need(await sb.rpc('admin_promo_code_action', { p_request_id:id, p_action:'approve' }));
+      await loadCmpReqs(); await loadPromos(); renderTab();
+      toast(r && r.status === 'approved' ? 'Promo code approved — it now works on this shop\'s orders only.' : 'Approved.');
+    });
+  },
+  cmpReject(id){
+    openSheet('Reject promo code request', `<label class="f" for="cmpRejNote">Reason (required)</label><textarea id="cmpRejNote" maxlength="500" rows="3" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit"></textarea><div class="actions"><button class="btn warn block" onclick="A.cmpRejectDo('${id}')">Reject request</button></div>`);
+  },
+  async cmpRejectDo(id){
+    const note = ($('cmpRejNote').value || '').trim(); if (!note) return toast('Write a reason before rejecting.', true);
+    await run(async () => {
+      need(await sb.rpc('admin_promo_code_action', { p_request_id:id, p_action:'reject', p_note:note }));
+      await loadCmpReqs(); closeSheet(); renderTab(); toast('Request rejected.');
+    });
+  },
+  async cmpBanner(id){
+    const r = (state.cmpReqs || []).find(x => x.id === id); if (!r) return;
+    state.cmpBannerPrefill = { title: r.restaurant?.name || r.code, subtitle: `Use code ${r.code}`, action_type: 'promo', action_value: r.code };
+    await go('banners'); A.editBanner('');
   },
   async deletePromo(id){ if (!await uiConfirm('Delete this promo code?')) return; await run(async () => { need(await sb.from('promo_codes').delete().eq('id', id)); await loadPromos(); closeSheet(); renderTab(); }); },
 
@@ -4139,14 +4938,14 @@ const A = {
         if (o.payment_method === 'cod') return '💵 Cash on delivery';
         const dest = o.pay_destination === 'shop' ? 'shop account' : o.pay_destination === 'region' ? 'Dera account' : 'online';
         let s = `📱 Online ${money(o.pay_online_amount)} → ${dest}`;
-        if (num(o.pay_balance_due) > 0) s += ` · baqi ${money(o.pay_balance_due)} cash`;
+        if (num(o.pay_balance_due) > 0) s += ` · ${money(o.pay_balance_due)} cash remaining`;
         if (o.pay_ref) s += ` · TID ${esc(o.pay_ref)}`;
         return s;
       };
       body.innerHTML = `
         <label class="f" for="stmtMonth">Month</label>
         <select id="stmtMonth" onchange="A.openMonthStatement('${id}', this.value)">${months}</select>
-        <h3 style="margin-top:14px">Paisa kahan hai — 3 hisaab</h3>
+        <h3 style="margin-top:14px">Where is the money — 3 accounts</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           ${sCard('💵 Cash — with the rider', st.cash_by_rider, 'COD + balance cash after advance')}
           ${sCard('📱 Online — in the shop account', st.online_shop, 'The shop already received it — not part of the payout')}
@@ -4160,7 +4959,7 @@ const A = {
         <div class="kv"><span class="muted">Shop earning</span><span>${money(tt.earning)}</span></div>
         <div class="kv"><span class="muted">Delivery fees</span><span>${money(tt.delivery_fees)}</span></div>
         <div class="kv"><span class="muted">Rider pays</span><span>${money(tt.rider_pays)}</span></div>
-        ${days.length ? `<h3 style="margin-top:16px">Din-ba-din</h3><div class="list">${days.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(dayName(x.date))} · ${num(x.orders)} orders</div><div class="row-sub">Cash ${money(x.cash_by_rider)} · Shop online ${money(x.online_shop)} · Dera online ${money(x.online_region)} · Commission ${money(x.commission)}</div></div><div class="row-side">${money(x.earning)}</div></div>`).join('')}</div>` : ''}
+        ${days.length ? `<h3 style="margin-top:16px">Day by day</h3><div class="list">${days.map(x => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(dayName(x.date))} · ${num(x.orders)} orders</div><div class="row-sub">Cash ${money(x.cash_by_rider)} · Shop online ${money(x.online_shop)} · Dera online ${money(x.online_region)} · Commission ${money(x.commission)}</div></div><div class="row-side">${money(x.earning)}</div></div>`).join('')}</div>` : ''}
         ${prods.length ? `<h3 style="margin-top:16px">Products</h3><div class="list">${prods.map(p => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(p.name)}</div><div class="row-sub">${num(p.qty)} sold · commission ${money(p.commission)}</div></div><div class="row-side">${money(p.sales)}</div></div>`).join('')}</div>` : ''}
         <h3 style="margin-top:16px">Orders (${ords.length}) — tap for full file</h3>
         ${ords.length ? `<div class="list">${ords.map(o => `<button class="row" onclick="A.openOrderFile('${o.id}', 'stmt')"><div class="row-main"><div class="row-title">#${esc(o.code || '')} · ${esc(o.customer_name || 'Customer')}</div><div class="row-sub">${when(o.delivered_at)} · ${payTxt(o)}<br>Commission ${money(o.commission)}${o.commission_rate != null ? ' (' + num(o.commission_rate) + '%)' : ''}${o.rider_name ? ' · Rider: ' + esc(o.rider_name) + ' (' + money(o.rider_pay) + ')' : ''}${o.minutes != null ? ' · ' + hours(o.minutes) : ''}</div></div><div class="row-side">${money(o.total)}<small>earn ${money(o.earning)}</small></div></button>`).join('')}</div>` : '<div class="empty">No delivered orders this month.</div>'}`;
@@ -4179,6 +4978,7 @@ const A = {
   // ---- Banners ----
   editBanner(id){
     const b = (state.banners || []).find(x => x.id === id) || { title:'', bg_color:'#E8722A', action_type:'none', is_active:true, sort_order:(state.banners || []).length };
+    if (!id && state.cmpBannerPrefill){ Object.assign(b, state.cmpBannerPrefill); state.cmpBannerPrefill = null; }
     const shops = state.restaurants.map(r => `<option value="${r.id}" ${b.action_value === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
     const dt = v => v ? new Date(new Date(v).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
     openSheet(id ? 'Edit banner' : 'Add banner', `
@@ -4232,7 +5032,7 @@ const A = {
         const pv = state.zcPay[k] ?? (fz.id === tz.id ? num(fz.rider_pay) : '');
         return `<td style="padding:4px"><input type="number" min="0" value="${v}" data-k="${k}" title="Customer fee" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:8px" onchange="state.zcEdit[this.dataset.k]=num(this.value)"><input type="number" min="0" value="${pv}" data-k="${k}" title="Rider pay" placeholder="Rider" style="width:70px;padding:6px;border:1px solid #bcd8c4;border-radius:8px;margin-top:3px;background:#f2f9f3" onchange="state.zcPay[this.dataset.k]=this.value"></td>`;
       }).join('')}</tr>`).join('');
-      openSheet('Zone-to-zone delivery charges', `<p class="muted" style="font-size:13px">Har box mein <b>upar wala khana = customer fee</b>, <b>neeche hari (green) wala = rider pay</b> — jab koi is zone ki shop se dusre zone ke address pe order kare. Same zone walay box mein us zone ke apne rates.</p>
+      openSheet('Zone-to-zone delivery charges', `<p class="muted" style="font-size:13px">In each box, <b>the top cell = customer fee</b>, <b>the green cell below = rider pay</b> — when someone orders from a shop in this zone to an address in another zone. In a same-zone box, that zone's own rates apply.</p>
         <div style="overflow-x:auto"><table style="border-collapse:collapse">${head}${body}</table></div>
         <div class="actions" style="margin-top:12px"><button class="btn block" onclick="A.saveZoneMatrix()">Save charges</button></div>`);
     });
@@ -4879,9 +5679,99 @@ const A = {
     if (!r || !r.ok){ toast((r && r.message) || 'Error', true); return; }
     await loadParcelsAdmin(); renderTab(); toast('Parcel cancelled');
   },
+  donRecipEdit(id){ const x = (state.donRecips || []).find(y => y.id === id) || { name:'', cause:'', account_type:'jazzcash', number:'', title:'', is_active:true };
+    openSheet(id ? 'Edit recipient' : 'Add recipient', `
+  <label class="f" for="donRName">Name</label><input id="donRName" type="text" value="${esc(x.name)}">
+  <label class="f" for="donRCause">Cause</label><textarea id="donRCause" rows="2" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit">${esc(x.cause)}</textarea>
+  <label class="f" for="donRType">Account type</label><select id="donRType"><option value="jazzcash" ${x.account_type === 'jazzcash' ? 'selected' : ''}>JazzCash</option><option value="easypaisa" ${x.account_type === 'easypaisa' ? 'selected' : ''}>Easypaisa</option></select>
+  <label class="f" for="donRNum">Account number</label><input id="donRNum" type="text" value="${esc(x.number)}">
+  <label class="f" for="donRTitle">Account title</label><input id="donRTitle" type="text" value="${esc(x.title)}">
+  <label class="f" for="donRAct"><input id="donRAct" type="checkbox" ${x.is_active ? 'checked' : ''}> Active (customers see it)</label>
+  <div class="actions"><button class="btn block" onclick="A.donRecipSave('${id || ''}')">Save recipient</button></div>`); },
+  async donRecipSave(id){ const row = { name:($('donRName').value || '').trim(), cause:($('donRCause').value || '').trim(), account_type:$('donRType').value, number:($('donRNum').value || '').trim(), title:($('donRTitle').value || '').trim(), is_active:$('donRAct').checked };
+    if (!row.name || !row.cause || !row.number || !row.title) return toast('Fill in every field.', true);
+    await run(async () => { need(await (id ? sb.from('donation_recipients').update(row).eq('id', id) : sb.from('donation_recipients').insert(row))); await donAdminLoad(); closeSheet(); toast('Recipient saved.'); }); },
+  async donRecipToggle(id, active){ if (!await uiConfirm(active ? 'Show this recipient to customers again?' : 'Hide this recipient from customers? Past donations stay recorded.')) return; await run(async () => { need(await sb.from('donation_recipients').update({ is_active:active }).eq('id', id)); await donAdminLoad(); toast(active ? 'Recipient active.' : 'Recipient hidden.'); }); },
+  async donReqApprove(id){ const r = (state.donReqs || []).find(x => x.id === id); if (!r) return; await run(async () => { const ex = await sb.from('donation_recipients').select('id').eq('number', r.number).limit(1); if (ex.error) throw ex.error; if (!(ex.data && ex.data.length)) need(await sb.from('donation_recipients').insert({ name:r.name, cause:r.cause, account_type:r.account_type, number:r.number, title:r.title, is_active:true })); need(await sb.from('donation_requests').update({ status:'approved' }).eq('id', id)); await donAdminLoad(); toast('Cause approved — it now appears as a recipient.'); }); },
+  donReqReject(id){ openSheet('Reject cause request', `<label class="f" for="donRejNote">Reason (required)</label><textarea id="donRejNote" maxlength="500" rows="3" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit"></textarea><div class="actions"><button class="btn warn block" onclick="A.donReqRejectDo('${id}')">Reject request</button></div>`); },
+  async donReqRejectDo(id){ const note = ($('donRejNote').value || '').trim(); if (!note) return toast('Write a reason before rejecting.', true); await run(async () => { need(await sb.from('donation_requests').update({ status:'rejected', admin_note:note }).eq('id', id)); await donAdminLoad(); closeSheet(); toast('Request rejected.'); }); },
+  async donVerConfirm(id){ await run(async () => { need(await sb.from('donation_records').update({ status:'confirmed' }).eq('id', id)); await donAdminLoad(); toast('Donation verified. No money was moved — the customer paid the recipient directly.'); }); },
+  donVerReject(id){ openSheet('Reject donation', `<label class="f" for="donVerNote">Reason (required)</label><textarea id="donVerNote" maxlength="500" rows="3" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit"></textarea><div class="actions"><button class="btn warn block" onclick="A.donVerRejectDo('${id}')">Reject donation</button></div>`); },
+  async donVerRejectDo(id){ const note = ($('donVerNote').value || '').trim(); if (!note) return toast('Write a reason before rejecting.', true); await run(async () => { need(await sb.from('donation_records').update({ status:'rejected', admin_note:note }).eq('id', id)); await donAdminLoad(); closeSheet(); toast('Donation rejected.'); }); },
+  async donSeeProof(path){ try { const res = await sb.storage.from('shop-docs').createSignedUrl(path, 600); if (res.data && res.data.signedUrl) window.open(res.data.signedUrl, '_blank'); } catch (e) { toast('Error', true); } },
   async saveSetting(key, value){
     await run(async () => { need(await putSettings({ key, value, updated_at:new Date().toISOString() })); await loadSettings(); renderTab(); toast('Saved'); });
   },
+  async insAdminLoad(){
+    state.insNoTable = false; state.insNoClaims = false;
+    try {
+      let q = sb.from('orders').select('id,status,created_at,insurance_premium').eq('insurance_opted', true);
+      if (scope()) q = q.eq('region_id', scope());
+      const res = await q.order('created_at', { ascending:false }).limit(50);
+      if (res.error) throw res.error; state.insAdminOrders = res.data || [];
+    } catch (e) { state.insAdminOrders = []; state.insNoTable = true; }
+    try {
+      const res = await sb.from('insurance_claims').select('id,order_id,premium,status,created_at,order:orders(region_id)').order('created_at', { ascending:false }).limit(50);
+      if (res.error) throw res.error;
+      state.insAdminClaims = (res.data || []).filter(c => !scope() || (c.order && c.order.region_id === scope()));
+    } catch (e) { state.insAdminClaims = []; state.insNoClaims = true; }
+    renderTab();
+  },
+  async pfrAdminLoad(){
+    try {
+      if (!state.restaurants.length) await loadRestaurants();
+      if (!state.shopReport.length) await loadShopReport();
+      const shops = scope() ? state.restaurants.filter(s => s.region_id === scope()) : (state.restaurants || []);
+      const res = await sb.from('payouts').select('party_id,created_at,amount,status').eq('party_type', 'restaurant').order('created_at', { ascending:false }).limit(500);
+      if (res.error) throw res.error;
+      const byShop = {};
+      (res.data || []).forEach(p => { if (!byShop[p.party_id]) byShop[p.party_id] = []; byShop[p.party_id].push(p); });
+      const lastMap = {};
+      Object.keys(byShop).forEach(id => { lastMap[id] = pfrLastPaid(byShop[id]); });
+      state.pfrRows = pfrShopRows(shops, state.shopReport, lastMap, pfrFreq(), pfrDayStr(new Date()));
+      state.pfrLoadError = false;
+    } catch (e) { state.pfrRows = []; state.pfrLoadError = true; }
+    renderTab();
+  },
+  async tmcMsgsLoad(){
+    state.tmcNoTable = false;
+    try {
+      const sh = await sb.from('restaurants').select('id,name,region_id').order('name').limit(100);
+      let shops = sh.data || [];
+      if (scope()) shops = shops.filter(s => s.region_id === scope());
+      state.tmcAdminShops = shops;
+      const res = await sb.from('shop_messages').select('*').order('created_at', { ascending:false }).limit(100);
+      if (res.error) throw res.error;
+      state.tmcAdminMsgs = res.data || [];
+      const ids = (res.data || []).map(m => m.id);
+      state.tmcAdminReads = [];
+      if (ids.length){ const rd = await sb.from('shop_message_reads').select('message_id').in('message_id', ids); state.tmcAdminReads = rd.data || []; }
+    } catch (e) { state.tmcAdminMsgs = []; state.tmcAdminReads = []; state.tmcNoTable = true; }
+    renderTab();
+  },
+  async tmcMsgSend(){
+    const title = ($('tmc_title') || {}).value.trim();
+    const body = ($('tmc_body') || {}).value.trim();
+    const tgt = ($('tmc_target') || {}).value;
+    if (!title || !body) return toast('Write a title and a message first.', true);
+    await run(async () => {
+      let restaurant_id = null, region_id = scope();
+      if (tgt && tgt !== 'all'){ restaurant_id = tgt; const s = (state.tmcAdminShops || []).find(x => x.id === tgt); region_id = s ? s.region_id : scope(); }
+      need(await sb.from('shop_messages').insert({ restaurant_id, region_id, title, body, created_by: (state.user && state.user.id) || null }));
+      toast('Message sent');
+      await A.tmcMsgsLoad();
+    });
+  },
+  async tmcMsgDel(id){
+    if (!confirm('Delete this message? Shops will no longer see it.')) return;
+    await run(async () => { need(await sb.from('shop_messages').delete().eq('id', id)); await A.tmcMsgsLoad(); toast('Message deleted'); });
+  },
+  async tmcMinVerSave(){
+    const v = ($('tmc_minver') || {}).value.trim();
+    if (v && !/^\d+(\.\d+)*$/.test(v)) return toast('Version looks like 6.85 (numbers and dots only).', true);
+    await A.saveSetting('shop_min_version', v);
+  },
+
   async pointsBoard(){
     const mv = ($('pt_month') || {}).value || new Date().toISOString().slice(0, 7);
     const parts = mv.split('-').map(Number); const y = parts[0], mo = parts[1] || 1;
@@ -4923,7 +5813,10 @@ const A = {
       { key:'loyalty_min_order', value:Math.max(0, num($('s_lp_min').value || 0)) },
       { key:'loyalty_redeem_min', value:Math.max(1, num($('s_lp_red').value || 100)) },
       { key:'loyalty_online_per', value:Math.max(0, num($('s_lp_online').value || 100)) },
-      { key:'wallet_min_withdrawal', value:Math.max(0, num($('s_wd_min').value || 500)) }
+      { key:'wallet_min_withdrawal', value:Math.max(0, num($('s_wd_min').value || 500)) },
+      { key:'ontime_promise_on', value:!!$('s_otp_on').checked },
+      { key:'ontime_late_points', value:Math.max(0, num($('s_otp_pts').value || 20)) },
+      { key:'surge_on', value:!!$('s_srg_on').checked }
     ].map(r => Object.assign(r, { updated_at:new Date().toISOString() }));
     await run(async () => { need(await putSettings(rows)); await loadSettings(); renderTab(); toast('Loyalty rules saved'); });
   },
@@ -5059,6 +5952,183 @@ A.publish = async function(){
 };
 
 // ---- Start ----
+
+// ================= 2FA (Feature 14: native Supabase Auth TOTP) =================
+// Factors live in Supabase Auth, never in app tables. Only a VERIFIED factor
+// gates logins; an enrolled-but-unverified factor never does. 2FA is
+// account-level (all devices), not device-level. It protects against a
+// stolen password only — never claim more than that.
+
+function tfaL(k){
+  const M = {
+    tfa_title:['Two-factor authentication','دو مرحلہ تصدیق'],
+    tfa_sub:['An extra code from your authenticator app, asked after your password.','پاس ورڈ کے بعد آپ کی authenticator ایپ سے ایک اضافی کوڈ مانگا جائے گا۔'],
+    tfa_row_sub:['Extra code at sign-in','سائن ان پر اضافی کوڈ'],
+    tfa_on:['On — a code is asked at every sign-in','فعال ہے — ہر سائن ان پر کوڈ مانگا جائے گا'],
+    tfa_off:['Off','بند ہے'],
+    tfa_setup:['Set up two-factor authentication','دو مرحلہ تصدیق سیٹ کریں'],
+    tfa_manage:['Manage two-factor authentication','دو مرحلہ تصدیق کا انتظام'],
+    tfa_scan:['Scan this QR code in your authenticator app (Google Authenticator, Microsoft Authenticator, or similar), or enter the secret manually below.','اس QR کوڈ کو اپنی authenticator ایپ (Google Authenticator، Microsoft Authenticator یا اس جیسی) میں اسکین کریں، یا نیچے دیا سیکرٹ خود درج کریں۔'],
+    tfa_secret:['Secret (manual entry)','سیکرٹ (دستی اندراج)'],
+    tfa_code:['6-digit code from your authenticator app','authenticator ایپ سے 6 ہندسوں کا کوڈ'],
+    tfa_verify:['Verify and turn on','تصدیق کریں اور فعال کریں'],
+    tfa_disable:['Turn off','بند کریں'],
+    tfa_disable_ask:['To turn it off, enter a current code from your authenticator app.','بند کرنے کے لیے authenticator ایپ سے موجودہ کوڈ درج کریں۔'],
+    tfa_enabled:['Two-factor authentication is on','دو مرحلہ تصدیق فعال ہو گئی'],
+    tfa_disabled:['Two-factor authentication is off','دو مرحلہ تصدیق بند ہو گئی'],
+    tfa_wrong:['Wrong or expired code. Try again with the current code.','غلط یا ختم شدہ کوڈ۔ موجودہ کوڈ سے دوبارہ کوشش کریں۔'],
+    tfa_enter_code:['Enter the 6-digit code','6 ہندسوں کا کوڈ درج کریں'],
+    tfa_gate_title:['Enter your two-factor code','اپنا دو مرحلہ کوڈ درج کریں'],
+    tfa_gate_sub:['Your account has two-factor authentication. Enter the 6-digit code from your authenticator app to continue.','آپ کے اکاؤنٹ پر دو مرحلہ تصدیق ہے۔ جاری رکھنے کے لیے authenticator ایپ سے 6 ہندسوں کا کوڈ درج کریں۔'],
+    tfa_continue:['Continue','جاری رکھیں'],
+    tfa_signout:['Use another account','دوسرا اکاؤنٹ استعمال کریں'],
+    tfa_status_err:['Could not check two-factor status. Check your connection and try again.','دو مرحلہ حیثیت معلوم نہ ہو سکی۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔'],
+    tfa_retry:['Try again','دوبارہ کوشش کریں'],
+    tfa_unavailable:['Two-factor authentication is not available in this app version. Update the app and try again.','دو مرحلہ تصدیق اس ایپ ورژن میں دستیاب نہیں۔ ایپ اپ ڈیٹ کریں اور دوبارہ کوشش کریں۔'],
+    tfa_recovery:['Lost your authenticator? Ask Dera support to remove this factor — then sign in with your password and set it up again. 2FA protects against a stolen password; it does not protect a signed-in device.','authenticator کھو گیا ہے؟ Dera سپورٹ سے یہ factor ہٹانے کو کہیں — پھر پاس ورڈ سے سائن ان کریں اور دوبارہ سیٹ کریں۔ 2FA چوری شدہ پاس ورڈ سے بچاتا ہے؛ سائن ان شدہ ڈیوائس سے نہیں۔'],
+    tfa_unfinished:['An unfinished setup exists — starting again replaces it.','ایک ادھوری سیٹ اپ موجود ہے — دوبارہ شروع کرنے سے وہ بدل جائے گی۔'],
+    tfa_cancel:['Cancel','منسوخ کریں']
+  };
+  const v = M[k] || [k, k]; return state.lang === 'ur' ? v[1] : v[0];
+}
+function tfaHasApi(){ try { return !!(sb.auth && sb.auth.mfa && typeof sb.auth.mfa.listFactors === 'function' && typeof sb.auth.mfa.getAuthenticatorAssuranceLevel === 'function'); } catch(e){ return false; } }
+async function tfaStatus(){
+  if (!tfaHasApi()) return { api:false, verified:[], unverified:[], error:null };
+  try {
+    const { data, error } = await sb.auth.mfa.listFactors();
+    if (error) throw error;
+    const totp = (data && data.totp) || [];
+    return { api:true, verified: totp.filter(f => f.status === 'verified'), unverified: totp.filter(f => f.status !== 'verified'), error:null };
+  } catch(e){ return { api:true, verified:[], unverified:[], error:e }; }
+}
+function tfaOverlay(html){
+  const old = document.getElementById('tfaGateWrap'); if (old) old.remove();
+  const d = document.createElement('div'); d.id = 'tfaGateWrap';
+  d.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#fff;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto';
+  d.innerHTML = html; document.body.appendChild(d);
+  try { if (typeof hideSplash === 'function') hideSplash(); } catch(e){}
+  return d;
+}
+function tfaCloseOverlay(){ const el = document.getElementById('tfaGateWrap'); if (el) el.remove(); }
+function tfaGateBox(title, sub, bodyHtml){
+  return `<div style="width:100%;max-width:380px"><h2 style="margin:0 0 8px">${title}</h2><p class="muted" style="font-size:14px;margin:0 0 14px">${sub}</p>${bodyHtml}</div>`;
+}
+function tfaPrompt(factorId){
+  return new Promise(resolve => {
+    tfaOverlay(tfaGateBox(tfaL('tfa_gate_title'), tfaL('tfa_gate_sub'),
+      `<input id="tfaGateCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center"><div id="tfaGateMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button id="tfaGateBtn" class="btn" style="width:100%;margin-top:10px">${tfaL('tfa_continue')}</button><button id="tfaGateOut" class="btn ghost" style="width:100%;margin-top:8px">${tfaL('tfa_signout')}</button>`));
+    const btn = document.getElementById('tfaGateBtn'), msg = document.getElementById('tfaGateMsg');
+    const inp = document.getElementById('tfaGateCode'); if (inp) setTimeout(() => inp.focus(), 60);
+    btn.onclick = async () => {
+      const code = (inp.value || '').trim();
+      if (!/^\d{6}$/.test(code)){ msg.textContent = tfaL('tfa_enter_code'); return; }
+      btn.disabled = true; msg.textContent = '';
+      try {
+        const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId });
+        if (chErr) throw chErr;
+        const { error } = await sb.auth.mfa.verify({ factorId, challengeId: ch.id, code });
+        if (error) throw error;
+        tfaCloseOverlay(); resolve(true);
+      } catch(e){ msg.textContent = tfaL('tfa_wrong'); btn.disabled = false; }
+    };
+    document.getElementById('tfaGateOut').onclick = async () => {
+      tfaCloseOverlay(); try { await sb.auth.signOut(); } catch(e){}
+      try { showLogin(); } catch(e){}
+      resolve(false);
+    };
+  });
+}
+function tfaStatusErrorGate(){
+  return new Promise(resolve => {
+    tfaOverlay(tfaGateBox(tfaL('tfa_title'), tfaL('tfa_status_err'),
+      `<button id="tfaGateRetry" class="btn" style="width:100%">${tfaL('tfa_retry')}</button><button id="tfaGateOut2" class="btn ghost" style="width:100%;margin-top:8px">${tfaL('tfa_signout')}</button>`));
+    document.getElementById('tfaGateRetry').onclick = async () => { tfaCloseOverlay(); resolve(await tfaGate()); };
+    document.getElementById('tfaGateOut2').onclick = async () => {
+      tfaCloseOverlay(); try { await sb.auth.signOut(); } catch(e){}
+      try { showLogin(); } catch(e){}
+      resolve(false);
+    };
+  });
+}
+async function tfaGate(){
+  if (!tfaHasApi()) return true;
+  let st; try { st = await tfaStatus(); } catch(e){ st = { error:e }; }
+  if (st.error) return await tfaStatusErrorGate();
+  if (!st.verified || !st.verified.length) return true;
+  let aal = null;
+  try { const r = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (r.error) throw r.error; aal = r.data; } catch(e){ return await tfaStatusErrorGate(); }
+  if (aal && aal.currentLevel === 'aal2') return true;
+  return await tfaPrompt(st.verified[0].id);
+}
+async function tfaSheet(){
+  const st = await tfaStatus();
+  if (!st.api){ openSheet(tfaL('tfa_title'), `<p class="muted">${tfaL('tfa_unavailable')}</p>`); return; }
+  if (st.error){ openSheet(tfaL('tfa_title'), `<p class="muted">${tfaL('tfa_status_err')}</p><button class="btn" style="width:100%" onclick="tfaSheet()">${tfaL('tfa_retry')}</button>`); return; }
+  if (st.verified.length){
+    openSheet(tfaL('tfa_title'), `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_on')}</p><button class="btn warn" style="width:100%" onclick="tfaDisableAsk()">${tfaL('tfa_disable')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`);
+    return;
+  }
+  openSheet(tfaL('tfa_title'), `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_sub')}</p>${st.unverified.length ? `<p class="muted" style="font-size:13px">${tfaL('tfa_unfinished')}</p>` : ''}<button class="btn" style="width:100%" onclick="tfaEnrollStart()">${tfaL('tfa_setup')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`);
+}
+async function tfaEnrollStart(){
+  try {
+    const st = await tfaStatus();
+    if (st.verified.length) return tfaSheet();
+    for (const f of (st.unverified || [])){ try { await sb.auth.mfa.unenroll({ factorId: f.id }); } catch(e){} }
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
+    if (error) throw error;
+    state.tfaPending = { id: data.id, secret: (data.totp && data.totp.secret) || '', qr: (data.totp && data.totp.qr_code) || '' };
+    tfaEnrollSheet();
+  } catch(e){ toast((e && e.message) || tfaL('tfa_status_err'), true); }
+}
+function tfaEnrollSheet(){
+  const p = state.tfaPending; if (!p) return tfaSheet();
+  openSheet(tfaL('tfa_title'), `<div class="box"><p class="muted" style="font-size:13px;margin:0 0 10px">${tfaL('tfa_scan')}</p><div id="tfaQr" style="text-align:center"></div><p class="muted" style="font-size:13px;margin:10px 0 4px">${tfaL('tfa_secret')}</p><div style="word-break:break-all;font-family:monospace">${p.secret || '—'}</div><input id="tfaEnrollCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center;margin-top:12px"><div id="tfaMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button class="btn" style="width:100%;margin-top:8px" onclick="tfaVerifyEnroll()">${tfaL('tfa_verify')}</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="tfaCancelEnroll()">${tfaL('tfa_cancel')}</button></div>`);
+  const q = document.getElementById('tfaQr'); if (q && p.qr) q.innerHTML = p.qr;
+}
+async function tfaCancelEnroll(){
+  const p = state.tfaPending; state.tfaPending = null;
+  if (p){ try { await sb.auth.mfa.unenroll({ factorId: p.id }); } catch(e){} }
+  tfaSheet();
+}
+async function tfaVerifyEnroll(){
+  const p = state.tfaPending; if (!p) return tfaSheet();
+  const inp = document.getElementById('tfaEnrollCode'), msg = document.getElementById('tfaMsg');
+  const code = (inp && inp.value || '').trim();
+  if (!/^\d{6}$/.test(code)){ if (msg) msg.textContent = tfaL('tfa_enter_code'); return; }
+  try {
+    const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId: p.id });
+    if (chErr) throw chErr;
+    const { error } = await sb.auth.mfa.verify({ factorId: p.id, challengeId: ch.id, code });
+    if (error) throw error;
+    state.tfaPending = null; toast(tfaL('tfa_enabled')); tfaSheet();
+  } catch(e){ if (msg) msg.textContent = tfaL('tfa_wrong'); }
+}
+function tfaDisableAsk(){
+  openSheet(tfaL('tfa_title'), `<div class="box"><p class="muted" style="font-size:13px;margin:0 0 10px">${tfaL('tfa_disable_ask')}</p><input id="tfaDisCode" inputmode="numeric" autocomplete="one-time-code" placeholder="${tfaL('tfa_code')}" style="width:100%;padding:12px;font-size:18px;letter-spacing:4px;text-align:center"><div id="tfaDisMsg" class="muted" style="font-size:13px;margin-top:8px;min-height:18px"></div><button class="btn warn" style="width:100%;margin-top:8px" onclick="tfaDisableVerify()">${tfaL('tfa_disable')}</button><button class="btn ghost" style="width:100%;margin-top:8px" onclick="tfaSheet()">${tfaL('tfa_cancel')}</button></div>`);
+}
+async function tfaDisableVerify(){
+  const inp = document.getElementById('tfaDisCode'), msg = document.getElementById('tfaDisMsg');
+  const code = (inp && inp.value || '').trim();
+  if (!/^\d{6}$/.test(code)){ if (msg) msg.textContent = tfaL('tfa_enter_code'); return; }
+  try {
+    const st = await tfaStatus(); const f = st.verified[0];
+    if (!f) return tfaSheet();
+    const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId: f.id });
+    if (chErr) throw chErr;
+    const { error } = await sb.auth.mfa.verify({ factorId: f.id, challengeId: ch.id, code });
+    if (error) throw error;
+    await sb.auth.mfa.unenroll({ factorId: f.id });
+    toast(tfaL('tfa_disabled')); tfaSheet();
+  } catch(e){ if (msg) msg.textContent = tfaL('tfa_wrong'); }
+}
+function tfaSecHtml(st){
+  if (!st || !st.api) return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_unavailable')}</p></div>`;
+  if (st.error) return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${tfaL('tfa_status_err')}</p><button class="btn ghost" onclick="tfaSheet()">${tfaL('tfa_manage')}</button></div>`;
+  const on = st.verified.length > 0;
+  return `<div class="box"><b>🔐 ${tfaL('tfa_title')}</b><p class="muted" style="font-size:13px;margin:5px 0">${on ? tfaL('tfa_on') : tfaL('tfa_sub')}</p><button class="btn ghost" onclick="tfaSheet()">${tfaL('tfa_manage')}</button></div><p class="muted" style="font-size:13px">${tfaL('tfa_recovery')}</p>`;
+}
+
 // ================= CHAT (same code in all four apps) =================
 const Chat = (() => {
   const L = {
@@ -5929,10 +6999,10 @@ const Bulk = (() => {
       const sh = await loadShop(); const cat = id => (sh.cats.find(c => c.id === id) || {}).name || '';
       let rows = sh.items.map(i => [i.id, i.name, Number(i.price), i.compare_price != null ? Number(i.compare_price) : '', cat(i.category_id), i.stock_qty != null ? Number(i.stock_qty) : '', kgText(Number(i.weight_kg || 0)), i.description || '', i.keywords || '', i.barcode || '', '']);
       if (!rows.length) rows = [['', 'Dalda Ghee 1kg', 560, 590, 'Ghee & Oil', 40, '1kg', '', 'dalda.jpg'], ['', 'Tapal Danedar 450g', 720, '', 'Tea', 25, '450g', 'Strong tea', ''], ['', 'Chicken Karahi (Full)', 1800, '', 'Karahi', '', '', 'Serves 4', '']];
-      const help = L() === 'ur' ? [['Dera · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: doodh, milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
-        : [['Dera · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: doodh, milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
+      const help = L() === 'ur' ? [['Dera · شیٹ کیسے بھریں'], [''], ['ID — نہ بدلیں۔ نئی پروڈکٹ کے لیے خالی چھوڑ دیں۔'], ['Name — پروڈکٹ کا نام (ضروری)'], ['Price — بیچنے کی قیمت، صرف نمبر (ضروری)'], ['Old price — رعایت سے پہلے کی قیمت (اختیاری)'], ['Section — جیسے Tea، Ghee & Oil۔ نیا نام لکھیں تو نیا سیکشن بن جائے گا'], ['Stock — کتنے ہیں۔ خالی = کوئی حد نہیں۔ 0 = ختم ہے'], ['Weight — جیسے 500g یا 1kg (اختیاری)'], ['Description — تفصیل (اختیاری)'], ['Keywords — تلاش کے دوسرے نام، کومے سے الگ، جیسے: milk, دودھ (اختیاری)'], ['Barcode — پیکٹ پر لکھا بارکوڈ نمبر (اختیاری)'], ['Photo — تصویر کی فائل کا نام جیسے dalda.jpg، یا تصویر کا لنک (اختیاری)'], [''], ['ایک لائن = ایک پروڈکٹ۔ پہلی لائن نہ بدلیں۔ قیمت بدلنی ہو تو یہی شیٹ دوبارہ ڈاؤن لوڈ کریں، قیمت بدلیں اور اپ لوڈ کر دیں۔']]
+        : [['Dera · How to fill this sheet'], [''], ['ID — do not change. Leave empty for a new product.'], ['Name — product name (needed)'], ['Price — selling price, numbers only (needed)'], ['Old price — price before discount (optional)'], ['Section — like Tea, Ghee & Oil. A new name makes a new section'], ['Stock — how many you have. Empty = no limit. 0 = out of stock'], ['Weight — like 500g or 1kg (optional)'], ['Description — (optional)'], ['Keywords — other names people search, with commas, like: milk, دودھ (optional)'], ['Barcode — the barcode number on the pack (optional)'], ['Photo — photo file name like dalda.jpg, or a link to the photo (optional)'], [''], ['One line = one product. Do not change the first line. To change prices later, download this sheet again, change the prices and upload it.']];
       download(xlsxBlob([{ name:'Products', head:true, rows:[HEAD].concat(rows), widths:[10, 34, 10, 11, 18, 9, 10, 30, 18] }, { name:'Help', rows:help, widths:[110] }]),
-        'wanhar-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
+        'dera-products-' + new Date().toISOString().slice(0, 10) + '.xlsx');
     } catch (e) { C.toast(e.message || 'Error', true); }
     if (b) b.disabled = false;
   }
@@ -5979,8 +7049,8 @@ const Bulk = (() => {
     const opts = sel => `<option value="">—</option>` + headers.map(h => `<option value="${h.i}"${sel === h.i ? ' selected' : ''}>${esc(h.label)}</option>`).join('');
     const sampleHtml = sample.length ? `<div class="bkmap-sample"><b>Preview:</b>${sample.map(r => `<div class="bkmap-row">${r.slice(0, 6).map(c => `<span>${esc(String(c ?? '').slice(0, 20))}</span>`).join('')}</div>`).join('')}</div>` : '';
     pv.innerHTML = `<div class="bkmap">
-      <div class="bkmap-title">🗺️ Columns khud map karo</div>
-      <div class="muted" style="font-size:13px;margin-bottom:10px">Auto-detect nahi ho saka. Neeche har field ke liye sahi column chuno:</div>
+      <div class="bkmap-title">🗺️ Map the columns yourself</div>
+      <div class="muted" style="font-size:13px;margin-bottom:10px">Auto-detect did not work. Choose the right column for each field below:</div>
       ${fields.map(f => `<div class="bkmap-field"><label>${f.label}${f.req ? ' <b style="color:red">*</b>' : ''}</label><select id="bkmap_${f.k}">${opts(pre[f])}</select></div>`).join('')}
       ${sampleHtml}
       <button type="button" class="btn bkbtn" onclick="Bulk.applyMapping()">✓ Apply & Preview</button>
@@ -6542,13 +7612,14 @@ const Receipt = (() => {
   return { row, list, open, method, M };
 })();
 function hideSplash(){
+  pfmMark('ready');
   const sp = document.getElementById('splash');
   if (!sp || sp.dataset.done) return;
   sp.dataset.done = '1';
   const t0 = window.__splashT || Date.now();
-  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 1900 - (Date.now() - t0)));
+  setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 900 - (Date.now() - t0)));
 }
-(async function boot(){
+(async function boot(){ pfmMark('boot');
   try {
     const { data:{ session } } = await sb.auth.getSession();
     if (session) await afterLogin(session.user); else showLogin();
