@@ -664,7 +664,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.48';
+const APP_VERSION = '5.49';
 
 // ---- Connection (these two values are safe to be public) ----
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
@@ -1160,10 +1160,17 @@ function renderTab(){
 
 // ================= DATA =================
 async function loadRider(){
-  const { data:prof } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
-  state.profile = prof || {};
-  state.rider = need(await sb.from('riders').select('*').eq('profile_id', state.user.id).maybeSingle());
-  const s = await sb.from('app_settings').select('key,value');
+  const [profileResult, riderResult, settingsResult] = await Promise.allSettled([
+    sb.from('profiles').select('*').eq('id', state.user.id).single(),
+    sb.from('riders').select('*').eq('profile_id', state.user.id).maybeSingle(),
+    sb.from('app_settings').select('key,value')
+  ]);
+  if (profileResult.status === 'rejected') throw profileResult.reason;
+  state.profile = profileResult.value.data || {};
+  if (riderResult.status === 'rejected') throw riderResult.reason;
+  state.rider = need(riderResult.value);
+  if (settingsResult.status === 'rejected') throw settingsResult.reason;
+  const s = settingsResult.value;
   state.settings = {}; (s.data || []).forEach(r => { state.settings[r.key] = r.value; });
   if (state.rider && state.rider.region_id){
     try {
