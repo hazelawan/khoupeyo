@@ -508,6 +508,7 @@ main{padding-top:18px!important}
   border:1px solid var(--line)!important;border-radius:20px;box-shadow:var(--sh-3);padding:4px!important;background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px)}
 @media (prefers-color-scheme: dark){ .nav{background:rgba(20,30,25,.94)} }
 .nav button{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='4' width='6.5' height='6.5' rx='1.5'/%3E%3Crect x='13.5' y='4' width='6.5' height='6.5' rx='1.5'/%3E%3Crect x='4' y='13.5' width='6.5' height='6.5' rx='1.5'/%3E%3Crect x='13.5' y='13.5' width='6.5' height='6.5' rx='1.5'/%3E%3C/svg%3E");position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 7px!important;font-size:11.5px!important;font-weight:600!important;color:var(--muted);background:none!important;border:0!important;border-radius:16px;white-space:nowrap;min-width:0;overflow:visible}
+@media (max-width:380px){ .nav button{font-size:10.5px!important;padding:8px 1px 7px!important} }
 .nav button::before{content:"";width:22px;height:22px;background:currentColor;-webkit-mask:var(--ic) center/contain no-repeat;mask:var(--ic) center/contain no-repeat;flex:none}
 .nav button.on{color:var(--brand)!important;font-weight:700!important}
 .nav button.on::after{content:"";position:absolute;bottom:1px;top:auto;left:50%;width:16px;height:3px;border-radius:3px;background:var(--marigold);transform:translateX(-50%)}
@@ -673,7 +674,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.69';
+const APP_VERSION = '5.71';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -764,7 +765,7 @@ const I18N = {
     check_again:'Check again', jobs:'Deliveries', earnings:'Earnings', rules:'Rules', account:'Account',
     on_duty:'On duty', off_duty:'Off duty', start_duty:'Start duty', end_duty:'End duty',
     end_duty_q:'End your duty now? You will stop getting new deliveries.',
-    off_msg:'You are off duty. Start your duty to get deliveries.', go_title:'Ready for deliveries?', go_note:'Start duty to receive deliveries. Face and location checks remain required.', go_swipe:'Swipe to start duty', gst_hint_jobs:'Tip: swipe a job left to hide it, right to see it on the map.', gst_hidden:'Job hidden from this list', gst_hidden_offer:'Job hidden — your offer still counts down', gst_undo:'Undo', gst_hide_lbl:'Hide', gst_map_lbl:'On map', gst_guide_t:'5 · Swipes', gst_guide_d:'Swipe a job left to hide it, right to see it on the map. Swipe sideways on a tab to move to the next tab. Nothing important happens by swipe alone — Accept and Decline still need their buttons.', gst_acct_t:'👆 Swipes', gst_acct_d:'On a job card: swipe left to hide it (Undo appears above the list), swipe right to see it on the map. Swipe sideways anywhere else to move between tabs. Maps, sliders and buttons are never hijacked.',
+    off_msg:'You are off duty. Start your duty to get deliveries.', go_title:'Ready for deliveries?', go_note:'Start duty to receive deliveries. Face and location checks remain required.', go_swipe:'Swipe to start duty', gst_hint_jobs:'Tip: swipe a job left to hide it, right to see it on the map.', gst_hidden:'Job hidden from this list', gst_hidden_offer:'Job hidden — your offer still counts down', gst_undo:'Undo', gst_hide_lbl:'Hide', gst_map_lbl:'On map', gst_guide_t:'5 · Swipes', gst_guide_d:'Swipe a job left to hide it, right to see it on the map. Swipe sideways on a tab to move to the next tab. Nothing important happens by swipe alone — Accept and Decline still need their buttons.',  
     my_deliveries:'My deliveries', new_jobs:'Available deliveries', no_jobs:'No deliveries right now. New ones will ring here.',
     keep_open:'Keep this app open and the screen on while on duty.',
     accept:'Accept', skip:'Skip', new_order:'New delivery', pick_from:'Pick up from', deliver_to:'Deliver to',
@@ -788,7 +789,7 @@ const I18N = {
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
     not_confirmed:'Your email is not confirmed yet. Open the email from Dera (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
     confirm_email:'Account created. We sent you an email: open it (look in Spam too) and tap the link, then log in.',
-    bad_login:'Wrong email or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
+    bad_login:'Wrong ID or password', enter_all:'Please fill in all the fields', short_pw:'Password must be at least 6 characters',
     bad_phone:'Enter a valid phone number like 0300 1234567', st_rider_assigned:'Go to the shop', st_picked_up:'On the way to the customer',
     accepted:'Delivery accepted', no_phone:'No phone number', customer:'Customer',
     face_title:'Register your face', face_intro:'Take a clear selfie once. At the start of every duty your face is matched with this photo.',
@@ -883,7 +884,7 @@ const I18N = {
     check_again:'دوبارہ دیکھیں', jobs:'ڈیلیوریاں', earnings:'کمائی', rules:'اصول', account:'اکاؤنٹ',
     on_duty:'ڈیوٹی پر', off_duty:'ڈیوٹی بند', start_duty:'ڈیوٹی شروع کریں', end_duty:'ڈیوٹی ختم کریں',
     end_duty_q:'ڈیوٹی ابھی ختم کریں؟ نئی ڈیلیوریاں آنا بند ہو جائیں گی۔',
-    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔', go_title:'ڈیلیوری کے لیے تیار ہیں؟', go_note:'ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔ چہرے اور لوکیشن کی معمول کی تصدیق برقرار رہے گی۔', go_swipe:'ڈیوٹی شروع کرنے کے لیے سلائیڈ کریں', gst_hint_jobs:'مشورہ: کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔', gst_hidden:'کام اس فہرست سے چھپا دیا گیا', gst_hidden_offer:'کام چھپا دیا گیا — آپ کی آفر کا وقت اب بھی چل رہا ہے', gst_undo:'واپس لائیں', gst_hide_lbl:'چھپائیں', gst_map_lbl:'نقشے پر', gst_guide_t:'5 · سوائپ', gst_guide_d:'کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔ ٹیب بدلنے کے لیے سائیڈ میں سوائپ کریں۔ سوائپ سے کوئی اہم کام نہیں ہوتا — قبول یا انکار کے لیے اب بھی بٹن دبانا ہوگا۔', gst_acct_t:'👆 سوائپ', gst_acct_d:'کام کے کارڈ پر: چھپانے کے لیے دائیں سوائپ کریں (فہرست کے اوپر واپسی کا بٹن آئے گا)، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔ ٹیب بدلنے کے لیے کہیں بھی سائیڈ میں سوائپ کریں۔ نقشے، سلائیڈر اور بٹن کبھی متاثر نہیں ہوتے۔',
+    off_msg:'آپ ڈیوٹی پر نہیں ہیں۔ ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔', go_title:'ڈیلیوری کے لیے تیار ہیں؟', go_note:'ڈیلیوریاں لینے کے لیے ڈیوٹی شروع کریں۔ چہرے اور لوکیشن کی معمول کی تصدیق برقرار رہے گی۔', go_swipe:'ڈیوٹی شروع کرنے کے لیے سلائیڈ کریں', gst_hint_jobs:'مشورہ: کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔', gst_hidden:'کام اس فہرست سے چھپا دیا گیا', gst_hidden_offer:'کام چھپا دیا گیا — آپ کی آفر کا وقت اب بھی چل رہا ہے', gst_undo:'واپس لائیں', gst_hide_lbl:'چھپائیں', gst_map_lbl:'نقشے پر', gst_guide_t:'5 · سوائپ', gst_guide_d:'کسی کام کو چھپانے کے لیے دائیں سوائپ کریں، نقشے پر دیکھنے کے لیے بائیں سوائپ کریں۔ ٹیب بدلنے کے لیے سائیڈ میں سوائپ کریں۔ سوائپ سے کوئی اہم کام نہیں ہوتا — قبول یا انکار کے لیے اب بھی بٹن دبانا ہوگا۔',  
     my_deliveries:'میری ڈیلیوریاں', new_jobs:'دستیاب ڈیلیوریاں', no_jobs:'ابھی کوئی ڈیلیوری نہیں۔ نئی آنے پر یہاں گھنٹی بجے گی۔',
     keep_open:'ڈیوٹی کے دوران ایپ کھلی اور اسکرین آن رکھیں۔',
     accept:'قبول کریں', skip:'چھوڑیں', new_order:'نئی ڈیلیوری', pick_from:'یہاں سے اٹھائیں', deliver_to:'یہاں پہنچائیں',
@@ -907,7 +908,7 @@ const I18N = {
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
     not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Dera کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
     confirm_email:'اکاؤنٹ بن گیا۔ ہم نے آپ کو ای میل بھیجی ہے: اسے کھولیں (Spam میں بھی دیکھیں)، لنک دبائیں، پھر لاگ اِن کریں۔',
-    bad_login:'ای میل یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
+    bad_login:'آئی ڈی یا پاس ورڈ غلط ہے', enter_all:'براہ کرم تمام خانے پُر کریں', short_pw:'پاس ورڈ کم از کم 6 حروف کا ہو',
     bad_phone:'درست فون نمبر لکھیں، جیسے 0300 1234567', st_rider_assigned:'دکان جائیں', st_picked_up:'گاہک کی طرف جا رہے ہیں',
     accepted:'ڈیلیوری قبول ہو گئی', no_phone:'فون نمبر نہیں', customer:'گاہک',
     face_title:'اپنا چہرہ رجسٹر کریں', face_intro:'ایک بار صاف سیلفی لیں۔ ہر ڈیوٹی کے شروع میں آپ کا چہرہ اس تصویر سے ملایا جائے گا۔',
@@ -1263,6 +1264,7 @@ function renderTab(){
   if (state.tab === 'jobs' && state.mine.length) setTimeout(() => { state.mine.forEach(o => initNavMap(o.id)); }, 400);
   if (state.tab === 'jobs' && (state.mine || []).length >= 2) setTimeout(() => { mstInitMap(); }, 450);
   if (state.tab === 'jobs') setTimeout(() => { rhomeInitMap(); rhomeLoadEver(); destLoad(); bscProbe(); }, 400);
+  if (state.tab === 'duty') setTimeout(() => { bscProbe(); }, 400);
   document.title = state.available.length && onDuty() ? `(${state.available.length}) Dera Rider` : 'Dera Rider';
 }
 
@@ -2406,16 +2408,16 @@ function dutyGoCard(){
 // exactly like the Earn payslip). Salary, bonuses, overtime, fines and
 // deductions are NOT included; the card says so.
 function rhomeEst(){ const done = state.done || []; const t0 = new Date(); t0.setHours(0, 0, 0, 0); const td = done.filter(o => new Date(o.delivered_at) >= t0); return { month:done.reduce((n, o) => n + num(o.rider_pay), 0), n:done.length, todayN:td.length, todayA:td.reduce((n, o) => n + num(o.rider_pay), 0) }; }
-function rhomeEstHtml(){ const e = rhomeEst(); return `<div class="card"><div class="line"><b>💰 ${t('rhome_est_t')}</b><span class="pill y">${t('rhome_est_only')}</span></div><div style="font-size:26px;font-weight:800;margin-top:4px">${money(e.month)}</div><div class="muted" style="font-size:13px">${e.n ? t('rhome_est_month', { n:e.n }) : t('rhome_est_empty')}</div><div class="muted" style="font-size:13px">${t('rhome_est_today', { n:e.todayN, a:money(e.todayA) })}</div><div class="muted" style="font-size:12px;margin-top:6px">${t('rhome_est_note')}</div><button class="btn ghost small" style="margin-top:8px" onclick="go('earn')">${t('rhome_est_earn')} ›</button></div>`; }
+function rhomeEstHtml(){ const e = rhomeEst(); return `<div class="card"><div class="line"><b>💰 ${t('rhome_est_t')}</b><span class="pill y">${t('rhome_est_only')}</span></div><div style="font-size:26px;font-weight:800;margin-top:4px">${money(e.month)}</div><div class="muted" style="font-size:13px">${e.n ? t('rhome_est_month', { n:e.n }) : t('rhome_est_empty')}</div><div class="muted" style="font-size:13px">${t('rhome_est_today', { n:e.todayN, a:money(e.todayA) })}</div><div class="muted" style="font-size:12px;margin-top:6px">${t('rhome_est_note')}</div>${state.tab === 'earn' ? '' : `<button class="btn ghost small" style="margin-top:8px" onclick="go('earn')">${t('rhome_est_earn')} ›</button>`}</div>`; }
 function rhomeGuideKey(){ return state.rider ? 'kh_rd_guide_' + state.rider.id : null; }
 function rhomeGuideDismissed(){ const k = rhomeGuideKey(); return k ? ls.get(k, 0) === 1 : true; }
 function rhomeGuideVisible(){ if (rhomeGuideDismissed()) return false; if (state.rhomeEver === true) return false; if (state.rhomeEver === false) return true; return (state.doneAll || []).length === 0; }
 async function rhomeLoadEver(){ if (state.rhomeEver !== undefined || rhomeGuideDismissed() || !state.rider) return; const before = rhomeGuideVisible(); try { const { data } = await sb.from('orders').select('id').eq('rider_id', state.rider.id).eq('status', 'delivered').limit(1); state.rhomeEver = !!(data && data.length); } catch (e) { state.rhomeEver = null; } if (state.tab === 'jobs' && rhomeGuideVisible() !== before) renderTab(); }
 function rhomeDismissGuide(){ const k = rhomeGuideKey(); if (k) ls.set(k, 1); renderTab(); }
-function rhomeShowGuide(){ const k = rhomeGuideKey(); if (k) ls.set(k, 0); go('jobs'); }
+function rhomeShowGuide(){ const k = rhomeGuideKey(); if (k) ls.set(k, 0); state.rhgGuideOpen = 1; go('jobs'); }
 function rhomeLoc(){ if (!navigator.geolocation) { toast(t('sfty_no_loc')); return; } navigator.geolocation.getCurrentPosition(p => { state.pos = { lat:p.coords.latitude, lng:p.coords.longitude }; renderTab(); }, () => toast(t('sfty_no_loc')), { enableHighAccuracy:true, timeout:8000 }); }
 function rhomeJobs(){ const el = document.getElementById('rhomeJobsList'); if (el) el.scrollIntoView(); else window.scrollTo(0, 0); }
-function rhomeGuideHtml(){ if (!rhomeGuideVisible()) return ''; const d = onDuty(), loc = !!state.pos; const step = (title, desc, btn) => `<div style="margin-top:10px"><b>${title}</b><div class="muted" style="font-size:13px">${desc}</div>${btn}</div>`; const done = txt => `<span style="color:var(--brand);font-weight:700;font-size:13px">${txt}</span>`; return `<div class="card"><div class="line"><b>🧭 ${t('rhome_guide_t')}</b><button class="chip" onclick="rhomeDismissGuide()">${t('rhome_guide_dismiss')}</button></div>${step(t('rhome_g1_t'), t('rhome_g1_d'), d ? done(t('rhome_g1_done')) : `<button class="btn small" style="margin-top:6px" onclick="A.toggleDuty()">${t('rhome_g1_btn')}</button>`)}${step(t('rhome_g2_t'), t('rhome_g2_d'), loc ? done(t('rhome_g2_done')) : `<button class="btn small" style="margin-top:6px" onclick="rhomeLoc()">${t('rhome_g2_btn')}</button>`)}${step(t('rhome_g3_t'), t('rhome_g3_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="rhomeJobs()">${t('rhome_g3_btn')}</button>`)}${step(t('rhome_g4_t'), t('rhome_g4_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="go('acct')">${t('rhome_g4_btn')}</button>`)}${step(t('gst_guide_t'), t('gst_guide_d'), '')}</div>`; }
+function rhomeGuideHtml(){ if (!rhomeGuideVisible()) return ''; const d = onDuty(), loc = !!state.pos; const step = (title, desc, btn) => `<div style="margin-top:10px"><b>${title}</b><div class="muted" style="font-size:13px">${desc}</div>${btn}</div>`; const done = txt => `<span style="color:var(--brand);font-weight:700;font-size:13px">${txt}</span>`; return `<div class="card"><div class="line"><b>🧭 ${t('rhome_guide_t')}</b><span><button class="chip" onclick="state.rhgGuideOpen=0;renderTab()">${t('close_word')}</button> <button class="chip" onclick="rhomeDismissGuide()">${t('rhome_guide_dismiss')}</button></span></div>${step(t('rhome_g1_t'), t('rhome_g1_d'), d ? done(t('rhome_g1_done')) : `<button class="btn small" style="margin-top:6px" onclick="A.toggleDuty()">${t('rhome_g1_btn')}</button>`)}${step(t('rhome_g2_t'), t('rhome_g2_d'), loc ? done(t('rhome_g2_done')) : `<button class="btn small" style="margin-top:6px" onclick="rhomeLoc()">${t('rhome_g2_btn')}</button>`)}${step(t('rhome_g3_t'), t('rhome_g3_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="rhomeJobs()">${t('rhome_g3_btn')}</button>`)}${step(t('rhome_g4_t'), t('rhome_g4_d'), `<button class="btn small ghost" style="margin-top:6px" onclick="go('acct')">${t('rhome_g4_btn')}</button>`)}${step(t('gst_guide_t'), t('gst_guide_d'), '')}${step('6 · ' + t('dest_t'), t('dest_radius_note') + ' ' + t('dest_active_note'), `<button class="btn small ghost" style="margin-top:6px" onclick="destPickToggle()">${t('dest_set')}</button>`)}${step('7 · ' + t('safety_check_title'), t('safety_check_note'), `<button class="btn small ghost" style="margin-top:6px" onclick="A.bscGoToCheck()">${t('bsc_go_check')}</button>`)}${step('8 · ' + t('mst_title'), t('mst_rule'), '')}${step('9 · ' + t('rhome_est_t'), t('rhome_est_note'), `<button class="btn small ghost" style="margin-top:6px" onclick="state.earnTab='pay';go('earn')">${t('rhome_est_earn')}</button>`)}</div>`; }
 // ---- Destination Mode (Feature 13): opt-in, rider's own setting. Dispatch
 // filtering is server-side (prepared-only SQL); the app never hides jobs
 // itself. Destination is stored device-local AND synced to rider_destinations
@@ -2439,6 +2441,8 @@ async function destLoad(){
   } catch (e){ state.dest = local; state.destServer = false; }
   if (state.tab === 'jobs' && (JSON.stringify(state.dest || null) + '|' + state.destServer) !== before) renderTab();
 }
+// Superseded by rhgDestLine (compact map-adjacent control, 5.71); kept so the
+// 5.71 diff drops no function. Safe to delete in a later cleanup once verified.
 function destHtml(){
   const d = state.dest; const picking = !!state.destPicking; let inner = '';
   if (!d){
@@ -2477,7 +2481,27 @@ async function destClear(){
   try { need(await sb.from('rider_destinations').delete().eq('rider_id', state.rider.id)); state.destServer = true; } catch (e){ state.destServer = false; }
   toast(t('dest_cleared')); renderTab();
 }
-function rhomeTopHtml(){ return `<div class="card" style="padding:8px"><div id="rhomeMap" class="nav-map ${state.tripPrefs.nightMap ? 'nav-map-night' : ''}"></div><div class="muted" style="font-size:13px;margin:6px 4px 2px">${state.destPicking ? t('dest_pick_hint') : (state.pos ? t('rhome_map_note') : t('rhome_loc_off'))}</div></div>${destHtml()}${rhomeEstHtml()}${rhomeGuideHtml()}`; }
+function rhomeTopHtml(){ return `<div class="card" style="padding:8px"><div id="rhomeMap" class="nav-map ${state.tripPrefs.nightMap ? 'nav-map-night' : ''}"></div><div class="muted" style="font-size:13px;margin:6px 4px 2px">${state.destPicking ? t('dest_pick_hint') : (state.pos ? t('rhome_map_note') : t('rhome_loc_off'))}</div>${rhgDestLine()}</div>${rhgGuideBlock()}`; }
+// ---- Rider home regrouping (5.71): home keeps only a compact destination line and a
+// single guide entry; the full destination card, payout estimate, full guide dump and
+// full bike checklist now live in their own tabs (see rhgGuideBlock, viewDuty bikecheck,
+// viewEarn pay). No new strings: every label below reuses an existing i18n key.
+function rhgDestLine(){
+  const d = state.dest; const picking = !!state.destPicking;
+  const status = d ? `<b>${d.mode_on ? '🎯 ' : '⚪ '}${esc(d.name || t('dest_pin'))}</b><span class="pill ${d.mode_on ? 'y' : ''}">${d.mode_on ? t('dest_on') : t('dest_off')}</span>` : `<span class="muted" style="font-size:13px">${t('dest_none')}</span>`;
+  let btns = picking ? `<button class="btn ghost small" onclick="destPickToggle()">${t('dest_pick_cancel')}</button>` : `<button class="btn small" onclick="destPickToggle()">${d ? t('dest_change') : t('dest_set')}</button>`;
+  if (d && !picking) btns += `<button class="btn ${d.mode_on ? 'ghost' : ''} small" style="margin-left:6px" onclick="destToggle()">${d.mode_on ? t('dest_toggle_off') : t('dest_toggle_on')}</button><button class="btn ghost small" style="margin-left:6px" onclick="destClear()">${t('dest_clear')}</button>`;
+  return `<div class="line" style="border-top:1px solid var(--line);margin-top:6px;padding-top:8px"><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">🎯 ${status}</span><span style="display:flex;gap:6px;flex:none">${btns}</span></div>`;
+}
+function rhgGuideEntryHtml(){
+  if (!rhomeGuideVisible()) return '';
+  return `<div class="card"><button class="row" style="width:100%;border:none;background:none" onclick="state.rhgGuideOpen=1;renderTab()"><div class="row-main"><div class="row-title">🧭 ${t('rhome_guide_t')}</div></div><span class="muted">›</span></button><div style="text-align:end"><button class="chip" onclick="rhomeDismissGuide()">${t('rhome_guide_dismiss')}</button></div></div>`;
+}
+function rhgGuideBlock(){ if (!rhomeGuideVisible()) return ''; return state.rhgGuideOpen ? rhomeGuideHtml() : rhgGuideEntryHtml(); }
+function rhgBikeWarnHtml(){
+  if (!state.rider || bscTodayDone()) return '';
+  return `<div class="note" style="margin-bottom:10px">⚠️ ${t('bsc_reminder')} <button class="btn ghost small" style="margin-left:6px" onclick="A.bscGoToCheck()">${t('bsc_go_check')}</button></div>`;
+}
 function rhomePins(){ const pts = []; const add = (lat, lng, icon, label) => { if (lat != null && lng != null && isFinite(+lat) && isFinite(+lng)) pts.push({ p:[+lat, +lng], icon, label }); }; if (state.pos) add(state.pos.lat, state.pos.lng, '🛵', t('you')); if (state.dest && state.dest.mode_on) add(state.dest.lat, state.dest.lng, '🎯', (state.dest.name || t('dest_pin'))); (state.mine || []).forEach(o => { const r = o.restaurant || {}; add(r.lat, r.lng, '🏪', r.name || t('nav_shop')); add(o.address_lat, o.address_lng, '🏠', t('nav_cust')); }); if (onDuty()) (state.available || []).filter(j => !state.skipped.has(j.order_id)).slice(0, 20).forEach(j => add(j.restaurant_lat, j.restaurant_lng, '🏪', j.restaurant_name || t('nav_shop'))); (state.myParcels || []).forEach(p => add(p.drop_lat, p.drop_lng, '🏠', t('pk_parcel'))); return pts; }
 async function rhomeInitMap(){ const el = document.getElementById('rhomeMap'); if (!el || state.tab !== 'jobs') return; const run = ++rhomeRun; if (rhomeMap){ try { rhomeMap.remove(); } catch (e) {} rhomeMap = null; } const pts = rhomePins(); let centre = state.pos ? [state.pos.lat, state.pos.lng] : null; if (!centre && !pts.length){ if (state.rhomeCenter === undefined){ try { const { data } = await sb.from('regions').select('center_lat,center_lng').eq('id', state.rider.region_id).maybeSingle(); state.rhomeCenter = (data && data.center_lat != null) ? [Number(data.center_lat), Number(data.center_lng)] : null; } catch (e) { state.rhomeCenter = null; } } if (run !== rhomeRun || !el.isConnected || state.tab !== 'jobs') return; centre = state.rhomeCenter; if (!centre){ el.innerHTML = `<div class="muted" style="padding:20px;text-align:center">${t('rhome_nomap')}</div>`; return; } } try { const L = await loadLeafletR(); if (run !== rhomeRun || !el.isConnected || state.tab !== 'jobs') return; const map = L.map(el, { zoomControl:false }); rhomeMap = map; L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:'© OpenStreetMap' }).addTo(map); pts.forEach(pt => { const ic = L.divIcon({ html:pt.icon, className:'', iconSize:[28,28], iconAnchor:[14,14] }); L.marker(pt.p, { icon:ic }).addTo(map).bindPopup(esc(pt.label)); }); if (state.destPicking) map.on('click', e => destPinDropped(e.latlng.lat, e.latlng.lng)); if (pts.length > 1) map.fitBounds(pts.map(x => x.p), { padding:[20, 20] }); else if (pts.length === 1) map.setView(pts[0].p, 14); else map.setView(centre, 13); } catch (e) {} }
 
@@ -2493,10 +2517,9 @@ function viewJobs(){
     <div class="tile"><b>🛣️ ${todayKm.toFixed(1)} km</b><span>${t('km_today')}</span></div></div>`;
   const top = rhomeTopHtml();
   const boost = boostBanner();
-  const safety = safetyChecklistCard();
-  if (suspended() && !state.mine.length) return top + safety + suspBanner() + boost + stats;
+  if (suspended() && !state.mine.length) return top + rhgBikeWarnHtml() + suspBanner() + boost + stats;
   if (!onDuty() && !state.mine.length){
-    return top + `${safety}${boost}${goalCard()}${stats}${cashWarning()}${dutyGoCard()}`;
+    return top + `${boost}${stats}${cashWarning()}${dutyGoCard()}`;
   }
   const mine = state.mine.length ? `<h2>${t('my_deliveries')} <span class="count">${state.mine.length}</span></h2>${mstRouteCard()}${state.mine.map(activeCard).join('')}` : '';
   const myP = (state.myParcels || []).length ? `<h2>📦 ${t('pk_mine')} <span class="count">${state.myParcels.length}</span></h2>${state.myParcels.map(parcelActiveCard).join('')}` : '';
@@ -2513,7 +2536,7 @@ function viewJobs(){
   const hot = onDuty() && !state.mine.length && (state.hot || []).length ? `<div class="card"><b>${t('hot_t')}</b><div class="muted" style="font-size:13px">${t('hot_s')}</div>${state.hot.slice(0, 3).map((h, i) => `<a class="hotrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lng}"><span>${['🥇', '🥈', '🥉'][i]} ${state.pos ? fmtKm(km(state.pos.lat, state.pos.lng, Number(h.lat), Number(h.lng))) : '📍'}</span><b>${t('hot_n').replace('{n}', h.orders)}</b><span class="muted">›</span></a>`).join('')}</div>` : '';
   const gpsHint = onDuty() && !state.pos ? `<div class="note" style="border-color:#E2A400;margin-bottom:10px">${t('gps_hint')}</div>` : '';
   const radar = onDuty() ? `<div class="card" style="border:1px solid var(--brand);margin:8px 0"><b>📡 ${t('radar_title')}</b><div class="muted" style="font-size:13px">${t('radar_note')}</div></div>` : '';
-  return top + safety + sound + suspBanner() + boost + cashWarning() + rankChip + radar + (onDuty() && !state.mine.length ? goalCard() + targetsCard() + dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
+  return top + rhgBikeWarnHtml() + sound + suspBanner() + boost + cashWarning() + rankChip + radar + (onDuty() && !state.mine.length ? dutyCard() + breakCard() : '') + mine + myP + (state.mine.length ? '' : stats) + hot + gpsHint + jobs + pjobs;
 }
 
 setInterval(() => { const el = document.getElementById('breakClock'); if (el && state.breakOpen){ const left = num(state.rider.break_minutes || 60) - breakUsed(); el.textContent = left < 0 ? '+' + hm(-left) : hm(left); el.style.color = left < 0 ? 'var(--danger)' : ''; } }, 15000);
@@ -2655,11 +2678,13 @@ function viewDuty(){
   const back = `<button class="row" style="width:100%;text-align:start;background:none;border:none;cursor:pointer;margin-bottom:8px" onclick="state.dutySec=null;renderTab()"><div><b>${t('duty_back')}</b></div></button>`;
   if (!sec) return `<h1>${t('att_title')}</h1>${suspBanner()}<div class="list">
     ${mrow('timing', '🕘', t('duty_m_timing'))}
+    ${mrow('bikecheck', '🛡️', t('safety_check_title'))}
     ${mrow('leave', '🏖️', t('duty_m_leave'))}
     ${mrow('complaints', '⚠️', t('duty_m_complaints'))}
     ${mrow('offers', '🎁', t('duty_m_offers'))}
     ${mrow('contract', '📋', t('duty_m_contract'))}
   </div>`;
+  if (sec === 'bikecheck') return `<h1>${t('safety_check_title')}</h1>${suspBanner()}${back}${safetyChecklistCard()}`;
   if (sec === 'timing') return `<h1>${t('duty_m_timing')}</h1>${suspBanner()}${back}
     ${shiftPickerCard()}
     <div class="card"><b>🕘 ${t('my_timing')}</b>${timing}${nextHtml}</div>
@@ -2729,11 +2754,10 @@ function perksCards(){
 }
 function riderProHub(){
   const month = (state.done || []).reduce((n, o) => n + num(o.rider_pay), 0);
-  const activeBoosts = boostBanner();
   const goal = goalCard();
   const quests = targetsCard();
   const offers = offersCard();
-  return `<h2>🌟 ${t('pro_hub')}</h2><div class="muted" style="margin:-6px 0 10px">${t('pro_note')}</div><div class="tiles"><div class="tile hi"><b>${money(month)}</b><span>${t('pro_earn')}</span></div><div class="tile"><b>${(state.done || []).length}</b><span>${t('deliveries_n')}</span></div></div>${activeBoosts}${goal}${quests}${offers}<div class="card"><b>${t('earnings')}</b><div class="muted" style="font-size:13px">${t('month_pay')}: ${money(month)}</div><button class="btn ghost" style="margin-top:8px" onclick="state.earnTab='pay';renderTab()">${t('earn_t_pay')} ›</button></div>`;
+  return `<h2>🌟 ${t('pro_hub')}</h2><div class="muted" style="margin:-6px 0 10px">${t('pro_note')}</div><div class="tiles"><div class="tile hi"><b>${money(month)}</b><span>${t('pro_earn')}</span></div><div class="tile"><b>${(state.done || []).length}</b><span>${t('deliveries_n')}</span></div></div>${goal}${quests}${offers}<div class="card"><b>${t('earnings')}</b><div class="muted" style="font-size:13px">${t('month_pay')}: ${money(month)}</div><button class="btn ghost" style="margin-top:8px" onclick="state.earnTab='pay';renderTab()">${t('earn_t_pay')} ›</button></div>`;
 }
 // ================= EARNINGS TAB =================
 function viewEarn(){
@@ -2775,7 +2799,7 @@ function viewEarn(){
   const etab = (key, label) => `<button class="chip ${et === key ? 'on' : ''}" onclick="state.earnTab='${key}';renderTab()">${label}</button>`;
   let earnBody = '';
   if (et === 'pro') earnBody = riderProHub();
-  else if (et === 'pay') earnBody = `<div class="tiles">
+  else if (et === 'pay') earnBody = `${rhomeEstHtml()}<div class="tiles">
       <div class="tile hi"><b>${money(monthPay)}</b><span>${t('month_pay')}</span></div>
       <div class="tile hi"><b>${money(Math.max(0, monthPay - paid))}</b><span>${t('to_pay')}</span></div>
       <div class="tile"><b>${state.done.length}</b><span>${t('deliveries_n')} · ${t('this_month')}</span></div>
@@ -2980,7 +3004,7 @@ function viewAcct(){
         <div class="row"><b>${t('parcels_enabled')}</b><label class="switch"><input type="checkbox" ${state.tripPrefs.parcels ? 'checked' : ''} onchange="A.setTripPref('parcels',this.checked)"><span></span></label></div>
         <div class="row"><label for="prefNightMap"><b>🌙 ${t('night_map')}</b></label><label class="switch"><input id="prefNightMap" type="checkbox" aria-label="${t('night_map')}" ${state.tripPrefs.nightMap ? 'checked' : ''} onchange="A.setTripPref('nightMap',this.checked)"><span></span></label></div>
         <div class="row"><label for="prefTraffic"><b>🚦 ${t('traffic_preference')}</b></label><label class="switch"><input id="prefTraffic" type="checkbox" aria-label="${t('traffic_preference')}" ${state.tripPrefs.traffic ? 'checked' : ''} onchange="A.setTripPref('traffic',this.checked)"><span></span></label></div>
-      </div>
+      </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="go('jobs')">🎯 ${t('dest_acct')}</button></div>
     </div>
     <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
     ${Theme.picker(state.lang)}
@@ -2994,7 +3018,7 @@ function viewAcct(){
       <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
       ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
       ${Legal.links(state.lang)}
-    </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="go('jobs')">🎯 ${t('dest_acct')}</button></div><div class="card"><button class="btn ghost small" style="width:100%" onclick="rhomeShowGuide()">🧭 ${t('rhome_guide_again')}</button></div><div class="card"><b>👆 ${t('gst_acct_t')}</b><div class="muted" style="font-size:13px;margin-top:4px">${t('gst_acct_d')}</div></div><div class="card" style="margin-top:8px"><b>🛟 ${t('sfty_emerg_t')}</b><div class="muted" style="font-size:13px;margin:4px 0">${t('sfty_emerg_note')}</div><label style="font-size:13px" for="sftyEcName">${t('sfty_emerg_name')}</label><input id="sftyEcName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.name) || '')}"><label style="font-size:13px" for="sftyEcPhone">${t('sfty_emerg_phone')}</label><input id="sftyEcPhone" inputmode="tel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.phone) || '')}"><button class="btn small" style="margin-top:8px" onclick="A.sftyEmergSave()">${t('sfty_emerg_save')}</button></div></div>
+    </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="rhomeShowGuide()">🧭 ${t('rhome_guide_again')}</button></div><div class="card" style="margin-top:8px"><b>🛟 ${t('sfty_emerg_t')}</b><div class="muted" style="font-size:13px;margin:4px 0">${t('sfty_emerg_note')}</div><label style="font-size:13px" for="sftyEcName">${t('sfty_emerg_name')}</label><input id="sftyEcName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.name) || '')}"><label style="font-size:13px" for="sftyEcPhone">${t('sfty_emerg_phone')}</label><input id="sftyEcPhone" inputmode="tel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.phone) || '')}"><button class="btn small" style="margin-top:8px" onclick="A.sftyEmergSave()">${t('sfty_emerg_save')}</button></div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
     <div class="card">
       <button class="row" style="width:100%;border:none;background:none" onclick="tfaSheet()"><div class="row-main"><div class="row-title">🔐 ${t('tfa_title')}</div><div class="row-sub">${t('tfa_row_sub')}</div></div><span class="muted">›</span></button>
@@ -3344,6 +3368,7 @@ const A = {
     if (rec && !rec.reported) { rec.reported = true; bscSaveHist([rec, ...(bscHist() || []).filter(h => h.date !== rec.date)]); }
   },
   bscGoToCheck(){
+    if (state.tab !== 'duty'){ state.dutySec = 'bikecheck'; go('duty'); return; }
     const el = document.getElementById('bscCard');
     if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); const old = el.style.boxShadow; el.style.boxShadow = '0 0 0 3px rgba(232,114,42,.55)'; setTimeout(() => { el.style.boxShadow = old; }, 1600); }
   },
