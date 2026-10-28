@@ -288,6 +288,25 @@ html[dir=rtl] .price-alert{left:auto;right:12px}
 .alinks{display:flex;flex-direction:column;align-items:center;gap:0;margin-top:20px}
 .alinks .link{padding:9px 0}
 .auth-card .ver{margin-top:14px;text-align:center}
+.auth.auth-login{height:calc(100dvh - env(safe-area-inset-top,0px));min-height:0;overflow:hidden;padding:0}
+.auth-login .auth-hero{height:16dvh;min-height:96px;max-height:150px}
+.auth-login .auth-card{padding:16px 20px calc(12px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain}
+.auth-login .auth-card h1{font-size:24px}
+.auth-login .auth-card .sub{margin-bottom:12px}
+.auth-login .afield{margin-bottom:10px}
+.auth-login .auth-card label.f{margin-bottom:5px}
+.auth-login .auth-card input{padding:11px 14px}
+.auth-login .arow{margin:0 0 8px}
+.auth-login .arow .link{padding:6px 0}
+.auth-login .auth-go{padding:13px 16px!important}
+.auth-login .auth-card .btn.ghost{padding:12px 16px}
+.auth-login .auth-card .err-text{min-height:0;margin-top:8px}
+.auth-login .alinks{margin-top:12px}
+.auth-login .alinks .link{padding:7px 0}
+.auth-login .auth-card .ver{margin-top:8px}
+.auth-login .auth-card h1{line-height:1.25}
+.auth-login .auth-card .sub{line-height:1.5}
+.auth-login .auth-card label.f,.auth-login .auth-card input,.auth-login .auth-go,.auth-login .auth-card .btn.ghost,.auth-login .alinks .link,.auth-login .auth-card .ver,.auth-login .arow .link{line-height:1.45}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 @keyframes driftx{0%,100%{transform:translateX(0)}50%{transform:translateX(16px)}}
 .auth{max-width:400px;margin:0 auto;padding:9vh 20px 30px}
@@ -1068,7 +1087,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.05';
+const APP_VERSION = '6.06';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -1792,7 +1811,7 @@ function showAuth(msg, ok){
   fields.push(`<div class="afield" style="animation-delay:.29s"><label class="f" for="a_email">${t('email')}</label><div class="inpwrap"><input id="a_email" type="email" autocomplete="username" autocapitalize="off" placeholder="${t('email_ph')}"></div></div>`);
   fields.push(`<div class="afield" style="animation-delay:.36s"><label class="f" for="a_pw">${t('password')}</label><div class="inpwrap"><input id="a_pw" type="password" placeholder="${t('pw_ph')}" autocomplete="${signup ? 'new-password' : 'current-password'}"><button type="button" class="eye" onclick="A.togglePw()" aria-label="show">👁️</button></div></div>`);
   $('app').innerHTML = `
-  <div class="auth">
+  <div class="auth auth-login">
     <div class="auth-hero"><svg class="scene" viewBox="0 0 390 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
 <circle cx="318" cy="58" r="30" fill="#FFD98A"/><circle cx="318" cy="58" r="44" fill="#FFD98A" opacity=".35"/>
 <g fill="#FFFFFF" opacity=".92" style="animation:driftx 8s ease-in-out infinite"><ellipse cx="86" cy="52" rx="36" ry="14"/><ellipse cx="114" cy="44" rx="26" ry="12"/><ellipse cx="62" cy="46" rx="20" ry="10"/></g>

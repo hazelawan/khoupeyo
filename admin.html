@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.95';
+const APP_VERSION = '7.96';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -767,7 +767,7 @@ const state = {
   tab:'home', period:'today', dash:null, shopReport:[], topProducts:[],
   orders:[], issues:[], orderFilter:'active', orderQ:'',
   zones:[], restaurants:[], riders:[],
-  riderMonth: monthStart(0), riderRows:[], riderFilter:'all',
+  riderMonth: monthStart(0), riderRows:[], riderFilter:'all', riderQ:'',
   menuRestaurant:'all', productFilter:'all', productQ:'', productPage:0, productHasMore:false, categories:[], items:[], formCats:[],
   customers:[], customerQ:'', promos:[], fineRules:[], settings:{}, supportTickets:[], supportPage:0, supportQ:'', supportStatus:'all', supportSelected:null, supportMessages:[], supportAttachments:[], supportAttachmentsLoading:false, supportAttachmentsError:'', supportAttachmentRequest:0, supportTargetHours:24, approvals:{refunds:[],shifts:[],promos:[]}, bnrFilter:'all', bnrRegionMap:null, approvalsErrors:{}
 };
@@ -1976,39 +1976,23 @@ function viewRiders(){
   const pRows = pending.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill y">New request</span></div>
     <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}${r.cnic ? ' · CNIC ' + esc(r.cnic) : ''} · ${dayName(r.created_at)}</div>
     <div class="bar" style="margin:10px 0 0"><button class="btn" onclick="A.approveRider('${r.rider_id}')">Approve</button><button class="btn warn" onclick="A.rejectRider('${r.rider_id}')">Reject</button></div></div>`).join('');
-  const card = r => {
-    const net = riderNet(r); const due = net - num(r.paid); const over = num(r.cash_limit) > 0 && num(r.cash_in_hand) >= num(r.cash_limit);
-    const idr = (state.riderIds || {})[r.rider_id] || {};
-    return `<div class="card click" onclick="A.openRider('${r.rider_id}')">
-      ${idr.rider_code ? `<div class="idline">🆔 <b>${esc(idr.rider_code)}</b> <span class="muted">· used by</span></div>` : ''}
-      <div class="row-title">${esc(r.full_name || 'Rider')}
-        <span class="pill ${r.is_online ? 'g' : ''}">${r.is_online ? 'On duty' : 'Off duty'}</span>
-        ${contractPill(r)}
-        ${state.paused && state.paused[r.rider_id] ? `<span class="pill r">⛔ Paused till ${esc(tAt(state.paused[r.rider_id].suspended_until))}</span>` : ''}
-        ${r.face_registered ? '' : '<span class="pill y">No face</span>'}
-        ${num(r.flagged_shifts) ? `<span class="pill r">${r.flagged_shifts} selfie issue</span>` : ''}
-        ${r.rating ? `<span class="muted" style="font-size:13px">★ ${r.rating}</span>` : ''}</div>
-      <div class="row-sub">${esc(r.phone || '')} · ${esc(r.vehicle || '')}</div>
-      <div class="row-sub">🕘 ${esc(timingText(r))}${r.on_break ? ' · <b style="color:#B45309">☕ On break</b>' : ''}${num(r.late_days) ? ` · <b class="red">late ${r.late_days} days</b>` : ''}</div>
-      ${targetLine(r)}
-      <div class="mini">
-        <div><b>${r.deliveries}</b><span>Deliveries</span></div>
-        <div><b>${hours(r.online_minutes)}</b><span>On duty${num(r.overtime_minutes) ? ` · <b style="display:inline;font-size:inherit;color:var(--brand)">+${hours(r.overtime_minutes)} OT</b>` : ''}</span></div>
-        <div><b class="${num(r.fines) ? 'red' : ''}">${money(r.fines)}</b><span>Fines</span></div>
-        <div><b>${money(net)}</b><span>Month pay</span></div>
-        <div><b class="${due < 0 ? 'red' : ''}">${money(Math.abs(due))}</b><span>${due > 0 ? 'Still to pay' : due < 0 ? 'Rider owes company' : 'Paid'}</span></div>
-        <div><b class="${over ? 'red' : ''}">${money(r.cash_in_hand)}</b><span>Cash in hand</span></div>
-      </div></div>`;
+  const row = r => {
+    const code = ((state.riderIds || {})[r.rider_id] || {}).rider_code || '';
+    return `<button class="row" onclick="A.openRider('${r.rider_id}')"><div class="row-main"><div class="row-title">${code ? `🆔 ${esc(code)} · ` : ''}${esc(r.full_name || 'Rider')}</div></div><span class="muted">›</span></button>`;
   };
+
   const chips = [['all','All'],['online','On duty'],['cash','Holding cash'],['unpaid','Pay due'],['flag','Selfie issues']].map(([k, l]) => `<button class="chip ${fl === k ? 'on' : ''}" onclick="A.riderFilter('${k}')">All ${l}</button>`).join('');
-  // Group by duty status when showing all
+  // Search over the chips-filtered active list (ID or name, case-insensitive)
+  const rq = String(state.riderQ || '').trim().toLowerCase();
+  const searched = rq ? shown.filter(r => { const code = ((state.riderIds || {})[r.rider_id] || {}).rider_code || ''; return code.toLowerCase().includes(rq) || (r.full_name || '').toLowerCase().includes(rq); }) : shown;
+  // Group by duty status when showing all (no search)
   let riderList;
-  if (fl === 'all' && shown.length > 1){
-    const onDuty = shown.filter(r => r.is_online);
-    const offDuty = shown.filter(r => !r.is_online);
-    riderList = `${onDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">🟢 On duty <span class="catcount">${onDuty.length}</span></div>${onDuty.map(card).join('')}</div>` : ''}${offDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">⚫ Off duty <span class="catcount">${offDuty.length}</span></div>${offDuty.map(card).join('')}</div>` : ''}`;
+  if (fl === 'all' && !rq && searched.length > 1){
+    const onDuty = searched.filter(r => r.is_online);
+    const offDuty = searched.filter(r => !r.is_online);
+    riderList = `${onDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">🟢 On duty <span class="catcount">${onDuty.length}</span></div><div class="list">${onDuty.map(row).join('')}</div></div>` : ''}${offDuty.length ? `<div class="staffgroup"><div class="staffgroup-h">⚫ Off duty <span class="catcount">${offDuty.length}</span></div><div class="list">${offDuty.map(row).join('')}</div></div>` : ''}`;
   } else {
-    riderList = shown.map(card).join('') || '<div class="empty">No riders here yet. Tap “Create Rider ID” to add a rider.</div>';
+    riderList = searched.length ? `<div class="list">${searched.map(row).join('')}</div>` : `<div class="empty">${rq ? 'No riders match your search.' : 'No riders here yet. Tap “Create Rider ID” to add a rider.'}</div>`;
   }
   const lb = state.lb || { today:[], month:[], last_month:[] }; const aw = (state.settings && state.settings.rider_awards) || {};
   const medal = n => n === 1 ? '🥇' : n === 2 ? '🥈' : '🥉';
@@ -2029,6 +2013,7 @@ function viewRiders(){
       <div class="tile"><b>${money(tot(r => num(r.fines)))}</b><span>Fines this month</span></div>
     </div>
     ${pending.length ? `<h3>New requests (${pending.length})</h3>${pRows}` : ''}
+    <input type="search" placeholder="Search ID or name" value="${esc(state.riderQ)}" oninput="A.riderSearch(this.value)" style="margin-bottom:10px">
     <div class="chips">${chips}</div>
     ${riderList}
     ${blocked.length ? `<h3>Blocked (${blocked.length})</h3>${blocked.map(r => `<div class="card"><div class="row-title">${esc(r.full_name || 'Rider')}<span class="pill r">Blocked</span></div><div class="row-sub">${esc(r.phone || '')}</div><div class="bar" style="margin:10px 0 0"><button class="btn ghost small" onclick="A.openRider('${r.rider_id}')">Details</button><button class="btn small" onclick="A.unblockRider('${r.rider_id}')">Unblock</button></div></div>`).join('')}` : ''}${blstAdminSection()}`;
@@ -4378,6 +4363,7 @@ const A = {
   // ---- Riders ----
   async pickMonth(m){ state.riderMonth = m; await run(loadRiderMonth); renderTab(); },
   riderFilter(f){ state.riderFilter = f; renderTab(); },
+  riderSearch(v){ state.riderQ = v; renderTab(); const inp = document.querySelector('main input[type=search]'); if (inp){ inp.focus(); inp.setSelectionRange(v.length, v.length); } },
   async approveRider(id){
     const r = state.riderRows.find(x => x.rider_id === id); if (!r) return;
     await run(async () => {

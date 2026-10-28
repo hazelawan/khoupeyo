@@ -503,6 +503,16 @@ main{padding-top:18px!important}
 .hubbtn{border-radius:16px;box-shadow:none;padding:12px;min-height:64px;border:1px solid var(--line)}
 .hubbtn span{width:38px;height:38px;border-radius:11px;background:var(--soft);display:grid;place-items:center;font-size:19px;flex:none}
 .hubbtn i{box-shadow:0 0 0 2px var(--paper)}
+/* Bike safety check one-page fit (5.72): scoped to .bsc-fit + main.bsc-page ONLY.
+   Tightens spacing/padding/fonts inside Duty -> Bike safety check; no other Duty
+   section and no other tab is affected. Checkbox rows ~44px (EN) via 10px padding;
+   small buttons keep the app-standard 40px height (unchanged). main.bsc-page bottom
+   padding (80px) only clears the floating nav (~67px + 10px offset) instead of 130px. */
+main.bsc-page{padding-top:12px!important;padding-bottom:80px!important}
+.bsc-fit h1{font-size:22px;margin:2px 0 8px}
+.bsc-fit>button.row{padding:10px 4px}
+.bsc-fit #bscCard{padding:12px;margin-bottom:0}
+.bsc-fit #bscCard .row{padding:10px 4px}
 /* bottom navigation with icons */
 .nav{left:50%!important;right:auto!important;transform:translateX(-50%);width:min(calc(100% - 20px),680px);bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
   border:1px solid var(--line)!important;border-radius:20px;box-shadow:var(--sh-3);padding:4px!important;background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px)}
@@ -674,7 +684,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.71';
+const APP_VERSION = '5.72';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -1256,6 +1266,7 @@ function renderTab(){
   if (state.tab === 'rules') v.innerHTML = viewRules();
   if (state.tab === 'acct') v.innerHTML = viewAcct();
   if (state.tab === 'duty') v.innerHTML = viewDuty();
+  v.classList.toggle('bsc-page', state.tab === 'duty' && state.dutySec === 'bikecheck');
   if (state.tab === 'earn' && state.earnTab === 'history') initHistoryVirtual();
   markTab(); bindSliders(); gstBind(); if (state.tab === 'acct') showMyFace();
   if (state.tab === 'acct') blstLoadStatus();
@@ -2353,14 +2364,14 @@ function safetyChecklistCard(){
   const rec = bscTodayRec();
   const failed = rec ? (rec.failed || []) : bscFailedOf(draft);
   const failedLabels = failed.map(bscLabel).join(', ');
-  const phoneNote = state.bscServer === false ? `<div class="muted" style="font-size:12px;margin-top:8px">📱 ${t('bsc_phone_only')}</div>` : '';
+  const phoneNote = state.bscServer === false ? `<div class="muted" style="font-size:12px;margin-top:6px">📱 ${t('bsc_phone_only')}</div>` : '';
   const status = rec
     ? `<div style="font-size:13px;margin-top:8px">✅ ${t('bsc_done_today')}${failed.length ? ` · <span style="color:var(--danger)">⚠️ ${t('bsc_failed')}: ${esc(failedLabels)}</span>` : ` · ${t('bsc_all_ok')}`}${rec.synced ? ` · ${t('bsc_synced')}` : ''}</div>`
-    : `<div style="margin-top:10px"><button class="btn small" onclick="A.bscConfirm()">${t('bsc_confirm')}</button>${failed.length ? ` <button class="btn ghost small" onclick="A.bscReport()">${t('bsc_report_issue')}</button>` : ''}<div class="muted" style="font-size:12px;margin-top:6px">${t('bsc_report_note')}</div></div>`;
-  return `<div class="card" id="bscCard"><b>🛡️ ${t('safety_check_title')}</b><div class="muted" style="font-size:13px;margin:4px 0 8px">${t('safety_check_note')}</div>
+    : `<div style="margin-top:8px"><button class="btn small" onclick="A.bscConfirm()">${t('bsc_confirm')}</button>${failed.length ? ` <button class="btn ghost small" onclick="A.bscReport()">${t('bsc_report_issue')}</button>` : ''}<div class="muted" style="font-size:12px;margin-top:4px">${t('bsc_report_note')}</div></div>`;
+  return `<div class="card" id="bscCard"><b>🛡️ ${t('safety_check_title')}</b><div class="muted" style="font-size:12px;margin:2px 0 6px">${t('safety_check_note')}</div>
     ${bscITEMS.map(([id, label]) => { const val = rec ? !!(rec.items && rec.items[id]) : !!draft[id]; return `<label class="row" style="align-items:center;cursor:pointer"><span>${t(label)}</span><input type="checkbox" ${val ? 'checked' : ''} ${rec ? 'disabled' : ''} onchange="A.saveSafetyCheck('${id}',this.checked)" aria-label="${t(label)}"></label>`; }).join('')}
     ${status}
-    <div style="margin-top:8px"><button class="btn ghost small" onclick="A.bscHistory()">${t('bsc_history')}</button></div>
+    <div style="margin-top:6px"><button class="btn ghost small" onclick="A.bscHistory()">${t('bsc_history')}</button></div>
     ${phoneNote}</div>`;
 }
 function openParcelScanner(id, action){
@@ -2441,8 +2452,8 @@ async function destLoad(){
   } catch (e){ state.dest = local; state.destServer = false; }
   if (state.tab === 'jobs' && (JSON.stringify(state.dest || null) + '|' + state.destServer) !== before) renderTab();
 }
-// Superseded by rhgDestLine (compact map-adjacent control, 5.71); kept so the
-// 5.71 diff drops no function. Safe to delete in a later cleanup once verified.
+// Superseded by rhgDestLine (compact map-adjacent control, prior version); kept so the
+// prior-version diff drops no function. Safe to delete in a later cleanup once verified.
 function destHtml(){
   const d = state.dest; const picking = !!state.destPicking; let inner = '';
   if (!d){
@@ -2482,7 +2493,7 @@ async function destClear(){
   toast(t('dest_cleared')); renderTab();
 }
 function rhomeTopHtml(){ return `<div class="card" style="padding:8px"><div id="rhomeMap" class="nav-map ${state.tripPrefs.nightMap ? 'nav-map-night' : ''}"></div><div class="muted" style="font-size:13px;margin:6px 4px 2px">${state.destPicking ? t('dest_pick_hint') : (state.pos ? t('rhome_map_note') : t('rhome_loc_off'))}</div>${rhgDestLine()}</div>${rhgGuideBlock()}`; }
-// ---- Rider home regrouping (5.71): home keeps only a compact destination line and a
+// ---- Rider home regrouping (prior version): home keeps only a compact destination line and a
 // single guide entry; the full destination card, payout estimate, full guide dump and
 // full bike checklist now live in their own tabs (see rhgGuideBlock, viewDuty bikecheck,
 // viewEarn pay). No new strings: every label below reuses an existing i18n key.
@@ -2684,7 +2695,7 @@ function viewDuty(){
     ${mrow('offers', '🎁', t('duty_m_offers'))}
     ${mrow('contract', '📋', t('duty_m_contract'))}
   </div>`;
-  if (sec === 'bikecheck') return `<h1>${t('safety_check_title')}</h1>${suspBanner()}${back}${safetyChecklistCard()}`;
+  if (sec === 'bikecheck') return `<div class="bsc-fit"><h1>${t('safety_check_title')}</h1>${suspBanner()}${back}${safetyChecklistCard()}</div>`;
   if (sec === 'timing') return `<h1>${t('duty_m_timing')}</h1>${suspBanner()}${back}
     ${shiftPickerCard()}
     <div class="card"><b>🕘 ${t('my_timing')}</b>${timing}${nextHtml}</div>
@@ -3012,13 +3023,6 @@ function viewAcct(){
       <label class="switch"><input type="checkbox" ${state.sound ? 'checked' : ''} onchange="A.setSound(this.checked)"><span></span></label></div>
     <div class="card" style="margin-top:8px"><button class="row" style="width:100%;border:none;background:none" onclick="A.toggleLang()"><div class="row-main"><div class="row-title">🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</div></div><span class="muted">›</span></button></div>
     </div>
-    <div class="grp"><div class="grp-h">🛟 Rider support & help</div>
-    <div class="card">
-      <button class="row" style="width:100%;border:none;background:none" onclick="openSupportCenter()"><div class="row-main"><div class="row-title">🛟 Feedback / screenshot</div><div class="muted" style="font-size:13px">Send feedback or attach a screenshot to rider support</div></div><span class="muted">›</span></button>
-      <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
-      ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
-      ${Legal.links(state.lang)}
-    </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="rhomeShowGuide()">🧭 ${t('rhome_guide_again')}</button></div><div class="card" style="margin-top:8px"><b>🛟 ${t('sfty_emerg_t')}</b><div class="muted" style="font-size:13px;margin:4px 0">${t('sfty_emerg_note')}</div><label style="font-size:13px" for="sftyEcName">${t('sfty_emerg_name')}</label><input id="sftyEcName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.name) || '')}"><label style="font-size:13px" for="sftyEcPhone">${t('sfty_emerg_phone')}</label><input id="sftyEcPhone" inputmode="tel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.phone) || '')}"><button class="btn small" style="margin-top:8px" onclick="A.sftyEmergSave()">${t('sfty_emerg_save')}</button></div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
     <div class="card">
       <button class="row" style="width:100%;border:none;background:none" onclick="tfaSheet()"><div class="row-main"><div class="row-title">🔐 ${t('tfa_title')}</div><div class="row-sub">${t('tfa_row_sub')}</div></div><span class="muted">›</span></button>
@@ -3026,6 +3030,13 @@ function viewAcct(){
       <button class="row danger" style="width:100%;border:none;background:none" onclick="Legal.del()"><div class="row-main"><div class="row-title">🗑️ ${t('delete_account') || 'Delete my account'}</div></div><span class="muted">›</span></button>
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
+    <div class="grp"><div class="grp-h">🛟 Rider support & help</div>
+    <div class="card">
+      <button class="row" style="width:100%;border:none;background:none" onclick="openSupportCenter()"><div class="row-main"><div class="row-title">🛟 Feedback / screenshot</div><div class="muted" style="font-size:13px">Send feedback or attach a screenshot to rider support</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.sos()"><div class="row-main"><div class="row-title" style="color:#C0392B">🆘 ${t('sos')}</div></div><span class="muted">›</span></button>
+      ${state.settings.support_phone ? `<a class="row" style="border-top:1px solid var(--line)" href="tel:${esc(state.settings.support_phone)}"><div class="row-main"><div class="row-title">📞 ${t('call_support')}</div></div><span class="muted">›</span></a>` : ''}
+      ${Legal.links(state.lang)}
+    </div><div class="card"><button class="btn ghost small" style="width:100%" onclick="rhomeShowGuide()">🧭 ${t('rhome_guide_again')}</button></div><div class="card" style="margin-top:8px"><b>🛟 ${t('sfty_emerg_t')}</b><div class="muted" style="font-size:13px;margin:4px 0">${t('sfty_emerg_note')}</div><label style="font-size:13px" for="sftyEcName">${t('sfty_emerg_name')}</label><input id="sftyEcName" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.name) || '')}"><label style="font-size:13px" for="sftyEcPhone">${t('sfty_emerg_phone')}</label><input id="sftyEcPhone" inputmode="tel" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:4px 0" value="${esc((state.sftyContact && state.sftyContact.phone) || '')}"><button class="btn small" style="margin-top:8px" onclick="A.sftyEmergSave()">${t('sfty_emerg_save')}</button></div></div>
     <p class="ver" style="margin-top:14px">Dera Rider v${APP_VERSION}</p>${pfmLine()}</div>`;
 }
 async function showMyFace(){

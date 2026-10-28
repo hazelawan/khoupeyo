@@ -704,7 +704,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.93';
+const APP_VERSION = '6.94';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -1253,7 +1253,7 @@ function noImg(name, cat){
   const hues = [150, 38, 12, 205, 265, 175]; return `<span class="noimg" style="--h:${hues[h % hues.length]}" aria-hidden="true"><span class="emj">${em}</span></span>`; }
 function updateOpenBtn(){ const b = $('openBtn'), r = state.restaurant; if (!b) return; b.className = 'openbtn ' + (r.is_open ? 'on' : ''); b.innerHTML = `<i></i>${r.is_open ? t('open_now') : t('closed_now')}`; b.setAttribute('onclick', `A.toggleOpen(${!r.is_open})`); }
 function markTab(){
-  ['orders','menu','earn','shop','groups'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k || (k === 'earn' && state.tab === 'stmt') || (k === 'shop' && (state.tab === 'insights' || state.tab === 'taxdocs'))); });
+  ['orders','menu','earn','shop'].forEach(k => { const b = $('t_' + k); if (b) b.classList.toggle('on', state.tab === k || (k === 'earn' && state.tab === 'stmt') || (k === 'shop' && (['insights','taxdocs','promobanner','promocode','academy','groups','vouchers'].includes(state.tab)))); });
   const o = $('t_orders'); if (o){ const n = newOrders().length; o.innerHTML = (isServices() ? t('bk_title') : t('orders')) + (n ? `<span class="dot">${n}</span>` : ''); }
 }
 // ================= SHELL =================
@@ -1269,13 +1269,11 @@ function renderShell(){
       <button id="t_orders" onclick="go('orders')">${isServices() ? t('bk_title') : t('orders')}</button>
       <button id="t_menu" onclick="go('menu')">${isServices() ? t('kind_services') : isFood() ? t('tab_menu') : t('products')}</button>
       ${state.staffMode ? '' : `<button id="t_earn" onclick="go('earn')">${t('earnings')}</button>
-      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>
-      <button id="t_groups" onclick="go('groups')">${t('grp_nav')}</button>
-      <button id="t_vouchers" onclick="go('vouchers')">${t('vch_nav')}</button>`}
+      <button id="t_shop" onclick="go('shop')">${t('shop')}</button>`}
     </div></nav>`;
 }
 async function go(tab){
-  if (state.staffMode && (tab === 'earn' || tab === 'shop' || tab === 'stmt' || tab === 'insights' || tab === 'taxdocs')) tab = 'orders';
+  if (state.staffMode && (tab === 'earn' || tab === 'shop' || tab === 'stmt' || tab === 'insights' || tab === 'taxdocs' || tab === 'groups' || tab === 'vouchers' || tab === 'promobanner' || tab === 'promocode' || tab === 'academy')) tab = 'orders';
   state.tab = tab; markTab();
   const v = $('view'); if (!v) return;
   v.innerHTML = `<div class="empty">${t('loading')}</div>`;
@@ -1288,6 +1286,8 @@ async function go(tab){
     if (tab === 'stmt') await loadStmt();
     if (tab === 'insights') await loadInsights();
     if (tab === 'taxdocs') await txdLoad();
+    if (tab === 'promobanner') await loadPromoRequests();
+    if (tab === 'promocode') await cmpLoad();
     if (tab === 'shop'){ loadStaff(); await loadReviews(); await loadPromoRequests(); await cmpLoad(); await arpLoad(); await tmcShopLoad(); try { const { data } = await sb.from('shop_requests').select('id,shop_name,status').eq('user_id', state.user.id).eq('status', 'pending').limit(1); state.sreqPending = (data || [])[0] || null; } catch (e) {} }
   });
   renderTab(); window.scrollTo(0, 0);
@@ -1300,6 +1300,9 @@ function renderTab(){
   if (state.tab === 'stmt') v.innerHTML = viewStmt();
   if (state.tab === 'insights') v.innerHTML = viewInsights();
   if (state.tab === 'taxdocs') v.innerHTML = txdView();
+  if (state.tab === 'promobanner') v.innerHTML = viewPromoBanner();
+  if (state.tab === 'promocode') v.innerHTML = viewPromoCode();
+  if (state.tab === 'academy') v.innerHTML = viewAcademy();
   if (state.tab === 'shop') v.innerHTML = viewShop();
   if (state.tab === 'groups') v.innerHTML = viewGroupShop();
   if (state.tab === 'vouchers') v.innerHTML = viewVoucherShop();
@@ -2846,13 +2849,7 @@ function arpRulesCard(){
 }
 function viewShop(){
   const r = state.restaurant; const rv = state.reviews || [];
-  const promoRows = (state.promoRequests || []).map(p => `<div class="card">
-    <div class="ch"><b>${esc(p.title || '')}</b><span class="pill ${p.status === 'approved' ? 'g' : p.status === 'rejected' ? 'r' : 'y'}">${esc(p.status || 'pending')}</span></div>
-    ${p.subtitle ? `<div>${esc(p.subtitle)}</div>` : ''}
-    <div class="muted" style="font-size:13px;margin-top:6px">${esc(p.created_at ? when(p.created_at) : '')}${p.starts_at || p.ends_at ? ` · ${esc(p.starts_at ? new Date(p.starts_at).toLocaleString() : 'No start')} – ${esc(p.ends_at ? new Date(p.ends_at).toLocaleString() : 'No end')}` : ''}</div>
-    ${p.admin_note ? `<div class="note"><b>${state.lang === 'ur' ? 'انتظامیہ کا نوٹ' : 'Admin note'}:</b> ${esc(p.admin_note)}</div>` : ''}
-    ${p.banner_id ? `<div class="muted" style="font-size:13px">${state.lang === 'ur' ? 'بینر شائع ہو گیا' : 'Banner published'}</div>` : ''}
-  </div>`).join('');
+
   const avg = rv.length ? (rv.reduce((n, x) => n + num(x.restaurant_rating), 0) / rv.length).toFixed(1) : null;
   const revs = rv.slice(0, 15).map(x => {
     const reply = x.shop_reply ? `<div class="note" style="margin-top:8px"><b>${t('shop_reply_label')}</b>${x.shop_reply_auto ? ` <span class="muted" style="font-size:12px">🤖 ${t('arp_auto_label')}</span>` : ''}<div style="white-space:pre-wrap;margin-top:4px">${esc(x.shop_reply)}</div><small class="muted">${esc(x.shop_replied_at ? when(x.shop_replied_at) : '')}</small></div>` : '';
@@ -2884,55 +2881,12 @@ function viewShop(){
     ${!state.staffMode ? `<button type="button" class="btn ghost" style="margin:0 0 12px" onclick="go('insights')">📈 ${state.lang === 'ur' ? 'دکان کے رجحانات اور گاہکوں کے مجموعی گروپ' : 'Shop trends & aggregate customer groups'}</button>` : ''}
     ${!state.staffMode ? `<button type="button" class="btn ghost" style="margin:0 0 12px" onclick="go('taxdocs')">📄 ${state.lang === 'ur' ? 'ٹیکس دستاویزات' : 'Tax documents'}</button>` : ''}
     <div class="grp"><div class="grp-h">${state.lang === 'ur' ? '📣 تشہیر' : '📣 Promotions'}</div>
-    <h2>${state.lang === 'ur' ? '📣 تشہیر کی درخواست' : '📣 Request a promotion'}</h2>
-    <div class="card">
-      <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے تشہیری بینر کی درخواست دیں۔ بینر انتظامیہ کی منظوری کے بعد ہی شائع ہوگا۔' : 'Request a promotional banner for your shop. It will only be published after admin approval.'}</p>
-      <label class="f" for="promoTitle">${state.lang === 'ur' ? 'عنوان (ضروری)' : 'Title (required, 3–80 characters)'}</label><input id="promoTitle" type="text" minlength="3" maxlength="80" required>
-      <label class="f" for="promoSubtitle">${state.lang === 'ur' ? 'ذیلی عنوان (اختیاری)' : 'Subtitle (optional, up to 180 characters)'}</label><input id="promoSubtitle" type="text" maxlength="180">
-      <label class="f" for="promoImage">${state.lang === 'ur' ? 'تصویر کا URL (اختیاری)' : 'Image URL (optional)'}</label><input id="promoImage" type="url" inputmode="url" placeholder="https://…">
-      <label class="f" for="promoStarts">${state.lang === 'ur' ? 'شروع ہونے کا وقت (اختیاری)' : 'Starts at (optional)'}</label><input id="promoStarts" type="datetime-local">
-      <label class="f" for="promoEnds">${state.lang === 'ur' ? 'ختم ہونے کا وقت (اختیاری)' : 'Ends at (optional)'}</label><input id="promoEnds" type="datetime-local">
-      <div id="promoError" class="err-text" role="alert" aria-live="polite"></div>
-      <button type="button" class="btn" id="promoSubmit" onclick="A.submitPromoRequest()">${state.lang === 'ur' ? 'منظوری کے لیے بھیجیں' : 'Submit for approval'}</button>
-    </div>
-    <div class="ch"><h2 style="margin:12px 0 8px">${state.lang === 'ur' ? 'پچھلی درخواستیں' : 'Previous requests'}</h2><button type="button" class="linkbtn" onclick="A.refreshPromoRequests()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh'}</button></div>
-    ${promoRows || `<div class="empty">${state.lang === 'ur' ? 'ابھی کوئی درخواست نہیں۔' : 'No promotion requests yet.'}</div>`}
-    <h2>${state.lang === 'ur' ? '🏷️ پرومو کوڈ کی درخواست' : '🏷️ Promo code requests'}</h2>
-    <div class="card">
-      <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے ڈسکاؤنٹ کوڈ کی درخواست دیں۔ منظوری کے بعد یہ کوڈ صرف اسی دکان کے آرڈرز پر چلے گا۔ بینر الگ سے انتظامیہ بنائے گی۔' : 'Request a discount code for your shop. Once approved, the code works only on this shop\'s orders. The banner is a separate step the admin creates.'}</p>
-      ${state.cmpNoTable ? `<div class="note">${state.lang === 'ur' ? 'پرومو کوڈ کی درخواستیں ابھی دستیاب نہیں ہیں — بیک اینڈ اپ ڈیٹ باقی ہے۔' : 'Promo code requests are not available yet — the backend update is still pending.'}</div>` : ''}
-      ${(() => { const ce = (state.cmpReqs || []).find(x => x.id === state.cmpEditId) || null; return `
-      <label class="f" for="cmpCode">${state.lang === 'ur' ? 'کوڈ (ضروری، 3 سے 20 حروف)' : 'Code (required, 3–20 characters)'}</label><input id="cmpCode" type="text" maxlength="20" autocapitalize="characters" placeholder="SAVE10" value="${esc(ce ? ce.code : '')}">
-      <label class="f" for="cmpType">${state.lang === 'ur' ? 'ڈسکاؤنٹ کی قسم' : 'Discount type'}</label><select id="cmpType"><option value="percent" ${ce && ce.type === 'percent' ? 'selected' : ''}>${state.lang === 'ur' ? 'فیصد' : 'Percent'}</option><option value="fixed" ${ce && ce.type === 'fixed' ? 'selected' : ''}>${state.lang === 'ur' ? 'مقررہ رقم' : 'Fixed amount'}</option><option value="free_delivery" ${ce && ce.type === 'free_delivery' ? 'selected' : ''}>${state.lang === 'ur' ? 'مفت ڈلیوری' : 'Free delivery'}</option></select>
-      <label class="f" for="cmpVal">${state.lang === 'ur' ? 'ڈسکاؤنٹ (فیصد کے لیے 1 سے 100)' : 'Discount value (1–100 for percent)'}</label><input id="cmpVal" type="number" min="0" value="${ce ? num(ce.value) : ''}">
-      <label class="f" for="cmpMin">${state.lang === 'ur' ? 'کم از کم آرڈر (روپے، اختیاری)' : 'Minimum order (Rs, optional)'}</label><input id="cmpMin" type="number" min="0" value="${ce ? num(ce.min_order) : ''}">
-      <label class="f" for="cmpMax">${state.lang === 'ur' ? 'زیادہ سے زیادہ ڈسکاؤنٹ (روپے، اختیاری)' : 'Maximum discount (Rs, optional)'}</label><input id="cmpMax" type="number" min="0" value="${ce && ce.max_discount != null ? num(ce.max_discount) : ''}">
-      <label class="f" for="cmpExp">${state.lang === 'ur' ? 'ختم ہونے کی تاریخ (اختیاری)' : 'Expiry date (optional)'}</label><input id="cmpExp" type="date" value="${ce && ce.expires_at ? new Date(ce.expires_at).toISOString().slice(0, 10) : ''}">
-      <label class="f" for="cmpNote">${state.lang === 'ur' ? 'انتظامیہ کے لیے نوٹ (اختیاری)' : 'Note for admin (optional)'}</label><input id="cmpNote" type="text" maxlength="200" value="${esc(ce ? (ce.note || '') : '')}">
-      <div id="cmpError" class="err-text" role="alert" aria-live="polite"></div>
-      <button type="button" class="btn" id="cmpSubmit" onclick="A.cmpSubmit()" ${state.cmpNoTable ? 'disabled' : ''}>${ce ? (state.lang === 'ur' ? 'تبدیلیاں محفوظ کریں' : 'Save changes') : (state.lang === 'ur' ? 'منظوری کے لیے بھیجیں' : 'Submit for approval')}</button>
-      ${ce ? `<button type="button" class="linkbtn" onclick="A.cmpCancelEdit()">${state.lang === 'ur' ? 'ترمیم منسوخ کریں' : 'Cancel edit'}</button>` : ''}`; })()}
-    </div>
-    <div class="ch"><h2 style="margin:12px 0 8px">${state.lang === 'ur' ? 'کوڈ کی درخواستیں' : 'Code requests'}</h2><button type="button" class="linkbtn" onclick="A.cmpRefresh()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh'}</button></div>
-    ${cmpRows() || `<div class="empty">${state.lang === 'ur' ? 'ابھی کوئی کوڈ درخواست نہیں۔' : 'No code requests yet.'}</div>`}
-    </div>
+    <div class="list setlist">
+      <button class="row" onclick="go('promobanner')"><div class="row-main"><div class="row-title">${state.lang === 'ur' ? '📣 تشہیر کی درخواست' : '📣 Request a promotion'}</div><div class="row-sub">${state.lang === 'ur' ? 'آپ کی دکان کے لیے تشہیری بینر' : 'Promotional banner for your shop'}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="go('promocode')"><div class="row-main"><div class="row-title">${state.lang === 'ur' ? '🏷️ پرومو کوڈ کی درخواست' : '🏷️ Promo code requests'}</div><div class="row-sub">${state.lang === 'ur' ? 'آپ کی دکان کے لیے ڈسکاؤنٹ کوڈ' : 'Discount code for your shop'}</div></div><span class="muted">›</span></button>
+      <button class="row" onclick="go('vouchers')"><div class="row-main"><div class="row-title">🎁 ${t('vch_title')}</div><div class="row-sub">${t('vch_shop_sub')}</div></div><span class="muted">›</span></button>
+    </div></div>
     ${(() => { const x = weekHours(r)[todayDw()]; const badge = x.off ? t('day_closed') : `${time12(x.o)} – ${time12(x.c)}`; return `
-    <div class="card academy" style="margin:12px 0"><b>🎓 ${state.lang === 'ur' ? 'دکان سیکھنے کی مختصر تربیت' : 'Shop quick-start academy'}</b>
-      <details><summary>${state.lang === 'ur' ? '1. پروڈکٹ اور اچھی تصویر شامل کریں' : '1. Add a product and a clear photo'}</summary><p>${state.lang === 'ur' ? 'مینو / پروڈکٹس کھولیں، سیکشن چنیں اور نام، قیمت اور دستیابی درج کریں۔ روشن، صاف تصویر اپ لوڈ کریں؛ کراپ ایڈیٹر میں تناسب، زوم اور جگہ درست کر کے استعمال کریں۔' : 'Open Menu / Products, choose a section, then enter the name, price and availability. Upload a bright, clear photo; use the crop editor to adjust framing, zoom and aspect ratio before applying it.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '2. آرڈر وصول اور تیار کریں' : '2. Receive and prepare orders'}</summary><p>${state.lang === 'ur' ? 'ایپ کھلی اور آواز آن رکھیں۔ نیا آرڈر قبول کریں، تیاری کا وقت بتائیں، پھر تیار ہونے پر تیار نشان لگائیں۔' : 'Keep the app open with sound enabled. Accept a new order, set a realistic prep time, then mark it ready when it is prepared.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '3. اوقات اور دستیابی تازہ رکھیں' : '3. Keep hours and availability current'}</summary><p>${state.lang === 'ur' ? 'دکان کی ترتیبات میں کھلنے کے اوقات اور وقفے محفوظ کریں۔ مصروف ہوں تو نئی آرڈرز عارضی طور پر روکیں؛ دستیابی بدلنے پر اسٹاک اپ ڈیٹ کریں۔' : 'Save opening hours and breaks in Shop settings. Pause new orders temporarily when busy, and update stock when availability changes.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '4. گاہک کا منظر دیکھیں' : '4. Check the customer view'}</summary><p>${state.lang === 'ur' ? 'پری ویو میں دکان اور پروڈکٹس دیکھیں تاکہ تصویر، نام اور قیمت درست نظر آئیں۔' : 'Use customer preview to check that your shop and products display with the right photos, names and prices.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '5. تصویر منظوری کے لیے بھیجیں' : '5. Submit a product photo for approval'}</summary><p>${state.lang === 'ur' ? 'پروڈکٹ کی تصویر ایڈیٹر سے محفوظ / جمع کریں۔ نئی تصویر Admin کی منظوری کے لیے جاتی ہے؛ منظوری تک موجودہ لائیو تصویر برقرار رہتی ہے۔ تصویر کی منظوری کی حالت میں درخواست دیکھیں۔' : 'Submit a product photo from the editor. The new photo goes to Admin for approval; the current live photo stays in place until approval. Check Photo approval status for your submission.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '6. آرڈر حوالگی سے پہلے چیک لسٹ' : '6. Use the order handoff checklist'}</summary><p>${state.lang === 'ur' ? 'تیار یا حوالگی کے مرحلے کے آرڈر میں حوالگی چیک لسٹ کھولیں۔ اشیا، پیکٹ بند ہونے اور کسٹمر یا رائیڈر کی حوالگی کی تصدیق کریں؛ چاہیں تو نوٹ لکھ کر محفوظ کریں۔' : 'Open Handoff checklist on an order in the ready or handoff stage. Confirm the items, sealed package, and customer or rider handoff; add an optional note and save.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '7. خاص یا چھٹی کے دن کے اوقات' : '7. Set special or holiday hours'}</summary><p>${state.lang === 'ur' ? 'دکان کی اوقات والی سیٹنگ کھولیں، تاریخ چنیں، اس دن کے کھلنے اور بند ہونے کے وقت درج کریں یا بند ہونے کا انتخاب کریں، پھر محفوظ کریں۔ یہ استثنا صرف اسی تاریخ کے لیے ہفتہ وار اوقات پر فوقیت رکھتا ہے؛ آئندہ تاریخ استعمال کریں۔' : 'Open Shop timings, choose a date, enter that date’s opening and closing times or mark it closed, then save. The exception overrides weekly hours for that date only; choose a future date.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '8. سپورٹ درخواست اور جواب' : '8. Create and follow a support request'}</summary><p>${state.lang === 'ur' ? 'مدد اور قانونی میں سپورٹ پیغامات کھول کر درخواست بنائیں؛ ضرورت ہو تو متعلقہ آرڈر منتخب کریں۔ درخواست میں جواب دیں، اور بند درخواست کو دوبارہ کھولنے یا ترجیح بڑھانے کے دستیاب اختیار استعمال کریں۔ جواب کے وقت کی ضمانت نہیں۔' : 'Open Support messages under Help & legal to create a request; link an order when relevant. Reply in the request, and use the available reopen or escalate action when applicable. Response time is not guaranteed.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '9. گروپ آرڈرز سنبھالیں' : '9. Handle group orders'}</summary><p>${state.lang === 'ur' ? 'گروپس ٹیب کھولیں۔ لاک، ادائیگی جاری اور تیار گروپ ایک مکمل آرڈر ہیں — انہیں عام آرڈر کی طرح تیار کریں۔ کھلے گروپ ابھی بن رہے ہیں — انہیں ابھی تیار نہ کریں۔' : 'Open the Groups tab. Locked, Paying and Ready groups are one consolidated order — prepare them like a normal order. Open groups are still being built — do not prepare them yet.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '10. گفٹ واؤچر بنائیں' : '10. Create gift vouchers'}</summary><p>${state.lang === 'ur' ? 'واؤچرز ٹیب کھول کر صرف اپنی دکان کے لیے کوڈ بنائیں۔ گاہک انہیں اپنی ایپ میں استعمال کرتے ہیں۔ پیشکش ختم ہو تو کوڈ غیر فعال کر دیں۔' : 'Open the Vouchers tab to create codes that only work at your shop. Customers redeem them in their app. Deactivate a code when you stop offering it.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '11. پرومو کوڈ اور بینر کی درخواست دیں' : '11. Request promo codes and banners'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے ڈسکاؤنٹ کوڈ یا تشہیری بینر کی درخواست دیں۔ منظور شدہ کوڈ صرف اسی دکان کے آرڈرز پر چلتا ہے؛ بینر منظوری کے بعد انتظامیہ الگ سے بناتی ہے۔' : 'From the Shop tab, request a discount code or a promotional banner. An approved code works only on orders from this shop; a banner is a separate step the admin creates after approval.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '12. کاؤنٹر آرڈر لیں' : '12. Take counter orders'}</summary><p>${state.lang === 'ur' ? 'آرڈرز ٹیب میں کاؤنٹر آرڈر سے واک ان گاہک کا بل بنائیں۔ یہ کاؤنٹر پر نقد ادائیگی ہے — نہ رائیڈر، نہ ڈلیوری فیس، نہ کوڈ۔' : 'On the Orders tab, use Counter order for walk-in customers. It is cash at the counter, with no rider, delivery fee or code.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '13. ٹیکس دستاویزات اپ لوڈ کریں' : '13. Upload tax documents'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے ٹیکس دستاویزات کھول کر این ٹی این سرٹیفکیٹ، کاروباری رجسٹریشن یا بینک دستاویز اپ لوڈ کریں۔ تصدیق سے دکان خود منظور یا مسترد نہیں ہوتی۔' : 'From the Shop tab, open Tax documents and upload your NTN certificate, business registration or bank document. Verification does not approve or reject the shop itself.'}</p></details>
-      <details><summary>${state.lang === 'ur' ? '14. رجحانات اور پیغامات دیکھیں' : '14. Check insights and messages'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے دکان کے رجحانات میں فروخت، آمدنی اور بہترین پروڈکٹس دیکھیں، اور پیغامات میں دفتر کی اطلاعیں پڑھیں۔' : 'From the Shop tab, open Shop trends to see sales, earnings and top products, and Messages for announcements from the office.'}</p></details>
-    </div>
     <div class="grp" style="margin-top:6px"><div class="grp-h">👤 Profile &amp; Account</div>
     <div class="list setlist">
       <button class="row" onclick="A.profileSheet()"><div class="row-main"><div class="row-title">🏪 ${t('m_profile')}</div><div class="row-sub">${t('m_profile_s')}</div></div><span class="muted">›</span></button>
@@ -2951,6 +2905,7 @@ function viewShop(){
       <button class="row" onclick="dndealSheet()"><div class="row-main"><div class="row-title">🍽️ ${t('dn_t2')}</div><div class="row-sub">${t('dn_s2')}</div></div><span class="muted">›</span></button>
       <button class="row" onclick="blstShopSheet()"><div class="row-main"><div class="row-title">⛔ ${t('blst_t')}</div><div class="row-sub">${t('blst_s')}</div></div><span class="muted">›</span></button>
       ${(isFood() || (state.restaurant && state.restaurant.dinein_on)) ? `<button class="row" onclick="A.dineinSheet()"><div class="row-main"><div class="row-title">${t('dn_t')}</div><div class="row-sub">${t('dn_s')}</div></div><span class="chev">›</span></button>` : ''}${isServices() ? `<button class="row" onclick="A.bookingSheet2()"><div class="row-main"><div class="row-title">📅 ${t('m_booking2')}</div><div class="row-sub">${t('m_booking2_s')}</div></div><span class="muted">›</span></button>` : ''}
+      <button class="row" onclick="go('groups')"><div class="row-main"><div class="row-title">👥 ${t('grp_title')}</div><div class="row-sub">${state.lang === 'ur' ? 'اپنے گروپ آرڈر دیکھیں' : 'See your group orders'}</div></div><span class="muted">›</span></button>
     </div></div>
 `; })()}
     <h2>${t('my_shops')}</h2>
@@ -2970,6 +2925,7 @@ function viewShop(){
       <button class="row" style="width:100%;border:none;background:none" onclick="A.tmcMsgsSheet()"><div class="row-main"><div class="row-title">📬 ${t('tmc_msgs')}</div><div class="row-sub">${t('tmc_msgs_sub')}</div></div>${state.tmcUnread ? `<span class="pill r">${state.tmcUnread}</span>` : ''}<span class="muted">›</span></button>
       <button class="row" style="width:100%;border:none;background:none" onclick="A.supportCenter()"><div class="row-main"><div class="row-title">🛟 ${state.lang === 'ur' ? 'سپورٹ پیغامات' : 'Support messages'}</div><div class="row-sub">${state.lang === 'ur' ? 'مدد کی درخواست بنائیں اور جواب دیں' : 'Create a request and reply to support'}</div></div><span class="muted">›</span></button>
       <button class="row" style="width:100%;border:none;background:none" onclick="A.supportNew(null)"><div class="row-main"><div class="row-title">🐞 ${state.lang === 'ur' ? 'بگ رپورٹ کریں / اسکرین شاٹ بھیجیں' : 'Report a bug / screenshot'}</div><div class="row-sub">${state.lang === 'ur' ? 'اختیاری اسکرین شاٹ کے ساتھ مدد کی درخواست' : 'Create a support request with an optional screenshot'}</div></div><span class="muted">›</span></button>
+      <button class="row" style="width:100%;border:none;background:none" onclick="go('academy')"><div class="row-main"><div class="row-title">🎓 ${state.lang === 'ur' ? 'دکان سیکھنے کی مختصر تربیت' : 'Shop quick-start academy'}</div><div class="row-sub">${state.lang === 'ur' ? '14 مختصر رہنما' : '14 short guides'}</div></div><span class="muted">›</span></button>
       ${Legal.links(state.lang)}
     </div></div>
     <div class="grp"><div class="grp-h">👤 ${t('account') || 'Account'}</div>
@@ -2978,6 +2934,69 @@ function viewShop(){
       <button class="row danger" style="width:100%;border:none;background:none;border-top:1px solid var(--line)" onclick="A.logout()"><div class="row-main"><div class="row-title">🚪 ${t('logout')}</div></div></button>
     </div></div>
     <p class="ver" style="margin-top:14px">Dera Shop v${APP_VERSION}</p>${pfmLine()}`;
+}
+
+
+function viewPromoBanner(){
+  const promoRows = (state.promoRequests || []).map(p => `<div class="card">
+    <div class="ch"><b>${esc(p.title || '')}</b><span class="pill ${p.status === 'approved' ? 'g' : p.status === 'rejected' ? 'r' : 'y'}">${esc(p.status || 'pending')}</span></div>
+    ${p.subtitle ? `<div>${esc(p.subtitle)}</div>` : ''}
+    <div class="muted" style="font-size:13px;margin-top:6px">${esc(p.created_at ? when(p.created_at) : '')}${p.starts_at || p.ends_at ? ` · ${esc(p.starts_at ? new Date(p.starts_at).toLocaleString() : 'No start')} – ${esc(p.ends_at ? new Date(p.ends_at).toLocaleString() : 'No end')}` : ''}</div>
+    ${p.admin_note ? `<div class="note"><b>${state.lang === 'ur' ? 'انتظامیہ کا نوٹ' : 'Admin note'}:</b> ${esc(p.admin_note)}</div>` : ''}
+    ${p.banner_id ? `<div class="muted" style="font-size:13px">${state.lang === 'ur' ? 'بینر شائع ہو گیا' : 'Banner published'}</div>` : ''}
+  </div>`).join('');
+  return `    <h1>${state.lang === 'ur' ? '📣 تشہیر کی درخواست' : '📣 Request a promotion'}</h1>
+    <div class="card">
+      <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے تشہیری بینر کی درخواست دیں۔ بینر انتظامیہ کی منظوری کے بعد ہی شائع ہوگا۔' : 'Request a promotional banner for your shop. It will only be published after admin approval.'}</p>
+      <label class="f" for="promoTitle">${state.lang === 'ur' ? 'عنوان (ضروری)' : 'Title (required, 3–80 characters)'}</label><input id="promoTitle" type="text" minlength="3" maxlength="80" required>
+      <label class="f" for="promoSubtitle">${state.lang === 'ur' ? 'ذیلی عنوان (اختیاری)' : 'Subtitle (optional, up to 180 characters)'}</label><input id="promoSubtitle" type="text" maxlength="180">
+      <label class="f" for="promoImage">${state.lang === 'ur' ? 'تصویر کا URL (اختیاری)' : 'Image URL (optional)'}</label><input id="promoImage" type="url" inputmode="url" placeholder="https://…">
+      <label class="f" for="promoStarts">${state.lang === 'ur' ? 'شروع ہونے کا وقت (اختیاری)' : 'Starts at (optional)'}</label><input id="promoStarts" type="datetime-local">
+      <label class="f" for="promoEnds">${state.lang === 'ur' ? 'ختم ہونے کا وقت (اختیاری)' : 'Ends at (optional)'}</label><input id="promoEnds" type="datetime-local">
+      <div id="promoError" class="err-text" role="alert" aria-live="polite"></div>
+      <button type="button" class="btn" id="promoSubmit" onclick="A.submitPromoRequest()">${state.lang === 'ur' ? 'منظوری کے لیے بھیجیں' : 'Submit for approval'}</button>
+    </div>
+    <div class="ch"><h2 style="margin:12px 0 8px">${state.lang === 'ur' ? 'پچھلی درخواستیں' : 'Previous requests'}</h2><button type="button" class="linkbtn" onclick="A.refreshPromoRequests()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh'}</button></div>
+    ${promoRows || `<div class="empty">${state.lang === 'ur' ? 'ابھی کوئی درخواست نہیں۔' : 'No promotion requests yet.'}</div>`}`;
+}
+function viewPromoCode(){
+  return `    <h1>${state.lang === 'ur' ? '🏷️ پرومو کوڈ کی درخواست' : '🏷️ Promo code requests'}</h1>
+    <div class="card">
+      <p class="muted" style="margin:0 0 8px">${state.lang === 'ur' ? 'اپنی دکان کے لیے ڈسکاؤنٹ کوڈ کی درخواست دیں۔ منظوری کے بعد یہ کوڈ صرف اسی دکان کے آرڈرز پر چلے گا۔ بینر الگ سے انتظامیہ بنائے گی۔' : 'Request a discount code for your shop. Once approved, the code works only on this shop\'s orders. The banner is a separate step the admin creates.'}</p>
+      ${state.cmpNoTable ? `<div class="note">${state.lang === 'ur' ? 'پرومو کوڈ کی درخواستیں ابھی دستیاب نہیں ہیں — بیک اینڈ اپ ڈیٹ باقی ہے۔' : 'Promo code requests are not available yet — the backend update is still pending.'}</div>` : ''}
+      ${(() => { const ce = (state.cmpReqs || []).find(x => x.id === state.cmpEditId) || null; return `
+      <label class="f" for="cmpCode">${state.lang === 'ur' ? 'کوڈ (ضروری، 3 سے 20 حروف)' : 'Code (required, 3–20 characters)'}</label><input id="cmpCode" type="text" maxlength="20" autocapitalize="characters" placeholder="SAVE10" value="${esc(ce ? ce.code : '')}">
+      <label class="f" for="cmpType">${state.lang === 'ur' ? 'ڈسکاؤنٹ کی قسم' : 'Discount type'}</label><select id="cmpType"><option value="percent" ${ce && ce.type === 'percent' ? 'selected' : ''}>${state.lang === 'ur' ? 'فیصد' : 'Percent'}</option><option value="fixed" ${ce && ce.type === 'fixed' ? 'selected' : ''}>${state.lang === 'ur' ? 'مقررہ رقم' : 'Fixed amount'}</option><option value="free_delivery" ${ce && ce.type === 'free_delivery' ? 'selected' : ''}>${state.lang === 'ur' ? 'مفت ڈلیوری' : 'Free delivery'}</option></select>
+      <label class="f" for="cmpVal">${state.lang === 'ur' ? 'ڈسکاؤنٹ (فیصد کے لیے 1 سے 100)' : 'Discount value (1–100 for percent)'}</label><input id="cmpVal" type="number" min="0" value="${ce ? num(ce.value) : ''}">
+      <label class="f" for="cmpMin">${state.lang === 'ur' ? 'کم از کم آرڈر (روپے، اختیاری)' : 'Minimum order (Rs, optional)'}</label><input id="cmpMin" type="number" min="0" value="${ce ? num(ce.min_order) : ''}">
+      <label class="f" for="cmpMax">${state.lang === 'ur' ? 'زیادہ سے زیادہ ڈسکاؤنٹ (روپے، اختیاری)' : 'Maximum discount (Rs, optional)'}</label><input id="cmpMax" type="number" min="0" value="${ce && ce.max_discount != null ? num(ce.max_discount) : ''}">
+      <label class="f" for="cmpExp">${state.lang === 'ur' ? 'ختم ہونے کی تاریخ (اختیاری)' : 'Expiry date (optional)'}</label><input id="cmpExp" type="date" value="${ce && ce.expires_at ? new Date(ce.expires_at).toISOString().slice(0, 10) : ''}">
+      <label class="f" for="cmpNote">${state.lang === 'ur' ? 'انتظامیہ کے لیے نوٹ (اختیاری)' : 'Note for admin (optional)'}</label><input id="cmpNote" type="text" maxlength="200" value="${esc(ce ? (ce.note || '') : '')}">
+      <div id="cmpError" class="err-text" role="alert" aria-live="polite"></div>
+      <button type="button" class="btn" id="cmpSubmit" onclick="A.cmpSubmit()" ${state.cmpNoTable ? 'disabled' : ''}>${ce ? (state.lang === 'ur' ? 'تبدیلیاں محفوظ کریں' : 'Save changes') : (state.lang === 'ur' ? 'منظوری کے لیے بھیجیں' : 'Submit for approval')}</button>
+      ${ce ? `<button type="button" class="linkbtn" onclick="A.cmpCancelEdit()">${state.lang === 'ur' ? 'ترمیم منسوخ کریں' : 'Cancel edit'}</button>` : ''}`; })()}
+    </div>
+    <div class="ch"><h2 style="margin:12px 0 8px">${state.lang === 'ur' ? 'کوڈ کی درخواستیں' : 'Code requests'}</h2><button type="button" class="linkbtn" onclick="A.cmpRefresh()">${state.lang === 'ur' ? 'تازہ کریں' : 'Refresh'}</button></div>
+    ${cmpRows() || `<div class="empty">${state.lang === 'ur' ? 'ابھی کوئی کوڈ درخواست نہیں۔' : 'No code requests yet.'}</div>`}`;
+}
+function viewAcademy(){
+  return `    <h1>${state.lang === 'ur' ? '🎓 دکان سیکھنے کی مختصر تربیت' : '🎓 Shop quick-start academy'}</h1>
+    <div class="card academy" style="margin:12px 0"><b>🎓 ${state.lang === 'ur' ? 'دکان سیکھنے کی مختصر تربیت' : 'Shop quick-start academy'}</b>
+      <details><summary>${state.lang === 'ur' ? '1. پروڈکٹ اور اچھی تصویر شامل کریں' : '1. Add a product and a clear photo'}</summary><p>${state.lang === 'ur' ? 'مینو / پروڈکٹس کھولیں، سیکشن چنیں اور نام، قیمت اور دستیابی درج کریں۔ روشن، صاف تصویر اپ لوڈ کریں؛ کراپ ایڈیٹر میں تناسب، زوم اور جگہ درست کر کے استعمال کریں۔' : 'Open Menu / Products, choose a section, then enter the name, price and availability. Upload a bright, clear photo; use the crop editor to adjust framing, zoom and aspect ratio before applying it.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '2. آرڈر وصول اور تیار کریں' : '2. Receive and prepare orders'}</summary><p>${state.lang === 'ur' ? 'ایپ کھلی اور آواز آن رکھیں۔ نیا آرڈر قبول کریں، تیاری کا وقت بتائیں، پھر تیار ہونے پر تیار نشان لگائیں۔' : 'Keep the app open with sound enabled. Accept a new order, set a realistic prep time, then mark it ready when it is prepared.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '3. اوقات اور دستیابی تازہ رکھیں' : '3. Keep hours and availability current'}</summary><p>${state.lang === 'ur' ? 'دکان کی ترتیبات میں کھلنے کے اوقات اور وقفے محفوظ کریں۔ مصروف ہوں تو نئی آرڈرز عارضی طور پر روکیں؛ دستیابی بدلنے پر اسٹاک اپ ڈیٹ کریں۔' : 'Save opening hours and breaks in Shop settings. Pause new orders temporarily when busy, and update stock when availability changes.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '4. گاہک کا منظر دیکھیں' : '4. Check the customer view'}</summary><p>${state.lang === 'ur' ? 'پری ویو میں دکان اور پروڈکٹس دیکھیں تاکہ تصویر، نام اور قیمت درست نظر آئیں۔' : 'Use customer preview to check that your shop and products display with the right photos, names and prices.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '5. تصویر منظوری کے لیے بھیجیں' : '5. Submit a product photo for approval'}</summary><p>${state.lang === 'ur' ? 'پروڈکٹ کی تصویر ایڈیٹر سے محفوظ / جمع کریں۔ نئی تصویر Admin کی منظوری کے لیے جاتی ہے؛ منظوری تک موجودہ لائیو تصویر برقرار رہتی ہے۔ تصویر کی منظوری کی حالت میں درخواست دیکھیں۔' : 'Submit a product photo from the editor. The new photo goes to Admin for approval; the current live photo stays in place until approval. Check Photo approval status for your submission.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '6. آرڈر حوالگی سے پہلے چیک لسٹ' : '6. Use the order handoff checklist'}</summary><p>${state.lang === 'ur' ? 'تیار یا حوالگی کے مرحلے کے آرڈر میں حوالگی چیک لسٹ کھولیں۔ اشیا، پیکٹ بند ہونے اور کسٹمر یا رائیڈر کی حوالگی کی تصدیق کریں؛ چاہیں تو نوٹ لکھ کر محفوظ کریں۔' : 'Open Handoff checklist on an order in the ready or handoff stage. Confirm the items, sealed package, and customer or rider handoff; add an optional note and save.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '7. خاص یا چھٹی کے دن کے اوقات' : '7. Set special or holiday hours'}</summary><p>${state.lang === 'ur' ? 'دکان کی اوقات والی سیٹنگ کھولیں، تاریخ چنیں، اس دن کے کھلنے اور بند ہونے کے وقت درج کریں یا بند ہونے کا انتخاب کریں، پھر محفوظ کریں۔ یہ استثنا صرف اسی تاریخ کے لیے ہفتہ وار اوقات پر فوقیت رکھتا ہے؛ آئندہ تاریخ استعمال کریں۔' : 'Open Shop timings, choose a date, enter that date’s opening and closing times or mark it closed, then save. The exception overrides weekly hours for that date only; choose a future date.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '8. سپورٹ درخواست اور جواب' : '8. Create and follow a support request'}</summary><p>${state.lang === 'ur' ? 'مدد اور قانونی میں سپورٹ پیغامات کھول کر درخواست بنائیں؛ ضرورت ہو تو متعلقہ آرڈر منتخب کریں۔ درخواست میں جواب دیں، اور بند درخواست کو دوبارہ کھولنے یا ترجیح بڑھانے کے دستیاب اختیار استعمال کریں۔ جواب کے وقت کی ضمانت نہیں۔' : 'Open Support messages under Help & legal to create a request; link an order when relevant. Reply in the request, and use the available reopen or escalate action when applicable. Response time is not guaranteed.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '9. گروپ آرڈرز سنبھالیں' : '9. Handle group orders'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے گروپ آرڈرز کھولیں۔ لاک، ادائیگی جاری اور تیار گروپ ایک مکمل آرڈر ہیں — انہیں عام آرڈر کی طرح تیار کریں۔ کھلے گروپ ابھی بن رہے ہیں — انہیں ابھی تیار نہ کریں۔' : 'Open Group orders from the Shop tab. Locked, Paying and Ready groups are one consolidated order — prepare them like a normal order. Open groups are still being built — do not prepare them yet.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '10. گفٹ واؤچر بنائیں' : '10. Create gift vouchers'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے گفٹ کارڈ اور واؤچر کھول کر صرف اپنی دکان کے لیے کوڈ بنائیں۔ گاہک انہیں اپنی ایپ میں استعمال کرتے ہیں۔ پیشکش ختم ہو تو کوڈ غیر فعال کر دیں۔' : 'From the Shop tab, open Gift cards & vouchers to create codes that only work at your shop. Customers redeem them in their app. Deactivate a code when you stop offering it.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '11. پرومو کوڈ اور بینر کی درخواست دیں' : '11. Request promo codes and banners'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے پرومو کوڈ کی درخواستیں یا تشہیر کی درخواست کھولیں۔ منظور شدہ کوڈ صرف اسی دکان کے آرڈرز پر چلتا ہے؛ بینر منظوری کے بعد انتظامیہ الگ سے بناتی ہے۔' : 'From the Shop tab, open Promo code requests or Request a promotion. An approved code works only on orders from this shop; a banner is a separate step the admin creates after approval.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '12. کاؤنٹر آرڈر لیں' : '12. Take counter orders'}</summary><p>${state.lang === 'ur' ? 'آرڈرز ٹیب میں کاؤنٹر آرڈر سے واک ان گاہک کا بل بنائیں۔ یہ کاؤنٹر پر نقد ادائیگی ہے — نہ رائیڈر، نہ ڈلیوری فیس، نہ کوڈ۔' : 'On the Orders tab, use Counter order for walk-in customers. It is cash at the counter, with no rider, delivery fee or code.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '13. ٹیکس دستاویزات اپ لوڈ کریں' : '13. Upload tax documents'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے ٹیکس دستاویزات کھول کر این ٹی این سرٹیفکیٹ، کاروباری رجسٹریشن یا بینک دستاویز اپ لوڈ کریں۔ تصدیق سے دکان خود منظور یا مسترد نہیں ہوتی۔' : 'From the Shop tab, open Tax documents and upload your NTN certificate, business registration or bank document. Verification does not approve or reject the shop itself.'}</p></details>
+      <details><summary>${state.lang === 'ur' ? '14. رجحانات اور پیغامات دیکھیں' : '14. Check insights and messages'}</summary><p>${state.lang === 'ur' ? 'شاپ ٹیب سے دکان کے رجحانات میں فروخت، آمدنی اور بہترین پروڈکٹس دیکھیں، اور پیغامات میں دفتر کی اطلاعیں پڑھیں۔' : 'From the Shop tab, open Shop trends to see sales, earnings and top products, and Messages for announcements from the office.'}</p></details>
+    </div>`;
 }
 
 // ---- In-app photo crop editor ----
@@ -3123,10 +3142,10 @@ function payAccSub(a){
 }
 const A = {
   async refreshPromoRequests(){
-    await run(async () => { await loadPromoRequests(); if (state.tab === 'shop') renderTab(); });
+    await run(async () => { await loadPromoRequests(); if (['shop','promobanner'].includes(state.tab)) renderTab(); });
   },
   async cmpRefresh(){
-    await run(async () => { await cmpLoad(); if (state.tab === 'shop') renderTab(); });
+    await run(async () => { await cmpLoad(); if (['shop','promocode'].includes(state.tab)) renderTab(); });
   },
   cmpEditRow(id){
     state.cmpEditId = id; renderTab();
