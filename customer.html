@@ -938,7 +938,7 @@ html[dir=rtl] .grid2 .price-alert{left:auto!important;right:8px!important}
 </style>
 </head>
 <body>
-<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🛍️</div><div class="sp-word"><span style="animation-delay:0.65s">D</span><span style="animation-delay:0.70s">e</span><span style="animation-delay:0.74s">r</span><span style="animation-delay:0.79s">a</span><span class="dot" style="animation-delay:0.85s">.</span></div><div class="sp-tag" style="font-weight:700">Everything you need, in one place!</div><div style="font-size:12px;color:#A89880;margin-top:6px;letter-spacing:.04em">Products • Services • Appointments</div><div class="sp-load"><i></i></div></div>
+<div id="splash"><div class="sp-blob b1"></div><div class="sp-blob b2"></div><svg class="sp-hills" viewBox="0 0 390 130" preserveAspectRatio="none"><path d="M0,70 Q95,30 195,62 T390,52 L390,130 L0,130 Z" fill="#F5D9BC" opacity=".8"/><path d="M0,92 Q110,58 210,84 T390,78 L390,130 L0,130 Z" fill="#EFC99E" opacity=".9"/></svg><div class="sp-icon">🛍️</div><div class="sp-word"><span style="animation-delay:0.65s">D</span><span style="animation-delay:0.70s">e</span><span style="animation-delay:0.74s">r</span><span style="animation-delay:0.79s">a</span><span class="dot" style="animation-delay:0.85s">.</span></div><div class="sp-tag" id="spTag" style="font-weight:700">Everything you need, in one place!</div><div style="font-size:12px;color:#A89880;margin-top:6px;letter-spacing:.04em">Products • Services • Appointments</div><div class="sp-load"><i></i></div></div>
 <script>window.__splashT=Date.now();</script>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1068,7 +1068,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '6.03';
+const APP_VERSION = '6.05';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -1078,7 +1078,7 @@ const APP_VERSION = '6.03';
 const SUPABASE_URL = "https://ijhvlbfuyracfyfefwze.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DPslzvs1_VM7NwdlBGbCWg_cSgWInhp";
 // Passkeys: opt into the Supabase Auth WebAuthn API (registerPasskey / signInWithPasskey / passkey.*).
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-customer-auth', experimental: { passkey: true } } });
+let sb = null; try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storageKey: 'khoupeyo-customer-auth', experimental: { passkey: true } } }); } catch (e) { sb = null; }
 
 // ---- Small helpers ----
 const ls = {
@@ -1113,7 +1113,7 @@ const pctOff = i => num(i.compare_price) > num(i.price) ? Math.round((1 - num(i.
 // ---- Words: English and Urdu ----
 const I18N = {
   en: {
-    appearance:'Appearance', grp_profile:'Profile', grp_orders:'Orders & wallet', help_legal:'Help & legal', delete_account:'Delete my account', voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Dera:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
+    appearance:'Appearance', grp_profile:'Profile', grp_orders:'Orders & wallet', acc_savings:'Savings & rewards', acc_famgive:'Family & giving', help_legal:'Help & legal', delete_account:'Delete my account', voice_no:'Voice search does not work in this browser. Use Chrome.', voice_listen:'Speak now…', recent_s:'Recent searches', popular_s:'Popular searches', clear_s:'Clear', notify_me:'🔔 Tell me when it is back', notify_on:'🔔 We will tell you when it is back', notify_off:'Alert removed', share:'📤 Share', share_txt:'Look at this on Dera:', link_copied:'Link copied', price_any:'Any price', price_under:'Under {p}', for_other:'Order for someone else', for_other_s:'The rider will call this person and give the order to them.', rcv_name:'Receiver name', rcv_phone:'Receiver phone', receiver:'Receiver', faq_t:'Help & questions', faq_link:'❓ Help & questions (FAQ)',
     activity:'Activity', activity_empty:'No orders or appointments yet.', activity_order:'Order', activity_booking:'Appointment', allergy_notice:'Allergy & ingredient note: menu information may be incomplete or out of date. Contact the shop directly to confirm ingredients and allergen handling before ordering. Dera cannot guarantee an item is allergen-safe.', saved_shops:'Saved shops', save_shop:'♡ Save shop', shop_saved:'♥ Shop saved', shop_save_login:'Log in to save shops', shops_none:'No saved shops yet.', shopping_list:'Shopping list', meal_plan:'Meal plan', add_list_item:'Add item', list_placeholder:'Item name', list_empty:'Your list is empty.', planned_meal:'Meal', meal_placeholder:'What are you planning to eat?', plan_date:'Date', add_meal:'Add meal', plan_empty:'No meals planned yet.', checked:'Done', remove_item:'Remove',
     rate_items_t:'Rate the products (optional)', rate_bk:'How was the service?', rate_bk_send:'Send rating', rate_bk_thanks:'Thank you for your rating!', reviews_t:'Customer reviews', no_reviews:'No reviews yet.', rev_n:'{n} reviews',
     book:'📅 Book', book_title:'Book a time', bk_day:'Choose a day', bk_time:'Choose a time', bk_none:'No free time on this day. Try another day.', bk_note:'Note for the shop (optional)', bk_confirm:'Book this time', bk_ok:'Booked! Please reach on time.', bk_login:'Please log in to book', my_bookings:'My bookings', bk_booked:'Booked', bk_arrived:'At the shop', bk_done:'Done', bk_cancelled:'Cancelled', bk_no_show:'Cancelled — late', bk_rule:'Please be on time. If you are more than {m} min late, the booking is cancelled by itself.', bk_wait_till:'The shop waits for you until {t}', bk_cancel:'Cancel booking', bk_cancel_q:'Cancel this booking?', bk_cancel_ok:'Booking cancelled', bk_free:'{n} free', bk_pay:'Pay at the shop', today:'Today', tomorrow:'Tomorrow', min_s:'min', bk_loading:'Loading times…',
@@ -1214,10 +1214,11 @@ const I18N = {
     reco_reorder:'🔁 Reorder again', reco_reorder_sub:'Your favourites, one tap away', reco_foryou:'✨ For you', reco_foryou_sub:'Picked based on your taste', reco_popular:'📍 Popular near you', reco_popular_sub:'Bestsellers in your area', reco_times:'{n}× bought', reco_orders:'🔥 {n} orders', reco_match:'{n}% match',
     reco_recent:'👁️ Recently viewed', reco_recent_sub:'You were looking at these', flash_title:'⚡ Flash Sale', flash_ends:'Ends in', price_drop:'⬇ Price dropped', loyalty_pts:'Loyalty points', loyalty_earn:'Earn 1 pt per Rs {n} order', redeem:'Redeem', redeem_how_many:'How many points to redeem? (min {m})', redeem_min:'Minimum {m} points', redeem_done:'Promo code: {c} — apply it at checkout!', pts_disc:'Points discount (max 40%)', use_pts:'Use points as discount', pts_max:'Max {m} pts', wd_title:'Withdraw money', wd_amt:'Amount (min Rs {m})', wd_to:'To your number {n}', wd_req:'Request withdrawal', wd_done:'Withdrawal requested. You will receive it within 24 hours.', wd_list:'My withdrawals', st_requested:'Requested', st_approved:'Approved', st_paid:'Paid', st_rejected:'Rejected', wd_min:'Minimum withdrawal is Rs {m}', wd_fee:'Fee Rs {f} will be deducted', wd_none:'No withdrawals yet.', wd_nophone:'Add your phone number in your profile first.', w_auto_refund:'Auto-refund (cancelled order)', w_convert:'Points converted', w_withdrawal:'Withdrawal', pts_wallet_note:'Points appear in your wallet after delivery.',
     login_sub:'Welcome back! Log in to order from shops near you.', signup_sub:'Join Dera — order, book and track in seconds.',
-    ob1t:'Everything in one app', ob1d:'Products, services and appointments from shops near you.',
-    ob2t:'Book in seconds', ob2d:'Barber, clinic, car wash — pick a time and book instantly.',
-    ob3t:'Track your order live', ob3d:'Watch your rider on the way. Pay cash when it arrives.',
-    ob_next:'Next', ob_skip:'Skip', ob_start:'Get started',
+    ob1t:'Everything in one app', ob1d:'Products, services, appointments and parcel delivery from shops near you.',
+    ob2t:'Order together', ob2d:'Start a group order with friends and split the delivery fee and payment. Family accounts keep the household together.',
+    ob3t:'Save & give', ob3d:'Gift vouchers, price-drop alerts and Dera Points save you money. Donations go straight to verified recipients.',
+    ob4t:'Track & book live', ob4d:'Watch your rider on the map and book barbers, clinics and services in seconds.',
+    ob_next:'Next', ob_skip:'Skip', ob_start:'Get started', sp_tag:'Jahan SAB MILTA hai!',
     banner_t:'Everything delivered to your door', banner_s:'Order from local shops. Pay cash on delivery.', minutes:'min',
     search_shop:'Search in this shop', results_for:'Results for "{q}"', blocked:'Your account is blocked. Please contact Dera.',
     rider_here:'Your rider has arrived. Please come to the door.', rider_waiting:'Your rider is waiting for you', wait_warn:'Please pick up the phone or come to the door. If you do not respond before the time ends, your order will be cancelled.', failed:'The rider could not deliver your order and it was cancelled.',
@@ -1269,7 +1270,7 @@ const I18N = {
     rf_not_created:'The request was not created. Please try again.', rf_submit_fail:'Could not submit your request. Please try again.',
   },
   ur: {
-    appearance:'انداز', grp_profile:'پروفائل', grp_orders:'آرڈرز اور والیٹ', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Dera پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
+    appearance:'انداز', grp_profile:'پروفائل', grp_orders:'آرڈرز اور والیٹ', acc_savings:'بچت اور انعامات', acc_famgive:'فیملی اور عطیات', help_legal:'مدد اور قانونی', delete_account:'میرا اکاؤنٹ ختم کریں', voice_no:'اس براؤزر میں بول کر تلاش کام نہیں کرتی۔ Chrome استعمال کریں۔', voice_listen:'اب بولیں…', recent_s:'پچھلی تلاش', popular_s:'مشہور تلاش', clear_s:'صاف کریں', notify_me:'🔔 واپس آئے تو بتائیں', notify_on:'🔔 واپس آتے ہی آپ کو بتائیں گے', notify_off:'الرٹ ہٹا دیا', share:'📤 شیئر', share_txt:'Dera پر یہ دیکھیں:', link_copied:'لنک کاپی ہو گیا', price_any:'کوئی بھی قیمت', price_under:'{p} سے کم', for_other:'کسی اور کے لیے آرڈر', for_other_s:'رائیڈر اسی بندے کو کال کرے گا اور آرڈر اسی کو دے گا۔', rcv_name:'وصول کرنے والے کا نام', rcv_phone:'وصول کرنے والے کا فون', receiver:'وصول کرنے والا', faq_t:'مدد اور سوالات', faq_link:'❓ مدد اور سوالات (FAQ)',
     activity:'سرگرمیاں', activity_empty:'ابھی کوئی آرڈر یا اپائنٹمنٹ نہیں۔', activity_order:'آرڈر', activity_booking:'اپائنٹمنٹ', allergy_notice:'الرجی اور اجزاء کا نوٹ: مینو کی معلومات نامکمل یا پرانی ہو سکتی ہیں۔ آرڈر سے پہلے اجزاء اور الرجی سے متعلق تیاری کی تصدیق براہِ راست دکان سے کریں۔ Dera اس بات کی ضمانت نہیں دیتا کہ کوئی چیز الرجی سے محفوظ ہے۔', saved_shops:'محفوظ دکانیں', save_shop:'♡ دکان محفوظ کریں', shop_saved:'♥ دکان محفوظ ہے', shop_save_login:'دکانیں محفوظ کرنے کے لیے لاگ ان کریں', shops_none:'ابھی کوئی دکان محفوظ نہیں۔', shopping_list:'خریداری کی فہرست', meal_plan:'کھانے کا منصوبہ', add_list_item:'آئٹم شامل کریں', list_placeholder:'آئٹم کا نام', list_empty:'فہرست خالی ہے۔', planned_meal:'کھانا', meal_placeholder:'کیا کھانے کا ارادہ ہے؟', plan_date:'تاریخ', add_meal:'کھانا شامل کریں', plan_empty:'ابھی کھانے کا منصوبہ نہیں۔', checked:'مکمل', remove_item:'ہٹائیں',
     rate_items_t:'پروڈکٹس کو ریٹ کریں (اختیاری)', rate_bk:'سروس کیسی رہی؟', rate_bk_send:'ریٹنگ بھیجیں', rate_bk_thanks:'ریٹنگ کا شکریہ!', reviews_t:'گاہکوں کے ریویوز', no_reviews:'ابھی کوئی ریویو نہیں۔', rev_n:'{n} ریویوز',
     book:'📅 بُک کریں', book_title:'وقت بُک کریں', bk_day:'دن چنیں', bk_time:'وقت چنیں', bk_none:'اس دن کوئی وقت خالی نہیں۔ کوئی اور دن دیکھیں۔', bk_note:'دکان کے لیے نوٹ (اختیاری)', bk_confirm:'یہ وقت بُک کریں', bk_ok:'بُک ہو گیا! وقت پر پہنچیں۔', bk_login:'بُک کرنے کے لیے لاگ اِن کریں', my_bookings:'میری بُکنگز', bk_booked:'بُک ہے', bk_arrived:'دکان پر پہنچ گئے', bk_done:'مکمل', bk_cancelled:'منسوخ', bk_no_show:'منسوخ — دیر ہو گئی', bk_rule:'وقت پر پہنچیں۔ اگر آپ {m} منٹ سے زیادہ لیٹ ہوئے تو بُکنگ خود منسوخ ہو جائے گی۔', bk_wait_till:'دکان {t} تک آپ کا انتظار کرے گی', bk_cancel:'بُکنگ منسوخ کریں', bk_cancel_q:'یہ بُکنگ منسوخ کریں؟', bk_cancel_ok:'بُکنگ منسوخ ہو گئی', bk_free:'{n} خالی', bk_pay:'پیسے دکان پر دیں', today:'آج', tomorrow:'کل', min_s:'منٹ', bk_loading:'وقت لوڈ ہو رہے ہیں…',
@@ -1370,10 +1371,11 @@ const I18N = {
     reco_reorder:'🔁 دوبارہ آرڈر کریں', reco_reorder_sub:'آپ کی پسندیدہ چیزیں، ایک ٹیپ پر', reco_foryou:'✨ آپ کے لیے', reco_foryou_sub:'آپ کی پسند کے حساب سے', reco_popular:'📍 آپ کے علاقے میں مقبول', reco_popular_sub:'آپ کے علاقے میں سب سے زیادہ بکنے والا', reco_times:'{n} بار خریدی', reco_orders:'🔥 {n} آرڈرز', reco_match:'{n}% میچ',
     reco_recent:'👁️ حال ہی میں دیکھی', reco_recent_sub:'آپ یہ دیکھ رہے تھے', flash_title:'⚡ فلیش سیل', flash_ends:'ختم ہونے میں', price_drop:'⬇ قیمت کم ہوئی', loyalty_pts:'لائلٹی پوائنٹس', loyalty_earn:'ہر Rs {n} کے آرڈر پر 1 پوائنٹ', redeem:'ریڈیم کریں', redeem_how_many:'کتنے پوائنٹس ریڈیم کرنے ہیں؟ (کم از کم {m})', redeem_min:'کم از کم {m} پوائنٹس', redeem_done:'پرومو کوڈ: {c} — چیک آؤٹ پر لگائیں!', pts_disc:'پوائنٹس رعایت (زیادہ سے زیادہ 40٪)', use_pts:'پوائنٹس رعایت کے طور پر استعمال کریں', pts_max:'زیادہ سے زیادہ {m} پوائنٹس', wd_title:'رقم نکالیں', wd_amt:'رقم (کم از کم Rs {m})', wd_to:'آپ کے نمبر {n} پر', wd_req:'نکالنے کی درخواست کریں', wd_done:'نکالنے کی درخواست ہو گئی۔ 24 گھنٹے میں مل جائے گی۔', wd_list:'میری نکالیں', st_requested:'درخواست', st_approved:'منظور', st_paid:'ادا شدہ', st_rejected:'مسترد', wd_min:'کم از کم نکالنا Rs {m} ہے', wd_fee:'فیس Rs {f} کٹے گی', wd_none:'ابھی کوئی نکالنا نہیں۔', wd_nophone:'پہلے اپنے پروفائل میں اپنا فون نمبر ڈالیں۔', w_auto_refund:'خودکار واپسی (منسوخ آرڈر)', w_convert:'پوائنٹس تبدیل', w_withdrawal:'نکالنا', pts_wallet_note:'پوائنٹس ڈیلیوری کے بعد والیٹ میں آئیں گے۔',
     login_sub:'خوش آمدید! آس پاس کی دکانوں سے آرڈر کے لیے لاگ اِن کریں۔', signup_sub:'ڈیرہ جوائن کریں — سیکنڈوں میں آرڈر، بُکنگ اور ٹریکنگ۔',
-    ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز اور اپائنٹمنٹس۔',
-    ob2t:'سیکنڈوں میں بُک کریں', ob2d:'حجام، کلینک، کار واش — وقت چنیں اور فوراً بُک کریں۔',
-    ob3t:'آرڈر لائیو دیکھیں', ob3d:'رائیڈر کو آتے ہوئے دیکھیں۔ چیز ملے تو کیش دیں۔',
-    ob_next:'آگے', ob_skip:'چھوڑیں', ob_start:'شروع کریں',
+    ob1t:'سب کچھ ایک ایپ میں', ob1d:'آس پاس کی دکانوں سے پروڈکٹس، سروسز، اپائنٹمنٹس اور پارسل ڈیلیوری۔',
+    ob2t:'مل کر آرڈر کریں', ob2d:'دوستوں کے ساتھ گروپ آرڈر بنائیں اور ڈیلیوری فیس اور ادائیگی تقسیم کریں۔ فیملی اکاؤنٹس گھر والوں کو ایک ساتھ رکھتے ہیں۔',
+    ob3t:'بچت اور عطیہ', ob3d:'گفٹ واؤچرز، قیمت کم ہونے کی اطلاع اور ڈیرہ پوائنٹس آپ کے پیسے بچاتے ہیں۔ عطیات براہ راست تصدیق شدہ وصول کنندگان کو جاتے ہیں۔',
+    ob4t:'لائیو ٹریکنگ اور بکنگ', ob4d:'رائیڈر کو نقشے پر آتے دیکھیں اور حجام، کلینک اور سروسز سیکنڈوں میں بُک کریں۔',
+    ob_next:'آگے', ob_skip:'چھوڑیں', ob_start:'شروع کریں', sp_tag:'Jahan SAB MILTA hai!',
     banner_t:'ہر چیز آپ کے دروازے پر', banner_s:'مقامی دکانوں سے آرڈر کریں۔ ادائیگی ڈیلیوری پر نقد۔', minutes:'منٹ',
     search_shop:'اس دکان میں تلاش کریں', results_for:'"{q}" کے نتائج', blocked:'آپ کا اکاؤنٹ بلاک ہے۔ براہ کرم Dera سے رابطہ کریں۔',
     rider_here:'آپ کا رائیڈر پہنچ گیا ہے۔ براہ کرم دروازے پر آئیں۔', rider_waiting:'آپ کا رائیڈر آپ کا انتظار کر رہا ہے', wait_warn:'براہ کرم فون اٹھائیں یا دروازے پر آئیں۔ وقت ختم ہونے تک جواب نہ دیا تو آرڈر منسوخ ہو جائے گا۔', failed:'رائیڈر آپ کا آرڈر نہیں پہنچا سکا اور یہ منسوخ ہو گیا۔',
@@ -1492,7 +1494,7 @@ const t = (k, v) => {
   if (v) for (const x in v) s = s.replace('{' + x + '}', v[x]);
   return s;
 };
-function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; }
+function applyLang(){ document.documentElement.lang = state.lang; document.documentElement.dir = state.lang === 'ur' ? 'rtl' : 'ltr'; try { const st = document.getElementById('spTag'); if (st) st.textContent = t('sp_tag'); } catch (e) {} }
 function toast(msg, isErr){
   if (isErr && /failed to fetch|networkerror|load failed|network request failed/i.test(String(msg))) msg = (() => { try { return state.lang === 'ur'; } catch (e) { return false; } })() ? 'انٹرنیٹ کا مسئلہ ہے۔ انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔' : 'Internet problem. Check your internet and try again.';
   const el = document.createElement('div'); el.className = 'toast' + (isErr ? ' err' : ''); el.textContent = msg;
@@ -4669,8 +4671,6 @@ async function submitRefundRequest(orderId){
     if (button) { button.disabled = false; button.textContent = t('rf_submit'); }
   }
 }
-A.toggleRefundForm = toggleRefundForm;
-A.submitRefundRequest = submitRefundRequest;
 
 // ---- Delivery time and complaints about the rider ----
 const tAt = ts => new Date(ts).toLocaleTimeString('en-GB', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:'Asia/Karachi' });
@@ -4767,20 +4767,26 @@ async function showAccount(){
     <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn" style="width:auto;padding:10px 18px" onclick="A.withdrawReq()">💸 ${t('wd_title')}</button></div>
     <div id="wdList"></div>
     ${wtx.length ? `<details class="box wtx"><summary class="muted">${t('w_hist')}</summary>${wtx.map(x => `<div class="line"><span>${t({ order:'w_order', order_back:'w_back', refund:'w_refund', admin:'w_admin', plus:'w_plus', auto_refund:'w_auto_refund', points_convert:'w_convert', withdrawal:'w_withdrawal' }[x.kind] || 'w_admin')}<small class="muted" style="display:block;font-size:12px">${esc(when(x.created_at))}${x.note ? ' · ' + esc(x.note) : ''}</small></span><b style="color:${num(x.amount) < 0 ? 'var(--danger)' : 'var(--brand)'}">${num(x.amount) > 0 ? '+' : '−'}${money(Math.abs(num(x.amount)))}</b></div>`).join('')}</details>` : `<div class="muted" style="font-size:13px;margin:-4px 2px 10px">${t('wallet_none')}</div>`}
-    <div class="grp"><div class="grp-h">🧾 ${t('grp_orders')}</div>
-    ${plusSet() ? `<a class="menu-row plusrow" href="#/plus"><span>⭐ ${t('plus')}<small>${plusActive() ? esc(t('plus_until', { d:new Date(state.plus.ends_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) }).replace('⭐ ', '')) : t('plus_s')}</small></span><span class="muted">›</span></a>` : ''}
-    <a class="menu-row" href="#/saved"><span>♥ ${t('favourites')} (${state.favs.length})</span><span class="muted">›</span></a>
+    <div class="grp"><div class="grp-h">🧾 ${t('orders')}</div>
     <a class="menu-row" href="#/orders"><span>${t('history')}</span><span class="muted">›</span></a>
-    <a class="menu-row" href="#/offers"><span>${t('offers_invite')}</span><span class="muted">›</span></a>
     <a class="menu-row" href="#/groups"><span>👥 ${t('grp_title')}</span><span class="muted">›</span></a>
+    </div>
+    <div class="grp"><div class="grp-h">⭐ ${t('acc_savings')}</div>
+    ${plusSet() ? `<a class="menu-row plusrow" href="#/plus"><span>⭐ ${t('plus')}<small>${plusActive() ? esc(t('plus_until', { d:new Date(state.plus.ends_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' }) }).replace('⭐ ', '')) : t('plus_s')}</small></span><span class="muted">›</span></a>` : ''}
+    <a class="menu-row" href="#/offers"><span>${t('offers_invite')}</span><span class="muted">›</span></a>
     <a class="menu-row" href="#/vouchers"><span>🎁 ${t('vch_title')}</span><span class="muted">›</span></a>
-    <a class="menu-row" href="#/donations"><span>❤️ ${t('don_title')}</span><span class="muted">›</span></a>
     <a class="menu-row" href="#/price-alerts"><span>${t('pda_title')} <span class="muted" id="pdaBadge" style="${pdaTriggeredCount() ? '' : 'display:none'}">${pdaTriggeredCount() ? '⬇ ' + pdaTriggeredCount() : ''}</span></span><span class="muted">›</span></a>
+    </div>
+    <div class="grp"><div class="grp-h">♥ ${t('favourites')}</div>
+    <a class="menu-row" href="#/saved"><span>♥ ${t('favourites')} (${state.favs.length})</span><span class="muted">›</span></a>
+    </div>
+    <div class="grp"><div class="grp-h">👨‍👩‍👧‍👦 ${t('acc_famgive')}</div>
     <a class="menu-row" href="#/families"><span>👨‍👩‍👧‍👦 ${t('fam_title')}</span><span class="muted">›</span></a>
+    <a class="menu-row" href="#/donations"><span>❤️ ${t('don_title')}</span><span class="muted">›</span></a>
     </div>
     <div class="grp"><div class="grp-h">👤 ${t('grp_profile')}</div>
     <button class="menu-row" onclick="A.accSection('profile')"><span>👤 ${t('edit_profile')}<small class="muted" style="display:block;font-size:12px">${esc(p.full_name || state.user.email)}</small></span><span class="muted">›</span></button>
-    ${(state.regions || []).length > 1 ? `<button class="menu-row" onclick="A.pickRegion()" style="border:2px solid var(--brand)"><span>📍 ${t('delivery_region') || 'Delivery Region'}<small class="muted" style="display:block;font-size:12px;color:var(--brand);font-weight:700">${esc(regionName())}</small></span><span class="muted">›</span></button>` : ''}    <button class="menu-row" onclick="A.privacySecurity()"><span>🔐 ${state.lang==='ur'?'پرائیویسی اور سیکیورٹی':'Privacy & Security'}<small class="muted" style="display:block;font-size:12px">${state.lang==='ur'?'اجازتیں، ڈیٹا اور اکاؤنٹ':'Permissions, data & account'}</small></span><span class="muted">›</span></button>    <button class="menu-row" onclick="nav('/security')"><span>🔐 ${t('sec_title')}<small class="muted" style="display:block;font-size:12px">${t('sec_sub')}</small></span><span class="muted">›</span></button><button class="menu-row" onclick="cmmSheet()"><span>💬 ${t('cmm_title')}<small class="muted" style="display:block;font-size:12px">${t('cmm_sub')}</small></span><span class="muted">›</span></button>    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
+    ${(state.regions || []).length > 1 ? `<button class="menu-row" onclick="A.pickRegion()" style="border:2px solid var(--brand)"><span>📍 ${t('delivery_region') || 'Delivery Region'}<small class="muted" style="display:block;font-size:12px;color:var(--brand);font-weight:700">${esc(regionName())}</small></span><span class="muted">›</span></button>` : ''}    <button class="menu-row" onclick="A.privacySecurity()"><span>🔐 ${state.lang==='ur'?'پرائیویسی':'Privacy'}<small class="muted" style="display:block;font-size:12px">${state.lang==='ur'?'ڈیٹا کاپی اور آواز کی اطلاع':'Data copy & spoken alerts'}</small></span><span class="muted">›</span></button>    <button class="menu-row" onclick="nav('/security')"><span>🔐 ${t('sec_title')}<small class="muted" style="display:block;font-size:12px">${t('sec_sub')}</small></span><span class="muted">›</span></button><button class="menu-row" onclick="cmmSheet()"><span>💬 ${t('cmm_title')}<small class="muted" style="display:block;font-size:12px">${t('cmm_sub')}</small></span><span class="muted">›</span></button>    <div id="accProfile" style="display:${state.accSec === 'profile' ? 'block' : 'none'}"><div class="box">
       <label class="f" for="p_name" style="margin-top:0">${t('name')}</label><input id="p_name" type="text" value="${esc(p.full_name)}">
       <label class="f" for="p_phone">${t('phone')}</label><input id="p_phone" type="tel" inputmode="tel" value="${esc(p.phone)}">
       <label class="f">${t('email')}</label><div class="muted">${esc(state.user.email)}</div>
@@ -4792,7 +4798,6 @@ async function showAccount(){
     </div>
     <div class="grp"><div class="grp-h">🎨 ${t('appearance') || 'Appearance'}</div>
       ${Theme.picker(state.lang)}
-      <button class="menu-row" style="margin-top:8px" onclick="A.toggleLang()"><span>🌐 ${t('language')}: ${state.lang === 'ur' ? 'English' : 'اردو'}</span><span class="muted">›</span></button>
     </div>
     <div class="grp"><div class="grp-h">💬 ${t('help_legal') || 'Help & legal'}</div>
       <button class="menu-row" onclick='Chat.open(null, "sup", state.user.id)'><span>💬 ${t('chat_support')}</span><span class="muted">›</span></button>
@@ -4935,7 +4940,7 @@ let searchTimer = null;
 const A = {
   privacySecurity(){
     const ur=state.lang==='ur', capable=('speechSynthesis' in window && !!window.SpeechSynthesisUtterance), enabled=!!ls.get('kh_voice_order_alerts',false);
-    openSheet(ur?'پرائیویسی اور سیکیورٹی':'Privacy & Security', `<p class="muted" style="font-size:14px">${ur?'Dera آپ کے اکاؤنٹ اور آرڈر چلانے کے لیے ضروری معلومات استعمال کرتا ہے۔ لوکیشن صرف پتہ لگانے کے لیے آپ کی درخواست پر لی جاتی ہے؛ اسے براؤزر کی اجازتوں میں بھی کنٹرول کیا جا سکتا ہے۔':'Dera uses information needed to provide your account and orders. Location is requested only when you ask to use it for an address; you can also manage permissions in your browser settings.'}</p><button class="menu-row" style="width:100%" onclick="A.dataDownloadRequest()"><span>📥 ${ur?'میرے ڈیٹا کی کاپی کی درخواست':'Request a copy of my data'}<small class="muted" style="display:block;font-size:12px">${ur?'سپورٹ ٹکٹ بنے گا؛ یہ ڈاؤن لوڈ نہیں':'Creates a support ticket; no export is prepared here'}</small></span><span>›</span></button><div class="box" style="margin-top:10px"><b>🔊 ${ur?'آرڈر کی آواز میں اطلاع':'Spoken order alerts'}</b><p class="muted" style="font-size:13px;margin:5px 0">${ur?'یہ ترتیب صرف اس ڈیوائس/براؤزر میں محفوظ ہے اور بطورِ طے بند ہے۔ صرف عمومی آرڈر اپ ڈیٹ بولی جائے گی۔':'Stored only on this device/browser and off by default. Speech uses generic order-update wording only, not order details.'} ${capable?'':(ur?'اس براؤزر میں آواز کی سہولت دستیاب نہیں۔':'Speech is not available in this browser.')}</p><label><input id="privacyVoiceToggle" type="checkbox" ${enabled?'checked':''} ${capable?'':'disabled'} onchange="A.setVoiceAlerts(this.checked)"> ${ur?'آواز کی اطلاع فعال کریں':'Enable spoken alerts (device only)'}</label><div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" style="flex:1" ${capable?'':'disabled'} onclick="A.testVoiceAlert()">${ur?'آزمائیں':'Test'}</button><button class="btn warn" style="flex:1" onclick="A.stopVoiceAlert()">${ur?'روکیں':'Stop'}</button></div></div><p class="muted" style="font-size:13px">${ur?'پاس ورڈ کی تبدیلی اور پاس کیز اب سیکیورٹی اسکرین پر دستیاب ہیں۔ دو مرحلہ تصدیق بھی سیکیورٹی اسکرین پر ہے۔':'Password change and passkeys are now available on the Security screen. Two-factor authentication is also on the Security screen.'}</p><button class="menu-row" style="width:100%" onclick="closeSheet();nav('/security')"><span>🔐 ${ur?'سیکیورٹی':'Security'}<small class="muted" style="display:block;font-size:12px">${ur?'پاس ورڈ، پاس کیز اور ڈیوائسز':'Password, passkeys & devices'}</small></span><span>›</span></button><button class="menu-row danger" style="width:100%" onclick="closeSheet();Legal.del()"><span>🗑️ ${ur?'اکاؤنٹ حذف کرنے کا موجودہ راستہ':'Delete account (existing flow)'}</span><span>›</span></button><button class="menu-row" style="width:100%" onclick="closeSheet();A.logout()"><span>🚪 ${ur?'لاگ آؤٹ':'Log out (existing sign-out flow)'}</span><span>›</span></button>`);
+    openSheet(ur?'پرائیویسی اور سیکیورٹی':'Privacy & Security', `<p class="muted" style="font-size:14px">${ur?'Dera آپ کے اکاؤنٹ اور آرڈر چلانے کے لیے ضروری معلومات استعمال کرتا ہے۔ لوکیشن صرف پتہ لگانے کے لیے آپ کی درخواست پر لی جاتی ہے؛ اسے براؤزر کی اجازتوں میں بھی کنٹرول کیا جا سکتا ہے۔':'Dera uses information needed to provide your account and orders. Location is requested only when you ask to use it for an address; you can also manage permissions in your browser settings.'}</p><button class="menu-row" style="width:100%" onclick="A.dataDownloadRequest()"><span>📥 ${ur?'میرے ڈیٹا کی کاپی کی درخواست':'Request a copy of my data'}<small class="muted" style="display:block;font-size:12px">${ur?'سپورٹ ٹکٹ بنے گا؛ یہ ڈاؤن لوڈ نہیں':'Creates a support ticket; no export is prepared here'}</small></span><span>›</span></button><div class="box" style="margin-top:10px"><b>🔊 ${ur?'آرڈر کی آواز میں اطلاع':'Spoken order alerts'}</b><p class="muted" style="font-size:13px;margin:5px 0">${ur?'یہ ترتیب صرف اس ڈیوائس/براؤزر میں محفوظ ہے اور بطورِ طے بند ہے۔ صرف عمومی آرڈر اپ ڈیٹ بولی جائے گی۔':'Stored only on this device/browser and off by default. Speech uses generic order-update wording only, not order details.'} ${capable?'':(ur?'اس براؤزر میں آواز کی سہولت دستیاب نہیں۔':'Speech is not available in this browser.')}</p><label><input id="privacyVoiceToggle" type="checkbox" ${enabled?'checked':''} ${capable?'':'disabled'} onchange="A.setVoiceAlerts(this.checked)"> ${ur?'آواز کی اطلاع فعال کریں':'Enable spoken alerts (device only)'}</label><div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost" style="flex:1" ${capable?'':'disabled'} onclick="A.testVoiceAlert()">${ur?'آزمائیں':'Test'}</button><button class="btn warn" style="flex:1" onclick="A.stopVoiceAlert()">${ur?'روکیں':'Stop'}</button></div></div><p class="muted" style="font-size:13px">${ur?'پاس ورڈ کی تبدیلی اور پاس کیز اب سیکیورٹی اسکرین پر دستیاب ہیں۔ دو مرحلہ تصدیق بھی سیکیورٹی اسکرین پر ہے۔':'Password change and passkeys are now available on the Security screen. Two-factor authentication is also on the Security screen.'}</p>`);
   },
   setVoiceAlerts(on){ ls.set('kh_voice_order_alerts',!!on); if(!on) A.stopVoiceAlert(); toast(state.lang==='ur'?(on?'آواز کی اطلاع فعال':'آواز کی اطلاع بند'):(on?'Spoken alerts enabled on this device':'Spoken alerts disabled')); },
   testVoiceAlert(){ if(!('speechSynthesis' in window)||!window.SpeechSynthesisUtterance) return toast(state.lang==='ur'?'آواز دستیاب نہیں':'Speech unavailable',true); try { window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(state.lang==='ur'?'یہ Dera آرڈر کی آزمائشی اطلاع ہے۔':'This is a test of Dera order alerts.'); u.lang=state.lang==='ur'?'ur-PK':'en-IN'; window.speechSynthesis.speak(u); } catch(e) { toast(state.lang==='ur'?'آواز دستیاب نہیں':'Speech unavailable',true); } },
@@ -5954,6 +5959,10 @@ function showNextAlert(){
 function closeAlert(){ const a = alertQueue.shift(); if (a) markSeen(a.key); const el = $('alertSheet'); if (el) el.remove(); setTimeout(showNextAlert, 300); return a; }
 A.alertOk = () => { closeAlert(); };
 A.alertOpen = () => { const a = closeAlert(); if (a) nav('/order/' + a.orderId); };
+// Feature 40: moved here from above toggleRefundForm's definition — assigning to A before
+// `const A = {...}` threw a TDZ ReferenceError that killed the whole script (splash hang).
+A.toggleRefundForm = toggleRefundForm;
+A.submitRefundRequest = submitRefundRequest;
 let checking = false;
 async function checkAlerts(){
   if (!state.user || checking) return; checking = true;
@@ -7207,7 +7216,7 @@ const BackNav = (() => {
 let obIdx = 0;
 function showOnboard(){
   hideSplash();
-  const slides = [['🛍️','ob1t','ob1d'],['📅','ob2t','ob2d'],['🛵','ob3t','ob3d']];
+  const slides = [['🛍️','ob1t','ob1d'],['👥','ob2t','ob2d'],['🎁','ob3t','ob3d'],['🛵','ob4t','ob4d']];
   const ov = document.createElement('div');
   ov.className = 'obover'; ov.id = 'obover';
   const paint = () => {
@@ -7225,7 +7234,15 @@ function showOnboard(){
   };
   document.body.appendChild(ov); paint();
 }
+// Feature 40 (grouping fix): boot-safety helpers. cgf_timeout bounds every boot await;
+// cgf_retryCard is the visible fail-open screen when the backend cannot be reached at all.
+function cgf_timeout(ms){ return new Promise(r => setTimeout(() => r('timeout'), ms)); }
+function cgf_retryCard(title, msg){
+  const app = document.getElementById('app');
+  if (app) app.innerHTML = `<div style="padding:48px 20px;text-align:center"><div style="font-size:48px">📶</div><h2 style="margin:12px 0 6px">${title}</h2><p style="color:#666;margin:0 0 20px">${msg}</p><button onclick="location.reload()" style="padding:12px 28px;border:0;border-radius:12px;background:#0f7a4d;color:#fff;font-weight:700;font-size:16px;cursor:pointer">↻ ${state.lang === 'ur' ? 'دوبارہ کوشش کریں' : 'Try again'}</button></div>`;
+}
 function hideSplash(){
+  window.__bootDone = true;
   pfmMark('ready');
   const sp = document.getElementById('splash');
   if (!sp || sp.dataset.done) return;
@@ -7234,8 +7251,12 @@ function hideSplash(){
   setTimeout(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 500); }, Math.max(0, 900 - (Date.now() - t0)));
 }
 async function bootMain(){
+  // Feature 40: no backend, no boot. The Supabase client itself failed to build
+  // (CDN blocked/failed) — fail open to a visible retry instead of a stuck splash.
+  if (!sb){ try { hideSplash(); } catch (e) {} cgf_retryCard(state.lang === 'ur' ? 'ڈیرہ لوڈ نہیں ہوا' : 'Could not load Dera', state.lang === 'ur' ? 'انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔' : 'Check your internet connection and try again.'); return; }
   try {
     // Feature 30: boot queries run in parallel (same queries, same fallbacks, same state before either branch)
+    // Feature 40: every boot await is bounded — a stalled network must never hold the splash forever.
     const pfmQSettings = (async () => { try {
       const { data:rs } = await sb.from('region_settings').select('key,value').in('key', ['rider_speed_kmh']);
       state.settings = {}; (rs || []).forEach(x => { state.settings[x.key] = x.value; });
@@ -7253,9 +7274,14 @@ async function bootMain(){
       state.ridersOnline = count || 0;
     } catch(e){ state.ridersOnline = -1; } })();
     const pfmQSession = sb.auth.getSession();
-    await Promise.all([pfmQSettings, pfmQZones, pfmQRiders, pfmQSession]);
-    const { data:{ session } } = await pfmQSession;
-    if (session) await afterLogin(session.user);
+    await Promise.race([Promise.all([pfmQSettings, pfmQZones, pfmQRiders, pfmQSession]), cgf_timeout(15000)]);
+    let session = null;
+    try { const res = await Promise.race([pfmQSession, cgf_timeout(15000).then(() => ({ data: { session: null } }))]); session = res && res.data && res.data.session; } catch (e) { session = null; }
+    if (session){
+      let loginOk = false;
+      try { await Promise.race([afterLogin(session.user).then(() => { loginOk = true; }), cgf_timeout(15000)]); } catch (e) {}
+      if (!loginOk){ try { renderShell(); route(); } catch (e) {} }
+    }
     else { if (!location.hash || location.hash === '#') replaceHash('#/'); renderShell(); route(); }
   } catch (e) { logErr(e); showAuth(t('error')); }
   hideSplash();
@@ -7266,6 +7292,22 @@ async function bootMain(){
   let seen = 0; try { seen = ls.get('kh_onboard', 0); } catch(e){}
   if (!seen) showOnboard(); else bootMain();
 })();
+</script>
+<script>
+// Feature 40 watchdog: if the main script died (CDN failure, early fault) the splash
+// would otherwise sit forever. 60s is longer than the 45s worst-case bounded boot
+// (15s queries + 15s session + 15s login), so a healthy slow-network boot never trips
+// it. Fires only while the splash is still up and hideSplash never ran (__bootDone unset).
+setTimeout(function(){
+  try {
+    if (window.__bootDone) return;
+    var sp = document.getElementById('splash');
+    if (!sp) return;
+    sp.style.display = 'none';
+    var app = document.getElementById('app');
+    if (app) app.innerHTML = '<div style="padding:48px 20px;text-align:center;font-family:sans-serif"><div style="font-size:48px">📶</div><h2 style="margin:12px 0 6px">Could not load Dera</h2><p style="color:#666;margin:0 0 4px">Check your internet connection and try again.</p><p style="color:#666;margin:0 0 20px">انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔</p><button onclick="location.reload()" style="padding:12px 28px;border:0;border-radius:12px;background:#0f7a4d;color:#fff;font-weight:700;font-size:16px;cursor:pointer">↻ Try again · دوبارہ کوشش کریں</button></div>';
+  } catch (e) {}
+}, 60000);
 </script>
 </body>
 </html>
