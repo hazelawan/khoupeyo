@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.97';
+const APP_VERSION = '7.98';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -697,10 +697,10 @@ const STEPS = ['placed','accepted','preparing','ready','rider_assigned','picked_
 const LABEL = {placed:'New',accepted:'Accepted',preparing:'Preparing',ready:'Ready',rider_assigned:'Rider assigned',picked_up:'On the way',delivered:'Delivered',cancelled:'Cancelled',rejected:'Rejected'};
 const FINAL = ['delivered','cancelled','rejected'];
 const KIND = { customer_unreachable:'Customer not answering calls', customer_absent:'Customer not at the address', customer_refused_pay:'Customer not paying cash', wrong_address:'Wrong or unclear address', shop_delay:'Order not ready at shop', shop_closed:'Shop closed', order_damaged:'Order damaged or spilled', accident:'Accident or vehicle problem', rider_delay:'Rider will be late', other:'Other problem', chat_help:'Asked Dera to join a chat', not_received:'Customer says order NOT received', order_lost:'🚨 Rider says the order was stolen or lost' };
-const MORE_TABS = ['customers','promos','banners','zones','rules','targets','reports','staff','settings','publish','regions','region','parcels','support','approvals','groups','donations'];
+const MORE_TABS = ['customers','promos','banners','zones','rules','targets','campaigns','reports','staff','settings','publish','regions','region','parcels','support','approvals','groups','donations'];
 const can = p => p === 'hq' ? (state.perms || []).includes('hq') : ((state.perms || []).includes('owner') || (state.perms || []).includes(p));
 const RIDER_TABS = ['attendance','leaves','complaints','shifts','perks','fleet'];
-const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', perks:'riders', fleet:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', groups:'orders', vouchers:'settings', families:'orders', ontime:'orders',
+const TAB_PERM = { misses:'shops', backup:'money', plus:'money', payoutreq:'money', omap:'orders', perks:'riders', fleet:'riders', attendance:'riders', leaves:'riders', complaints:'riders', shifts:'riders', orders:'orders', restaurants:'shops', menu:'shops', riders:'riders', customers:'orders', promos:'settings', banners:'settings', zones:'settings', rules:'riders', targets:'riders', campaigns:'riders', reports:'money', staff:'owner', settings:'settings', publish:'hq', regions:'hq', region:'hq', parcels:'orders', groups:'orders', vouchers:'settings', families:'orders', ontime:'orders',
   dinein:'orders', support:'orders', approvals:'owner' };
 
 // ---- Small helpers ----
@@ -1012,6 +1012,7 @@ async function go(tab){
     if (tab === 'rules') await loadFineRules();
     if (tab === 'settings') await loadSettings();
     if (tab === 'targets') await Promise.all([loadTargets(), loadSettings()]);
+    if (tab === 'campaigns') await loadCampaigns();
     if (tab === 'staff') await loadStaff();
     if (tab === 'regions' || tab === 'region') await loadRegions();
     if (tab === 'region') await loadRegionFile();
@@ -1169,7 +1170,7 @@ function renderTab(){
   const m = $('main'); if (!m) return;
   const v = { home:viewHome, orders:viewOrders, restaurants:viewShops, menu:viewProducts, riders:viewRiders, more:viewMore,
               customers:viewCustomers, misses:viewMisses, payoutreq:viewPayoutReqs, backup:viewBackup, plus:viewPlus, omap:viewOmap, promos:viewPromos, donations:viewDonations, banners:viewBanners, parcels:viewParcels, groups:viewGroupAdmin, vouchers:viewVoucherAdmin, families:viewFamilyAdmin, ontime:viewOntimeAdmin,
-  dinein:viewDineinAdmin, targets:viewTargets, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, fleet:viewFleet, support:viewSupport, approvals:viewApprovals }[state.tab];
+  dinein:viewDineinAdmin, targets:viewTargets, campaigns:viewCampaigns, reports:viewReports, staff:viewStaff, zones:viewZones, rules:viewRules, settings:viewSettings, publish:viewPublish, regions:viewRegions, region:viewRegionPage, attendance:viewAttendance, leaves:viewLeaves, complaints:viewComplaints, shifts:viewShifts, perks:viewPerks, fleet:viewFleet, support:viewSupport, approvals:viewApprovals }[state.tab];
   const allNote = !scope() && (state.regions || []).length > 1 && !['home','regions','region','publish','staff'].includes(state.tab) ? '<div class="note" style="font-size:13px;margin-bottom:10px">🌍 You are seeing <b>all regions together</b>. To add or change things for one city, choose it at the top.</div>' : '';
   m.innerHTML = allNote + (v ? v() : '');
   renderNav();
@@ -2443,6 +2444,7 @@ function viewMore(){
   const money = it('reports', '📊 Reports', 'Monthly reports, shop statements and rider pay slips (Excel or PDF)')
     + it('payoutreq', '💸 Shop payout requests', 'Shops asking for their money — pay them from here')
     + it('targets', '💰 Rider pay and targets', 'Pay per delivery for bike, car and bicycle · bonus targets')
+    + it('campaigns', '🎁 Quests campaigns', 'Fixed-date bonus campaigns with stacked delivery goals')
     + it('donations', '❤️ Donations', 'Recipients, cause requests and donations to verify');
   const marketing = it('promos', '🎟️ Promo codes', 'Discounts, first order offer, free delivery')
     + it('vouchers', '🎁 Gift cards & vouchers', 'System-wide voucher codes, uses and expiry (read-only for balances)')
@@ -3017,6 +3019,7 @@ function viewTargets(){
       <div class="row-sub">${x.deliveries} deliveries ${per[x.period]} → ${money(x.amount)} bonus one time · ${x.contract ? (x.contract === 'company' ? 'company riders' : 'own-bike riders') : 'all riders'}${x.vehicle ? ' · ' + VEH[x.vehicle] : ''}</div></div></button>`).join('');
   const bon = state.recentBonus.map(b => `<div class="row" style="cursor:default"><div class="row-main"><div class="row-title">${esc(b.rider?.profile?.full_name || 'Rider')}</div><div class="row-sub">${esc(b.title || '')} · ${when(b.created_at)}</div></div><div class="row-side">${money(b.amount)}</div></div>`).join('');
   return `${backLink()}<h2>💰 Rider pay and targets</h2>
+    <div class="bar"><button class="btn ghost" onclick="go('campaigns')">🎁 Quests campaigns ›</button></div>
     <div class="seg2"><button class="${tab === 'pay' ? 'on' : ''}" onclick="A.tgTab('pay')">Pay per delivery</button><button class="${tab === 'tg' ? 'on' : ''}" onclick="A.tgTab('tg')">Bonus targets</button><button class="${tab === 'day' ? 'on' : ''}" onclick="A.tgTab('day')">🎉 Special days</button></div>
     ${tab === 'pay' ? payPanel() : tab === 'day' ? boostPanel() : `
     <div class="muted" style="margin:4px 0 10px;font-size:14px">When a rider reaches a target, the bonus is added to their month pay <b>one time</b> and they get a notification. A target can be for all riders, one contract or one vehicle.</div>
@@ -3025,6 +3028,25 @@ function viewTargets(){
     <h3>Latest bonuses earned</h3><div class="list">${bon || '<div class="empty">None yet.</div>'}</div>`}`;
 }
 
+// ---- F47 Quests campaigns (mirrors the targets page: load + form + save + delete) ----
+async function loadCampaigns(){
+  try { const c = await sb.from('rider_campaigns').select('*, campaign_goals(*)').order('created_at', { ascending:false }); state.campaigns = need(c) || []; } catch (e) { state.campaigns = []; }
+  try { const a = await sb.from('campaign_awards').select('campaign_id,goal_id').limit(500); state.campaignAwards = a.data || []; } catch (e) { state.campaignAwards = []; }
+}
+function campGoalRow(n, a){ return `<div class="two cg-goal"><div><label class="f">Deliveries</label><input class="cg-n" type="number" min="1" value="${n === '' || n == null ? '' : num(n)}"></div><div><label class="f">Bonus (Rs)</label><input class="cg-a" type="number" min="0" value="${a === '' || a == null ? '' : num(a)}"></div></div>`; }
+function campGoalAdd(){ const box = $('cg_goals'); if (box) box.insertAdjacentHTML('beforeend', campGoalRow('', '')); }
+function viewCampaigns(){
+  const list = (state.campaigns || []).filter(c => !scope() || !c.region_id || c.region_id === scope());
+  const rows = list.map(c => { const goals = (c.campaign_goals || []).slice().sort((a, b) => a.deliveries - b.deliveries); const earned = (state.campaignAwards || []).filter(a => a.campaign_id === c.id).length;
+    return `<button class="row" onclick="A.campaignForm('${c.id}')"><div class="row-main"><div class="row-title">🎁 ${esc(c.title)} ${c.is_active ? '<span class="pill g">On</span>' : '<span class="pill">Off</span>'}</div>
+      <div class="row-sub">${esc(c.start_date)} → ${esc(c.end_date)} · ${goals.map(g => `${g.deliveries} → ${money(g.amount)}`).join(' · ') || 'No goals yet'} · ${c.scope_contract ? (c.scope_contract === 'company' ? 'company riders' : 'own-bike riders') : 'all riders'}${c.scope_vehicle ? ' · ' + VEH[c.scope_vehicle] : ''} · ${earned} goal bonuses earned</div></div></button>`; }).join('');
+  return `${backLink()}<h2>🎁 Quests campaigns</h2>
+    <div class="muted" style="margin:4px 0 10px;font-size:14px">A fixed-date campaign: when a rider reaches a goal inside the window, the bonus is added to their month pay <b>one time</b> through the normal bonus system. Deleting a campaign never removes bonuses already earned.</div>
+    <div class="bar"><button class="btn" onclick="A.campaignForm()">Add campaign</button></div>
+    <div class="list">${rows || '<div class="empty">No campaigns yet.</div>'}</div>`;
+}
+
+// ---- Reports ----
 // ---- Reports ----
 function viewReports(){
   const now = new Date(); const opts = [];
@@ -4823,6 +4845,42 @@ const A = {
     });
   },
   async deleteTarget(id){ if (!await uiConfirm('Delete this target? Bonuses already earned stay.')) return; await run(async () => { need(await sb.from('rider_targets').delete().eq('id', id)); await loadTargets(); closeSheet(); renderTab(); }); },
+
+  campaignForm(id){
+    const x = (state.campaigns || []).find(y => y.id === id) || { title:'', start_date:ymd(new Date()), end_date:ymd(new Date()), scope_contract:null, scope_vehicle:null, is_active:true, campaign_goals:[] };
+    const goals = (x.campaign_goals || []).slice().sort((a, b) => a.deliveries - b.deliveries);
+    openSheet(id ? 'Edit campaign' : 'Add campaign', `
+      <div class="note" style="font-size:13px;margin-top:0">A fixed-date bonus campaign: when a rider reaches a goal inside the window, the bonus is added to their month pay <b>one time</b> through the normal bonus system. Deleting a campaign never removes bonuses already earned.</div>
+      <label class="f" for="cg_title">Title riders see</label><input id="cg_title" type="text" value="${esc(x.title)}" placeholder="Special bonus for Full time riders">
+      <div class="two"><div><label class="f" for="cg_from">Starts</label><input id="cg_from" type="date" value="${esc(x.start_date || '')}"></div>
+        <div><label class="f" for="cg_to">Ends</label><input id="cg_to" type="date" value="${esc(x.end_date || '')}"></div></div>
+      <div class="two"><div><label class="f" for="cg_ct">Contract</label><select id="cg_ct"><option value="">All riders</option><option value="company" ${x.scope_contract === 'company' ? 'selected' : ''}>Company riders</option><option value="freelance" ${x.scope_contract === 'freelance' ? 'selected' : ''}>Own bike riders</option></select></div>
+        <div><label class="f" for="cg_veh">Vehicle</label><select id="cg_veh"><option value="">All vehicles</option>${Object.keys(VEH).map(v => `<option value="${v}" ${x.scope_vehicle === v ? 'selected' : ''}>${VEH[v]}</option>`).join('')}</select></div></div>
+      <div class="muted" style="font-size:13px">Region: ${scope() ? esc(regionName(scope())) : 'all regions (choose a region at the top first to limit a new campaign to it)'}</div>
+      <h3 style="margin:12px 0 6px">Goals (deliveries → bonus)</h3>
+      <div id="cg_goals">${(goals.length ? goals : [{ deliveries:100, amount:500 }]).map(g => campGoalRow(g.deliveries, g.amount)).join('')}</div>
+      <button class="btn ghost small" style="margin-top:8px" onclick="campGoalAdd()">+ Add goal</button>
+      <label class="check"><input id="cg_on" type="checkbox" ${x.is_active ? 'checked' : ''}> Campaign is on</label>
+      <div class="actions"><button class="btn block" onclick="A.saveCampaign('${id || ''}')">Save campaign</button>${id ? `<button class="btn warn block" onclick="A.deleteCampaign('${id}')">Delete</button>` : ''}</div>`);
+  },
+  async saveCampaign(id){
+    const title = $('cg_title').value.trim(); const from = $('cg_from').value, to = $('cg_to').value;
+    if (!title) return toast('Write the campaign title', true);
+    if (!from || !to || to < from) return toast('End date must be on or after the start date', true);
+    const goals = [...document.querySelectorAll('.cg-goal')].map(r => ({ deliveries:Math.round(num(r.querySelector('.cg-n').value)), amount:num(r.querySelector('.cg-a').value) })).filter(g => g.deliveries >= 1 && g.amount >= 0);
+    if (!goals.length) return toast('Add at least one goal', true);
+    await run(async () => {
+      const existing = (state.campaigns || []).find(y => y.id === id);
+      const row = { title, start_date:from, end_date:to, scope_contract:$('cg_ct').value || null, scope_vehicle:$('cg_veh').value || null, is_active:$('cg_on').checked, region_id: existing ? existing.region_id : (scope() || null) };
+      let cid = id;
+      if (id) need(await sb.from('rider_campaigns').update(row).eq('id', id));
+      else { const ins = need(await sb.from('rider_campaigns').insert(row).select('id').single()); cid = ins.id; }
+      need(await sb.from('campaign_goals').delete().eq('campaign_id', cid));
+      need(await sb.from('campaign_goals').insert(goals.map(g => ({ campaign_id:cid, deliveries:g.deliveries, amount:g.amount, region_id:row.region_id }))));
+      await loadCampaigns(); closeSheet(); renderTab(); toast('Campaign saved');
+    });
+  },
+  async deleteCampaign(id){ if (!await uiConfirm('Delete this campaign? Goals go away, but bonuses already earned stay.')) return; await run(async () => { need(await sb.from('rider_campaigns').delete().eq('id', id)); await loadCampaigns(); closeSheet(); renderTab(); }); },
 
   // ---- Staff ----
   staffForm(email, perms){
