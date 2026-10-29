@@ -503,7 +503,7 @@ main{padding-top:18px!important}
 .hubbtn{border-radius:16px;box-shadow:none;padding:12px;min-height:64px;border:1px solid var(--line)}
 .hubbtn span{width:38px;height:38px;border-radius:11px;background:var(--soft);display:grid;place-items:center;font-size:19px;flex:none}
 .hubbtn i{box-shadow:0 0 0 2px var(--paper)}
-/* Bike safety check one-page fit (5.72): scoped to .bsc-fit + main.bsc-page ONLY.
+/* Bike safety check one-page fit (prior version): scoped to .bsc-fit + main.bsc-page ONLY.
    Tightens spacing/padding/fonts inside Duty -> Bike safety check; no other Duty
    section and no other tab is affected. Checkbox rows ~44px (EN) via 10px padding;
    small buttons keep the app-standard 40px height (unchanged). main.bsc-page bottom
@@ -684,7 +684,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this every time the file is updated ----
-const APP_VERSION = '5.72';
+const APP_VERSION = '5.73';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -794,7 +794,7 @@ const I18N = {
     near_limit:'You are close to your cash limit. Deposit cash soon.',
     deposits:'Cash deposits', payments:'Salary payments', recent:'Recent deliveries', no_recent:'No completed deliveries yet.',
     my_fines:'My fines this month', no_fines:'No fines this month. Well done!', rules_title:'Rules and fines',
-    rules_note:'Breaking a rule means a fine that is cut from your monthly pay.', rating:'Customer rating',
+    rules_note:'Breaking a rule means a fine that is cut from your monthly pay.', rating:'Customer rating', grd_title:'Your grade: {g}', grd_new:'New rider', grd_new_note:'Grade appears after 5 ratings this month', grd_est:'Estimate — server grade unavailable', grd_rating:'Customer rating', grd_fines:'Active fines this month', grd_late:'Late complaints this month', grd_accept:'Acceptance', grd_offers:'offers', grd_offers_low:'Not enough offers yet', grd_duty:'Late duty starts', grd_bonus:'Grade bonus per delivery', grd_no_ratings:'No ratings yet', grd_no_caps:'no caps', grd_capped_at:'capped at {g}', grd_reason_rating:'Rating {a}', grd_fine_one:'1 active fine', grd_fine_many:'{n} active fines', grd_late_one:'1 late complaint', grd_late_many:'{n} late complaints', grd_duty_one:'1 late duty start', grd_duty_many:'{n} late duty starts',
     enable_sound:'Tap here to turn on the alert sound', sound:'Alert sound', logout:'Log out', language:'Language',
     saved:'Saved', error:'Something went wrong. Please try again.', loading:'Loading…',
     not_confirmed:'Your email is not confirmed yet. Open the email from Dera (look in Spam too) and tap the link, then log in.', resend:'Send the email again', resent:'Email sent again. Check your inbox and Spam.',
@@ -913,7 +913,7 @@ const I18N = {
     near_limit:'نقد رقم حد کے قریب ہے۔ جلد جمع کروائیں۔',
     deposits:'جمع کروائی گئی رقم', payments:'تنخواہ کی ادائیگیاں', recent:'حالیہ ڈیلیوریاں', no_recent:'ابھی کوئی مکمل ڈیلیوری نہیں۔',
     my_fines:'اس مہینے کے جرمانے', no_fines:'اس مہینے کوئی جرمانہ نہیں۔ شاباش!', rules_title:'اصول اور جرمانے',
-    rules_note:'اصول توڑنے پر جرمانہ آپ کی ماہانہ رقم سے کٹے گا۔', rating:'گاہکوں کی ریٹنگ',
+    rules_note:'اصول توڑنے پر جرمانہ آپ کی ماہانہ رقم سے کٹے گا۔', rating:'گاہکوں کی ریٹنگ', grd_title:'آپ کا گریڈ: {g}', grd_new:'نیا رائیڈر', grd_new_note:'اس مہینے 5 ریٹنگز کے بعد گریڈ نظر آئے گا', grd_est:'تخمینہ — سرور گریڈ دستیاب نہیں', grd_rating:'گاہکوں کی ریٹنگ', grd_fines:'اس مہینے کے فعال جرمانے', grd_late:'اس مہینے کی دیر سے ڈیلیوری کی شکایات', grd_accept:'قبولیت', grd_offers:'آفرز', grd_offers_low:'ابھی کافی آفرز نہیں', grd_duty:'ڈیوٹی پر دیر سے شروعات', grd_bonus:'فی ڈیلیوری گریڈ بونس', grd_no_ratings:'ابھی کوئی ریٹنگ نہیں', grd_no_caps:'کوئی حد نہیں', grd_capped_at:'زیادہ سے زیادہ {g}', grd_reason_rating:'ریٹنگ {a}', grd_fine_one:'1 فعال جرمانہ', grd_fine_many:'{n} فعال جرمانے', grd_late_one:'1 دیر سے ڈیلیوری کی شکایت', grd_late_many:'{n} دیر سے ڈیلیوری کی شکایات', grd_duty_one:'1 بار ڈیوٹی دیر سے شروع', grd_duty_many:'{n} بار ڈیوٹی دیر سے شروع',
     enable_sound:'آواز آن کرنے کے لیے یہاں دبائیں', sound:'الرٹ کی آواز', logout:'لاگ آؤٹ', language:'زبان',
     saved:'محفوظ ہو گیا', error:'کچھ گڑبڑ ہو گئی۔ دوبارہ کوشش کریں۔', loading:'لوڈ ہو رہا ہے…',
     not_confirmed:'آپ کی ای میل کی ابھی تصدیق نہیں ہوئی۔ Dera کی ای میل کھولیں (Spam میں بھی دیکھیں) اور لنک دبائیں، پھر لاگ اِن کریں۔', resend:'ای میل دوبارہ بھیجیں', resent:'ای میل دوبارہ بھیج دی گئی۔ Inbox اور Spam دیکھیں۔',
@@ -1003,7 +1003,7 @@ const I18N = {
 };
 const state = {
   lang: ls.get('kh_lang', 'en'), user:null, profile:null, rider:null, settings:{}, tab:'jobs', authMode:'login',
-  mine:[], issues:{}, dlvConf:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null,
+  mine:[], issues:{}, dlvConf:{}, available:[], done:[], fines:[], rules:[], payouts:[], handovers:[], shift:null, todayMinutes:0, rating:null, grade:null,
   sound: ls.get('kh_rd_sound', true), supportTickets:[], supportMessages:[], supportSelected:null, supportOrderId:null, supportContext:null, supportTargetHours:24, tripPrefs:(() => { const p = ls.get('kh_rd_trip_prefs', {}); return { orders:p.orders !== false, parcels:p.parcels !== false, nightMap:p.nightMap === true, autoNavigation:p.autoNavigation === true, traffic:p.traffic === true }; })(), seen:new Set(), seenOffer:new Set(), skipped:new Set(), parcels:[], myParcels:[], seenParcel:new Set(), pos:null
 };
 const t = (k, v) => { let x = (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k; if (v) for (const n in v) x = x.split('{' + n + '}').join(v[n]); return x; };
@@ -1444,6 +1444,8 @@ async function loadRules(){
     const { data } = await sb.from('reviews').select('rider_rating').in('order_id', ids).not('rider_rating', 'is', null);
     if (data && data.length) state.rating = { avg:(data.reduce((n, x) => n + x.rider_rating, 0) / data.length).toFixed(1), n:data.length };
   }
+  state.grade = null;
+  try { const gr = await sb.rpc('my_rider_grade'); if (!gr.error && gr.data && typeof gr.data === 'object') state.grade = gr.data; } catch (e) { state.grade = null; }
 }
 let refreshing = false;
 async function refresh(){
@@ -2981,11 +2983,80 @@ function historyHtml(){
 }
 
 // ================= RULES TAB =================
+// ================= RIDER GRADE CARD (Feature 46) =================
+// Server grade (state.grade, from my_rider_grade) is preferred. When it is
+// null the card is a CLIENT ESTIMATE from loaded state only: base grade from
+// state.rating + fines caps only. Acceptance / late complaints / duty starts
+// are NOT in the fallback (not loaded here) and are never invented.
+function grdColor(g){ return ({ A:'#16A34A', B:'#059669', C:'#CA8A04', D:'#EA580C', E:'#DC2626', F:'#991B1B', New:'#64748B' })[g] || '#64748B'; }
+function grdRank(g){ return ({ A:1, B:2, C:3, D:4, E:5, F:6 })[g] || 99; }
+function grdBaseFromAvg(avg, n){
+  if (n == null || n < 5 || avg == null) return 'New';
+  const a = Number(avg);
+  if (a >= 4.5) return 'A'; if (a >= 4.0) return 'B'; if (a >= 3.5) return 'C'; if (a >= 3.0) return 'D'; if (a >= 2.0) return 'E'; return 'F';
+}
+function grdFallbackGrade(base, finesN){
+  // Fines cap is a CEILING: the grade can only go down (worse rank wins).
+  let cap = null; if (finesN >= 3) cap = 'D'; else if (finesN === 2) cap = 'C'; else if (finesN === 1) cap = 'B';
+  if (!cap) return base;
+  return grdRank(cap) > grdRank(base) ? cap : base;
+}
+function grdCountStr(n, oneKey, manyKey){ return n === 1 ? t(oneKey) : t(manyKey, { n }); }
+function grdGradeCard(){
+  const g = state.grade;
+  const finesN = (state.fines || []).filter(f => f.status === 'active').length;
+  let grade, base, bonus, ratingAvg, ratingN, fines, late, accPct, offersN, lateStarts, caps, isEst;
+  if (g && typeof g.grade === 'string') {
+    isEst = false; grade = g.grade; base = g.base || g.grade; bonus = num(g.bonus);
+    ratingAvg = g.rating_avg; ratingN = g.rating_n; fines = g.fines; late = g.late_complaints;
+    accPct = g.acceptance_pct; offersN = g.offers_n; lateStarts = g.late_starts;
+    caps = Array.isArray(g.caps) ? g.caps : [];
+  } else {
+    isEst = true;
+    const r = state.rating || null;
+    ratingAvg = r ? r.avg : null; ratingN = r ? r.n : 0; fines = finesN;
+    base = grdBaseFromAvg(ratingAvg, ratingN);
+    grade = base === 'New' ? 'New' : grdFallbackGrade(base, finesN);
+    bonus = grade === 'A' ? 10 : grade === 'B' ? 5 : 0;
+    late = null; accPct = null; offersN = null; lateStarts = null;
+    caps = finesN ? [{ by:'fines', max: finesN >= 3 ? 'D' : finesN === 2 ? 'C' : 'B' }] : [];
+  }
+  const title = grade === 'New' ? t('grd_new') : t('grd_title', { g: esc(grade) });
+  let reason;
+  if (grade === 'New') { reason = t('grd_new_note'); }
+  else {
+    const ratingPart = ratingAvg != null ? t('grd_reason_rating', { a: ratingAvg }) : t('grd_no_ratings');
+    if (!caps.length) { reason = ratingPart + ' · ' + t('grd_no_caps'); }
+    else {
+      const binding = caps.slice().sort((a, b) => grdRank(a.max) - grdRank(b.max))[0];
+      let capLabel = '';
+      if (binding.by === 'fines') capLabel = grdCountStr(num(fines), 'grd_fine_one', 'grd_fine_many');
+      else if (binding.by === 'late') capLabel = grdCountStr(num(late), 'grd_late_one', 'grd_late_many');
+      else if (binding.by === 'acceptance') capLabel = t('grd_accept') + ' ' + accPct + '%';
+      else if (binding.by === 'duty') capLabel = grdCountStr(num(lateStarts), 'grd_duty_one', 'grd_duty_many');
+      reason = ratingPart + ' · ' + capLabel + (grade !== base ? ' — ' + t('grd_capped_at', { g: esc(grade) }) : '');
+    }
+  }
+  const rows = [];
+  rows.push([t('grd_rating'), ratingAvg != null ? esc(String(ratingAvg)) + ' (' + num(ratingN) + ')' : t('grd_no_ratings')]);
+  rows.push([t('grd_fines'), String(num(fines))]);
+  if (!isEst) {
+    rows.push([t('grd_late'), String(num(late))]);
+    rows.push([t('grd_accept'), accPct != null ? accPct + '% (' + num(offersN) + ' ' + t('grd_offers') + ')' : t('grd_offers_low')]);
+    if (lateStarts != null) rows.push([t('grd_duty'), String(num(lateStarts))]);
+  }
+  rows.push([t('grd_bonus'), bonus > 0 ? '+' + money(bonus) : money(0)]);
+  const rowsHtml = rows.map(r => `<div class="row"><div class="muted" style="font-size:14px">${r[0]}</div><div><b>${r[1]}</b></div></div>`).join('');
+  const badgeSize = grade === 'New' ? 'font-size:19px;padding:0 12px' : 'font-size:28px;width:56px';
+  return `<div class="card" style="margin-bottom:12px"><div style="display:flex;gap:12px;align-items:center"><div style="display:flex;align-items:center;justify-content:center;height:56px;${badgeSize};font-weight:800;color:#fff;background:${grdColor(grade)};border-radius:12px;flex:none">${esc(grade)}</div><div style="min-width:0"><b>${title}</b><div class="muted" style="font-size:13px">${reason}</div>${isEst ? `<div style="font-size:13px;font-weight:700">${t('grd_est')}</div>` : ''}</div></div><div style="margin-top:10px">${rowsHtml}</div></div>`;
+}
+
 function viewRules(){
   const fines = state.fines.map(f => `<div class="row"><div><b>${esc(f.reason)}</b>${f.status === 'waived' ? ' <span class="pill g">✓</span>' : ''}<div class="muted" style="font-size:13px">${when(f.fined_at)}</div></div>
     <div class="r ${f.status === 'waived' ? 'muted' : 'red'}" style="${f.status === 'waived' ? 'text-decoration:line-through' : ''}"><b>−${money(f.amount)}</b></div></div>`).join('');
   const rules = state.rules.map(r => `<div class="row"><div>${esc(r.title)}</div><div class="r red"><b>${money(r.amount)}</b></div></div>`).join('');
   return `<h1>${t('rules')}</h1>
+    ${grdGradeCard()}
     ${state.rating ? `<div class="tiles" style="margin-bottom:12px"><div class="tile hi"><b>★ ${state.rating.avg}</b><span>${t('rating')} (${state.rating.n})</span></div><div class="tile"><b>${state.fines.filter(f => f.status === 'active').length}</b><span>${t('fines')} · ${t('this_month')}</span></div></div>` : ''}
     <h2 style="margin-top:0">${t('my_fines')}</h2>${fines || `<div class="card muted">${t('no_fines')}</div>`}
     <h2>${t('rules_title')}</h2><p class="muted" style="margin-top:0">${t('rules_note')}</p>${rules}`;

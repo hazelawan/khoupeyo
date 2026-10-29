@@ -680,7 +680,7 @@ html[lang=ur] .uidlg .msg{font-family:"Noto Naskh Arabic",inherit;line-height:1.
 const uiConfirm = UI.confirm, uiPrompt = UI.prompt, uiAlert = UI.alert;
 
 // ---- Version: change this number every time the file is updated ----
-const APP_VERSION = '7.96';
+const APP_VERSION = '7.97';
   // ---- Startup diagnostics (Feature 30: real measured milestones, never invented) ----
   const pfmMarks = { script: Math.round(performance.now()) };
   function pfmMark(k){ try { pfmMarks[k] = Math.round(performance.now()); } catch(e){} }
@@ -2402,6 +2402,25 @@ function riderIdBlock(id, rider, r){
     ${can('riders') ? `<div class="two" style="margin-top:8px"><button class="btn small" onclick="A.handOverForm('${id}')">🔁 Give ID to another person</button><button class="btn ghost small" onclick="A.riderPwForm('${id}')">🔑 New password</button></div>
       <div class="two" style="margin-top:8px"><button class="btn ghost small" onclick="A.holderForm('${id}')">✏️ Name, phone, CNIC</button>${/^[A-Z0-9]+-\d{1,3}$/.test(rider.rider_code || '') ? `<button class="btn warn small" onclick="A.renewIdForm('${id}')">🔒 Make ID stronger</button>` : '<span></span>'}</div>` : ''}
     ${(state.holders || []).length > 1 ? `<details style="margin-top:8px"><summary style="cursor:pointer;font-weight:700">Who used this ID (${state.holders.length})</summary>${hist}</details>` : ''}</div>`;
+}
+// ---- F46: rider grade card (detail sheet Overview tab only; never in list rows) ----
+function riderGradeCard46(g){
+  if (!g || !g.grade) return `<div class="card" style="margin-top:8px"><div class="row-title">⭐ Rider grade</div><div class="row-sub">Grade unavailable</div></div>`;
+  const col = { A:'#16A34A', B:'#059669', C:'#CA8A04', D:'#EA580C', E:'#DC2626', F:'#991B1B', New:'#64748B' }[g.grade] || '#64748B';
+  const capName = { fines:'fines', late:'late complaints', acceptance:'acceptance', duty:'late duty starts' };
+  const caps = (g.caps || []).map(c => `capped by ${capName[c.by] || c.by} to ${c.max}`).join(' · ');
+  const ratingPart = g.rating_avg != null ? `Rating ${g.rating_avg} (${num(g.rating_n)})` : 'No ratings yet';
+  const reason = g.grade === 'New' ? 'Grade appears after 5 ratings this month' : [ratingPart, `base ${g.base}`, caps].filter(Boolean).join(' · ');
+  const title = g.grade === 'New' ? 'New rider' : `Rider grade: ${g.grade}`;
+  const bonus = num(g.bonus) > 0 ? `+${money(g.bonus)}` : money(0);
+  return `<div class="card" style="margin-top:8px"><div class="row-title">⭐ ${esc(title)} <span class="pill" style="background:${col}">${esc(g.grade)}</span></div><div class="row-sub">${esc(reason)}</div>
+    <div class="kv" style="margin-top:8px"><span class="muted">Customer rating</span><span>${g.rating_avg != null ? `${esc(String(g.rating_avg))} ★ (${num(g.rating_n)} ratings)` : 'No ratings yet'}</span></div>
+    <div class="kv"><span class="muted">Base grade</span><span>${esc(String(g.base || '—'))}</span></div>
+    <div class="kv"><span class="muted">Active fines this month</span><span>${num(g.fines)}</span></div>
+    <div class="kv"><span class="muted">Late complaints this month</span><span>${num(g.late_complaints)}</span></div>
+    <div class="kv"><span class="muted">Acceptance</span><span>${g.acceptance_pct != null ? `${esc(String(g.acceptance_pct))}% (${num(g.offers_n)} offers)` : 'Not enough offers yet'}</span></div>
+    ${g.contract_type === 'company' ? `<div class="kv"><span class="muted">Late duty starts</span><span>${g.late_starts != null ? num(g.late_starts) : '—'}</span></div>` : ''}
+    <div class="kv"><span class="muted">Grade bonus per delivery</span><span>${bonus}</span></div></div>`;
 }
 function riderLoginCard(code, pw, name){
   const text = `Dera Rider app\n${riderAppLink()}\nRider ID: ${code}\nPassword: ${pw}${name ? '\nName: ' + name : ''}`;
@@ -4388,7 +4407,7 @@ const A = {
     openSheet(r.full_name || 'Rider', '<div class="empty">Loading…</div>');
     await run(async () => {
       const f = new Date(state.riderMonth + 'T00:00:00'); const [y, m] = state.riderMonth.split('-'); const t = new Date(+y, +m, 1);
-      const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr, bl] = await Promise.all([
+      const [rd, fines, shifts, hand, pays, hs, cr, ch, pbr, bl, grd] = await Promise.all([
         sb.from('riders').select('profile_id,face_photo_path,current_lat,current_lng,suspended_until,suspend_reason,rider_code,holder_since,region_id').eq('id', id).single(),
         sb.from('rider_fines').select('*, order:orders(id)').eq('rider_id', id).gte('fined_at', f.toISOString()).lt('fined_at', t.toISOString()).order('fined_at', { ascending:false }),
         sb.from('rider_shifts').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(60),
@@ -4398,7 +4417,8 @@ const A = {
         sb.from('rider_credentials').select('login_id,updated_at').eq('rider_id', id).maybeSingle(),
         sb.from('rider_charges').select('*').eq('rider_id', id).order('created_at', { ascending:false }).limit(60),
         sb.from('rider_prayer_breaks').select('*').eq('rider_id', id).gte('started_at', f.toISOString()).lt('started_at', t.toISOString()).order('started_at', { ascending:false }).limit(100),
-        sb.from('rider_blacklists').select('*').eq('rider_id', id).eq('active', true).order('created_at', { ascending:false })
+        sb.from('rider_blacklists').select('*').eq('rider_id', id).eq('active', true).order('created_at', { ascending:false }),
+        (async () => { try { const g = await sb.rpc('admin_rider_grade', { p_rider: id }); if (g && g.error) return { data: null }; return g; } catch (e) { return { data: null }; } })()
       ]);
       state.riderChargeList = (ch && ch.data) || [];
       let bscRows = null, bscErr = false;
@@ -4408,6 +4428,8 @@ const A = {
       try { const profId = (rd && rd.data || {}).profile_id; if (profId){ const asx = await sb.from('account_security').select('must_change_password').eq('user_id', profId).maybeSingle(); state.riderMustChange = !!(asx.data && asx.data.must_change_password); } } catch (e) {}
       const rider = need(rd); const fl = need(fines); const sh = need(shifts); const hd = need(hand); const py = need(pays);
       const prayerBreaks = (pbr && pbr.data) || [];
+      const gradeRaw = (grd && grd.data) || null;
+      const gradeData = Array.isArray(gradeRaw) ? (gradeRaw[0] || null) : gradeRaw;
       const prayerRows = prayerBreaks.map(p => {
         const label = { fajr:'Fajr', zuhr:'Zuhr', asr:'Asr', maghrib:'Maghrib', isha:'Isha' }[p.prayer_name] || p.prayer_name;
         const dur = p.duration_min || (p.ended_at ? Math.round((new Date(p.ended_at) - new Date(p.started_at)) / 60000) : 0);
@@ -4446,6 +4468,7 @@ const A = {
         <div id="rt-overview" style="display:${rt === 'overview' ? 'block' : 'none'}">
         ${riderIdBlock(id, rider, r)}
         ${pauseBlock(id, rider)}
+        ${riderGradeCard46(gradeData)}
         <div class="kv" style="margin-top:8px"><span class="muted">🕘 Duty time</span><span>${esc(timingText(r))}</span></div>
         ${prayerBreaks.length ? `<div class="kv"><span class="muted">🕌 Prayer breaks (${monthLabel(state.riderMonth)})</span><span>${prayerBreaks.length} breaks · ${prayerTotal} min</span></div>
         <div class="list" style="margin-top:6px">${prayerRows}</div>` : ''}
